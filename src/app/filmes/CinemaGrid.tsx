@@ -1,0 +1,258 @@
+'use client'
+export const dynamic = 'force-dynamic'
+
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase'
+import Image from 'next/image'
+
+// Ordem de categorias permitidas
+const CATEGORY_ORDER = [
+  'Lançamento 2026',
+  'Lançamento 2025',
+  'Animação',
+  'Comédia',
+  'Ação',
+  'Aventura',
+  'Dorama',
+  'Negritude',
+  'Finanças',
+  'Infantil',
+  'Clássicos',
+  'Crime',
+  'Anime',
+  'Romance',
+  'Religioso',
+  'Nacional',
+  'Documentários',
+  'Drama',
+  'Família',
+  'Musical',
+  'Faroeste',
+  'Ficção',
+  'Policial',
+  'Suspense',
+  'Terror',
+  'Adulto',
+]
+
+interface Cinema {
+  id: number
+  titulo: string | null
+  tmdb_id: number | null
+  url: string | null
+  trailer: string | null
+  year: number | null
+  rating: number | null
+  description: string | null
+  poster: string | null
+  category: string | null
+  type: string | null
+  created_at: string | null
+  banner: string | null
+  backdrop: string | null
+  duration: string | null
+}
+
+export function CinemaGrid() {
+  const [films,      setFilms]      = useState<Cinema[]>([])
+  const [loading,    setLoading]    = useState(true)
+  const [error,      setError]      = useState('')
+  const [category,   setCategory]   = useState('all')
+
+  useEffect(() => {
+    const sb = createClient()
+    sb.from('cinema')
+      .select('id,titulo,tmdb_id,url,trailer,year,rating,description,poster,category,type,created_at,banner,backdrop,duration')
+      .order('created_at', { ascending: false })
+      .then(({ data, error: err }) => {
+        if (err) {
+          console.error('Supabase error:', err)
+          setError(`Erro ao carregar: ${err.message}`)
+          setLoading(false)
+          return
+        }
+        const rows = (data || []) as Cinema[]
+        setFilms(rows)
+        setLoading(false)
+      })
+  }, [])
+
+  // Função para extrair categorias válidas de um filme
+  const getFilmCategories = (filmCategory: string | null): string[] => {
+    if (!filmCategory) return []
+    
+    // Se contém vírgula, é múltiplas categorias
+    const cats = filmCategory.split(',').map(c => c.trim())
+    
+    // Filtrar apenas as categorias permitidas
+    return cats.filter(c => CATEGORY_ORDER.includes(c))
+  }
+
+  const filtered = category === 'all'
+    ? films
+    : films.filter(f => getFilmCategories(f.category).includes(category))
+
+  // Group by category when showing all
+  const grouped: Record<string, Cinema[]> = {}
+  if (category === 'all') {
+    CATEGORY_ORDER.forEach(cat => {
+      const items = films.filter(f => getFilmCategories(f.category).includes(cat))
+      if (items.length) grouped[cat] = items
+    })
+    // Uncategorized
+    const uncatItems = films.filter(f => getFilmCategories(f.category).length === 0)
+    if (uncatItems.length) grouped['Sem categoria'] = uncatItems
+  }
+
+  return (
+    <div style={{ paddingBottom: 60 }}>
+      {/* States */}
+      {loading && (
+        <div style={{ padding:'0 clamp(16px,4vw,60px)' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(100px,13vw,180px),1fr))',
+            gap: 'clamp(8px,1.2vw,14px)',
+          }}>
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="skeleton" style={{ aspectRatio:'2/3', borderRadius:10 }} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div style={{ textAlign:'center', padding:'60px 20px' }}>
+          <p style={{ color:'#ff6b6b', fontFamily:"'Open Sans',sans-serif", fontSize:14 }}>{error}</p>
+          <p style={{ color:'#888', fontFamily:"'Open Sans',sans-serif", fontSize:12, marginTop:8 }}>
+            Verifique se a tabela <code style={{color:'#d9a23a'}}>cinema</code> existe no Supabase e as RLS estão configuradas.
+          </p>
+        </div>
+      )}
+
+      {!loading && !error && films.length === 0 && (
+        <div style={{ textAlign:'center', padding:'80px 20px' }}>
+          <span style={{ fontSize:56 }}>🎬</span>
+          <p style={{ color:'#d9a23a', fontFamily:"'Inter',sans-serif", fontWeight:700, fontSize:18, marginTop:16 }}>
+            Nenhum filme na tabela cinema
+          </p>
+          <p style={{ color:'#666', fontFamily:"'Open Sans',sans-serif", fontSize:13, marginTop:8 }}>
+            Adicione registros na tabela <strong style={{color:'#d9a23a'}}>cinema</strong> no Supabase
+          </p>
+        </div>
+      )}
+
+      {!loading && !error && films.length > 0 && (
+        category === 'all' ? (
+          // Grouped by category
+          Object.entries(grouped).map(([cat, items]) => (
+            <section key={cat} style={{ padding:'0 clamp(16px,4vw,60px) clamp(20px,2.5vw,36px)' }}>
+              <h2 style={{
+                fontFamily:    "'Inter', sans-serif",
+                fontWeight:    800,
+                fontSize:      'clamp(13px,1.6vw,20px)',
+                color:         '#d9a23a',
+                marginBottom:  'clamp(10px,1.2vw,16px)',
+                borderLeft:    '4px solid #b40000',
+                paddingLeft:   12,
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+              }}>{cat}</h2>
+              <CinemaRow items={items} />
+            </section>
+          ))
+        ) : (
+          // Single category — grid
+          <section style={{ padding:'0 clamp(16px,4vw,60px)' }}>
+            <CinemaGridFull items={filtered} />
+          </section>
+        )
+      )}
+    </div>
+  )
+}
+
+/* ── Carrossel horizontal ── */
+function CinemaRow({ items }: { items: Cinema[] }) {
+  return (
+    <div style={{
+      display:          'flex',
+      gap:              'clamp(8px,1.1vw,14px)',
+      overflowX:        'auto',
+      paddingBottom:    6,
+      scrollbarWidth:   'none',
+      msOverflowStyle:  'none',
+    } as React.CSSProperties}>
+      {items.map(f => <CinemaCard key={f.id} film={f} />)}
+    </div>
+  )
+}
+
+/* ── Grade responsiva ── */
+function CinemaGridFull({ items }: { items: Cinema[] }) {
+  return (
+    <div style={{
+      display:             'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(100px,13vw,180px),1fr))',
+      gap:                 'clamp(8px,1.2vw,14px)',
+    }}>
+      {items.map(f => <CinemaCard key={f.id} film={f} />)}
+    </div>
+  )
+}
+
+/* ── Card individual ── */
+function CinemaCard({ film }: { film: Cinema }) {
+  const [hovered, setHovered] = useState(false)
+  const img = film.poster || film.banner || film.backdrop
+
+  const handleNavigate = () => {
+    window.location.href = `/detalhes/${film.id}`
+  }
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onTouchStart={() => setHovered(true)}
+      onTouchEnd={() => setHovered(false)}
+      onClick={handleNavigate}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          handleNavigate()
+        }
+      }}
+      tabIndex={0}
+      role="button"
+      style={{
+        flexShrink:  0,
+        width:       'clamp(100px,13vw,180px)',
+        aspectRatio: '2/3',
+        borderRadius: 10,
+        overflow:    'hidden',
+        position:    'relative',
+        cursor:      'pointer',
+        background:  '#1a0000',
+        boxShadow:   '0 4px 18px rgba(0,0,0,0.75), 0 1px 3px rgba(0,0,0,0.5)',
+        transform:   hovered ? 'scale(1.08) translateY(-4px)' : 'scale(1)',
+        transition:  'all 0.2s ease-out',
+        outline:     'none',
+      }}
+    >
+      {img ? (
+        <Image
+          src={img}
+          alt={film.titulo || ''}
+          fill
+          sizes="(max-width:640px) 40vw, (max-width:1280px) 15vw, 180px"
+          style={{ objectFit:'cover' }}
+          loading="lazy"
+          unoptimized
+        />
+      ) : (
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', fontSize:40 }}>🎬</div>
+      )}
+    </div>
+  )
+}

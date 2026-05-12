@@ -1,0 +1,600 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* FUNDOS */
+  --bg-primary: #0B0B0F;
+  --bg-secondary: #141414;
+  --bg-card: #1A1A1F;
+
+  /* TEXTOS */
+  --text-primary: #ECECEC;
+  --text-secondary: #A1A1AA;
+
+  /* DESTAQUES */
+  --gold-primary: #F5C76B;
+  --gold-hover: #FFD67A;
+
+  /* AÇÕES */
+  --red-primary: #E50914;
+  --red-hover: #FF1F2D;
+
+  /* BORDAS */
+  --border-primary: rgba(255,255,255,0.08);
+  --border-gold: rgba(245,199,107,0.45);
+
+  /* SOMBRAS */
+  --shadow-gold: 0 0 18px rgba(245,199,107,0.15);
+  --shadow-red: 0 0 18px rgba(229,9,20,0.25);
+  --r-card: 10px;
+
+  /* ESPAÇAMENTOS FLUIDOS */
+  --container-px: clamp(1rem, 5vw, 8rem);
+  --section-gap: clamp(2rem, 6vw, 5rem);
+}
+
+/* ─── Reset & Base ─────────────────────────────── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+*:focus {
+  outline: none;
+}
+
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: "Inter", "Open Sans", sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  font-size: clamp(14px, 1vw + 10px, 22px); /* Base de fonte que escala */
+}
+
+/* ─── Typography rules ─────────────────────────── */
+/* Títulos, menus e botões → Inter */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Inter', system-ui, sans-serif;
+  line-height: 1.2;
+}
+
+/* ─── Scrollbar ─────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--px-red); }
+
+/* ─── Card shadow & rounded ─────────────────────── */
+.card-base {
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.card-base:hover {
+  transform: scale(1.04) translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* ─── Card Poster & Wide ─────────────────────────── */
+.card-poster, .card-wide {
+  display: inline-block;
+  position: relative;
+  border-radius: var(--r-card);
+  overflow: hidden;
+  outline: none;
+  text-decoration: none;
+  transition: all 0.2s ease-out;
+}
+
+.card-poster:focus-visible, .card-wide:focus-visible {
+  outline: 3px solid #b40000;
+  outline-offset: 2px;
+}
+
+.card-poster:focus-visible > div, .card-wide:focus-visible > div {
+  transform: scale(1.08);
+}
+
+/* ─── Horizontal scroll row ─────────────────────── */
+.scroll-row {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  width: 100%;
+}
+.scroll-row::-webkit-scrollbar { display: none; }
+.scroll-row > * { scroll-snap-align: start; flex-shrink: 0; }
+
+/* ─── Skeleton shimmer ───────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #1a1a1a 25%, #2d2d2d 50%, #1a1a1a 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.6s infinite linear;
+  border-radius: var(--r-card);
+}
+
+/* ─── Banner hero transitions ────────────────────── */
+@keyframes heroFadeIn {
+  from { opacity: 0; transform: scale(1.03); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes flyEmoji {
+  0% { 
+    bottom: 20px; 
+    opacity: 1; 
+    transform: translateX(0) scale(1); 
+  }
+  100% { 
+    bottom: 80%; 
+    opacity: 0; 
+    transform: translateX(var(--emoji-drift)) scale(2); 
+  }
+}
+
+.emoji-reaction {
+  position: absolute;
+  pointer-events: none;
+  z-index: 10002;
+  animation: flyEmoji 3s ease-out forwards;
+  font-size: 2rem;
+}
+
+.hero-enter { animation: heroFadeIn 0.8s ease forwards; }
+
+/* ─── Page fade ──────────────────────────────────── */
+@keyframes pageFade {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-enter { animation: pageFade 0.4s ease forwards; }
+
+/* ─── Live pulse ─────────────────────────────────── */
+@keyframes livePing {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  60%       { transform: scale(2); opacity: 0; }
+}
+.live-ping { animation: livePing 1.4s ease-in-out infinite; }
+
+/* ─── Nav menu animation ─────────────────────────── */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.nav-dropdown { animation: slideDown 0.2s ease forwards; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.nav-mobile-enter { animation: slideUp 0.25s ease forwards; }
+
+/* ─── Progress bar ───────────────────────────────── */
+input[type="range"] { accent-color: var(--px-red); cursor: pointer; }
+
+/* ─── Rating badge ───────────────────────────────── */
+.rating-badge {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: clamp(0.7rem, 1.2vw, 1rem);
+  border: 1.5px solid currentColor;
+  padding: clamp(2px, 0.5vw, 6px) clamp(4px, 0.8vw, 8px);
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+}
+
+/* ─── Flag emoji sizing ─────────────────────────── */
+.country-flag { font-size: 20px; line-height: 1; }
+
+/* ─── Gradient text (gold) ──────────────────────── */
+.text-gradient-gold {
+  background: linear-gradient(135deg, var(--px-gold), var(--px-gold-l));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Responsive clamps ─────────────────────────── */
+/* Padrão Netflix: Desktop + SmartTV/4K */
+
+/* Logo/Menu principal: 22px (Web) → 36px (TV) */
+.text-logo {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(22px, 2.5vw, 36px);
+  line-height: 1.1;
+  color: var(--gold-primary);
+}
+
+/* Menu superior: PAIXÃOFLIX Premium 24px */
+.text-nav {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: clamp(16px, 1.2vw, 24px);
+  line-height: 1.3;
+  transition: all .3s ease;
+}
+
+/* Títulos Hero Banner: PAIXÃOFLIX Premium 72px */
+.text-hero-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(28px, 6vw, 92px);
+  line-height: 1.1;
+  color: #FFFFFF;
+}
+
+/* Descrição Hero Banner: PAIXÃOFLIX Premium 28px */
+.text-hero-desc {
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-weight: 400;
+  font-size: clamp(14px, 1.5vw, 26px);
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+/* Títulos de capas: PAIXÃOFLIX Premium 22px */
+.text-card-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1.3;
+  color: white;
+}
+
+/* Metadados: PAIXÃOFLIX Premium 18px */
+.text-metadata {
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: clamp(12px, 1.1vw, 20px);
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+/* Botões: PAIXÃOFLIX Premium 24px */
+.text-button {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(14px, 1.2vw, 22px);
+  line-height: 1.2;
+}
+
+/* Busca: PAIXÃOFLIX Premium 22px */
+.text-search {
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 22px;
+  line-height: 1.3;
+}
+
+/* Legendas/Subtítulos: 18px (Web) → 42px (TV) */
+.text-subtitle {
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-weight: 400;
+  font-size: clamp(18px, 3vw, 42px);
+  line-height: 1.5;
+}
+
+/* Títulos das seções: PAIXÃOFLIX Premium 34px Dourado */
+h2,
+.text-section-title {
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-weight: 700 !important;
+  font-size: clamp(20px, 2.5vw, 42px) !important;
+  line-height: 1.2 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gold-primary) !important;
+  text-shadow: var(--shadow-gold);
+  margin-bottom: 20px !important;
+}
+
+/* Cards de filmes e Navegação por Foco */
+.movie-card {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all .35s ease;
+  background: var(--bg-card);
+}
+
+.movie-card:hover, .tv-focus:focus {
+  transform: scale(1.08);
+  box-shadow: 0 0 25px rgba(0,0,0,0.6);
+  z-index: 99;
+}
+
+.movie-card:focus, .movie-card.active {
+  border: 3px solid var(--gold-primary);
+  box-shadow: 0 0 20px rgba(245,199,107,0.35);
+}
+
+/* ─── Card poster sizes (responsive) ────────────── */
+.card-poster {
+  aspect-ratio: 2 / 3;
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  width: clamp(120px, 15vw, 320px);
+}
+
+.card-poster:hover {
+  transform: scale(1.06) translateY(-3px);
+  box-shadow: var(--shadow-hover);
+  z-index: 2;
+}
+
+.card-wide {
+  width: clamp(180px, 22vw, 320px);
+  aspect-ratio: 16 / 9;
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.card-wide:hover {
+  transform: scale(1.04) translateY(-3px);
+  box-shadow: var(--shadow-hover);
+  z-index: 2;
+}
+
+/* ─── Detail page (Netflix-style) ───────────────── */
+.detail-backdrop {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 21/9;
+  max-height: 65vh;
+  overflow: hidden;
+}
+@media (max-width: 640px) {
+  .detail-backdrop { aspect-ratio: 16/9; max-height: 45vw; }
+}
+
+/* ─── Section padding responsive ────────────────── */
+.section-px {
+  padding-left:  clamp(16px, 4vw, 60px);
+  padding-right: clamp(16px, 4vw, 60px);
+}
+
+/* ─── Button styles (Inter font enforced) ────────── */
+.btn {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.1s ease, opacity 0.18s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: clamp(0.875rem, 2vw, 1.75rem);
+  padding: clamp(8px, 1.2vw, 18px) clamp(18px, 2.5vw, 28px);
+}
+.btn:active { transform: scale(0.96); }
+
+.btn-red {
+  background: var(--px-red);
+  color: #fff;
+}
+.btn-red:hover { background: var(--px-red-h); }
+
+.btn-ghost {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.18); }
+
+.btn-sm {
+  font-size: clamp(0.8rem, 1.5vw, 1.25rem);
+  padding: clamp(6px, 1vw, 12px) clamp(14px, 1.8vw, 20px);
+  border-radius: 6px;
+}
+
+/* ─── Overlay gradient helpers ───────────────────── */
+.overlay-bottom {
+  background: linear-gradient(to top, #000 0%, rgba(0,0,0,0.7) 40%, transparent 100%);
+}
+.overlay-left {
+  background: linear-gradient(to right, #000 0%, rgba(0,0,0,0.8) 35%, rgba(0,0,0,0.4) 65%, transparent 100%);
+}
+.overlay-full {
+  background: rgba(0,0,0,0.55);
+}
+
+/* ─── Mobile nav safe area ───────────────────────── */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); }
+
+/* ─── Hide scrollbar utility ─────────────────────── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── PAIXAOFLIX cinematographic typography ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
+:root {
+  --px-red:     #b40000;
+  --px-red-h:   #e00000;
+  --px-gold:    #d9a23a;
+  --px-gold-l:  #ffd36b;
+  --px-black:   #000000;
+  --px-dark:    #0a0000;
+  --px-surface: #140000;
+  --font-title: 'Inter', system-ui, sans-serif;
+  --font-body:  'Open Sans', system-ui, sans-serif;
+}
+
+h1,h2,h3,h4,h5,h6,
+button, nav, .font-title {
+  font-family: var(--font-title) !important;
+  font-optical-sizing: auto;
+}
+
+body, p, span, a, input, label, .font-body {
+  font-family: var(--font-body);
+}
+
+/* Scrollbar vermelha */
+::-webkit-scrollbar-thumb { background: #5a0000; }
+
+/* ─── Video.js Netflix Skin ─────────────────────── */
+.vjs-netflix-skin {
+  width: 100% !important;
+  height: 100% !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.vjs-netflix-skin .vjs-control-bar {
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%) !important;
+  height: 100px !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 40px !important;
+}
+
+/* Garante que o painel de volume seja visível e estilizado */
+.vjs-netflix-skin .vjs-volume-panel {
+  display: flex !important;
+}
+
+.vjs-netflix-skin .vjs-play-progress {
+  background-color: var(--red-primary) !important;
+}
+
+.vjs-netflix-skin .vjs-play-progress:before {
+  font-size: 1.5em !important;
+  top: -0.3em !important;
+}
+
+.vjs-netflix-skin .vjs-slider {
+  background-color: rgba(255,255,255,0.2) !important;
+  border-radius: 4px !important;
+}
+
+.vjs-netflix-skin .vjs-big-play-button {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  border: 3px solid #fff !important;
+  width: 120px !important;
+  height: 120px !important;
+  line-height: 120px !important;
+  border-radius: 50% !important;
+  top: 50% !important;
+  left: 50% !important;
+  margin-top: -60px !important;
+  margin-left: -60px !important;
+  transition: all 0.3s ease !important;
+  font-size: 4em !important;
+}
+
+.vjs-netflix-skin:hover .vjs-big-play-button {
+  background-color: var(--red-primary) !important;
+  border-color: var(--red-primary) !important;
+  transform: scale(1.1);
+}
+
+/* ─── PAIXÃOFLIX PREMIUM PLAYER SKIN ──────────────── */
+.vjs-netflix-skin.video-js {
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+}
+
+/* Barra de Progresso Vermelha Netflix */
+.vjs-netflix-skin .vjs-play-progress, 
+.vjs-netflix-skin .vjs-volume-level {
+  background-color: var(--red-primary) !important;
+}
+
+/* Slider e Buffer */
+.vjs-netflix-skin .vjs-load-progress {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Botão de Play Gigante Centralizado */
+.vjs-netflix-skin .vjs-big-play-button {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  border: 2px solid #fff !important;
+  width: 2em !important;
+  height: 2em !important;
+  line-height: 1.9em !important;
+  border-radius: 50% !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.vjs-netflix-skin:hover .vjs-big-play-button,
+.vjs-netflix-skin .vjs-big-play-button:focus {
+  background-color: var(--red-primary) !important;
+  border-color: var(--red-primary) !important;
+  transform: scale(1.1);
+  box-shadow: var(--shadow-red) !important;
+}
+
+/* Ícones dos botões de Seek (10s) e Glow de Foco */
+.vjs-netflix-skin .vjs-icon-replay-10:before { content: "\f119" !important; font-family: VideoJS !important; }
+.vjs-netflix-skin .vjs-icon-forward-10:before { content: "\f11a" !important; font-family: VideoJS !important; }
+
+.vjs-netflix-skin .vjs-control:focus,
+.vjs-netflix-skin .vjs-control:hover {
+  text-shadow: 0 0 15px var(--gold-primary) !important;
+  color: var(--gold-primary) !important;
+}
+
+/* Menu de Qualidade e Legendas Premium */
+.vjs-netflix-skin .vjs-menu-button-popup .vjs-menu .vjs-menu-content {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-primary) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+}
+
+.vjs-netflix-skin .vjs-menu-item:hover,
+.vjs-netflix-skin .vjs-menu-item.vjs-selected {
+  background-color: var(--gold-primary) !important;
+  color: #000 !important;
+}
+
+/* Glow de Foco Universal */
+.tv-focus:focus {
+  outline: none;
+  border: 3px solid var(--gold-primary) !important;
+  box-shadow: var(--shadow-gold) !important;
+  transform: scale(1.05);
+  z-index: 10;
+}
+
+/* Restrições para Convidados no Player */
+.vjs-guest-mode .vjs-play-control,
+.vjs-guest-mode .vjs-progress-control,
+.vjs-guest-mode .vjs-skip-backward,
+.vjs-guest-mode .vjs-skip-forward {
+  display: none !important;
+}
+
+/* Ajuste para o Player não ser coberto pelo header no mobile */
+@media (max-width: 640px) {
+  .emoji-reaction { font-size: 1.5rem; }
+}
+
+::-webkit-scrollbar-thumb:hover { background: var(--px-red); }
