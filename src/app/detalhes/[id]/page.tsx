@@ -297,7 +297,7 @@ function DetailContent({ params }: Props) {
 
           background-size: cover;
           background-position: center;
-          filter: brightness(1.1) contrast(1.05);
+          filter: brightness(0.9) contrast(1.05);
         }
 
         /* OVERLAY */
@@ -944,14 +944,21 @@ function DetailContent({ params }: Props) {
                     : movieData?.cast_names) || [];
                 
                 return castArray.length > 0 ? (
-                  castArray.slice(0, 4).map((actor: any, index: number) => (
+              {(() => {
+                const castArray = movieData?.credits?.cast || 
+                  (typeof movieData?.cast_names === 'string' 
+                    ? movieData.cast_names.split(',').map((n: string) => n.trim()) 
+                    : movieData?.cast_names) || [];
+                
+                return castArray.length > 0 ? (
+                  castArray.slice(0, 8).map((actor: any, index: number) => (
                   <div key={index} className="cast-member">
                     <div 
                       className="cast-photo" 
                       style={{ 
                         backgroundImage: actor.profile_path 
                           ? `url(${IMG.poster(actor.profile_path, 'w185')})` 
-                          : actor.image ? `url(${actor.image})`
+                          : (actor.image || actor.profile_path) ? `url(${IMG.poster(actor.profile_path || actor.image, 'w185')})`
                           : 'url(https://placehold.co/95x95/1a1a1f/F5C76B?text=Ator)'
                       }}
                     ></div>

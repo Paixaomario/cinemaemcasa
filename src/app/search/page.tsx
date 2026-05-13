@@ -1,22 +1,130 @@
-import { Suspense } from 'react'
+'use client'
+
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { createClient } from '@/lib/supabase'
 import { Navbar } from '@/components/layout/Navbar'
-import { SearchResults } from './SearchResults'
+import { IMG } from '@/lib/tmdb'
+import Link from 'next/link'
+import Image from 'next/image'
+
+export const dynamic = 'force-dynamic'
 
 export default function SearchPage() {
   return (
-    <div className="min-h-screen page-enter" style={{ background: '#000' }}>
+    <Suspense fallback={<div className="min-h-screen bg-black" />}>
+      <SearchContent />
+    </Suspense>
+  )
+}
+
+function SearchContent() {
+  const searchParams = useSearchParams()
+  const query = searchParams.get('q') || ''
+  const [results, setResults] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const sb = createClient()
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([])
+      return
+    }
+
+    async function doSearch() {
+      setLoading(true)
+      try {
+        // 1. Busca no Banco Local (tabela cinema)
+        const { data: localItems } = await sb
+          .from('cinema')
+          .select('*')
+          .ilike('titulo', `%${query}%`)
+          .limit(20)
+
+        // 2. Busca na TMDB API (Multi-search)
+        const TMDB_KEY = 'c80875e533c3933c04f981d33190df09' 
+        const tmdbRes = await fetch(
+          `https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(query)}&language=pt-BR`
+        ).then(r => r.json())
+
+        const tmdbItems = tmdbRes.results
+          ?.filter((i: any) => i.media_type === 'movie' || i.media_type === 'tv')
+          .map((item: any) => ({
+            id: `${item.media_type === 'tv' ? 'serie' : 'filme'}-${item.id}`,
+            titulo: item.title || item.name,
+            poster: item.poster_path ? IMG.poster(item.poster_path, 'w500') : null,
+            backdrop: item.backdrop_path ? IMG.backdrop(item.backdrop_path, 'w780') : null,
+            rating: item.vote_average,
+            year: item.release_date ? new Date(item.release_date).getFullYear() : item.first_air_date ? new Date(item.first_air_date).getFullYear() : null
+          })) || []
+
+        // Combinar resultados sem duplicados
+        const combined = [...(localItems || [])]
+        tmdbItems.forEach((tmdb: any) => {
+            if (!combined.find(c => String(c.id) === String(tmdb.id))) {
+                combined.push(tmdb)
+            }
+        })
+
+        setResults(combined)
+      } catch (err) {
+        console.error('Search error:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    const timer = setTimeout(doSearch, 400)
+    return () => clearTimeout(timer)
+  }, [query, sb])
+
+  return (
+    <main className="min-h-screen bg-[#0B0B0F] text-white">
       <Navbar />
-      <Suspense fallback={
-        <div className="section-px py-8">
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
-            {Array.from({ length: 14 }).map((_, i) => (
-              <div key={i} className="skeleton" style={{ aspectRatio: '2/3', borderRadius: '10px' }} />
-            ))}
+      
+      <div className="pt-32 md:pt-40 px-[var(--container-px)] pb-20 max-w-[2400px] mx-auto">
+        <header className="mb-12">
+          <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter">
+            Busca: <span className="text-[var(--gold-primary)]">{query || '...'}</span>
+          </h1>
+          <p className="text-gray-400 mt-2 font-bold uppercase tracking-widest text-xs">
+            {loading ? 'Buscando no acervo...' : `${results.length} títulos localizados`}
+          </p>
+        </header>
+
+        {results.length === 0 && !loading ? (
+          <div className="flex flex-col items-center justify-center py-32 opacity-20">
+            <span className="text-8xl mb-4">🎬</span>
+            <p className="text-2xl font-black uppercase">Nenhum conteúdo localizado</p>
           </div>
-        </div>
-      }>
-        <SearchResults />
-      </Suspense>
-    </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-12">
+            {results.map((item) => (
+              <Link key={item.id} href={`/detalhes/${item.id}`} className="card-poster group tv-focus">
+                {item.poster || item.backdrop ? (
+                  <Image 
+                    src={item.poster || item.backdrop} 
+                    alt={item.titulo || ''} 
+                    fill 
+                    className="object-cover transition-all duration-500 group-hover:scale-110" 
+                    unoptimized 
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-5xl bg-white/5 rounded-2xl">🎬</div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-5">
+                  <p className="text-sm font-black uppercase truncate text-white">{item.titulo}</p>
+                  <div className="flex items-center gap-3 mt-1">
+                    {item.rating > 0 && <span className="text-xs text-[var(--gold-primary)] font-black">⭐ {item.rating.toFixed(1)}</span>}
+                    {item.year && <span className="text-xs text-gray-400 font-bold">{item.year}</span>}
+                  </div>
+                </div>
+              </Link>
+            ))}
+            {loading && [1,2,3,4,5].map(i => <div key={i} className="skeleton aspect-[2/3] w-full" />)}
+          </div>
+        )}
+      </div>
+    </main>
   )
 }
