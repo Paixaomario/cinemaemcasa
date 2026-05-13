@@ -128,8 +128,9 @@ export function HomeClient() {
                 const data: any = type === 'filme' ? await getMovieDetails(Number(rawId)) : await getShowDetails(Number(rawId))
                 return {
                   id: idStr,
-                  titulo: (data as any).title || (data as any).name,
-                  poster: (data as any).poster_path ? `https://image.tmdb.org/t/p/w500${(data as any).poster_path}` : null,
+                  titulo: data.title || data.name,
+                  // Garante o uso do poster individual do filme, ignorando posters de coleção
+                  poster: data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : null,
                   last_position: p.last_position,
                   duration_seconds: (data as any).runtime * 60 || (data as any).episode_run_time?.[0] * 60 || 3600
                 }

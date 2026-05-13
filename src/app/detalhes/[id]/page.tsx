@@ -448,11 +448,14 @@ function DetailContent({ params }: Props) {
   // Efeito para embaralhar recomendações a cada carregamento
   useEffect(() => {
     if (movieData) {
-      const rawRecs = movieData.similar?.results || movieData.recommendations?.results || []
+      // Filtra as recomendações para garantir que o filme atual não apareça e que cada um seja individual
+      const rawRecs = (movieData.similar?.results || movieData.recommendations?.results || [])
+        .filter((movie: any) => String(movie.id) !== String(resolvedParams?.id?.split('-')[1]));
+
       if (rawRecs.length > 0) {
         const shuffled = [...rawRecs]
           .sort(() => Math.random() - 0.5)
-          .slice(0, 3)
+          .slice(0, 8) // Aumentado para mostrar mais opções individuais
         setShuffledRecommendations(shuffled)
       }
     }
