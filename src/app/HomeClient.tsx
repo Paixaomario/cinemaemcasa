@@ -325,7 +325,6 @@ function HomeCard({ item, showProgress }: { item: CinemaItem, showProgress?: boo
           sizes="(max-width:640px) 40vw, 180px"
           style={{ objectFit:'cover' }}
           loading="lazy"
-          // unoptimized // Removed to enable Next.js image optimization
         />
       ) : (
         <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', fontSize:40 }}>🎬</div>
