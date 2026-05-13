@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import { VideoPlayer } from './VideoPlayer'
+import { VideoPlayer } from './detalhes/[id]/VideoPlayer'
 import { Navbar } from '@/components/layout/Navbar'
 import { getMovieDetails, getShowDetails } from '@/lib/tmdb'
 import { HomeClient } from './HomeClient'

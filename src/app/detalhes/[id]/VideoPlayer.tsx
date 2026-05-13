@@ -376,7 +376,7 @@ export function VideoPlayer({
 
       {/* Chat Lateral PAIXÃOFLIX Premium */}
       {currentRoomId && showChat && (
-        <PartyChat roomId={currentRoomId} userName={guestName} onReaction={sendReaction} />
+        <PartyChat roomId={currentRoomId} userName={activeUserName} onReaction={sendReaction} />
       )}
     </div>
   )

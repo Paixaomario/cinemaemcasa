@@ -28,7 +28,8 @@ export default function PerfilPage() {
         const hydratedFavs = await Promise.all(
           favs.map(async (f) => {
             const idStr = String(f.content_id)
-            if (!idStr.includes('-')) {
+            // Verifica se é um ID numérico puro (Cinema local)
+            if (!isNaN(Number(idStr)) && !idStr.includes('-')) {
               const { data } = await sb.from('cinema').select('*').eq('id', f.content_id).single()
               return data
             }
