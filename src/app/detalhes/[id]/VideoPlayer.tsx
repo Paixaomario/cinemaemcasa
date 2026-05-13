@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 import Image from 'next/image'
 import videojs from 'video.js'
 import { createClient } from '@/lib/supabase'
@@ -18,8 +18,8 @@ import 'videojs-vtt-thumbnails'
 import 'videojs-overlay'
 
 // Registro de botões de Seek customizados (substituindo o plugin incompatível)
-const registerPlayerPlugins = (videojs: any) => {
-  const Button = videojs.getComponent('Button');
+const registerPlayerPlugins = (vjs: any) => {
+  const Button = vjs.getComponent('Button');
   
   // Define ícones padrão caso a fonte falhe, ensure it's only added once
   if (!document.getElementById('vjs-custom-icons-style')) {
@@ -32,7 +32,7 @@ const registerPlayerPlugins = (videojs: any) => {
     document.head.appendChild(style);
   }
 
-  if (!videojs.getComponent('SeekBackward')) {
+  if (!vjs.getComponent('SeekBackward')) {
     // Register SeekBackward button
     class SeekBackward extends (Button as any) {
       constructor(player: any, options: any) {
@@ -46,7 +46,7 @@ const registerPlayerPlugins = (videojs: any) => {
         return 'vjs-icon-replay-10 vjs-control vjs-button';
       }
     }
-    videojs.registerComponent('SeekBackward', SeekBackward as any);
+    vjs.registerComponent('SeekBackward', SeekBackward as any);
 
     // Register SeekForward button
     class SeekForward extends (Button as any) {
@@ -61,12 +61,12 @@ const registerPlayerPlugins = (videojs: any) => {
         return 'vjs-icon-forward-10 vjs-control vjs-button';
       }
     }
-    videojs.registerComponent('SeekForward', SeekForward as any);
+    vjs.registerComponent('SeekForward', SeekForward as any);
   }
 
   // Inicializa o plugin do Chromecast se ainda não foi registrado
-  if (typeof videojs.getComponent('ChromecastButton') === 'undefined') {
-    chromecast(videojs);
+  if (typeof vjs.getComponent('ChromecastButton') === 'undefined') {
+    chromecast(vjs);
   }
 };
 
@@ -113,16 +113,16 @@ export function VideoPlayer({
     setShowChat(true);
   }
 
-  const startParty = () => {
+  const startParty = useCallback(() => {
     const newRoomId = Math.random().toString(36).substring(2, 11)
     setCurrentRoomId(newRoomId)
     setShowChat(true)
     const url = new URL(window.location.href)
     url.searchParams.set('room', newRoomId)
     window.history.pushState({}, '', url)
-  }
+  }, [title]);
 
-  const copyInviteLink = () => {
+  const copyInviteLink = useCallback(() => {
     if (!currentRoomId) return
     const url = new URL(window.location.href)
     url.searchParams.set('room', currentRoomId)
@@ -137,7 +137,7 @@ export function VideoPlayer({
         btn.innerText = originalText
       }, 2000)
     }
-  }
+  }, [currentRoomId, title]);
 
   useEffect(() => {
     if (!isYouTube && !playerRef.current && videoRef.current && hasJoined) {

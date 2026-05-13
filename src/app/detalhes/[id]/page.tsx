@@ -522,8 +522,9 @@ function DetailContent({ params }: Props) {
       </div>
     )
   }
+
   return (
-    <>
+    <div className="min-h-screen bg-black">
       <Navbar />
       <style dangerouslySetInnerHTML={{ __html: CUSTOM_STYLES }} />
 
@@ -751,6 +752,6 @@ function DetailContent({ params }: Props) {
           isGuest={!!roomFromUrl}
         />
       )}
-    </>
+    </div>
   )
 }
