@@ -969,6 +969,8 @@ function DetailContent({ params }: Props) {
                   </div>
                 );
               })()}
+            </div>
+          </div>
 
           {/* RECOMENDAÇÕES */}
           <div className="box">
