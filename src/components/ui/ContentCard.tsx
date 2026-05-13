@@ -19,7 +19,9 @@ export function ContentCard({ item, variant = 'poster' }: Props) {
   const detailUrl = `/detalhes/${isMovie ? 'filme' : 'serie'}-${item.id}`
 
   return (
-    <Link href={detailUrl} className={variant === 'poster' ? 'card-poster' : 'card-wide'} title={title}>
+    <Link href={detailUrl} className={`${variant === 'poster' ? 'card-poster' : 'card-wide'} tv-focus`} title={title}
+      onFocus={(e) => e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })}
+    >
       <div 
         className="relative h-full w-full bg-gray-900"
         onMouseEnter={() => setHovered(true)}

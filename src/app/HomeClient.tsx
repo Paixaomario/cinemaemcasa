@@ -285,6 +285,7 @@ function HomeCard({ item, showProgress }: { item: any, showProgress?: boolean })
       onTouchStart={() => setHovered(true)}
       onTouchEnd={() => setHovered(false)}
       onClick={() => window.location.href = detailUrl}
+      onFocus={(e) => e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault()

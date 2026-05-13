@@ -127,7 +127,7 @@ h1, h2, h3, h4, h5, h6 {
   scrollbar-width: none;
   width: 100%;
 }
-.scroll-row::-webkit-scrollbar { display: none; }
+.scroll-row::-webkit-scrollbar { display: none !important; }
 .scroll-row > * { scroll-snap-align: start; flex-shrink: 0; }
 
 /* ─── Skeleton shimmer ───────────────────────────── */
@@ -349,6 +349,7 @@ h2,
   cursor: pointer;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
   width: var(--card-poster-w);
+  scroll-margin: 0 40px; /* Garante espaço ao dar scroll por foco */
 }
 
 .card-poster:hover {
@@ -367,6 +368,7 @@ h2,
   position: relative;
   cursor: pointer;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
+  scroll-margin: 0 40px;
 }
 .card-wide:hover {
   transform: scale(1.04) translateY(-3px);
