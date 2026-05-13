@@ -160,8 +160,8 @@ function Section({ title, items, color, emptyMsg }: { title: string, items: any[
                   src={item.poster || item.backdrop} 
                   alt={item.titulo} 
                   fill 
-                  className="object-cover transition-transform group-hover:scale-110" 
-                  unoptimized 
+                  className="object-cover transition-transform group-hover:scale-110"
+                  // unoptimized // Removed to enable Next.js image optimization
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-5xl">🎬</div>

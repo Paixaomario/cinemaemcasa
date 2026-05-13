@@ -50,7 +50,7 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
   const country = getOriginCountry(item)
   const genres  = getGenreNames(item)
   const flag    = countryFlag(country)
-  const cert    = (item as any).certification || ''
+  const cert    = item.certification || ''
   const desc    = item.overview || ''
   const backdropUrl = IMG.original(item.backdrop_path) // 4K/original quality
 
@@ -87,7 +87,7 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
         className="absolute inset-0 flex flex-col justify-end section-px cursor-pointer tv-focus"
         style={{ paddingBottom: 'clamp(20px, 4vw, 60px)', opacity: visible ? 1 : 0, transition: 'opacity 0.6s ease' }}
         onClick={() => {
-          const isMovie = (item as any).media_type === 'movie' || (item as TMDBMovie).title !== undefined
+          const isMovie = item.media_type === 'movie' || 'title' in item
           const detailUrl = `/detalhes/${isMovie ? 'filme' : 'serie'}-${item.id}`
           router.push(detailUrl)
         }}
@@ -95,7 +95,7 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault()
-            const isMovie = (item as any).media_type === 'movie' || (item as TMDBMovie).title !== undefined
+            const isMovie = item.media_type === 'movie' || 'title' in item
             const detailUrl = `/detalhes/${isMovie ? 'filme' : 'serie'}-${item.id}`
             router.push(detailUrl)
           }

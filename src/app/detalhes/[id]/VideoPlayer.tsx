@@ -21,15 +21,19 @@ import 'videojs-overlay'
 const registerPlayerPlugins = (videojs: any) => {
   const Button = videojs.getComponent('Button');
   
-  // Define ícones padrão caso a fonte falhe
-  const style = document.createElement('style');
-  style.innerHTML = `
-    .vjs-icon-replay-10:before { content: "\\f119" !important; }
-    .vjs-icon-forward-10:before { content: "\\f11a" !important; }
-  `;
-  document.head.appendChild(style);
+  // Define ícones padrão caso a fonte falhe, ensure it's only added once
+  if (!document.getElementById('vjs-custom-icons-style')) {
+    const style = document.createElement('style');
+    style.id = 'vjs-custom-icons-style';
+    style.innerHTML = `
+      .vjs-icon-replay-10:before { content: "\\f119" !important; }
+      .vjs-icon-forward-10:before { content: "\\f11a" !important; }
+    `;
+    document.head.appendChild(style);
+  }
 
   if (!videojs.getComponent('SeekBackward')) {
+    // Register SeekBackward button
     class SeekBackward extends (Button as any) {
       constructor(player: any, options: any) {
         super(player, options);
@@ -44,6 +48,7 @@ const registerPlayerPlugins = (videojs: any) => {
     }
     videojs.registerComponent('SeekBackward', SeekBackward as any);
 
+    // Register SeekForward button
     class SeekForward extends (Button as any) {
       constructor(player: any, options: any) {
         super(player, options);
@@ -221,6 +226,11 @@ export function VideoPlayer({
       if (playerRef.current) {
         playerRef.current.dispose();
         playerRef.current = null;
+      }
+      // Clean up the dynamically added style tag
+      const styleTag = document.getElementById('vjs-custom-icons-style');
+      if (styleTag) {
+        document.head.removeChild(styleTag);
       }
     };
   }, [src, isYouTube, hasJoined, backdrop, startOffset, thumbnailsVtt, onNext]); 

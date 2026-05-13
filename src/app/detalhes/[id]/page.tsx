@@ -1,7 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation' // Import useRouter
 import React, { useEffect, useState, Suspense } from 'react'
 import { createClient } from '@/lib/supabase'
 import { IMG, getMovieDetails, getShowDetails, countryFlag, formatRuntime, getMovieCertification, getShowCertification, getTitle } from '@/lib/tmdb'
@@ -27,6 +27,7 @@ export default function DetailPage(props: Props) {
 }
 
 function DetailContent({ params }: Props) {
+  const router = useRouter() // Initialize useRouter
   const { user } = useAuth()
   const searchParams = useSearchParams()
   const roomFromUrl = searchParams.get('room')
@@ -983,10 +984,10 @@ function DetailContent({ params }: Props) {
                     className="recommend-card card-poster tv-focus" 
                     tabIndex={0}
                     onFocus={(e) => e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })}
-                    onClick={() => window.location.href = `/detalhes/${movie.media_type === 'tv' ? 'serie' : 'filme'}-${movie.id}`}
+                    onClick={() => router.push(`/detalhes/${movie.media_type === 'tv' ? 'serie' : 'filme'}-${movie.id}`)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
-                        window.location.href = `/detalhes/${movie.media_type === 'tv' ? 'serie' : 'filme'}-${movie.id}`
+                        router.push(`/detalhes/${movie.media_type === 'tv' ? 'serie' : 'filme'}-${movie.id}`)
                       }
                     }}
                   >

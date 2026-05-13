@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, CSSProperties } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { HeroBanner } from '@/components/sections/HeroBanner'
 import { buildBannerPool, getMovieDetails, getShowDetails, TMDBMovie, TMDBShow } from '@/lib/tmdb'
@@ -20,8 +21,8 @@ interface HomeSection {
   ativo: boolean
 }
 
-interface CinemaItem {
-  id: number
+export interface CinemaItem {
+  id: number | string
   titulo: string | null
   poster: string | null
   banner: string | null
@@ -32,6 +33,8 @@ interface CinemaItem {
   type: string | null
   url: string | null
   duration: string | null
+  last_position?: number
+  duration_seconds?: number
 }
 
 export function HomeClient() {
@@ -66,40 +69,39 @@ export function HomeClient() {
       setSections(sections)
 
       // ── 2. Para cada seção fonte=cinema, buscar filmes ───
-      const map: Record<string, CinemaItem[]> = {}
-
-      for (const sec of sections) {
-        if (sec.fonte !== 'cinema') continue
+      const sectionsPromises = sections.map(async (sec) => {
+        if (sec.fonte !== 'cinema') return { id: sec.id, items: [] };
 
         let q = sb
           .from('cinema')
           .select('id,titulo,poster,banner,backdrop,year,rating,category,type,url,duration')
 
-        // Filtrar por categorias (se houver)
         if (sec.categorias && sec.categorias.length > 0) {
           q = q.in('category', sec.categorias)
         }
 
-        // Ordenação
         switch (sec.ordenacao) {
           case 'rating_desc':     q = q.order('rating',     { ascending: false, nullsFirst: false }); break
           case 'year_desc':       q = q.order('year',       { ascending: false, nullsFirst: false }); break
-          case 'created_at_desc': q = q.order('created_at', { ascending: false, nullsFirst: false }); break
           default:                q = q.order('created_at', { ascending: false, nullsFirst: false }); break
         }
 
-        q = q.limit(50) // Aumentado para permitir rolagem total do acervo
+        q = q.limit(50)
 
         const { data, error: filmErr } = await q
 
         if (filmErr) {
           console.error(`cinema error (sec ${sec.titulo}):`, filmErr)
-        } else {
-          map[sec.id] = (data || []) as CinemaItem[]
+          return { id: sec.id, items: [] }
         }
-      }
+        return { id: sec.id, items: (data || []) as CinemaItem[] }
+      })
 
-      setItemsMap(map)
+      const resolvedSections = await Promise.all(sectionsPromises)
+      const newItemsMap: Record<string, CinemaItem[]> = {}
+      resolvedSections.forEach(res => { newItemsMap[res.id] = res.items })
+
+      setItemsMap(newItemsMap)
 
       // ── 2.1. Buscar "Continuar Assistindo" ───────────────
       if (user) {
@@ -248,18 +250,18 @@ function EmptyState() {
   )
 }
 
-function RowLayout({ items, showProgress }: { items: any[]; showProgress?: boolean }) {
+function RowLayout({ items, showProgress }: { items: CinemaItem[]; showProgress?: boolean }) {
   return (
     <div style={{
       display:'flex', gap:'clamp(12px, 1.5vw, 24px)',
       overflowX:'auto', paddingBottom:8, scrollbarWidth:'none',
-    } as React.CSSProperties}>
+    } as CSSProperties}>
       {items.map(item => <HomeCard key={item.id} item={item} showProgress={showProgress} />)}
     </div>
   )
 }
 
-function GridLayout({ items }: { items: any[] }) {
+function GridLayout({ items }: { items: CinemaItem[] }) {
   return (
     <div style={{
       display:'grid',
@@ -271,13 +273,13 @@ function GridLayout({ items }: { items: any[] }) {
   )
 }
 
-function HomeCard({ item, showProgress }: { item: any, showProgress?: boolean }) {
+function HomeCard({ item, showProgress }: { item: CinemaItem, showProgress?: boolean }) {
   const router = useRouter()
   const [hovered, setHovered] = useState(false)
   const img = item.poster || item.banner || item.backdrop
   
-  const detailUrl = String(item.id).includes('-') ? `/detalhes/${item.id}` : `/detalhes/${item.id}`
-  const progressPercent = item.last_position && item.duration_seconds ? (item.last_position / item.duration_seconds) * 100 : 0
+  const detailUrl = `/detalhes/${item.id}`
+  const progressPercent = (item.last_position && item.duration_seconds) ? (item.last_position / item.duration_seconds) * 100 : 0
 
   return (
     <div
@@ -323,14 +325,14 @@ function HomeCard({ item, showProgress }: { item: any, showProgress?: boolean })
           sizes="(max-width:640px) 40vw, 180px"
           style={{ objectFit:'cover' }}
           loading="lazy"
-          unoptimized
+          // unoptimized // Removed to enable Next.js image optimization
         />
       ) : (
         <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', fontSize:40 }}>🎬</div>
       )}
 
       {/* Barra de progresso Netflix */}
-      {showProgress && item.last_position > 0 && (
+      {showProgress && item.last_position && item.last_position > 0 && (
         <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 4, background: 'rgba(255,255,255,0.2)' }}>
           <div style={{ 
             width: `${Math.min(progressPercent, 100)}%`, 
