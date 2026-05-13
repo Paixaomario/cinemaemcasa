@@ -38,8 +38,8 @@ export function HomeClient() {
   const { user } = useAuth()
   const [sections,   setSections]   = useState<HomeSection[]>([])
   const [itemsMap,   setItemsMap]   = useState<Record<string, CinemaItem[]>>({})
-  const [continueWatching, setContinueWatching] = useState<any[]>([])
-  const [bannerPool, setBannerPool] = useState<any[]>([])
+  const [continueWatching, setContinueWatching] = useState<CinemaItem[]>([])
+  const [bannerPool, setBannerPool] = useState<Array<TMDBMovie | TMDBShow>>([])
   const [loading,    setLoading]    = useState(true)
   const [dbError,    setDbError]    = useState('')
 
@@ -112,18 +112,18 @@ export function HomeClient() {
           .limit(10)
 
         if (progressData && progressData.length > 0) {
-          const hydratedItems = await Promise.all(
+          const hydratedItems: any[] = await Promise.all(
             progressData.map(async (p) => {
               const idStr = String(p.content_id)
               // Se for ID local (tabela cinema)
               if (!idStr.includes('-')) {
                 const { data } = await sb.from('cinema').select('*').eq('id', p.content_id).single()
-                return { ...data, last_position: p.last_position, duration_seconds: data?.duration_seconds || 3600 }
+                return { ...data, last_position: p.last_position, duration_seconds: (data as any)?.duration_seconds || 3600 }
               } 
               // Se for ID TMDB
               const [type, rawId] = idStr.split('-')
               try {
-                const data = type === 'filme' ? await getMovieDetails(Number(rawId)) : await getShowDetails(Number(rawId))
+                const data: any = type === 'filme' ? await getMovieDetails(Number(rawId)) : await getShowDetails(Number(rawId))
                 return {
                   id: idStr,
                   titulo: (data as any).title || (data as any).name,
@@ -223,8 +223,8 @@ export function HomeClient() {
               }}>{sec.titulo}</h2>
 
               {sec.layout === 'grid'
-                ? <GridLayout items={items} limite={sec.limite} />
-                : <RowLayout  items={items} limite={sec.limite} />
+                ? <GridLayout items={items} />
+                : <RowLayout  items={items} showProgress={false} />
               }
             </section>
           )
@@ -248,7 +248,7 @@ function EmptyState() {
   )
 }
 
-function RowLayout({ items, limite, showProgress }: { items: any[]; limite: number; showProgress?: boolean }) {
+function RowLayout({ items, showProgress }: { items: any[]; showProgress?: boolean }) {
   return (
     <div style={{
       display:'flex', gap:'clamp(12px, 1.5vw, 24px)',
