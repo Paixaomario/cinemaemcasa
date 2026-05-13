@@ -251,7 +251,7 @@ function EmptyState() {
 function RowLayout({ items, limite, showProgress }: { items: any[]; limite: number; showProgress?: boolean }) {
   return (
     <div style={{
-      display:'flex', gap:'clamp(8px,1.1vw,14px)',
+      display:'flex', gap:'clamp(12px, 1.5vw, 24px)',
       overflowX:'auto', paddingBottom:8, scrollbarWidth:'none',
     } as React.CSSProperties}>
       {items.slice(0, limite).map(item => <HomeCard key={item.id} item={item} showProgress={showProgress} />)}
@@ -263,8 +263,8 @@ function GridLayout({ items, limite }: { items: any[]; limite: number }) {
   return (
     <div style={{
       display:'grid',
-      gridTemplateColumns:'repeat(auto-fill, minmax(clamp(120px, 15vw, 280px), 1fr))',
-      gap:'clamp(12px, 1.5vw, 24px)',
+      gridTemplateColumns:'repeat(5, 1fr)',
+      gap:'clamp(16px, 2vw, 32px)',
     }}>
       {items.slice(0, limite).map(item => <HomeCard key={item.id} item={item} />)}
     </div>
@@ -295,7 +295,7 @@ function HomeCard({ item, showProgress }: { item: any, showProgress?: boolean })
       role="link"
       style={{
         flexShrink:  0,
-        width:       'clamp(100px,13vw,180px)',
+        width:       'clamp(160px, 17vw, 500px)',
         aspectRatio: '2/3',
         borderRadius: 14,
         overflow:    'hidden',

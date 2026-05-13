@@ -296,13 +296,13 @@ h2,
 .text-section-title {
   font-family: 'Inter', system-ui, sans-serif !important;
   font-weight: 700 !important;
-  font-size: clamp(20px, 2.5vw, 42px) !important;
+  font-size: clamp(24px, 3vw, 56px) !important;
   line-height: 1.2 !important;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--gold-primary) !important;
   text-shadow: var(--shadow-gold);
-  margin-bottom: 20px !important;
+  margin-bottom: 28px !important;
 }
 
 /* Cards de filmes e Navegação por Foco */
@@ -335,7 +335,8 @@ h2,
   position: relative;
   cursor: pointer;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
-  width: clamp(120px, 15vw, 320px);
+  /* Ajustado para ~5 por tela (17vw * 5 = 85vw + margens) */
+  width: clamp(160px, 17vw, 500px);
 }
 
 .card-poster:hover {
