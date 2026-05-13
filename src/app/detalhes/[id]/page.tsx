@@ -245,7 +245,7 @@ function DetailContent({ params }: Props) {
   return (
     <>
       <Navbar />
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         /* =========================================================
            PAIXAOFLIX - PÁGINA DETALHES (MODELO 4)
            CSS COMPLETO PARA WINDSURF / HTML PURO
@@ -944,40 +944,31 @@ function DetailContent({ params }: Props) {
                     : movieData?.cast_names) || [];
                 
                 return castArray.length > 0 ? (
-              {(() => {
-                const castArray = movieData?.credits?.cast || 
-                  (typeof movieData?.cast_names === 'string' 
-                    ? movieData.cast_names.split(',').map((n: string) => n.trim()) 
-                    : movieData?.cast_names) || [];
-                
-                return castArray.length > 0 ? (
                   castArray.slice(0, 8).map((actor: any, index: number) => (
-                  <div key={index} className="cast-member">
-                    <div 
-                      className="cast-photo" 
-                      style={{ 
-                        backgroundImage: actor.profile_path 
-                          ? `url(${IMG.poster(actor.profile_path, 'w185')})` 
-                          : (actor.image || actor.profile_path) ? `url(${IMG.poster(actor.profile_path || actor.image, 'w185')})`
-                          : 'url(https://placehold.co/95x95/1a1a1f/F5C76B?text=Ator)'
-                      }}
-                    ></div>
-                    <div className="cast-name text-card-title">
-                      {typeof actor === 'string' ? actor : actor?.name || 'Ator'}
+                    <div key={index} className="cast-member">
+                      <div 
+                        className="cast-photo" 
+                        style={{ 
+                          backgroundImage: actor.profile_path 
+                            ? `url(${IMG.poster(actor.profile_path, 'w185')})` 
+                            : (actor.image || actor.profile_path) ? `url(${IMG.poster(actor.profile_path || actor.image, 'w185')})`
+                            : 'url(https://placehold.co/95x95/1a1a1f/F5C76B?text=Ator)'
+                        }}
+                      ></div>
+                      <div className="cast-name text-card-title">
+                        {typeof actor === 'string' ? actor : actor?.name || 'Ator'}
+                      </div>
+                      <div className="cast-role text-metadata">
+                        {typeof actor === 'object' ? actor?.character || 'Personagem' : 'Personagem'}
+                      </div>
                     </div>
-                    <div className="cast-role text-metadata">
-                      {typeof actor === 'object' ? actor?.character || 'Personagem' : 'Personagem'}
-                    </div>
-                  </div>
-                ))
+                  ))
                 ) : (
                   <div className="text-gray-400 italic py-10 text-center w-full">
                     Informações de elenco não disponíveis para este título.
                   </div>
                 );
               })()}
-            </div>
-          </div>
 
           {/* RECOMENDAÇÕES */}
           <div className="box">

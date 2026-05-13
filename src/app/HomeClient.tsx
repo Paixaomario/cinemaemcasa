@@ -254,7 +254,7 @@ function RowLayout({ items, limite, showProgress }: { items: any[]; limite: numb
       display:'flex', gap:'clamp(12px, 1.5vw, 24px)',
       overflowX:'auto', paddingBottom:8, scrollbarWidth:'none',
     } as React.CSSProperties}>
-      {items.slice(0, limite).map(item => <HomeCard key={item.id} item={item} showProgress={showProgress} />)}
+      {items.map(item => <HomeCard key={item.id} item={item} showProgress={showProgress} />)}
     </div>
   )
 }
