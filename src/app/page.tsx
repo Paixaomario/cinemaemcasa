@@ -1,14 +1,25 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
+import Image from 'next/image'
 import { useParams, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import { VideoPlayer } from './detalhes/[id]/VideoPlayer'
+import { VideoPlayer } from './detalhes/[id]/VideoPlayer' 
 import { Navbar } from '@/components/layout/Navbar'
 import { getMovieDetails, getShowDetails } from '@/lib/tmdb'
 import { HomeClient } from './HomeClient'
 import { IMG } from '@/lib/tmdb'
 
-export default function DetailsPage() {
+export const dynamic = 'force-dynamic'
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black" />}>
+      <DetailsPage />
+    </Suspense>
+  )
+}
+
+function DetailsPage() {
   const params = useParams()
   const id = params?.id
   const searchParams = useSearchParams()
