@@ -259,14 +259,14 @@ function RowLayout({ items, limite, showProgress }: { items: any[]; limite: numb
   )
 }
 
-function GridLayout({ items, limite }: { items: any[]; limite: number }) {
+function GridLayout({ items }: { items: any[] }) {
   return (
     <div style={{
       display:'grid',
       gridTemplateColumns:'repeat(5, 1fr)',
       gap:'clamp(16px, 2vw, 32px)',
     }}>
-      {items.slice(0, limite).map(item => <HomeCard key={item.id} item={item} />)}
+      {items.map(item => <HomeCard key={item.id} item={item} />)}
     </div>
   )
 }

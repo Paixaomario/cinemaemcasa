@@ -245,7 +245,7 @@ function DetailContent({ params }: Props) {
   return (
     <>
       <Navbar />
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style jsx>{`
         /* =========================================================
            PAIXAOFLIX - PÁGINA DETALHES (MODELO 4)
            CSS COMPLETO PARA WINDSURF / HTML PURO
