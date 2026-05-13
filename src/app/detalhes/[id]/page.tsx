@@ -1,8 +1,8 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useRouter, useSearchParams } from 'next/navigation' // Import useRouter
-import React, { useEffect, useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import React, { useEffect, useState, Suspense, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import { IMG, getMovieDetails, getShowDetails, countryFlag, formatRuntime, getMovieCertification, getShowCertification, getTitle } from '@/lib/tmdb'
 import { notFound } from 'next/navigation'
@@ -26,8 +26,287 @@ export default function DetailPage(props: Props) {
   )
 }
 
+const CUSTOM_STYLES = `
+  /* =========================================================
+     PAIXAOFLIX - PÁGINA DETALHES (MODELO 4)
+     CSS COMPLETO PARA WINDSURF / HTML PURO
+     Paleta: Preto + Vermelho + Dourado
+     ========================================================= */
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  .page-container {
+    width: 100%;
+    min-height: calc(100vh - 120px);
+    margin-top: 120px;
+    border-radius: 0;
+    border: none;
+    overflow: visible;
+    background: linear-gradient(180deg, #1f1a1a 0%, #121212 100%);
+    box-shadow: none;
+  }
+
+  .hero {
+    width: 100%;
+    height: 470px;
+    display: flex;
+    background: #000;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 50px;
+  }
+
+  .hero-bg {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.9) contrast(1.05);
+  }
+
+  .hero-overlay {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.4) 0%,
+      rgba(0, 0, 0, 0.3) 35%,
+      rgba(0, 0, 0, 0.1) 70%,
+      rgba(0, 0, 0, 0.05) 100%
+    );
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    padding: 40px var(--container-px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+  }
+
+  .text-hero-title { font-size: 38px !important; }
+  .text-hero-desc { font-size: 18px !important; }
+
+  .movie-meta {
+    display: flex;
+    gap: 22px;
+    color: rgba(255, 255, 255, 0.75);
+    align-items: center;
+  }
+
+  .meta-age {
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-weight: 900;
+    background: rgba(255, 180, 40, 0.15);
+    border: 2px solid rgba(255, 180, 40, 0.55);
+    color: #ffd36b;
+  }
+
+  .movie-description {
+    width: 100%;
+    max-width: 650px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.82);
+  }
+
+  .hero-buttons {
+    display: flex;
+    gap: 18px;
+    margin-top: 12px;
+  }
+
+  .btn-primary {
+    height: 62px;
+    padding: 0 28px;
+    border-radius: 10px;
+    border: 2px solid rgba(255, 0, 0, 0.6);
+    background: linear-gradient(180deg, #c20000 0%, #6a0000 100%);
+    color: #ffcc55;
+    font-size: 18px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: 0.2s ease;
+  }
+
+  .btn-primary:hover { transform: scale(1.04); }
+
+  .btn-secondary {
+    height: 62px;
+    padding: 0 28px;
+    border-radius: 10px;
+    border: 2px solid rgba(255, 180, 40, 0.55);
+    background: rgba(0, 0, 0, 0.55);
+    color: #ffd36b;
+    font-size: 18px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: 0.2s ease;
+  }
+
+  .btn-secondary:hover { transform: scale(1.04); border-color: rgba(255, 220, 120, 0.85); }
+
+  .btn-tertiary {
+    height: 62px;
+    padding: 0 28px;
+    border-radius: 10px;
+    border: 2px solid rgba(255, 180, 40, 0.4);
+    background: rgba(0, 0, 0, 0.35);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 18px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: 0.2s ease;
+  }
+
+  .btn-tertiary:hover { transform: scale(1.04); border-color: rgba(255, 220, 120, 0.75); color: #ffd36b; }
+
+  .action-icons { display: flex; gap: 34px; margin-top: 18px; }
+
+  .action-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.2s ease;
+  }
+
+  .action-item:hover { color: #ffd36b; transform: scale(1.05); }
+
+  .action-item .icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 180, 40, 0.5);
+    background: rgba(255, 180, 40, 0.06);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #d9a23a;
+    font-size: 18px;
+  }
+
+  .middle-sections {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 18px;
+    padding: 20px var(--container-px);
+    margin-top: 60px;
+  }
+
+  .box {
+    background: rgba(35, 35, 35, 0.7);
+    border-radius: 18px;
+    border: 2px solid rgba(255, 180, 40, 0.25);
+    padding: 18px;
+  }
+
+  .box-title {
+    text-transform: uppercase;
+    color: #d9a23a;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .box-title span { color: rgba(255, 255, 255, 0.65); cursor: pointer; }
+  .box-title span:hover { color: #ffd36b; }
+
+  .cast-grid { display: flex; gap: 18px; justify-content: space-between; }
+  .cast-member { width: 140px; text-align: center; }
+  .cast-photo {
+    width: 95px;
+    height: 95px;
+    border-radius: 50%;
+    margin: 0 auto 10px auto;
+    border: 3px solid rgba(255, 180, 40, 0.55);
+    background-size: cover;
+    background-position: center;
+  }
+  .cast-name { font-weight: 900; color: #ffd36b; }
+  .cast-role { margin-top: 4px; color: rgba(255, 255, 255, 0.65); }
+
+  .recommend-grid { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 6px; }
+  .recommend-grid::-webkit-scrollbar { height: 6px; }
+  .recommend-grid::-webkit-scrollbar-thumb { background: rgba(255, 180, 40, 0.35); border-radius: 10px; }
+
+  .recommend-card {
+    min-width: 140px;
+    height: 210px;
+    border-radius: 14px;
+    border: 2px solid rgba(255, 0, 0, 0.4);
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    background: #111;
+    transition: 0.2s ease;
+  }
+
+  .recommend-card:hover { transform: scale(1.04); border-color: rgba(255, 180, 40, 0.7); }
+  .recommend-poster { width: 100%; height: 100%; background-size: cover; background-position: center; filter: brightness(0.9); }
+  .recommend-rating {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-weight: 900;
+    background: rgba(0, 0, 0, 0.65);
+    border: 1px solid rgba(255, 180, 40, 0.45);
+    color: #ffd36b;
+  }
+
+  .details-footer { width: 100%; padding: 18px var(--container-px) 28px var(--container-px); position: relative; z-index: 15; }
+  .details-box {
+    width: 100%;
+    border-radius: 18px;
+    border: 2px solid rgba(255, 180, 40, 0.25);
+    background: rgba(0, 0, 0, 0.55);
+    padding: 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 18px;
+  }
+  .details-item { line-height: 1.6; color: rgba(255, 255, 255, 0.8); }
+  .details-item b { color: #d9a23a; font-weight: 900; }
+
+  @media (max-width: 980px) {
+    .middle-sections { grid-template-columns: 1fr; padding: 20px 15px; }
+    .hero { height: auto; min-height: 60vh; }
+    .hero-content { padding: 20px 15px; }
+    .details-box { grid-template-columns: 1fr; }
+    .cast-grid { flex-wrap: wrap; justify-content: center; gap: 15px; }
+    .hero-buttons { flex-direction: column; gap: 12px; }
+  }
+
+  ::-webkit-scrollbar-thumb:hover { background: var(--px-red); }
+`;
+
 function DetailContent({ params }: Props) {
-  const router = useRouter() // Initialize useRouter
+  const router = useRouter()
   const { user } = useAuth()
   const searchParams = useSearchParams()
   const roomFromUrl = searchParams.get('room')
@@ -223,11 +502,11 @@ function DetailContent({ params }: Props) {
     else alert('Trailer não disponível para este título.')
   }
 
-  const handleNextEpisode = () => {
+  const handleNextEpisode = useCallback(() => {
     // Lógica para ir para o próximo episódio (se for série)
     console.log('Próximo episódio!')
-    // router.push(`/detalhes/serie-${movieData.id}/temporada-${nextSeason}/episodio-${nextEpisode}`)
-  }
+  }, []);
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#000' }}>
@@ -246,608 +525,7 @@ function DetailContent({ params }: Props) {
   return (
     <>
       <Navbar />
-      <style dangerouslySetInnerHTML={{ __html: `
-        /* =========================================================
-           PAIXAOFLIX - PÁGINA DETALHES (MODELO 4)
-           CSS COMPLETO PARA WINDSURF / HTML PURO
-           Paleta: Preto + Vermelho + Dourado
-           ========================================================= */
-
-        /* ===== RESET ===== */
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-
-        /* ===== CONTAINER PRINCIPAL ===== */
-        .page-container {
-          width: 100%;
-          min-height: calc(100vh - 120px);
-          margin-top: 120px;
-          border-radius: 0;
-          border: none;
-          overflow: visible;
-
-          background: linear-gradient(180deg, #1f1a1a 0%, #121212 100%);
-          box-shadow: none;
-        }
-
-        /* TOPBAR REMOVIDA - USA NAVBAR GLOBAL */
-
-        /* =========================================================
-           HERO SECTION
-           ========================================================= */
-        .hero {
-          width: 100%;
-          height: 470px;
-          display: flex;
-
-          background: #000;
-          position: relative;
-          overflow: hidden;
-          margin-bottom: 50px;
-        }
-
-        /* FUNDO IMAGEM */
-        .hero-bg {
-          width: 100%;
-          height: 100%;
-          position: absolute;
-          inset: 0;
-
-          background-size: cover;
-          background-position: center;
-          filter: brightness(0.9) contrast(1.05);
-        }
-
-        /* OVERLAY */
-        .hero-overlay {
-          width: 100%;
-          height: 100%;
-          position: absolute;
-          inset: 0;
-
-          background: linear-gradient(
-            90deg,
-            rgba(0, 0, 0, 0.4) 0%,
-            rgba(0, 0, 0, 0.3) 35%,
-            rgba(0, 0, 0, 0.1) 70%,
-            rgba(0, 0, 0, 0.05) 100%
-          ); /* Sombra superior removida para clarear Navbar */
-        }
-
-        /* CONTEÚDO HERO */
-        .hero-content {
-          position: relative;
-          z-index: 10;
-          width: 100%;
-          padding: 40px var(--container-px);
-
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          gap: 14px;
-        }
-
-        /* PADRONIZAÇÃO DO TAMANHO DO TÍTULO */
-        .text-hero-title {
-          font-size: 38px !important;
-        }
-
-        /* PADRONIZAÇÃO DO TAMANHO DA DESCRIÇÃO */
-        .text-hero-desc {
-          font-size: 18px !important;
-        }
-
-        /* METADADOS */
-        .movie-meta {
-          display: flex;
-          gap: 22px;
-          color: rgba(255, 255, 255, 0.75);
-          align-items: center;
-        }
-
-        .meta-age {
-          padding: 3px 10px;
-          border-radius: 6px;
-          font-weight: 900;
-
-          background: rgba(255, 180, 40, 0.15);
-          border: 2px solid rgba(255, 180, 40, 0.55);
-          color: #ffd36b;
-        }
-
-        /* SINOPSE */
-        .movie-description {
-          width: 100%;
-          max-width: 650px;
-          line-height: 1.5;
-          color: rgba(255, 255, 255, 0.82);
-        }
-
-        /* BOTÕES HERO */
-        .hero-buttons {
-          display: flex;
-          gap: 18px;
-          margin-top: 12px;
-        }
-
-        /* BOTÃO PRIMÁRIO */
-        .btn-primary {
-          height: 62px;
-          padding: 0 28px;
-
-          border-radius: 10px;
-          border: 2px solid rgba(255, 0, 0, 0.6);
-
-          background: linear-gradient(180deg, #c20000 0%, #6a0000 100%);
-          color: #ffcc55;
-
-          font-size: 18px;
-          font-weight: 900;
-
-          display: flex;
-          align-items: center;
-          gap: 12px;
-
-          cursor: pointer;
-          transition: 0.2s ease;
-        }
-
-        .btn-primary:hover {
-          transform: scale(1.04);
-        }
-
-        /* BOTÃO SECUNDÁRIO */
-        .btn-secondary {
-          height: 62px;
-          padding: 0 28px;
-
-          border-radius: 10px;
-          border: 2px solid rgba(255, 180, 40, 0.55);
-
-          background: rgba(0, 0, 0, 0.55);
-          color: #ffd36b;
-
-          font-size: 18px;
-          font-weight: 900;
-
-          display: flex;
-          align-items: center;
-          gap: 12px;
-
-          cursor: pointer;
-          transition: 0.2s ease;
-        }
-
-        .btn-secondary:hover {
-          transform: scale(1.04);
-          border-color: rgba(255, 220, 120, 0.85);
-        }
-
-        /* BOTÃO TERCIÁRIO */
-        .btn-tertiary {
-          height: 62px;
-          padding: 0 28px;
-
-          border-radius: 10px;
-          border: 2px solid rgba(255, 180, 40, 0.4);
-
-          background: rgba(0, 0, 0, 0.35);
-          color: rgba(255, 255, 255, 0.85);
-
-          font-size: 18px;
-          font-weight: 800;
-
-          display: flex;
-          align-items: center;
-          gap: 12px;
-
-          cursor: pointer;
-          transition: 0.2s ease;
-        }
-
-        .btn-tertiary:hover {
-          transform: scale(1.04);
-          border-color: rgba(255, 220, 120, 0.75);
-          color: #ffd36b;
-        }
-
-        /* =========================================================
-           ACTION ICONS (Trailer / Favorito / Assistir Depois / Cinema)
-           ========================================================= */
-        .action-icons {
-          display: flex;
-          gap: 34px;
-          margin-top: 18px;
-        }
-
-        .action-item {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-
-          color: rgba(255, 255, 255, 0.85);
-          font-size: 16px;
-          cursor: pointer;
-
-          transition: 0.2s ease;
-        }
-
-        .action-item:hover {
-          color: #ffd36b;
-          transform: scale(1.05);
-        }
-
-        .action-item .icon {
-          width: 42px;
-          height: 42px;
-
-          border-radius: 50%;
-          border: 2px solid rgba(255, 180, 40, 0.5);
-          background: rgba(255, 180, 40, 0.06);
-
-          display: flex;
-          justify-content: center;
-          align-items: center;
-
-          color: #d9a23a;
-          font-size: 18px;
-        }
-
-        /* =========================================================
-           SECTION: ELENCO + RECOMENDAÇÕES
-           ========================================================= */
-        .middle-sections {
-          display: grid;
-          grid-template-columns: 1fr 1.3fr;
-          gap: 18px;
-
-          padding: 20px var(--container-px);
-          position: relative;
-          top: 0;
-          margin-top: 60px;
-          order: 1;
-        }
-
-        /* BOX PADRÃO */
-        .box {
-          background: rgba(35, 35, 35, 0.7);
-          border-radius: 18px;
-          border: 2px solid rgba(255, 180, 40, 0.25);
-          padding: 18px;
-        }
-
-        /* TITULO BOX */
-        .box-title {
-          text-transform: uppercase;
-          color: #d9a23a;
-          margin-bottom: 14px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .box-title span {
-          color: rgba(255, 255, 255, 0.65);
-          cursor: pointer;
-        }
-
-        .box-title span:hover {
-          color: #ffd36b;
-        }
-
-        /* =========================================================
-           ELENCO
-           ========================================================= */
-        .cast-grid {
-          display: flex;
-          gap: 18px;
-          justify-content: space-between;
-        }
-
-        .cast-member {
-          width: 140px;
-          text-align: center;
-        }
-
-        .cast-photo {
-          width: 95px;
-          height: 95px;
-          border-radius: 50%;
-
-          margin: 0 auto 10px auto;
-
-          border: 3px solid rgba(255, 180, 40, 0.55);
-          background-size: cover;
-          background-position: center;
-        }
-
-        .cast-name {
-          font-weight: 900;
-          color: #ffd36b;
-        }
-
-        .cast-role {
-          margin-top: 4px;
-          color: rgba(255, 255, 255, 0.65);
-        }
-
-        /* =========================================================
-           RECOMENDAÇÕES
-           ========================================================= */
-        .recommend-grid {
-          display: flex;
-          gap: 14px;
-          overflow-x: auto;
-          padding-bottom: 6px;
-        }
-
-        .recommend-grid::-webkit-scrollbar {
-          height: 6px;
-        }
-
-        .recommend-grid::-webkit-scrollbar-thumb {
-          background: rgba(255, 180, 40, 0.35);
-          border-radius: 10px;
-        }
-
-        .recommend-card {
-          min-width: 140px;
-          height: 210px;
-
-          border-radius: 14px;
-          border: 2px solid rgba(255, 0, 0, 0.4);
-
-          overflow: hidden;
-          cursor: pointer;
-          position: relative;
-
-          background: #111;
-          transition: 0.2s ease;
-        }
-
-        .recommend-card:hover {
-          transform: scale(1.04);
-          border-color: rgba(255, 180, 40, 0.7);
-        }
-
-        .recommend-poster {
-          width: 100%;
-          height: 100%;
-          background-size: cover;
-          background-position: center;
-          filter: brightness(0.9);
-        }
-
-        .recommend-rating {
-          position: absolute;
-          bottom: 10px;
-          left: 10px;
-
-          padding: 6px 10px;
-          border-radius: 10px;
-
-          font-weight: 900;
-
-          background: rgba(0, 0, 0, 0.65);
-          border: 1px solid rgba(255, 180, 40, 0.45);
-          color: #ffd36b;
-        }
-
-        /* =========================================================
-           FOOTER DETALHES
-           ========================================================= */
-        .details-footer {
-          width: 100%;
-          padding: 18px var(--container-px) 28px var(--container-px);
-          position: relative;
-          z-index: 15;
-        }
-
-        .details-box {
-          width: 100%;
-          border-radius: 18px;
-          border: 2px solid rgba(255, 180, 40, 0.25);
-          background: rgba(0, 0, 0, 0.55);
-
-          padding: 18px;
-          display: grid;
-          grid-template-columns: 1fr 1fr 1fr;
-          gap: 18px;
-        }
-
-        .details-item {
-          line-height: 1.6;
-          color: rgba(255, 255, 255, 0.8);
-        }
-
-        .details-item b {
-          color: #d9a23a;
-          font-weight: 900;
-        }
-
-        /* =========================================================
-           RESPONSIVIDADE
-           ========================================================= */
-        @media (max-width: 1250px) {
-          .middle-sections {
-            padding: 20px var(--container-px);
-          }
-
-          .details-footer {
-            padding: 18px var(--container-px) 28px var(--container-px);
-          }
-        }
-
-        @media (max-width: 980px) {
-          .middle-sections {
-            grid-template-columns: 1fr;
-            padding: 20px 15px;
-          }
-
-          .topbar-menu {
-            display: none;
-          }
-
-          .text-hero-title {
-            font-size: 27px !important;
-          }
-
-          .hero {
-            height: auto;
-            min-height: 60vh;
-          }
-
-          .hero-content {
-            padding: 20px 15px;
-          }
-
-          .details-box {
-            grid-template-columns: 1fr;
-          }
-
-          .cast-grid {
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-          }
-
-          .hero-buttons {
-            flex-direction: column;
-            gap: 12px;
-          }
-
-          .action-icons {
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-          }
-        }
-
-        @media (max-width: 768px) {
-          .topbar {
-            padding: 0 15px;
-            height: 70px;
-          }
-
-          .brand-name {
-            font-size: 20px;
-          }
-
-          .topbar-left img {
-            width: 40px;
-          }
-
-          .btn-login {
-            height: 40px;
-            padding: 0 12px;
-            font-size: 14px;
-          }
-
-          .search-box {
-            width: 50px;
-            height: 40px;
-          }
-
-          .text-hero-title {
-            font-size: 22px !important;
-          }
-
-          .movie-meta {
-            font-size: 16px;
-            gap: 15px;
-          }
-
-          .text-hero-desc {
-            font-size: 14px !important;
-          }
-
-          .btn-primary, .btn-secondary, .btn-tertiary {
-            height: 50px;
-            font-size: 16px;
-            padding: 0 20px;
-          }
-
-          .cast-member {
-            width: 120px;
-          }
-
-          .cast-photo {
-            width: 80px;
-            height: 80px;
-          }
-
-          .recommend-card {
-            min-width: 120px;
-            height: 180px;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .hero-content {
-            padding: 15px 10px;
-          }
-
-          .text-hero-title {
-            font-size: 17px !important;
-          }
-
-          .movie-meta {
-            font-size: 14px;
-            gap: 10px;
-            flex-wrap: wrap;
-          }
-
-          .text-hero-desc {
-            font-size: 12px !important;
-          }
-
-          .btn-primary, .btn-secondary, .btn-tertiary {
-            height: 45px;
-            font-size: 14px;
-            padding: 0 15px;
-            gap: 8px;
-          }
-
-          .action-item {
-            font-size: 14px;
-          }
-
-          .action-item .icon {
-            width: 35px;
-            height: 35px;
-            font-size: 16px;
-          }
-
-          .cast-member {
-            width: 100px;
-          }
-
-          .cast-photo {
-            width: 70px;
-            height: 70px;
-          }
-
-          .cast-name {
-            font-size: 12px;
-          }
-
-          .cast-role {
-            font-size: 10px;
-          }
-
-          .recommend-card {
-            min-width: 100px;
-            height: 150px;
-          }
-
-          .details-item {
-            font-size: 13px;
-          }
-        }
-      ` }} />
+      <style dangerouslySetInnerHTML={{ __html: CUSTOM_STYLES }} />
 
       <div className="page-container">
 
@@ -967,7 +645,7 @@ function DetailContent({ params }: Props) {
                   <div className="text-gray-400 italic py-10 text-center w-full">
                     Informações de elenco não disponíveis para este título.
                   </div>
-                );
+                )
               })()}
             </div>
           </div>
