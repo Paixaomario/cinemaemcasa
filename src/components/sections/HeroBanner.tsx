@@ -84,13 +84,14 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
 
       {/* Content — metadata only, NO buttons */}
       <div
-        className="absolute inset-0 flex flex-col justify-end section-px cursor-pointer"
+        className="absolute inset-0 flex flex-col justify-end section-px cursor-pointer tv-focus"
         style={{ paddingBottom: 'clamp(20px, 4vw, 60px)', opacity: visible ? 1 : 0, transition: 'opacity 0.6s ease' }}
         onClick={() => {
           const isMovie = (item as any).media_type === 'movie' || (item as TMDBMovie).title !== undefined
           const detailUrl = `/detalhes/${isMovie ? 'filme' : 'serie'}-${item.id}`
           router.push(detailUrl)
         }}
+        onFocus={(e) => e.currentTarget.scrollIntoView({ behavior: 'smooth' })}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault()

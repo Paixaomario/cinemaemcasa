@@ -201,7 +201,7 @@ export function HomeClient() {
             borderColor:   'var(--gold-primary)',
             paddingLeft:   12,
           }}>Continuar Assistindo</h2>
-          <RowLayout items={continueWatching} limite={10} showProgress />
+          <RowLayout items={continueWatching} showProgress />
         </section>
       )}
 
