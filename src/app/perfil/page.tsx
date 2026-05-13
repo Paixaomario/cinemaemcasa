@@ -153,7 +153,7 @@ function Section({ title, items, color, emptyMsg }: { title: string, items: any[
             <Link 
               key={item.id} 
               href={`/detalhes/${item.id}`}
-              className="group relative block aspect-[2/3] rounded-2xl overflow-hidden bg-[#1A1A1F] border-2 border-transparent hover:border-[var(--gold-primary)] transition-all hover:scale-105 shadow-2xl"
+              className="card-poster group"
             >
               {item.poster || item.backdrop ? (
                 <Image 

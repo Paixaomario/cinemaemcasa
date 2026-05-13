@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
+import Image from 'next/image'
 
 interface Message {
   id: string
@@ -16,7 +17,7 @@ interface UserPresence {
 interface PartyChatProps { 
   roomId: string, 
   userName: string, 
-  userAvatar?: string, // Adicionado avatar do anfitrião
+  userAvatar?: string, 
   onReaction?: (emoji: string) => void 
 }
 
@@ -91,7 +92,7 @@ export function PartyChat({ roomId, userName, userAvatar, isHost, onReaction }: 
   }
 
   return (
-    <div className="flex flex-col h-full w-full sm:w-[clamp(300px,25vw,500px)] bg-black/95 sm:bg-black/60 border-l border-white/10 backdrop-blur-xl z-[10005] fixed right-0 top-0 sm:relative shadow-2xl">
+    <div className="flex flex-col h-full w-full sm:w-80 bg-black/90 sm:bg-black/60 border-l border-white/10 backdrop-blur-lg z-[10005] fixed right-0 top-0 sm:relative">
       <div className="p-4 border-b border-white/5 bg-gradient-to-r from-[#1A1A1F] to-black">
         <h3 className="text-[#F5C76B] font-bold uppercase tracking-widest text-sm flex items-center gap-2">
           <span className="live-ping w-2 h-2 bg-red-600 rounded-full"></span>
@@ -114,6 +115,7 @@ export function PartyChat({ roomId, userName, userAvatar, isHost, onReaction }: 
         {REACTIONS.map(emoji => (
           <button 
             key={emoji} 
+            tabIndex={0}
             onClick={() => {
               console.log("Reaction clicked:", emoji); // Debug para garantir o clique
               onReaction?.(emoji);
@@ -140,6 +142,7 @@ export function PartyChat({ roomId, userName, userAvatar, isHost, onReaction }: 
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          tabIndex={0}
           placeholder="Diga algo..."
           className="w-full bg-[#1A1A1F] border border-white/10 rounded-full px-4 py-2 text-sm text-white focus:border-[#F5C76B] focus:ring-1 focus:ring-[#F5C76B] outline-none transition-all"
         />

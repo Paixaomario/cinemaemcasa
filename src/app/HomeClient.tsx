@@ -162,7 +162,7 @@ export function HomeClient() {
               <div className="skeleton" style={{ width:240, height:30, borderRadius:6, marginBottom:14 }} />
               <div style={{ display:'flex', gap:12 }}>
                 {Array.from({ length:5 }).map((_,j) => (
-                  <div key={j} className="skeleton" style={{ width:'clamp(100px,13vw,180px)', aspectRatio:'2/3', borderRadius:10, flexShrink:0 }} />
+                  <div key={j} className="skeleton" style={{ width:'var(--card-poster-w)', aspectRatio:'2/3', borderRadius:10, flexShrink:0 }} />
                 ))}
               </div>
             </div>
@@ -295,20 +295,21 @@ function HomeCard({ item, showProgress }: { item: any, showProgress?: boolean })
       role="link"
       style={{
         flexShrink:  0,
-        width:       'clamp(160px, 17vw, 500px)',
+        width:       'var(--card-poster-w)',
         aspectRatio: '2/3',
         borderRadius: 14,
         overflow:    'hidden',
         position:    'relative',
         cursor:      'pointer',
         background:  'var(--bg-card)',
-        boxShadow:   hovered ? '0 0 25px rgba(0,0,0,0.6)' : '0 4px 18px rgba(0,0,0,0.75)',
-        transform:   hovered ? 'scale(1.08)' : 'scale(1)',
-        transition:  'all .35s ease',
+        boxShadow:   hovered ? '0 10px 30px rgba(0,0,0,0.8)' : '0 4px 18px rgba(0,0,0,0.75)',
+        transform:   hovered ? 'scale(1.05)' : 'scale(1)',
+        transition:  'all .4s cubic-bezier(0.165, 0.84, 0.44, 1)',
         outline:     'none',
         zIndex:      hovered ? 99 : 1,
-        border:      hovered ? '3px solid var(--gold-primary)' : 'none',
+        border:      '2px solid transparent',
       }}
+      className="tv-focus"
     >
       {img ? (
         <Image

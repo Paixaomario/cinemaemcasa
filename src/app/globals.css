@@ -30,8 +30,12 @@
   --r-card: 10px;
 
   /* ESPAÇAMENTOS FLUIDOS */
-  --container-px: clamp(1rem, 5vw, 8rem);
+  --container-px: clamp(1rem, 3vw, 3.5rem);
   --section-gap: clamp(2rem, 6vw, 5rem);
+
+  /* PADRONIZAÇÃO DE CAPAS (Padrão 5 por linha) */
+  --card-poster-w: clamp(163px, 17.34vw, 510px);
+  --card-wide-w: clamp(184px, 22.44vw, 326px);
 }
 
 /* ─── Reset & Base ─────────────────────────────── */
@@ -39,6 +43,15 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* Foco Universal Suave para Smart TVs e Teclado */
+*:focus-visible {
+  outline: none;
+  border: 2px solid var(--gold-primary) !important;
+  box-shadow: 0 0 15px rgba(245, 199, 107, 0.25) !important;
+  transform: scale(1.05);
+  z-index: 50;
 }
 
 *:focus {
@@ -335,8 +348,7 @@ h2,
   position: relative;
   cursor: pointer;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
-  /* Ajustado para ~5 por tela (17vw * 5 = 85vw + margens) */
-  width: clamp(160px, 17vw, 500px);
+  width: var(--card-poster-w);
 }
 
 .card-poster:hover {
@@ -346,7 +358,7 @@ h2,
 }
 
 .card-wide {
-  width: clamp(180px, 22vw, 320px);
+  width: var(--card-wide-w);
   aspect-ratio: 16 / 9;
   border-radius: var(--r-card);
   box-shadow: var(--shadow-card);
@@ -376,8 +388,8 @@ h2,
 
 /* ─── Section padding responsive ────────────────── */
 .section-px {
-  padding-left:  clamp(16px, 4vw, 60px);
-  padding-right: clamp(16px, 4vw, 60px);
+  padding-left:  var(--container-px);
+  padding-right: var(--container-px);
 }
 
 /* ─── Button styles (Inter font enforced) ────────── */
@@ -577,12 +589,11 @@ body, p, span, a, input, label, .font-body {
 }
 
 /* Glow de Foco Universal */
-.tv-focus:focus {
+.tv-focus:focus-visible {
   outline: none;
-  border: 3px solid var(--gold-primary) !important;
-  box-shadow: var(--shadow-gold) !important;
-  transform: scale(1.05);
-  z-index: 10;
+  border: 2px solid var(--gold-primary) !important;
+  box-shadow: 0 0 12px rgba(245, 199, 107, 0.3) !important;
+  transition: all 0.3s ease-out;
 }
 
 /* Restrições para Convidados no Player */

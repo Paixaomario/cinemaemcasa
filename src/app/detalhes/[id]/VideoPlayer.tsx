@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 import Image from 'next/image'
 import videojs from 'video.js'
 import { createClient } from '@/lib/supabase'
@@ -77,11 +77,12 @@ interface Props {
   partyRoomId?: string | null
   isGuest?: boolean
   backdrop?: string | null
+  shouldStartParty?: boolean // New prop to indicate if a party should be started
 }
 
 export function VideoPlayer({ 
   src, title, contentId, userId, startOffset = 0, 
-  onClose, onNext, thumbnailsVtt, partyRoomId, isGuest, backdrop
+  onClose, onNext, thumbnailsVtt, partyRoomId, isGuest, backdrop, shouldStartParty
 }: Props) {
   const videoRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<any>(null)
@@ -89,7 +90,7 @@ export function VideoPlayer({
   const [showChat, setShowChat] = useState(!!currentRoomId && !isGuest)
   const [reactions, setReactions] = useState<any[]>([])
   
-  // Controle de entrada na sala para convidados
+  // Controle de entrada na sala para convidados e anfitriões
   const [hasJoined, setHasJoined] = useState(!isGuest)
   const [nameInput, setNameInput] = useState('')
   const [activeUserName, setActiveUserName] = useState(isGuest ? '' : 'Anfitrião')
@@ -120,7 +121,8 @@ export function VideoPlayer({
     if (!currentRoomId) return
     const url = new URL(window.location.href)
     url.searchParams.set('room', currentRoomId)
-    navigator.clipboard.writeText(url.toString())
+    const inviteMsg = `🍿 Vamos assistir "${title}" comigo? Acesse: ${url.toString()}`
+    navigator.clipboard.writeText(inviteMsg)
     
     const btn = document.getElementById('copy-link-btn')
     if (btn) {
@@ -209,85 +211,69 @@ export function VideoPlayer({
         if (startOffset > 0) {
           player.currentTime(startOffset);
         }
-
-        // 7. Chromecast Initialization
-        if (player.chromecast) {
-          player.chromecast({
-            addButtonToControlBar: false,
-          });
-        }
-
-        // 8. Sincronização Assistir Juntos (Realtime Broadcast)
-        if (currentRoomId) {
-          const channel = sb.channel(`sync-${currentRoomId}`)
-          
-          if (!isGuest) {
-            // Host envia comandos
-            player.on('play', () => channel.send({ type: 'broadcast', event: 'play', payload: { time: player.currentTime() } }))
-            player.on('pause', () => channel.send({ type: 'broadcast', event: 'pause', payload: { time: player.currentTime() } }))
-            player.on('seeking', () => channel.send({ type: 'broadcast', event: 'seek', payload: { time: player.currentTime() } }))
-            player.on('ratechange', () => channel.send({ type: 'broadcast', event: 'rate', payload: { rate: player.playbackRate() } }))
-          } else {
-            // Convidado recebe comandos
-            channel
-            .on('broadcast', { event: 'play' }, ({ payload }) => {
-              const drift = Math.abs(player.currentTime() - payload.time)
-              if (drift > 2) player.currentTime(payload.time)
-              player.play()
-            })
-            .on('broadcast', { event: 'pause' }, () => player.pause())
-            .on('broadcast', { event: 'seek' }, ({ payload }) => player.currentTime(payload.time))
-            .on('broadcast', { event: 'rate' }, ({ payload }) => player.playbackRate(payload.rate))
-          }
-          
-          channel
-          .on('broadcast', { event: 'reaction' }, ({ payload }) => {
-            const id = Date.now()
-            setReactions(prev => [...prev, { id, emoji: payload.emoji, left: Math.random() * 80 + 10 }])
-            setTimeout(() => setReactions(prev => prev.filter(r => r.id !== id)), 3000)
-          }).subscribe()
-        }
       })
+    }
+    return () => {
+      if (playerRef.current) {
+        playerRef.current.dispose();
+        playerRef.current = null;
+      }
+    };
+  }, [src, isYouTube, hasJoined]); // Somente reinicia se o vídeo ou o status de entrada mudar
 
-      // Salvamento de progresso automático (a cada 10 segundos)
+  // NOVO EFEITO: Apenas para Sincronização e Realtime
+  useEffect(() => {
+    if (currentRoomId && playerRef.current) {
+      const player = playerRef.current;
+      const channel = sb.channel(`sync-${currentRoomId}`);
+      
+      if (!isGuest) {
+        player.on('play', () => channel.send({ type: 'broadcast', event: 'play', payload: { time: player.currentTime() } }));
+        player.on('pause', () => channel.send({ type: 'broadcast', event: 'pause' }));
+        player.on('seeking', () => channel.send({ type: 'broadcast', event: 'seek', payload: { time: player.currentTime() } }));
+      } else {
+        channel
+          .on('broadcast', { event: 'play' }, ({ payload }) => {
+            const drift = Math.abs(player.currentTime() - payload.time);
+            if (drift > 2) player.currentTime(payload.time);
+            player.play();
+          })
+          .on('broadcast', { event: 'pause' }, () => player.pause())
+          .on('broadcast', { event: 'seek' }, ({ payload }) => player.currentTime(payload.time));
+      }
+
+      channel.on('broadcast', { event: 'reaction' }, ({ payload }) => {
+        const id = Date.now();
+        setReactions(prev => [...prev, { id, emoji: payload.emoji, left: Math.random() * 80 + 10 }]);
+        setTimeout(() => setReactions(prev => prev.filter(r => r.id !== id)), 3000);
+      }).subscribe();
+
+      return () => { sb.removeChannel(channel); };
+    }
+  }, [currentRoomId, isGuest, sb]);
+
+  // Efeito para salvar progresso
+  useEffect(() => {
+    if (playerRef.current && userId && contentId && !isGuest) {
+      const player = playerRef.current;
       let lastSaved = 0;
       player.on('timeupdate', () => {
         const now = Math.floor(player.currentTime());
-        
-        // Só salva progresso se tiver IDs válidos e não for convidado
-        const hasValidContent = contentId && String(contentId) !== 'undefined'
-        if (!isGuest && userId && hasValidContent && now > 0 && now % 10 === 0 && now !== lastSaved) {
+        if (now > 0 && now % 10 === 0 && now !== lastSaved) {
           lastSaved = now;
-          const isFinished = player.duration() > 0 && (now / player.duration()) > 0.95;
-          
           sb.from('view_progress').upsert(
-            { 
-              user_id: userId, 
-              content_id: String(contentId), 
-              last_position: now,
-              is_finished: isFinished 
-            },
+            { user_id: userId, content_id: String(contentId), last_position: now },
             { onConflict: 'user_id,content_id' }
-          ).then(({ error }) => {
-            if (error) console.error('Erro ao salvar progresso:', error.message);
-          });
+          );
         }
-      })
-
-      player.on('ended', () => {
-        if (onNext) {
-          onNext();
-        }
-      })
+      });
     }
+  }, [userId, contentId, isGuest, sb]);
 
-    return () => {
-      if (playerRef.current) {
-        playerRef.current.dispose()
-        playerRef.current = null
-      }
-    }
-  }, [src, isYouTube, contentId, userId, startOffset, thumbnailsVtt, onNext, currentRoomId, isGuest, sb])
+  // Effect to automatically start a party if shouldStartParty is true
+  useEffect(() => {
+    if (shouldStartParty && !isGuest && !currentRoomId) startParty()
+  }, [shouldStartParty, isGuest, currentRoomId, startParty])
 
   const sendReaction = (emoji: string) => {
     if (currentRoomId) {
@@ -296,6 +282,11 @@ export function VideoPlayer({
         event: 'reaction',
         payload: { emoji }
       })
+
+      // Feedback visual local imediato
+      const id = Date.now()
+      setReactions(prev => [...prev, { id, emoji, left: Math.random() * 80 + 10 }])
+      setTimeout(() => setReactions(prev => prev.filter(r => r.id !== id)), 3000)
     }
   }
 
@@ -316,7 +307,7 @@ export function VideoPlayer({
       <div className="absolute top-0 left-0 right-0 p-8 z-[10001] flex items-center justify-between bg-gradient-to-b from-black/90 via-black/40 to-transparent pointer-events-none">
         <button 
           onClick={onClose}
-          className="flex items-center gap-4 text-white text-2xl font-bold hover:text-[var(--gold-primary)] transition-colors pointer-events-auto"
+          className="flex items-center gap-4 text-white text-2xl font-bold hover:text-[var(--gold-primary)] focus-visible:text-[var(--gold-primary)] transition-colors pointer-events-auto outline-none" // Added tabIndex={0}
         >
           <span className="text-2xl">←</span>
           <span className="uppercase tracking-widest text-[12px] font-medium opacity-70">{title}</span>
@@ -324,7 +315,7 @@ export function VideoPlayer({
 
         <div className="flex gap-2">
           {!currentRoomId && !isGuest && (
-            <button 
+            <button tabIndex={0}
               onClick={startParty}
               className="p-3 bg-[var(--red-primary)] text-white rounded-full hover:bg-[var(--red-hover)] transition-all pointer-events-auto text-sm font-bold uppercase"
             >
@@ -334,14 +325,14 @@ export function VideoPlayer({
           
           {currentRoomId && (
             <>
-              <button 
+              <button tabIndex={0}
                 id="copy-link-btn"
                 onClick={copyInviteLink}
                 className="p-3 bg-white/10 rounded-full hover:bg-white/20 transition-all pointer-events-auto text-sm font-bold uppercase"
               >
                 🔗 Convidar
               </button>
-              <button 
+              <button tabIndex={0}
                 onClick={() => setShowChat(!showChat)}
                 className="p-3 bg-white/10 rounded-full hover:bg-[#F5C76B] hover:text-black transition-all pointer-events-auto text-sm font-bold uppercase tracking-tighter"
               >

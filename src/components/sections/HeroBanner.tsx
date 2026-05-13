@@ -81,7 +81,6 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
       {/* Gradient overlays */}
       <div className="absolute inset-0 overlay-left" />
       <div className="absolute inset-0 overlay-bottom" />
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 30%)' }} />
 
       {/* Content — metadata only, NO buttons */}
       <div

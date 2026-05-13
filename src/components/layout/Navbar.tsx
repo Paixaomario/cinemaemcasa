@@ -59,15 +59,9 @@ export function Navbar() {
         display:    'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        padding:    'clamp(12px, 2vh, 32px) var(--container-px)',
-        /* GLASS EFFECT */
-        background: scrolled
-          ? 'rgba(0,0,0,0.92)'
-          : 'linear-gradient(to bottom, rgba(0,0,0,0.85), transparent)',
-        backdropFilter:        'blur(24px) saturate(180%)',
-        WebkitBackdropFilter:  'blur(24px) saturate(180%)',
-        borderBottom:  'none',
-        transition:    'background 0.35s ease',
+        padding:    '0 var(--container-px) clamp(12px, 2vh, 32px)',
+        background: 'transparent',
+        borderBottom: 'none',
       }}>
 
         {/* ── TOPBAR ── */}
@@ -78,10 +72,9 @@ export function Navbar() {
           display:        'flex',
           alignItems:     'center',
           justifyContent: 'space-between',
-          borderRadius:   'clamp(12px,1.8vw,26px)',
+          borderRadius:   '0 0 clamp(12px,1.8vw,26px) clamp(12px,1.8vw,26px)',
           border:         '2.5px solid var(--red-primary)',
           background:     'linear-gradient(90deg, #1A1A1F 0%, #0B0B0F 100%)',
-          boxShadow:      'var(--shadow-red)',
           overflow:       'hidden',
           padding:        '0 clamp(8px,1.2vw,20px)',
         }}>
@@ -127,7 +120,7 @@ export function Navbar() {
             {NAV_LINKS.map(({ href, label, icon }) => {
               const active = pathname === href
               return (
-                <Link key={href} href={href} style={{ textDecoration:'none' }}>
+                <Link key={href} href={href} style={{ textDecoration:'none', outline:'none' }}>
                   <div className="text-nav"
                     style={{
                       display:    'flex',
@@ -137,22 +130,12 @@ export function Navbar() {
                       textTransform: 'uppercase',
                       letterSpacing: '0.06em',
                       cursor:     'pointer',
-                      transition: 'all 0.3s ease',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                       whiteSpace: 'nowrap',
                       fontSize:   '24px',
                       fontWeight: 500,
                       borderBottom: active ? '3px solid var(--gold-primary)' : 'none',
                       paddingBottom: active ? '6px' : '0',
-                    }}
-                    onMouseEnter={e => {
-                      const el = e.currentTarget as HTMLElement
-                      el.style.transform = 'scale(1.07)'
-                      el.style.color = 'var(--gold-hover)'
-                    }}
-                    onMouseLeave={e => {
-                      const el = e.currentTarget as HTMLElement
-                      el.style.transform = 'scale(1)'
-                      el.style.color = active ? 'var(--gold-primary)' : 'var(--text-primary)'
                     }}
                   >
                     <span style={{
@@ -179,7 +162,7 @@ export function Navbar() {
             {ICON_LINKS.map(({ href, icon, title }) => {
               const active = pathname === href
               return (
-                <Link key={href} href={href} title={title} style={{ textDecoration:'none' }}>
+                <Link key={href} href={href} title={title} style={{ textDecoration:'none', outline:'none' }}>
                   <span style={{
                     width:          'clamp(16px,1.9vw,32px)',
                     height:         'clamp(16px,1.9vw,32px)',
@@ -192,20 +175,8 @@ export function Navbar() {
                     color:          active ? 'var(--gold-primary)' : 'var(--text-primary)',
                     fontSize:       '24px',
                     cursor:         'pointer',
-                    transition:     'all 0.18s ease',
+                    transition:     'all 0.2s ease-out',
                     flexShrink:     0,
-                  }}
-                  onMouseEnter={e => {
-                    const el = e.currentTarget as HTMLElement
-                    el.style.transform = 'scale(1.1)'
-                    el.style.color = 'var(--gold-hover)'
-                    el.style.borderColor = 'var(--gold-primary)'
-                  }}
-                  onMouseLeave={e => {
-                    const el = e.currentTarget as HTMLElement
-                    el.style.transform = 'scale(1)'
-                    el.style.color = active ? 'var(--gold-primary)' : 'var(--text-primary)'
-                    el.style.borderColor = active ? 'var(--gold-primary)' : 'var(--border-primary)'
                   }}
                   >{icon}</span>
                 </Link>

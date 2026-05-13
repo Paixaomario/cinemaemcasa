@@ -34,6 +34,7 @@ function DetailContent({ params }: Props) {
   const [isFavorite, setIsFavorite] = useState(false)
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [shouldStartParty, setShouldStartParty] = useState(false) // New state for party initiation
   const [lastPosition, setLastPosition] = useState(0) // For resume playback
   const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(null)
 
@@ -122,6 +123,12 @@ function DetailContent({ params }: Props) {
           }
         }
 
+        // Se houver um roomId na URL, ativa o player automaticamente
+        if (roomFromUrl && foundData) {
+          const url = foundData.url || foundData.video_url
+          if (url) setActiveVideoUrl(url)
+        }
+
         setMovieData(foundData)
 
         // Verifica se o item já está nos favoritos do usuário
@@ -157,11 +164,15 @@ function DetailContent({ params }: Props) {
     loadMovieData()
   }, [resolvedParams, user])
 
-  const handleInvite = () => {
-    if (!user) return alert('Faça login para criar uma sala!')
-    const url = `${window.location.origin}${window.location.pathname}?room=${user.id}`
-    navigator.clipboard.writeText(url)
-    alert('Link de convite copiado! Envie para seus amigos.')
+  const handleStartParty = () => {
+    if (!user) return alert('Faça login para criar uma sala de Assistir Juntos!')
+    const url = movieData?.url || movieData?.video_url
+    if (url) {
+      setActiveVideoUrl(url)
+      setShouldStartParty(true)
+    } else {
+      alert('O conteúdo não está disponível para iniciar uma sala.')
+    }
   }
 
   async function handleToggleFavorite() {
@@ -243,7 +254,7 @@ function DetailContent({ params }: Props) {
           border: none;
           overflow: visible;
 
-          background: linear-gradient(180deg, #090000 0%, #000 100%);
+          background: linear-gradient(180deg, #1f1a1a 0%, #121212 100%);
           box-shadow: none;
         }
 
@@ -272,7 +283,7 @@ function DetailContent({ params }: Props) {
 
           background-size: cover;
           background-position: center;
-          filter: brightness(0.75) contrast(1.1);
+          filter: brightness(0.9) contrast(1.05);
         }
 
         /* OVERLAY */
@@ -284,9 +295,9 @@ function DetailContent({ params }: Props) {
 
           background: linear-gradient(
             90deg,
-            rgba(0, 0, 0, 0.85) 0%,
-            rgba(0, 0, 0, 0.75) 35%,
-            rgba(0, 0, 0, 0.15) 70%,
+            rgba(0, 0, 0, 0.6) 0%,
+            rgba(0, 0, 0, 0.45) 35%,
+            rgba(0, 0, 0, 0.1) 70%,
             rgba(0, 0, 0, 0.05) 100%
           );
         }
@@ -296,7 +307,7 @@ function DetailContent({ params }: Props) {
           position: relative;
           z-index: 10;
           width: 100%;
-          padding: 40px 40px 40px 40px;
+          padding: 40px var(--container-px);
 
           display: flex;
           flex-direction: column;
@@ -478,7 +489,7 @@ function DetailContent({ params }: Props) {
           grid-template-columns: 1fr 1.3fr;
           gap: 18px;
 
-          padding: 20px 28px;
+          padding: 20px var(--container-px);
           position: relative;
           top: 0;
           margin-top: 60px;
@@ -487,7 +498,7 @@ function DetailContent({ params }: Props) {
 
         /* BOX PADRÃO */
         .box {
-          background: rgba(0, 0, 0, 0.55);
+          background: rgba(35, 35, 35, 0.7);
           border-radius: 18px;
           border: 2px solid rgba(255, 180, 40, 0.25);
           padding: 18px;
@@ -615,7 +626,7 @@ function DetailContent({ params }: Props) {
            ========================================================= */
         .details-footer {
           width: 100%;
-          padding: 18px 28px 28px 28px;
+          padding: 18px var(--container-px) 28px var(--container-px);
           position: relative;
           z-index: 15;
         }
@@ -646,16 +657,12 @@ function DetailContent({ params }: Props) {
            RESPONSIVIDADE
            ========================================================= */
         @media (max-width: 1250px) {
-          .hero-content {
-            padding: 30px;
-          }
-
           .middle-sections {
-            padding: 20px 20px;
+            padding: 20px var(--container-px);
           }
 
           .details-footer {
-            padding: 18px 20px 28px 20px;
+            padding: 18px var(--container-px) 28px var(--container-px);
           }
         }
 
@@ -872,16 +879,16 @@ function DetailContent({ params }: Props) {
             </p>
 
             <div className="hero-buttons">
-              <button className="btn-primary text-button" onClick={handlePlayContent}>
+              <button className="btn-primary text-button" onClick={handlePlayContent} tabIndex={0}>
                 ▶️ ASSISTIR AGORA
               </button>
-              <button className="btn-secondary text-button" onClick={handlePlayTrailer}>
+              <button className="btn-secondary text-button" onClick={handlePlayTrailer} tabIndex={0}>
                 ▶️ TRAILER
               </button>
             </div>
 
             <div className="action-icons">
-              <div className="action-item" onClick={handleInvite}>
+              <div className="action-item" onClick={handleStartParty} tabIndex={0}>
                 <div className="icon">👥</div>
                 <span>Assistir Juntos</span>
               </div>
@@ -916,8 +923,14 @@ function DetailContent({ params }: Props) {
               <span className="text-metadata">Ver todos</span>
             </div>
             <div className="cast-grid">
-              {(movieData?.credits?.cast || movieData?.cast_names) && (movieData?.credits?.cast?.length > 0 || movieData?.cast_names?.length > 0) ? (
-                (movieData.credits?.cast || movieData.cast_names).slice(0, 4).map((actor: any, index: number) => (
+              {(() => {
+                const castArray = movieData?.credits?.cast || 
+                  (typeof movieData?.cast_names === 'string' 
+                    ? movieData.cast_names.split(',').map((n: string) => n.trim()) 
+                    : movieData?.cast_names) || [];
+                
+                return castArray.length > 0 ? (
+                  castArray.slice(0, 4).map((actor: any, index: number) => (
                   <div key={index} className="cast-member">
                     <div 
                       className="cast-photo" 
@@ -936,30 +949,12 @@ function DetailContent({ params }: Props) {
                     </div>
                   </div>
                 ))
-              ) : (
-                <>
-                  <div className="cast-member">
-                    <div className="cast-photo" style={{ backgroundImage: 'url(https://placehold.co/95x95/1a1a1f/F5C76B?text=?)' }}></div>
-                    <div className="cast-name">Elenco não disponível</div>
-                    <div className="cast-role">-</div>
+                ) : (
+                  <div className="text-gray-400 italic py-10 text-center w-full">
+                    Informações de elenco não disponíveis para este título.
                   </div>
-                  <div className="cast-member">
-                    <div className="cast-photo" style={{ backgroundImage: 'url(https://via.placeholder.com/95x95)' }}></div>
-                    <div className="cast-name">Elenco não disponível</div>
-                    <div className="cast-role">-</div>
-                  </div>
-                  <div className="cast-member">
-                    <div className="cast-photo" style={{ backgroundImage: 'url(https://via.placeholder.com/95x95)' }}></div>
-                    <div className="cast-name">Elenco não disponível</div>
-                    <div className="cast-role">-</div>
-                  </div>
-                  <div className="cast-member">
-                    <div className="cast-photo" style={{ backgroundImage: 'url(https://via.placeholder.com/95x95)' }}></div>
-                    <div className="cast-name">Elenco não disponível</div>
-                    <div className="cast-role">-</div>
-                  </div>
-                </>
-              )}
+                );
+              })()}
             </div>
           </div>
 
