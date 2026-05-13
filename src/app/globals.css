@@ -118,11 +118,11 @@ h1, h2, h3, h4, h5, h6 {
 /* ─── Horizontal scroll row ─────────────────────── */
 .scroll-row {
   display: flex;
-  gap: 16px;
+  gap: clamp(12px, 1.5vw, 24px);
   overflow-x: auto;
   overflow-y: visible;
   padding-bottom: 8px;
-  scroll-snap-type: x mandatory;
+  scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   width: 100%;

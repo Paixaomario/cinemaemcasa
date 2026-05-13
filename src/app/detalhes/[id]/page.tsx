@@ -35,6 +35,7 @@ function DetailContent({ params }: Props) {
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [shouldStartParty, setShouldStartParty] = useState(false) // New state for party initiation
+  const [shuffledRecommendations, setShuffledRecommendations] = useState<any[]>([])
   const [lastPosition, setLastPosition] = useState(0) // For resume playback
   const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(null)
 
@@ -164,6 +165,19 @@ function DetailContent({ params }: Props) {
     loadMovieData()
   }, [resolvedParams, user])
 
+  // Efeito para embaralhar recomendações a cada carregamento
+  useEffect(() => {
+    if (movieData) {
+      const rawRecs = movieData.similar?.results || movieData.recommendations?.results || []
+      if (rawRecs.length > 0) {
+        const shuffled = [...rawRecs]
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3)
+        setShuffledRecommendations(shuffled)
+      }
+    }
+  }, [movieData, resolvedParams])
+
   const handleStartParty = () => {
     if (!user) return alert('Faça login para criar uma sala de Assistir Juntos!')
     const url = movieData?.url || movieData?.video_url
@@ -283,7 +297,7 @@ function DetailContent({ params }: Props) {
 
           background-size: cover;
           background-position: center;
-          filter: brightness(0.9) contrast(1.05);
+          filter: brightness(1.1) contrast(1.05);
         }
 
         /* OVERLAY */
@@ -295,11 +309,11 @@ function DetailContent({ params }: Props) {
 
           background: linear-gradient(
             90deg,
-            rgba(0, 0, 0, 0.6) 0%,
-            rgba(0, 0, 0, 0.45) 35%,
+            rgba(0, 0, 0, 0.4) 0%,
+            rgba(0, 0, 0, 0.3) 35%,
             rgba(0, 0, 0, 0.1) 70%,
             rgba(0, 0, 0, 0.05) 100%
-          );
+          ); /* Sombra superior removida para clarear Navbar */
         }
 
         /* CONTEÚDO HERO */

@@ -88,7 +88,7 @@ export function HomeClient() {
           default:                q = q.order('created_at', { ascending: false, nullsFirst: false }); break
         }
 
-        q = q.limit(sec.limite || 5)
+        q = q.limit(sec.limite || 15) // Busca mais para permitir scroll, mas exibe 5 por "página"
 
         const { data, error: filmErr } = await q
 
