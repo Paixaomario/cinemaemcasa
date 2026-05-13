@@ -847,7 +847,7 @@ function DetailContent({ params }: Props) {
             font-size: 13px;
           }
         }
-      `}</style>
+      ` }} />
 
       <div className="page-container">
 
