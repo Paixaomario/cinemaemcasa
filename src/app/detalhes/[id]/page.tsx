@@ -949,9 +949,8 @@ function DetailContent({ params }: Props) {
                       <div 
                         className="cast-photo" 
                         style={{ 
-                          backgroundImage: actor.profile_path 
-                            ? `url(${IMG.poster(actor.profile_path, 'w185')})` 
-                            : (actor.image || actor.profile_path) ? `url(${IMG.poster(actor.profile_path || actor.image, 'w185')})`
+                          backgroundImage: (actor.profile_path || actor.image)
+                            ? `url(${IMG.poster(actor.profile_path || actor.image, 'w185')})` 
                             : 'url(https://placehold.co/95x95/1a1a1f/F5C76B?text=Ator)'
                         }}
                       ></div>
@@ -969,9 +968,7 @@ function DetailContent({ params }: Props) {
                   </div>
                 );
               })()}
-            </div>
-          </div>
-          
+
           {/* RECOMENDAÇÕES */}
           <div className="box">
             <div className="box-title text-section-title">
@@ -979,19 +976,20 @@ function DetailContent({ params }: Props) {
               <span className="text-metadata">Ver todos</span>
             </div>
             <div className="recommend-grid">
-              {shuffledRecommendations.map((movie: any) => (
-                <div 
-                  key={movie.id} 
-                  className="recommend-card card-poster tv-focus" 
-                  tabIndex={0}
-                  onFocus={(e) => e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })}
-                  onClick={() => window.location.href = `/detalhes/${movie.media_type === 'tv' ? 'serie' : 'filme'}-${movie.id}`}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      window.location.href = `/detalhes/${movie.media_type === 'tv' ? 'serie' : 'filme'}-${movie.id}`
-                    }
-                  }}
-                >
+              {shuffledRecommendations.length > 0 ? (
+                shuffledRecommendations.map((movie: any) => (
+                  <div 
+                    key={movie.id} 
+                    className="recommend-card card-poster tv-focus" 
+                    tabIndex={0}
+                    onFocus={(e) => e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })}
+                    onClick={() => window.location.href = `/detalhes/${movie.media_type === 'tv' ? 'serie' : 'filme'}-${movie.id}`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        window.location.href = `/detalhes/${movie.media_type === 'tv' ? 'serie' : 'filme'}-${movie.id}`
+                      }
+                    }}
+                  >
                     <div 
                       className="recommend-poster" 
                       style={{ 
@@ -1003,7 +1001,26 @@ function DetailContent({ params }: Props) {
                     <div className="recommend-rating text-metadata">⭐ {movie?.vote_average?.toFixed(1) || 'N/A'}</div>
                   </div>
                 ))
-              }
+              ) : (
+                <>
+                  <div className="recommend-card">
+                    <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/140x210)' }}></div>
+                    <div className="recommend-rating">⭐ N/A</div>
+                  </div>
+                  <div className="recommend-card">
+                    <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/140x210)' }}></div>
+                    <div className="recommend-rating">⭐ N/A</div>
+                  </div>
+                  <div className="recommend-card">
+                    <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/140x210)' }}></div>
+                    <div className="recommend-rating">⭐ N/A</div>
+                  </div>
+                  <div className="recommend-card">
+                    <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/140x210)' }}></div>
+                    <div className="recommend-rating">⭐ N/A</div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useRef, useState, useCallback } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import videojs from 'video.js'
 import { createClient } from '@/lib/supabase'
@@ -92,7 +92,7 @@ export function VideoPlayer({
   
   // Controle de entrada na sala para convidados e anfitriões
   const [hasJoined, setHasJoined] = useState(!isGuest)
-  const [nameInput, setNameInput] = useState('')
+  const [nameInput, setNameInput] = useState(isGuest ? '' : 'Anfitrião')
   const [activeUserName, setActiveUserName] = useState(isGuest ? '' : 'Anfitrião')
 
   const isYouTube = src.includes('youtube.com') || src.includes('youtu.be')
@@ -100,12 +100,12 @@ export function VideoPlayer({
 
   const sb = createClient()
 
-  const handleJoin = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!nameInput.trim()) return
-    setActiveUserName(nameInput.trim())
-    setHasJoined(true)
-    setShowChat(true)
+  function handleJoinSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!nameInput.trim()) return;
+    setActiveUserName(nameInput.trim());
+    setHasJoined(true);
+    setShowChat(true);
   }
 
   const startParty = () => {
@@ -212,6 +212,10 @@ export function VideoPlayer({
           player.currentTime(startOffset);
         }
       })
+
+      player.on('ended', () => {
+        if (onNext) onNext();
+      });
     }
     return () => {
       if (playerRef.current) {
@@ -219,7 +223,7 @@ export function VideoPlayer({
         playerRef.current = null;
       }
     };
-  }, [src, isYouTube, hasJoined]); // Somente reinicia se o vídeo ou o status de entrada mudar
+  }, [src, isYouTube, hasJoined, backdrop, startOffset, thumbnailsVtt, onNext]); 
 
   // NOVO EFEITO: Apenas para Sincronização e Realtime
   useEffect(() => {

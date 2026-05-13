@@ -1,10 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { HeroBanner } from '@/components/sections/HeroBanner'
-import { buildBannerPool, getMovieDetails, getShowDetails } from '@/lib/tmdb'
+import { buildBannerPool, getMovieDetails, getShowDetails, TMDBMovie, TMDBShow } from '@/lib/tmdb'
 import Image from 'next/image'
 import { useAuth } from '@/components/layout/SupabaseProvider'
 
@@ -36,7 +35,6 @@ interface CinemaItem {
 }
 
 export function HomeClient() {
-  const router = useRouter()
   const { user } = useAuth()
   const [sections,   setSections]   = useState<HomeSection[]>([])
   const [itemsMap,   setItemsMap]   = useState<Record<string, CinemaItem[]>>({})

@@ -20,7 +20,7 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
   useEffect(() => {
     if (initialPool && initialPool.length > 0) { setPool(initialPool); return }
     buildBannerPool(type, 20).then(p => setPool(p))
-  }, [type])
+  }, [type, initialPool])
 
   // Auto-rotate every 7s with fade transition
   const advance = useCallback(() => {
