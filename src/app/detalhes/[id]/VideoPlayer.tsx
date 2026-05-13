@@ -179,24 +179,24 @@ export function VideoPlayer({
 
       player.ready(() => {
         // 1. Atalhos de Teclado
-        player.hotkeys({ volumeStep: 0.1, seekStep: 10, alwaysCaptureHotkeys: true });
+        (player as any).hotkeys({ volumeStep: 0.1, seekStep: 10, alwaysCaptureHotkeys: true });
         
         // 2. Interface Mobile
-        player.mobileUi();
+        (player as any).mobileUi();
         
         // 3. Seletor de Qualidade HLS
         if (src.includes('.m3u8')) {
-          player.hlsQualitySelector({ displayCurrentQuality: true });
+          (player as any).hlsQualitySelector({ displayCurrentQuality: true });
         }
 
         // 4. Thumbnails no hover (se fornecido)
         if (thumbnailsVtt) {
-          player.vttThumbnails({ src: thumbnailsVtt });
+          (player as any).vttThumbnails({ src: thumbnailsVtt });
         }
 
         // 5. Exemplo de Skip Intro (Overlay)
         // Pode ser expandido futuramente puxando os tempos do banco de dados
-        player.overlay({
+        (player as any).overlay({
           overlays: [{
             start: 10,
             end: 40,
@@ -211,8 +211,8 @@ export function VideoPlayer({
         }
 
         // 7. Chromecast Initialization
-        if ((player as any).chromecast) {
-          (player as any).chromecast({
+        if (player.chromecast) {
+          player.chromecast({
             addButtonToControlBar: false,
           });
         }
@@ -287,7 +287,7 @@ export function VideoPlayer({
         playerRef.current = null
       }
     }
-  }, [src, isYouTube, contentId, userId, startOffset, thumbnailsVtt, onNext, currentRoomId, isGuest, sb, backdrop, hasJoined])
+  }, [src, isYouTube, contentId, userId, startOffset, thumbnailsVtt, onNext, currentRoomId, isGuest, sb])
 
   const sendReaction = (emoji: string) => {
     if (currentRoomId) {
@@ -296,16 +296,11 @@ export function VideoPlayer({
         event: 'reaction',
         payload: { emoji }
       })
-
-      // Feedback visual local imediato (resolve "emojis não fazem nada")
-      const id = Date.now()
-      setReactions(prev => [...prev, { id, emoji, left: Math.random() * 80 + 10 }])
-      setTimeout(() => setReactions(prev => prev.filter(r => r.id !== id)), 3000)
     }
   }
 
   return (
-    <div className={`fixed inset-0 z-[10000] bg-black flex hero-enter ${isGuest && hasJoined ? 'guest-fullscreen-fix' : ''}`}>
+    <div className={`fixed inset-0 z-[10000] bg-black flex hero-enter ${isGuest ? 'guest-fullscreen-fix' : ''}`}>
       {/* Camada de Emojis Voadores */}
       {reactions.map(r => (
         <span 
@@ -362,7 +357,7 @@ export function VideoPlayer({
         <Image src="/logo.png" alt="" width={160} height={60} className="object-contain" />
       </div>
 
-      <div className="flex-1 h-full relative bg-black overflow-hidden">
+      <div className="flex-1 h-full relative bg-black">
         <div className="w-full h-full">
           <div className={isGuest ? 'vjs-guest-mode' : ''}>
             {isYouTube ? (
@@ -381,9 +376,7 @@ export function VideoPlayer({
 
       {/* Chat Lateral PAIXÃOFLIX Premium */}
       {currentRoomId && showChat && (
-        <div className="h-full z-[10006] animate-in slide-in-from-right duration-300">
-          <PartyChat roomId={currentRoomId} userName={activeUserName} onReaction={sendReaction} />
-        </div>
+        <PartyChat roomId={currentRoomId} userName={guestName} onReaction={sendReaction} />
       )}
     </div>
   )

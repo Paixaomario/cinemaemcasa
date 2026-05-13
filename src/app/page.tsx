@@ -28,9 +28,7 @@ export default function DetailsPage() {
       if (!id) return
 
       // 2. Buscar conteúdo (Cinema ou TMDB)
-      const { data, error: dbError } = await sb.from('cinema').select('*').eq('id', id).single()
-      
-      if (dbError) console.warn("Modo Demo: Conteúdo não encontrado no banco local")
+      const { data } = await sb.from('cinema').select('*').eq('id', id).single()
 
       let contentData = data
       if (!data && String(id).includes('-')) {

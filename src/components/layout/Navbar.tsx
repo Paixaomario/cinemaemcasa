@@ -242,7 +242,6 @@ export function Navbar() {
                   onBlur={e => {
                     e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
                     e.currentTarget.style.boxShadow = 'none'
-                    if (!query) setSearchOpen(false)
                   }}
                 />
               </form>
