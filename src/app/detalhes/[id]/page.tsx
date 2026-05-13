@@ -245,7 +245,7 @@ function DetailContent({ params }: Props) {
   return (
     <>
       <Navbar />
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style jsx>{`
         /* =========================================================
            PAIXAOFLIX - PÁGINA DETALHES (MODELO 4)
            CSS COMPLETO PARA WINDSURF / HTML PURO
@@ -969,9 +969,7 @@ function DetailContent({ params }: Props) {
                   </div>
                 );
               })()}
-            </div>
-          </div>
-          
+
           {/* RECOMENDAÇÕES */}
           <div className="box">
             <div className="box-title text-section-title">
@@ -979,30 +977,41 @@ function DetailContent({ params }: Props) {
               <span className="text-metadata">Ver todos</span>
             </div>
             <div className="recommend-grid">
-              {shuffledRecommendations.map((movie: any) => (
-                <div 
-                  key={movie.id} 
-                  className="recommend-card card-poster tv-focus" 
-                  tabIndex={0}
-                  onFocus={(e) => e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })}
-                  onClick={() => window.location.href = `/detalhes/${movie.media_type === 'tv' ? 'serie' : 'filme'}-${movie.id}`}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      window.location.href = `/detalhes/${movie.media_type === 'tv' ? 'serie' : 'filme'}-${movie.id}`
-                    }
-                  }}
-                >
-                  <div 
-                    className="recommend-poster" 
-                    style={{ 
-                      backgroundImage: movie?.poster_path 
-                        ? `url(${IMG.poster(movie.poster_path, 'w500')})` 
-                        : 'url(https://via.placeholder.com/140x210)' 
-                    }}
-                  ></div>
-                  <div className="recommend-rating text-metadata">⭐ {movie?.vote_average?.toFixed(1) || 'N/A'}</div>
-                </div>
-              ))}
+              {(movieData?.similar?.results || movieData?.recommendations?.results) && 
+               ((movieData.similar?.results?.length || 0) > 0 || (movieData.recommendations?.results?.length || 0) > 0) ? (
+                (movieData.similar?.results || movieData.recommendations?.results).slice(0, 5).map((movie: any) => (
+                  <div key={movie.id} className="recommend-card">
+                    <div 
+                      className="recommend-poster" 
+                      style={{ 
+                        backgroundImage: movie?.poster_path 
+                          ? `url(https://image.tmdb.org/t/p/w342${movie.poster_path})` 
+                          : 'url(https://via.placeholder.com/140x210)' 
+                      }}
+                    ></div>
+                    <div className="recommend-rating text-metadata">⭐ {movie?.vote_average?.toFixed(1) || 'N/A'}</div>
+                  </div>
+                ))
+              ) : (
+                <>
+                  <div className="recommend-card">
+                    <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/140x210)' }}></div>
+                    <div className="recommend-rating">⭐ N/A</div>
+                  </div>
+                  <div className="recommend-card">
+                    <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/140x210)' }}></div>
+                    <div className="recommend-rating">⭐ N/A</div>
+                  </div>
+                  <div className="recommend-card">
+                    <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/140x210)' }}></div>
+                    <div className="recommend-rating">⭐ N/A</div>
+                  </div>
+                  <div className="recommend-card">
+                    <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/140x210)' }}></div>
+                    <div className="recommend-rating">⭐ N/A</div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { HeroBanner } from '@/components/sections/HeroBanner'
 import { buildBannerPool, getMovieDetails, getShowDetails } from '@/lib/tmdb'
@@ -35,6 +36,7 @@ interface CinemaItem {
 }
 
 export function HomeClient() {
+  const router = useRouter()
   const { user } = useAuth()
   const [sections,   setSections]   = useState<HomeSection[]>([])
   const [itemsMap,   setItemsMap]   = useState<Record<string, CinemaItem[]>>({})
@@ -88,7 +90,7 @@ export function HomeClient() {
           default:                q = q.order('created_at', { ascending: false, nullsFirst: false }); break
         }
 
-        q = q.limit(sec.limite || 15) // Busca mais para permitir scroll, mas exibe 5 por "página"
+        q = q.limit(50) // Aumentado para permitir rolagem total do acervo
 
         const { data, error: filmErr } = await q
 
@@ -272,6 +274,7 @@ function GridLayout({ items }: { items: any[] }) {
 }
 
 function HomeCard({ item, showProgress }: { item: any, showProgress?: boolean }) {
+  const router = useRouter()
   const [hovered, setHovered] = useState(false)
   const img = item.poster || item.banner || item.backdrop
   
@@ -284,12 +287,14 @@ function HomeCard({ item, showProgress }: { item: any, showProgress?: boolean })
       onMouseLeave={() => setHovered(false)}
       onTouchStart={() => setHovered(true)}
       onTouchEnd={() => setHovered(false)}
-      onClick={() => window.location.href = detailUrl}
-      onFocus={(e) => e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })}
+      onClick={() => router.push(detailUrl)}
+      onFocus={(e) => {
+        e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+      }}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault()
-          window.location.href = detailUrl
+          router.push(detailUrl)
         }
       }}
       tabIndex={0}
