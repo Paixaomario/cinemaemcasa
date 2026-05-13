@@ -50,7 +50,7 @@ export function Navbar() {
   return (
     <>
       {/* ── FIXED WRAPPER com glass effect ── */}
-      <header style={{
+      <header className="main-navbar" style={{
         position:   'fixed',
         top:        0,
         left:       0,
@@ -347,6 +347,9 @@ export function Navbar() {
           to   { opacity:1; transform:translateY(0);    }
         }
         @media (max-width: 600px) { .nav-lbl { display:none !important; } }
+        @media (max-width: 768px) {
+          .main-navbar { display: none !important; }
+        }
       `}</style>
     </>
   )
