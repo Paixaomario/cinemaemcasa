@@ -140,11 +140,11 @@ function NavContent() {
         }
 
         .nav-item .icon {
-          font-size: 56px !important;
-          width: 56px !important;
-          height: 56px !important;
-          min-width: 56px !important; /* Impede o encolhimento */
-          min-height: 56px !important;
+          font-size: 48px !important;
+          width: 48px !important;
+          height: 48px !important;
+          min-width: 48px !important; /* Impede o encolhimento */
+          min-height: 48px !important;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -192,7 +192,7 @@ function NavContent() {
             flex: 1;
             height: 100px !important;
           }
-          .nav-item .icon { font-size: 56px !important; width: 56px !important; height: 56px !important; min-width: 56px !important; }
+          .nav-item .icon { font-size: 48px !important; width: 48px !important; height: 48px !important; min-width: 48px !important; }
         }
       `}</style>
     </>
