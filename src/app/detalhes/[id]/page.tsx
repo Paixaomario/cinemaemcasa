@@ -293,6 +293,14 @@ const CUSTOM_STYLES = `
   .details-item { line-height: 1.6; color: rgba(255, 255, 255, 0.8); }
   .details-item b { color: #d9a23a; font-weight: 900; }
 
+  /* Ajustes finos de responsividade */
+  @media (max-width: 640px) {
+    .hero { height: auto; padding-top: 60px; }
+    .text-hero-title { font-size: 28px !important; }
+    .hero-buttons { flex-direction: column; width: 100%; }
+    .btn-primary, .btn-secondary { width: 100%; justify-content: center; height: 50px; font-size: 16px; }
+  }
+
   @media (max-width: 980px) {
     .middle-sections { grid-template-columns: 1fr; padding: 20px 15px; }
     .hero { height: auto; min-height: 60vh; }
