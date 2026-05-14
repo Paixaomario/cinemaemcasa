@@ -94,7 +94,7 @@ export function VideoPlayer({
   const [currentRoomId, setCurrentRoomId] = useState(partyRoomId)
   const [showChat, setShowChat] = useState(!!partyRoomId) // Só inicia se houver ID de sala
   const [reactions, setReactions] = useState<any[]>([])
-  
+
   // Controle de entrada na sala para convidados e anfitriões
   const [hasJoined, setHasJoined] = useState(!isGuest)
   const [nameInput, setNameInput] = useState(isGuest ? '' : 'Anfitrião')
@@ -153,14 +153,17 @@ export function VideoPlayer({
       videoRef.current.appendChild(videoElement)
 
       // Tentar forçar orientação horizontal em dispositivos móveis
-      try {
-        if (typeof window !== 'undefined' && window.screen?.orientation?.lock) {
-          (window.screen.orientation as any).lock('landscape').catch(() => {
-            // Silenciosamente falha se o navegador não permitir (comum em Safari/iOS sem PWA)
-            console.log('Rotação automática solicitada.');
-          });
-        }
-      } catch (e) {}
+      const lockOrientation = async () => {
+        try {
+          if (document.documentElement.requestFullscreen) {
+            await document.documentElement.requestFullscreen();
+            if (window.screen.orientation && (window.screen.orientation as any).lock) {
+              await (window.screen.orientation as any).lock('landscape');
+            }
+          }
+        } catch (e) { console.log("Auto-rotate prevented by browser policy"); }
+      };
+      lockOrientation();
 
       const player = playerRef.current = videojs(videoElement, {
         autoplay: true, // Força o play automático para convidados
@@ -237,6 +240,7 @@ export function VideoPlayer({
         playerRef.current.dispose();
         playerRef.current = null;
       }
+      // Restaurar orientação ao fechar (opcional)
       // Restaurar orientação ao fechar (opcional)
       if (typeof window !== 'undefined' && window.screen?.orientation?.unlock) {
         try {
@@ -321,7 +325,7 @@ export function VideoPlayer({
   }
 
   return (
-    <div className={`fixed inset-0 z-[10000] bg-black flex hero-enter ${isGuest ? 'guest-fullscreen-fix' : ''}`}>
+    <div className={`fixed inset-0 z-[10000] bg-black flex hero-enter ${isGuest ? 'guest-fullscreen-fix' : ''} ${showChat ? 'flex-row' : 'flex-col'}`}>
       {/* Camada de Emojis Voadores */}
       {reactions.map(r => (
         <span 
@@ -378,7 +382,7 @@ export function VideoPlayer({
         <Image src="/logo.png" alt="" width={160} height={60} className="object-contain" />
       </div>
 
-      <div className="flex-1 h-full relative bg-black">
+      <div className={`flex-1 h-full relative bg-black ${showChat ? 'w-full sm:w-[calc(100%-320px)]' : 'w-full'}`}>
         <div className="w-full h-full">
           <div className={isGuest ? 'vjs-guest-mode' : ''}>
             {isYouTube ? (
@@ -396,7 +400,7 @@ export function VideoPlayer({
       </div>
 
       {/* Chat Lateral PAIXÃOFLIX Premium */}
-      {currentRoomId && showChat && (
+      {currentRoomId && showChat && isPartyMode && ( /* Renderiza chat apenas se for party mode */
         <PartyChat roomId={currentRoomId} userName={activeUserName} onReaction={sendReaction} />
       )}
     </div>

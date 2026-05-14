@@ -356,20 +356,13 @@ function HomeCard({ item, showProgress }: { item: CinemaItem, showProgress?: boo
 
       {/* Barra de progresso Netflix */}
       {showProgress && item.last_position && item.last_position > 0 && (
-        <div className="absolute bottom-0 left-0 w-full p-2 bg-black/80 backdrop-blur-sm transition-opacity group-hover:opacity-100">
-          <div className="flex justify-between text-[10px] font-bold text-white mb-1 uppercase">
-            <span>{Math.round(progressPercent)}% exibido</span>
-            <span>Faltam {remainingText}</span>
-          </div>
-          <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.2)', borderRadius: 2 }}>
-            <div style={{ 
-              width: `${Math.min(progressPercent, 100)}%`, 
-              height: '100%', 
-              background: 'var(--red-primary)',
-              boxShadow: '0 0 10px var(--red-primary)',
-              borderRadius: 2
-            }} />
-          </div>
+        <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 4, background: 'rgba(255,255,255,0.2)' }}>
+          <div style={{ 
+            width: `${Math.min(progressPercent, 100)}%`, 
+            height: '100%', 
+            background: 'var(--red-primary)',
+            boxShadow: '0 0 10px var(--red-primary)' 
+          }} />
         </div>
       )}
     </div>

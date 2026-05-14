@@ -55,7 +55,7 @@ function NavContent() {
           z-index: 5000;
 
           width: min(95vw, 860px);
-          height: 80px;
+          height: 75px; /* Altura da barra ajustada para ícones de 48px */
 
           display: flex;
           justify-content: space-around;
@@ -141,11 +141,11 @@ function NavContent() {
         }
 
         .nav-item .icon {
-          font-size: 60px !important;
-          width: 60px !important;
-          height: 60px !important;
-          min-width: 60px !important;
-          min-height: 60px !important;
+          font-size: 48px !important; /* Ícones grandes */
+          width: 48px !important;
+          height: 48px !important;
+          min-width: 48px !important; /* Garante que não encolham */
+          min-height: 48px !important;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -182,16 +182,16 @@ function NavContent() {
             transform: translateX(-50%) !important; /* Ajusta a centralização */
             margin: 0 !important; /* Remove margens que possam empurrar */
             
-            height: 70px !important;
+            height: 75px !important; /* Altura da barra no mobile */
             border-radius: 30px;
-            padding: 0 10px;
+            padding: 0 5px; /* Padding lateral para espaçar os ícones */
             bottom: 15px;
           }
           .nav-item {
             flex: 1;
-            max-width: 50px;
+            max-width: 60px; /* Largura máxima para cada item */
           }
-          .nav-item .icon { font-size: 34px !important; }
+          .nav-item .icon { font-size: 48px !important; width: 48px !important; height: 48px !important; min-width: 48px !important; }
         }
       `}</style>
     </>
