@@ -199,7 +199,9 @@ export async function getShowsByGenre(genreId: number, page = 1) {
 }
 
 export async function getShowDetails(id: number) {
-  return tmdb<TMDBShow>(`/tv/${id}`, { append_to_response: 'credits,videos,similar,recommendations,content_ratings,watch/providers' }).then(data => ({ ...data, media_type: 'tv' as const }))
+  return tmdb<TMDBShow>(`/tv/${id}`, { 
+    append_to_response: 'credits,videos,similar,recommendations,content_ratings,watch/providers' 
+  }).then(data => ({ ...data, media_type: 'tv' as const }))
 }
 
 export async function getShowSeason(showId: number, season: number) {

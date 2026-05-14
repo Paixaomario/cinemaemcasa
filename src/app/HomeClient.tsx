@@ -49,19 +49,19 @@ export function HomeClient() {
   useEffect(() => {
     async function load() {
       const sb = createClient()
-      const globalSeenIds = new Set<string | number>()
+      const globalSeenIds = new Set<string>()
 
       try {
         setLoading(true)
 
-        // 1. Obter amostra do acervo real (evita conteúdos fakes e garante rotação)
-        const { data: localData } = await sb
+        // 1. Obter amostra do acervo para validação Anti-Fake e Banner
+        const { data: allLocalItems } = await sb
           .from('cinema')
-          .select('id, tmdb_id, type, titulo, poster, backdrop, banner, duration')
+          .select('id, tmdb_id, type, titulo, poster, backdrop, banner, duration_seconds')
           .limit(500)
 
-        const allLocalItems = localData || []
-        const allowedTmdbIds = new Set(allLocalItems.map(x => x.tmdb_id).filter(Boolean))
+        const localItems = allLocalItems || []
+        const allowedTmdbIds = new Set(localItems.map(x => x.tmdb_id).filter(Boolean))
 
         // 2. Processar "Continuar Assistindo" PRIMEIRO
         if (user) {
@@ -151,9 +151,9 @@ export function HomeClient() {
         })
         setItemsMap(newMap)
 
-        // 4. Banner Pool: Rotação Real de 100k itens
-        if (allLocalItems.length > 0) {
-          const shuffled = [...allLocalItems].sort(() => Math.random() - 0.5).slice(0, 15)
+        // 4. Banner Pool: Rotação Real (Escolha entre conteúdos locais válidos)
+        if (localItems.length > 0) {
+          const shuffled = [...localItems].sort(() => Math.random() - 0.5).slice(0, 15)
           const hydratedBanners = await Promise.all(shuffled.map(async (item) => {
             try {
               return item.type === 'serie' ? await getShowDetails(item.tmdb_id!) : await getMovieDetails(item.tmdb_id!)

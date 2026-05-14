@@ -91,14 +91,15 @@ export function VideoPlayer({
 }: Props) {
   const videoRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<any>(null)
-  const [currentRoomId, setCurrentRoomId] = useState(partyRoomId)
-  const [showChat, setShowChat] = useState(!!partyRoomId && hasJoined)
-  const [reactions, setReactions] = useState<any[]>([])
   
-  // Controle de entrada na sala para convidados e anfitriões
+  // Controle de entrada na sala (hasJoined deve vir antes de showChat)
   const [hasJoined, setHasJoined] = useState(!isGuest)
   const [nameInput, setNameInput] = useState(isGuest ? '' : 'Anfitrião')
   const [activeUserName, setActiveUserName] = useState(isGuest ? '' : 'Anfitrião')
+
+  const [currentRoomId, setCurrentRoomId] = useState(partyRoomId)
+  const [showChat, setShowChat] = useState(!!partyRoomId && hasJoined)
+  const [reactions, setReactions] = useState<any[]>([])
 
   const isYouTube = src.includes('youtube.com') || src.includes('youtu.be')
   const youtubeId = isYouTube ? (src.includes('v=') ? src.split('v=')[1]?.split('&')[0] : src.split('/').pop()) : null

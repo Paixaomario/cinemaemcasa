@@ -54,8 +54,9 @@ function NavContent() {
           transform: translateX(-50%) !important;
           z-index: 5000;
 
-          width: min(95vw, 860px);
-          height: 80px;
+          width: 92vw !important;
+          max-width: 500px !important;
+          height: 80px !important;
 
           display: flex;
           justify-content: space-around;
