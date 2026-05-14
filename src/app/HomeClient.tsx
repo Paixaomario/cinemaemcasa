@@ -54,13 +54,14 @@ export function HomeClient() {
       try {
         setLoading(true)
 
-        // 1. Obter amostra do banco para rotação do banner (evita conteúdos fakes)
-        const { data: allLocalItems } = await sb
+        // 1. Obter amostra do acervo real (evita conteúdos fakes e garante rotação)
+        const { data: localData } = await sb
           .from('cinema')
-          .select('id, tmdb_id, type, titulo, poster, backdrop, banner, duration_seconds')
+          .select('id, tmdb_id, type, titulo, poster, backdrop, banner, duration')
           .limit(500)
-        
-        const allowedTmdbIds = new Set(allLocalItems?.map(x => x.tmdb_id).filter(Boolean) || [])
+
+        const allLocalItems = localData || []
+        const allowedTmdbIds = new Set(allLocalItems.map(x => x.tmdb_id).filter(Boolean))
 
         // 2. Processar "Continuar Assistindo" PRIMEIRO
         if (user) {
@@ -150,16 +151,15 @@ export function HomeClient() {
         })
         setItemsMap(newMap)
 
-        // 4. Banner Pool: Rotação entre os 500 itens do banco
-        if (allLocalItems && allLocalItems.length > 0) {
-          const shuffled = [...allLocalItems].sort(() => Math.random() - 0.5).slice(0, 15)
-          const hydratedBanners = await Promise.all(shuffled.map(async (item) => {
-            if (!item.tmdb_id) return null
+        // 4. Banner Pool: Rotação entre o acervo real
+        if (allLocalItems.length > 0) {
+          const shuffled = [...allLocalItems].sort(() => Math.random() - 0.5).slice(0, 12)
+          const hydrated = await Promise.all(shuffled.map(async (item) => {
             try {
-              return item.type === 'serie' ? await getShowDetails(item.tmdb_id) : await getMovieDetails(item.tmdb_id)
+              return item.type === 'serie' ? await getShowDetails(item.tmdb_id!) : await getMovieDetails(item.tmdb_id!)
             } catch { return null }
           }))
-          setBannerPool(hydratedBanners.filter(Boolean) as any[])
+          setBannerPool(hydrated.filter(Boolean) as any[])
         }
 
       } catch (err) {
