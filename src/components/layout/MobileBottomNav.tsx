@@ -54,7 +54,7 @@ function NavContent() {
           z-index: 5000; /* Abaixo do VideoPlayer que é 10000 */
 
           width: min(95vw, 860px);
-          height: 92px;
+          height: 110px;
 
           display: flex;
           justify-content: space-around;
@@ -139,9 +139,9 @@ function NavContent() {
         }
 
         .nav-item .icon {
-          font-size: 26px;
-          width: 26px;
-          height: 26px;
+          font-size: 48px;
+          width: 48px;
+          height: 48px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -179,7 +179,7 @@ function NavContent() {
             transform: translateX(-50%) !important;
             margin: 0 !important;
             
-            height: 85px;
+            height: 100px;
             border-radius: 30px;
             padding: 8px 10px;
             bottom: 15px;
@@ -187,9 +187,9 @@ function NavContent() {
           .nav-item {
             width: auto;
             flex: 1;
-            height: 65px;
+            height: 80px;
           }
-          .nav-item .icon { font-size: 26px; width: 26px; height: 26px; }
+          .nav-item .icon { font-size: 48px; width: 48px; height: 48px; }
         }
       `}</style>
     </>

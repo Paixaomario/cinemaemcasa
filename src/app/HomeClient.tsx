@@ -194,10 +194,9 @@ export function HomeClient() {
       {/* Seção Continuar Assistindo */}
       {continueWatching.length > 0 && (
         <section style={{ padding:'0 var(--container-px) var(--section-gap)' }}>
-          <h2 className="text-section-title border-l-4" style={{
+          <h2 className="text-section-title" style={{
             marginBottom:  'clamp(14px,1.5vw,22px)',
-            borderColor:   'var(--gold-primary)',
-            paddingLeft:   12,
+            color:         'var(--gold-primary)'
           }}>Continuar Assistindo</h2>
           <RowLayout items={continueWatching} showProgress />
         </section>
@@ -215,10 +214,8 @@ export function HomeClient() {
 
           return (
             <section key={sec.id} style={{ padding:'0 var(--container-px) var(--section-gap)' }}>
-              <h2 className="text-section-title border-l-4" style={{
+              <h2 className="text-section-title" style={{
                 marginBottom:  'clamp(14px,1.5vw,22px)',
-                borderColor:   'var(--gold-primary)',
-                paddingLeft:   12,
                 color:         'var(--gold-primary)'
               }}>{sec.titulo}</h2>
 
