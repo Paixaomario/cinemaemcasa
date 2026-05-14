@@ -180,7 +180,7 @@ function NavContent() {
             margin: 0 !important;
             right: auto !important;
             
-            height: 100px;
+            height: 110px;
             border-radius: 30px;
             padding: 8px 10px;
             bottom: 15px;
@@ -188,7 +188,7 @@ function NavContent() {
           .nav-item {
             width: auto;
             flex: 1;
-            height: 80px;
+            height: 90px;
           }
           .nav-item .icon { font-size: 48px; width: 48px; height: 48px; }
         }
