@@ -153,8 +153,8 @@ export function CinemaGrid() {
                 fontSize:      'clamp(13px,1.6vw,20px)',
                 color:         '#d9a23a',
                 marginBottom:  'clamp(10px,1.2vw,16px)',
-                borderLeft:    '4px solid #b40000',
-                paddingLeft:   12,
+                borderLeft:    'none',
+                paddingLeft:   0,
                 letterSpacing: '0.05em',
                 textTransform: 'uppercase',
               }}>{cat}</h2>

@@ -49,10 +49,10 @@ function NavContent() {
         .mobile-bottom-nav {
           position: fixed;
           bottom: 18px;
-          left: 50% !important;
-          right: auto !important;
-          transform: translateX(-50%) !important;
-          z-index: 5000; /* Abaixo do VideoPlayer que é 10000 */
+          left: 50%;
+          right: auto;
+          transform: translateX(-50%);
+          z-index: 5000;
 
           width: min(95vw, 860px);
           height: 110px;
@@ -180,7 +180,7 @@ function NavContent() {
             transform: translateX(-50%) !important;
             margin: 0 !important;
             
-            height: 110px; /* Altura ajustada para ícones maiores */
+            height: 110px;
             border-radius: 30px;
             padding: 8px 10px;
             bottom: 15px;
@@ -188,7 +188,7 @@ function NavContent() {
           .nav-item {
             width: auto;
             flex: 1;
-            height: 90px; /* Altura do item ajustada */
+            height: 90px;
           }
           .nav-item .icon { font-size: 48px; width: 48px; height: 48px; }
         }
