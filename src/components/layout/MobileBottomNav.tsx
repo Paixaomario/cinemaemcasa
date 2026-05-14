@@ -179,9 +179,9 @@ function NavContent() {
             right: auto !important;
             transform: translateX(-50%) !important;
             margin: 0 !important;
-            right: auto !important;
+            right: auto !important; /* Garante que não haja conflito com 'left' */
             
-            height: 110px;
+            height: 110px; /* Altura ajustada para ícones maiores */
             border-radius: 30px;
             padding: 8px 10px;
             bottom: 15px;
@@ -189,7 +189,7 @@ function NavContent() {
           .nav-item {
             width: auto;
             flex: 1;
-            height: 90px;
+            height: 90px; /* Altura do item ajustada */
           }
           .nav-item .icon { font-size: 48px; width: 48px; height: 48px; }
         }
