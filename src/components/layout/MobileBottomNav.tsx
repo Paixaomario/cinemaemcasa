@@ -32,9 +32,10 @@ function NavContent() {
               key={item.href} 
               href={item.href} 
               className={`nav-item ${item.active ? 'active' : ''}`}
+              aria-label={item.label}
+              title={item.label}
             >
               <span className="icon">{item.icon}</span>
-              <span>{item.label}</span>
             </Link>
           )
         })}
@@ -129,10 +130,8 @@ function NavContent() {
           width: 95px;
           height: 70px;
           display: flex;
-          flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 7px;
           text-decoration: none;
           cursor: pointer;
           border-radius: 18px;
@@ -140,16 +139,8 @@ function NavContent() {
         }
 
         .nav-item .icon {
-          font-size: 24px;
+          font-size: 32px;
           color: rgba(255, 190, 90, 0.75);
-          transition: 0.2s ease;
-        }
-
-        .nav-item span {
-          font-size: 14px;
-          font-weight: 700;
-          color: rgba(255, 190, 90, 0.72);
-          letter-spacing: 0.2px;
           transition: 0.2s ease;
         }
 
@@ -162,7 +153,7 @@ function NavContent() {
         }
 
         .nav-item.active .icon,
-        .nav-item.active span {
+        .nav-item.active .icon {
           color: rgba(255, 90, 60, 0.85);
         }
 
@@ -171,7 +162,7 @@ function NavContent() {
         }
 
         .nav-item:hover .icon,
-        .nav-item:hover span {
+        .nav-item:hover .icon {
           color: rgba(255, 220, 150, 0.95);
         }
 
@@ -192,10 +183,8 @@ function NavContent() {
             width: auto;
             flex: 1;
             height: 65px;
-            gap: 4px;
           }
-          .nav-item .icon { font-size: 20px; }
-          .nav-item span { font-size: 10px; text-align: center; line-height: 1.1; }
+          .nav-item .icon { font-size: 28px; }
         }
       `}</style>
     </>
