@@ -30,6 +30,7 @@ async function tmdb<T>(path: string, params: Record<string, string> = {}): Promi
       ...(TMDB_TOKEN ? { Authorization: `Bearer ${TMDB_TOKEN}` } : {}),
       accept: 'application/json',
     },
+    cache: 'no-store' // Garante atualização a cada reload do sistema
   })
 
   if (!res.ok) {

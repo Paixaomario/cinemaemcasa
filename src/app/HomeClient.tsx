@@ -73,6 +73,7 @@ export function HomeClient() {
                 } else {
                   const [type, rawId] = idStr.split('-')
                   try {
+                    // Busca direta pelo ID do filme para evitar dados de coleção agrupados
                     item = type === 'filme' ? await getMovieDetails(Number(rawId)) : await getShowDetails(Number(rawId))
                   } catch { return null }
                 }
@@ -128,9 +129,10 @@ export function HomeClient() {
         resolved.forEach(res => {
           const filtered: CinemaItem[] = []
           for (const item of res.items) {
-            if (item.id && !globalSeenIds.has(item.id)) {
+            const idKey = String(item.id)
+            if (idKey && !globalSeenIds.has(idKey)) {
               filtered.push(item)
-              globalSeenIds.add(item.id) // Bloqueia este filme para as próximas fileiras
+              globalSeenIds.add(idKey) // Bloqueia este ID para que nunca repita na página
             }
             if (filtered.length >= (res.limit || 5)) break
           }
@@ -196,7 +198,9 @@ export function HomeClient() {
         <section style={{ padding:'0 var(--container-px) var(--section-gap)' }}>
           <h2 className="text-section-title" style={{
             marginBottom:  'clamp(14px,1.5vw,22px)',
-            color:         'var(--gold-primary)'
+            color:         'var(--gold-primary)',
+            borderLeft:    'none !important',
+            paddingLeft:   '0 !important'
           }}>Continuar Assistindo</h2>
           <RowLayout items={continueWatching} showProgress />
         </section>
@@ -216,7 +220,9 @@ export function HomeClient() {
             <section key={sec.id} style={{ padding:'0 var(--container-px) var(--section-gap)' }}>
               <h2 className="text-section-title" style={{
                 marginBottom:  'clamp(14px,1.5vw,22px)',
-                color:         'var(--gold-primary)'
+                color:         'var(--gold-primary)',
+                borderLeft:    'none !important',
+                paddingLeft:   '0 !important'
               }}>{sec.titulo}</h2>
 
               {sec.layout === 'grid'
