@@ -141,11 +141,11 @@ function NavContent() {
         }
 
         .nav-item .icon {
-          font-size: 44px !important;
-          width: 44px !important;
-          height: 44px !important;
-          min-width: 44px !important;
-          min-height: 44px !important;
+          font-size: 48px !important;
+          width: 48px !important;
+          height: 48px !important;
+          min-width: 48px !important;
+          min-height: 48px !important;
           display: flex;
           align-items: center;
           justify-content: center;
