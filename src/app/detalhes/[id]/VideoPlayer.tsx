@@ -92,7 +92,7 @@ export function VideoPlayer({
   const videoRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<any>(null)
   const [currentRoomId, setCurrentRoomId] = useState(partyRoomId)
-  const [showChat, setShowChat] = useState(!!partyRoomId && hasJoined)
+  const [showChat, setShowChat] = useState(false)
   const [reactions, setReactions] = useState<any[]>([])
 
   // Controle de entrada na sala para convidados e anfitriões

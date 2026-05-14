@@ -54,15 +54,15 @@ export function HomeClient() {
       try {
         setLoading(true)
 
-        // Obter IDs essenciais para validação e banner (limitado para performance)
-      const { data: allLocalItems } = await sb
-        .from('cinema')
+        // 1. Obter IDs essenciais para validação e rotação real (limitado a 1000 para performance)
+        const { data: allLocalItems } = await sb
+          .from('cinema')
           .select('id, tmdb_id, type, titulo, poster, backdrop, banner, duration_seconds')
-          .limit(1000) // Pega uma amostra grande o suficiente para rotatividade
-      
-      const allowedTmdbIds = new Set(allLocalItems?.map(x => x.tmdb_id).filter(Boolean))
+          .limit(1000)
+        
+        const allowedTmdbIds = new Set(allLocalItems?.map(x => x.tmdb_id).filter(Boolean))
 
-        // 1. Processar "Continuar Assistindo" PRIMEIRO
+        // 2. Processar "Continuar Assistindo" PRIMEIRO
         if (user) {
           const { data: progressData } = await sb
             .from('view_progress')
@@ -150,9 +150,9 @@ export function HomeClient() {
         })
         setItemsMap(newMap)
 
-        // 4. Banner Pool: Rotação Real
+        // 4. Banner Pool: Rotação Real entre conteúdos locais (Fim dos fakes)
         if (allLocalItems && allLocalItems.length > 0) {
-          const shuffled = [...allLocalItems].sort(() => Math.random() - 0.5).slice(0, 15)
+          const shuffled = [...allLocalItems].sort(() => Math.random() - 0.5).slice(0, 20)
           const hydrated = await Promise.all(shuffled.map(async (item) => {
             try {
               return item.type === 'serie' ? await getShowDetails(item.tmdb_id!) : await getMovieDetails(item.tmdb_id!)
@@ -353,15 +353,22 @@ function HomeCard({ item, showProgress }: { item: CinemaItem, showProgress?: boo
         <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', fontSize:40 }}>🎬</div>
       )}
 
-      {/* Barra de progresso Netflix */}
+      {/* Barra de progresso Netflix Detalhada */}
       {showProgress && item.last_position && item.last_position > 0 && (
-        <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 4, background: 'rgba(255,255,255,0.2)' }}>
-          <div style={{ 
-            width: `${Math.min(progressPercent, 100)}%`, 
-            height: '100%', 
-            background: 'var(--red-primary)',
-            boxShadow: '0 0 10px var(--red-primary)' 
-          }} />
+        <div className="absolute bottom-0 left-0 w-full p-2 bg-black/80 backdrop-blur-sm">
+          <div className="flex justify-between text-[10px] font-bold text-white mb-1 uppercase">
+            <span>{Math.round(progressPercent)}% exibido</span>
+            {remainingText && <span>Falta {remainingText}</span>}
+          </div>
+          <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.2)', borderRadius: 2 }}>
+            <div style={{ 
+              width: `${Math.min(progressPercent, 100)}%`, 
+              height: '100%', 
+              background: 'var(--red-primary)',
+              boxShadow: '0 0 10px var(--red-primary)',
+              borderRadius: 2
+            }} />
+          </div>
         </div>
       )}
     </div>
