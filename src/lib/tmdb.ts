@@ -178,8 +178,8 @@ export async function getMoviesByGenre(genreId: number, page = 1) {
 }
 
 export async function getMovieDetails(id: number) {
-  return tmdb<TMDBMovie>(`/movie/${id}`, { 
-    append_to_response: 'credits,videos,similar,release_dates' 
+  return tmdb<TMDBMovie>(`/movie/${id}`, {
+    append_to_response: 'credits,videos,similar,release_dates'
   }).then(data => ({ ...data, media_type: 'movie' as const }))
 }
 
@@ -205,8 +205,8 @@ export async function getShowsByGenre(genreId: number, page = 1) {
 }
 
 export async function getShowDetails(id: number) {
-  return tmdb<TMDBShow>(`/tv/${id}`, { 
-    append_to_response: 'credits,videos,similar,content_ratings' 
+  return tmdb<TMDBShow>(`/tv/${id}`, {
+    append_to_response: 'credits,videos,similar,content_ratings'
   }).then(data => ({ ...data, media_type: 'tv' as const }))
 }
 

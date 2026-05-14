@@ -199,7 +199,7 @@ export function HomeClient() {
           <h2 className="text-section-title" style={{
             marginBottom:  'clamp(14px,1.5vw,22px)',
             color:         'var(--gold-primary)',
-            borderLeft:    'none',
+            borderLeft:    '0',
             paddingLeft:   0
           }}>Continuar Assistindo</h2>
           <RowLayout items={continueWatching} showProgress />
@@ -221,7 +221,7 @@ export function HomeClient() {
               <h2 className="text-section-title" style={{
                 marginBottom:  'clamp(14px,1.5vw,22px)',
                 color:         'var(--gold-primary)',
-                borderLeft:    'none',
+                borderLeft:    '0',
                 paddingLeft:   0
               }}>{sec.titulo}</h2>
 

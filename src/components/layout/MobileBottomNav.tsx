@@ -179,8 +179,6 @@ function NavContent() {
             right: auto !important;
             transform: translateX(-50%) !important;
             margin: 0 !important;
-            right: auto !important;
-            left: 50% !important;
             
             height: 110px;
             border-radius: 30px;
