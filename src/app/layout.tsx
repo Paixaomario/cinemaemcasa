@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { SupabaseProvider } from '@/components/layout/SupabaseProvider'
+import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 
 export const metadata: Metadata = {
   title: { default: 'PAIXAOFLIX', template: '%s | PAIXAOFLIX' },
@@ -30,7 +31,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1" defer></script>
       </head>
       <body>
-        <SupabaseProvider>{children}</SupabaseProvider>
+        <SupabaseProvider>
+          {children}
+          <MobileBottomNav />
+        </SupabaseProvider>
       </body>
     </html>
   )
