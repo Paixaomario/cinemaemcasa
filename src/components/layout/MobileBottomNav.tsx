@@ -1,36 +1,37 @@
 'use client'
-import React from 'react'
+import React, { Suspense } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useAuth } from './SupabaseProvider'
 
-export function MobileBottomNav() {
+function NavContent() {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const currentTab = searchParams.get('tab')
   const { user } = useAuth()
 
   // Não exibir na página de exibição (detalhes/player)
   if (pathname?.startsWith('/detalhes')) return null
 
   const navItems = [
-    { href: '/', label: 'Home', icon: '🏠' },
-    { href: '/filmes', label: 'Filmes', icon: '🎬' },
-    { href: '/series', label: 'Séries', icon: '📺' },
-    { href: '/perfil', label: 'Favoritos', icon: '❤️' },
-    { href: '/perfil', label: 'Assistir Depois', icon: '⏰' },
-    { href: '/localizar', label: 'Localizar', icon: '🔍' },
-    { href: user ? '/perfil' : '/login', label: 'Perfil', icon: '👤' },
+    { href: '/', label: 'Home', icon: '🏠', active: pathname === '/' },
+    { href: '/filmes', label: 'Filmes', icon: '🎬', active: pathname === '/filmes' },
+    { href: '/series', label: 'Séries', icon: '📺', active: pathname === '/series' },
+    { href: '/perfil?tab=fav', label: 'Favoritos', icon: '❤️', active: pathname === '/perfil' && currentTab === 'fav' },
+    { href: '/perfil?tab=later', label: 'Assistir Depois', icon: '⏰', active: pathname === '/perfil' && currentTab === 'later' },
+    { href: '/localizar', label: 'Localizar', icon: '🔍', active: pathname === '/localizar' },
+    { href: user ? '/perfil' : '/login', label: 'Perfil', icon: '👤', active: pathname === '/perfil' && !currentTab },
   ]
 
   return (
     <>
       <nav className="mobile-bottom-nav">
         {navItems.map((item) => {
-          const isActive = pathname === item.href
           return (
             <Link 
               key={item.href} 
               href={item.href} 
-              className={`nav-item ${isActive ? 'active' : ''}`}
+              className={`nav-item ${item.active ? 'active' : ''}`}
             >
               <span className="icon">{item.icon}</span>
               <span>{item.label}</span>
@@ -47,9 +48,8 @@ export function MobileBottomNav() {
         .mobile-bottom-nav {
           position: fixed;
           bottom: 18px;
-          left: 0;
-          right: 0;
-          margin: 0 auto;
+          left: 50%;
+          transform: translateX(-50%);
           z-index: 5000; /* Abaixo do VideoPlayer que é 10000 */
 
           width: min(95vw, 860px);
@@ -175,23 +175,37 @@ export function MobileBottomNav() {
           color: rgba(255, 220, 150, 0.95);
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
           .mobile-bottom-nav {
-            height: 82px;
-            border-radius: 25px;
-            padding: 8px 4px;
-            bottom: 12px;
+            /* Centralização forçada para evitar desalinhamento à direita */
+            left: 50% !important;
+            right: auto !important;
+            transform: translateX(-50%) !important;
+            margin: 0 !important;
+            
+            height: 85px;
+            border-radius: 30px;
+            padding: 8px 10px;
+            bottom: 15px;
           }
           .nav-item {
             width: auto;
             flex: 1;
-            height: 60px;
-            gap: 2px;
+            height: 65px;
+            gap: 4px;
           }
-          .nav-item .icon { font-size: 18px; }
-          .nav-item span { font-size: 9px; text-align: center; line-height: 1.1; }
+          .nav-item .icon { font-size: 20px; }
+          .nav-item span { font-size: 10px; text-align: center; line-height: 1.1; }
         }
       `}</style>
     </>
+  )
+}
+
+export function MobileBottomNav() {
+  return (
+    <Suspense fallback={null}>
+      <NavContent />
+    </Suspense>
   )
 }
