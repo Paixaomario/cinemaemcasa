@@ -45,8 +45,7 @@ const CUSTOM_STYLES = `
     min-height: calc(100vh - 120px);
     margin-top: clamp(60px, 8vh, 120px);
     border-radius: 0;
-    border: none;
-    overflow: visible;
+    overflow: hidden;
     background: linear-gradient(180deg, #1f1a1a 0%, #121212 100%);
     overflow-x: hidden !important;
   }
@@ -295,23 +294,15 @@ const CUSTOM_STYLES = `
   .details-item b { color: #d9a23a; font-weight: 900; }
 
   @media (max-width: 640px) {
-    .hero { height: auto; min-height: 50vh; padding-top: 40px; }
+    .hero { height: auto; min-height: 55vh; padding-top: 40px; }
     .hero-content { padding: 20px 15px; width: 100%; }
-    .text-hero-title { font-size: clamp(20px, 7vw, 32px) !important; }
-    .hero-buttons { flex-direction: column; width: 100%; }
-    .btn-primary, .btn-secondary { width: 100%; justify-content: center; height: 50px; }
-    .middle-sections { grid-template-columns: 1fr; padding: 20px 15px; }
-  }
-
-  /* Ajustes finos de responsividade */
-  @media (max-width: 640px) {
-    .hero { height: auto; min-height: 50vh; padding-top: 20px; }
-    .hero-content { padding: 20px 15px; }
-    .text-hero-title { font-size: clamp(22px, 8vw, 32px) !important; }
+    .text-hero-title { font-size: clamp(24px, 8vw, 36px) !important; white-space: normal; }
     .hero-buttons { flex-direction: column; width: 100%; }
     .btn-primary, .btn-secondary { width: 100%; justify-content: center; height: 55px; font-size: 14px; }
     .action-icons { overflow-x: auto; padding-bottom: 10px; width: 100%; justify-content: flex-start; }
-    .middle-sections { grid-template-columns: 1fr; gap: 30px; }
+    .middle-sections { grid-template-columns: 1fr; gap: 30px; padding: 20px 15px; }
+    .cast-grid { overflow-x: auto; padding-bottom: 15px; display: flex; gap: 15px; }
+    .details-box { grid-template-columns: 1fr; }
   }
 
   @media (max-width: 980px) {

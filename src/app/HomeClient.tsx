@@ -54,13 +54,13 @@ export function HomeClient() {
       try {
         setLoading(true)
 
-        // 1. Obter IDs essenciais para validação e rotação real (limitado a 1000 para performance)
+        // 1. Obter amostra do banco para rotação do banner (evita conteúdos fakes)
         const { data: allLocalItems } = await sb
           .from('cinema')
           .select('id, tmdb_id, type, titulo, poster, backdrop, banner, duration_seconds')
-          .limit(1000)
+          .limit(500)
         
-        const allowedTmdbIds = new Set(allLocalItems?.map(x => x.tmdb_id).filter(Boolean))
+        const allowedTmdbIds = new Set(allLocalItems?.map(x => x.tmdb_id).filter(Boolean) || [])
 
         // 2. Processar "Continuar Assistindo" PRIMEIRO
         if (user) {
@@ -150,15 +150,16 @@ export function HomeClient() {
         })
         setItemsMap(newMap)
 
-        // 4. Banner Pool: Rotação Real entre conteúdos locais (Fim dos fakes)
+        // 4. Banner Pool: Rotação entre os 500 itens do banco
         if (allLocalItems && allLocalItems.length > 0) {
-          const shuffled = [...allLocalItems].sort(() => Math.random() - 0.5).slice(0, 20)
-          const hydrated = await Promise.all(shuffled.map(async (item) => {
+          const shuffled = [...allLocalItems].sort(() => Math.random() - 0.5).slice(0, 15)
+          const hydratedBanners = await Promise.all(shuffled.map(async (item) => {
+            if (!item.tmdb_id) return null
             try {
-              return item.type === 'serie' ? await getShowDetails(item.tmdb_id!) : await getMovieDetails(item.tmdb_id!)
-            } catch { return null; }
-          }));
-          setBannerPool(hydrated.filter(Boolean) as any[])
+              return item.type === 'serie' ? await getShowDetails(item.tmdb_id) : await getMovieDetails(item.tmdb_id)
+            } catch { return null }
+          }))
+          setBannerPool(hydratedBanners.filter(Boolean) as any[])
         }
 
       } catch (err) {
@@ -353,21 +354,18 @@ function HomeCard({ item, showProgress }: { item: CinemaItem, showProgress?: boo
         <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', fontSize:40 }}>🎬</div>
       )}
 
-      {/* Barra de progresso Netflix Detalhada */}
+      {/* Barra de progresso Estilo Netflix Premium */}
       {showProgress && item.last_position && item.last_position > 0 && (
-        <div className="absolute bottom-0 left-0 w-full p-2 bg-black/80 backdrop-blur-sm">
-          <div className="flex justify-between text-[10px] font-bold text-white mb-1 uppercase">
-            <span>{Math.round(progressPercent)}% exibido</span>
-            {remainingText && <span>Falta {remainingText}</span>}
+        <div className="absolute bottom-0 left-0 w-full p-3 bg-black/80 backdrop-blur-md">
+          <div className="flex justify-between text-[11px] font-black text-white mb-2 uppercase tracking-tighter">
+            <span className="text-[var(--gold-primary)]">{Math.round(progressPercent)}% VISTO</span>
+            {remainingText && <span className="opacity-70">FALTAM {remainingText}</span>}
           </div>
-          <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.2)', borderRadius: 2 }}>
-            <div style={{ 
-              width: `${Math.min(progressPercent, 100)}%`, 
-              height: '100%', 
-              background: 'var(--red-primary)',
-              boxShadow: '0 0 10px var(--red-primary)',
-              borderRadius: 2
-            }} />
+          <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-[var(--red-primary)] shadow-[0_0_12px_var(--red-primary)] transition-all duration-1000"
+              style={{ width: `${Math.min(progressPercent, 100)}%` }}
+            />
           </div>
         </div>
       )}

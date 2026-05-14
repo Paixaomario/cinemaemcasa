@@ -178,16 +178,10 @@ export async function getMoviesByGenre(genreId: number, page = 1) {
 }
 
 export async function getMovieDetails(id: number) {
-  return tmdb<TMDBMovie>(`/movie/${id}`, { 
-    append_to_response: 'credits,videos,similar,recommendations,release_dates,watch/providers' 
-  }).then(data => ({ ...data, media_type: 'movie' as const }))
+  return tmdb<TMDBMovie>(`/movie/${id}`, { append_to_response: 'credits,videos,similar,recommendations,release_dates,watch/providers' }).then(data => ({ ...data, media_type: 'movie' as const }))
 }
 
 // ─── TV Shows ─────────────────────────────────────
-export async function getTrendingShows(page = 1) {
-  return tmdb<TMDBPage<TMDBShow>>('/trending/tv/week', { page: String(page) })
-}
-
 export async function getPopularShows(page = 1) {
   return tmdb<TMDBPage<TMDBShow>>('/tv/popular', { page: String(page) })
 }
@@ -205,9 +199,7 @@ export async function getShowsByGenre(genreId: number, page = 1) {
 }
 
 export async function getShowDetails(id: number) {
-  return tmdb<TMDBShow>(`/tv/${id}`, { 
-    append_to_response: 'credits,videos,similar,recommendations,content_ratings,watch/providers' 
-  }).then(data => ({ ...data, media_type: 'tv' as const }))
+  return tmdb<TMDBShow>(`/tv/${id}`, { append_to_response: 'credits,videos,similar,recommendations,content_ratings,watch/providers' }).then(data => ({ ...data, media_type: 'tv' as const }))
 }
 
 export async function getShowSeason(showId: number, season: number) {
