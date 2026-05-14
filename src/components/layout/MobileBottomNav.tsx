@@ -179,7 +179,6 @@ function NavContent() {
             right: auto !important;
             transform: translateX(-50%) !important;
             margin: 0 !important;
-            right: auto !important; /* Garante que não haja conflito com 'left' */
             
             height: 110px; /* Altura ajustada para ícones maiores */
             border-radius: 30px;
