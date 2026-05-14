@@ -199,8 +199,8 @@ export function HomeClient() {
           <h2 className="text-section-title" style={{
             marginBottom:  'clamp(14px,1.5vw,22px)',
             color:         'var(--gold-primary)',
-            borderLeft:    '0 !important',
-            paddingLeft:   '0 !important'
+            borderLeft:    'none',
+            paddingLeft:   0
           }}>Continuar Assistindo</h2>
           <RowLayout items={continueWatching} showProgress />
         </section>
@@ -221,8 +221,8 @@ export function HomeClient() {
               <h2 className="text-section-title" style={{
                 marginBottom:  'clamp(14px,1.5vw,22px)',
                 color:         'var(--gold-primary)',
-                borderLeft:    '0 !important',
-                paddingLeft:   '0 !important'
+                borderLeft:    'none',
+                paddingLeft:   0
               }}>{sec.titulo}</h2>
 
               {sec.layout === 'grid'
