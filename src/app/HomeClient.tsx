@@ -49,107 +49,104 @@ export function HomeClient() {
   useEffect(() => {
     async function load() {
       const sb = createClient()
+      const globalSeenIds = new Set<string | number>()
 
-      // ── 1. Buscar seções ativas ──────────────────────────
-      const { data: secs, error: secErr } = await sb
-        .from('home_sections')
-        .select('id,titulo,categorias,fonte,tmdb_endpoint,layout,limite,ordenacao,posicao,ativo')
-        .eq('ativo', true)
-        .order('posicao', { ascending: true })
-
-      if (secErr) {
-        console.error('home_sections error:', secErr)
-        // Não trava a tela em caso de erro no banco (modo desenvolvimento/sem instalação)
-        setDbError('') 
-        setLoading(false)
-        return
-      }
-
-      const sections = (secs || []) as HomeSection[]
-      setSections(sections)
-
-      // ── 2. Para cada seção fonte=cinema, buscar filmes ───
-      const sectionsPromises = sections.map(async (sec) => {
-        if (sec.fonte !== 'cinema') return { id: sec.id, items: [] };
-
-        let q = sb
-          .from('cinema')
-          .select('id,titulo,poster,banner,backdrop,year,rating,category,type,url,duration')
-
-        if (sec.categorias && sec.categorias.length > 0) {
-          q = q.in('category', sec.categorias)
-        }
-
-        switch (sec.ordenacao) {
-          case 'rating_desc':     q = q.order('rating',     { ascending: false, nullsFirst: false }); break
-          case 'year_desc':       q = q.order('year',       { ascending: false, nullsFirst: false }); break
-          default:                q = q.order('created_at', { ascending: false, nullsFirst: false }); break
-        }
-
-        q = q.limit(sec.limite || 5) // Respeita o limite da seção ou padrão de 5
-
-        const { data, error: filmErr } = await q
-
-        if (filmErr) {
-          console.error(`cinema error (sec ${sec.titulo}):`, filmErr)
-          return { id: sec.id, items: [] }
-        }
-        return { id: sec.id, items: (data || []) as CinemaItem[] }
-      })
-
-      const resolvedSections = await Promise.all(sectionsPromises)
-      const newItemsMap: Record<string, CinemaItem[]> = {}
-      resolvedSections.forEach(res => { newItemsMap[res.id] = res.items })
-
-      setItemsMap(newItemsMap)
-
-      // ── 2.1. Buscar "Continuar Assistindo" ───────────────
-      if (user) {
-        const { data: progressData } = await sb
-          .from('view_progress')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('is_finished', false)
-          .order('updated_at', { ascending: false })
-          .limit(5) // Limitado a 5 para mobile
-
-        if (progressData && progressData.length > 0) {
-          const hydratedItems: any[] = await Promise.all(
-            progressData.map(async (p) => {
-              const idStr = String(p.content_id)
-              // Se for ID local (tabela cinema)
-              if (!idStr.includes('-')) {
-                const { data } = await sb.from('cinema').select('*').eq('id', p.content_id).single()
-                return { ...data, last_position: p.last_position, duration_seconds: (data as any)?.duration_seconds || 3600 }
-              } 
-              // Se for ID TMDB
-              const [type, rawId] = idStr.split('-')
-              try {
-                const data: any = type === 'filme' ? await getMovieDetails(Number(rawId)) : await getShowDetails(Number(rawId))
-                return {
-                  id: idStr,
-                  titulo: data.title || data.name,
-                  // Garante o uso do poster individual do filme, ignorando posters de coleção
-                  poster: data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : null,
-                  last_position: p.last_position,
-                  duration_seconds: (data as any).runtime * 60 || (data as any).episode_run_time?.[0] * 60 || 3600
-                }
-              } catch { return null }
-            })
-          )
-          setContinueWatching(hydratedItems.filter(Boolean))
-        }
-      }
-
-      // ── 3. Banner pool TMDB ──────────────────────────────
       try {
+        // 1. Processar "Continuar Assistindo" PRIMEIRO
+        if (user) {
+          const { data: progressData } = await sb
+            .from('view_progress')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('is_finished', false)
+            .order('updated_at', { ascending: false })
+            .limit(5)
+
+          if (progressData && progressData.length > 0) {
+            const hydrated = await Promise.all(
+              progressData.map(async (p) => {
+                const idStr = String(p.content_id)
+                let item: any = null
+                if (!idStr.includes('-')) {
+                  const { data } = await sb.from('cinema').select('*').eq('id', p.content_id).single()
+                  item = data
+                } else {
+                  const [type, rawId] = idStr.split('-')
+                  try {
+                    item = type === 'filme' ? await getMovieDetails(Number(rawId)) : await getShowDetails(Number(rawId))
+                  } catch { return null }
+                }
+                if (item) {
+                  globalSeenIds.add(idStr) // Bloqueia ID do histórico para o resto da home
+                  return {
+                    ...item,
+                    id: idStr,
+                    titulo: item.titulo || item.title || item.name,
+                    poster: item.poster || (item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null),
+                    last_position: p.last_position,
+                    duration_seconds: item.duration_seconds || (item.runtime * 60) || 3600
+                  }
+                }
+                return null
+              })
+            )
+            setContinueWatching(hydrated.filter(Boolean) as CinemaItem[])
+          }
+        }
+
+        // 2. Buscar definições de seções
+        const { data: secs, error: secErr } = await sb
+          .from('home_sections')
+          .select('id,titulo,categorias,fonte,tmdb_endpoint,layout,limite,ordenacao,posicao,ativo')
+          .eq('ativo', true)
+          .order('posicao', { ascending: true })
+
+        if (secErr) throw secErr
+        const homeSections = (secs || []) as HomeSection[]
+        setSections(homeSections)
+
+        // 3. Buscar e filtrar itens de cada seção (sequencialmente)
+        const sectionsPromises = homeSections.map(async (sec) => {
+          if (sec.fonte !== 'cinema') return { id: sec.id, items: [] as CinemaItem[], limit: sec.limite }
+          
+          let q = sb.from('cinema').select('id,titulo,poster,banner,backdrop,year,rating,category,type,url,duration')
+          if (sec.categorias && sec.categorias.length > 0) q = q.in('category', sec.categorias)
+          
+          switch (sec.ordenacao) {
+            case 'rating_desc': q = q.order('rating', { ascending: false, nullsFirst: false }); break
+            case 'year_desc':   q = q.order('year', { ascending: false, nullsFirst: false }); break
+            default:            q = q.order('created_at', { ascending: false, nullsFirst: false }); break
+          }
+
+          const { data } = await q.limit((sec.limite || 5) * 3) // Buffer para filtragem
+          return { id: sec.id, items: (data || []) as CinemaItem[], limit: sec.limite || 5 }
+        })
+
+        const resolved = await Promise.all(sectionsPromises)
+        const newMap: Record<string, CinemaItem[]> = {}
+
+        resolved.forEach(res => {
+          const filtered: CinemaItem[] = []
+          for (const item of res.items) {
+            if (item.id && !globalSeenIds.has(item.id)) {
+              filtered.push(item)
+              globalSeenIds.add(item.id) // Bloqueia este filme para as próximas fileiras
+            }
+            if (filtered.length >= (res.limit || 5)) break
+          }
+          newMap[res.id] = filtered
+        })
+        setItemsMap(newMap)
+
+        // 4. Carregar Banner Pool (TMDB)
         const pool = await buildBannerPool('all', 20)
         setBannerPool(pool)
-      } catch (e) {
-        console.warn('TMDB banner error:', e)
-      }
 
-      setLoading(false)
+      } catch (err) {
+        console.error('Erro no carregamento da Home:', err)
+      } finally {
+        setLoading(false)
+      }
     }
 
     load()
