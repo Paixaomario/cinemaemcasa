@@ -313,6 +313,7 @@ function DetailContent({ params }: Props) {
   const [movieData, setMovieData] = useState<any>(null)
   const [isFavorite, setIsFavorite] = useState(false)
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null)
+  const [isPartyMode, setIsPartyMode] = useState(false)
   const [loading, setLoading] = useState(true)
   const [shouldStartParty, setShouldStartParty] = useState(false) // New state for party initiation
   const [shuffledRecommendations, setShuffledRecommendations] = useState<any[]>([])
@@ -419,7 +420,10 @@ function DetailContent({ params }: Props) {
         // Se houver um roomId na URL, ativa o player automaticamente
         if (roomFromUrl && foundData) {
           const url = foundData.url || foundData.video_url
-          if (url) setActiveVideoUrl(url)
+          if (url) {
+            setActiveVideoUrl(url)
+            setIsPartyMode(true)
+          }
         }
 
         setMovieData(foundData)
@@ -490,6 +494,7 @@ function DetailContent({ params }: Props) {
     const url = movieData?.url || movieData?.video_url
     if (url) {
       setActiveVideoUrl(url)
+      setIsPartyMode(true)
       setShouldStartParty(true)
     } else {
       alert('O conteúdo não está disponível para iniciar uma sala.')
@@ -516,6 +521,7 @@ function DetailContent({ params }: Props) {
 
   const handlePlayContent = () => {
     const url = movieData?.url || movieData?.video_url
+    setIsPartyMode(false)
     if (url) setActiveVideoUrl(url)
     else alert('O conteúdo principal não está disponível no momento.')
   }
@@ -524,6 +530,7 @@ function DetailContent({ params }: Props) {
     // Prioriza o trailer da tabela 'cinema', senão busca no retorno da TMDB
     const trailer = movieData?.trailer || 
                    movieData?.videos?.results?.find((v: any) => v.type === 'Trailer' || v.type === 'Teaser')?.key
+    setIsPartyMode(false)
     
     if (trailer) setActiveVideoUrl(trailer.includes('http') ? trailer : `https://www.youtube.com/watch?v=${trailer}`)
     else alert('Trailer não disponível para este título.')

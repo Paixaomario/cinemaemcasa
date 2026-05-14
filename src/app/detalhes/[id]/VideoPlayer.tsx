@@ -152,6 +152,16 @@ export function VideoPlayer({
       
       videoRef.current.appendChild(videoElement)
 
+      // Tentar forçar orientação horizontal em dispositivos móveis
+      try {
+        if (typeof window !== 'undefined' && window.screen?.orientation?.lock) {
+          (window.screen.orientation as any).lock('landscape').catch(() => {
+            // Silenciosamente falha se o navegador não permitir (comum em Safari/iOS sem PWA)
+            console.log('Rotação automática solicitada.');
+          });
+        }
+      } catch (e) {}
+
       const player = playerRef.current = videojs(videoElement, {
         autoplay: true, // Força o play automático para convidados
         controls: true,
@@ -226,6 +236,12 @@ export function VideoPlayer({
       if (playerRef.current) {
         playerRef.current.dispose();
         playerRef.current = null;
+      }
+      // Restaurar orientação ao fechar (opcional)
+      if (typeof window !== 'undefined' && window.screen?.orientation?.unlock) {
+        try {
+          window.screen.orientation.unlock();
+        } catch (e) {}
       }
       // Clean up the dynamically added style tag
       const styleTag = document.getElementById('vjs-custom-icons-style');
