@@ -139,7 +139,12 @@ function NavContent() {
         }
 
         .nav-item .icon {
-          font-size: 32px;
+          font-size: 26px;
+          width: 26px;
+          height: 26px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           color: rgba(255, 190, 90, 0.75);
           transition: 0.2s ease;
         }
@@ -184,7 +189,7 @@ function NavContent() {
             flex: 1;
             height: 65px;
           }
-          .nav-item .icon { font-size: 28px; }
+          .nav-item .icon { font-size: 26px; width: 26px; height: 26px; }
         }
       `}</style>
     </>
