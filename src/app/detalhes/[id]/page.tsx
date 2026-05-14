@@ -293,6 +293,16 @@ const CUSTOM_STYLES = `
   .details-item { line-height: 1.6; color: rgba(255, 255, 255, 0.8); }
   .details-item b { color: #d9a23a; font-weight: 900; }
 
+  @media (max-width: 640px) {
+    .hero { height: auto; min-height: 50vh; padding-top: 40px; }
+    .hero-content { padding: 20px 15px; width: 100%; overflow: hidden; }
+    .text-hero-title { font-size: clamp(20px, 7vw, 32px) !important; }
+    .hero-buttons { flex-direction: column; width: 100%; }
+    .btn-primary, .btn-secondary { width: 100%; justify-content: center; height: 50px; }
+    .details-box { grid-template-columns: 1fr; }
+    .cast-grid { overflow-x: auto; padding-bottom: 10px; }
+  }
+
   /* Ajustes finos de responsividade */
   @media (max-width: 640px) {
     .hero { height: auto; min-height: 50vh; padding-top: 20px; }

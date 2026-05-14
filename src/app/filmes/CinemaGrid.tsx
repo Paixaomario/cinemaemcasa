@@ -191,11 +191,7 @@ function CinemaRow({ items }: { items: Cinema[] }) {
 /* ── Grade responsiva ── */
 function CinemaGridFull({ items }: { items: Cinema[] }) {
   return (
-    <div className="grid gap-4" style={{
-      gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', /* Padrão para mobile */
-      '@media (min-width: 640px)': { gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }, /* Tablet */
-      '@media (min-width: 1024px)': { gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }, /* Desktop */
-    }}>
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
       {items.map(f => <CinemaCard key={f.id} film={f} />)}
     </div>
   )
@@ -227,7 +223,7 @@ function CinemaCard({ film }: { film: Cinema }) {
       role="button"
       style={{
         flexShrink:  0,
-        width:       '100%', /* Ocupa 100% da coluna do grid */
+        width:       'clamp(100px,13vw,180px)',
         aspectRatio: '2/3',
         borderRadius: 10,
         overflow:    'hidden',
