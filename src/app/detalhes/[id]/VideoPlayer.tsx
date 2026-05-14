@@ -92,7 +92,7 @@ export function VideoPlayer({
   const videoRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<any>(null)
   const [currentRoomId, setCurrentRoomId] = useState(partyRoomId)
-  const [showChat, setShowChat] = useState(false)
+  const [showChat, setShowChat] = useState(!!partyRoomId && hasJoined)
   const [reactions, setReactions] = useState<any[]>([])
   
   // Controle de entrada na sala para convidados e anfitriões
@@ -105,13 +105,6 @@ export function VideoPlayer({
 
   const sb = createClient()
 
-  function handleJoinSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!nameInput.trim()) return;
-    setActiveUserName(nameInput.trim());
-    setHasJoined(true);
-    setShowChat(true);
-  }
 
   const startParty = useCallback(() => {
     const newRoomId = Math.random().toString(36).substring(2, 11)
@@ -120,7 +113,7 @@ export function VideoPlayer({
     const url = new URL(window.location.href)
     url.searchParams.set('room', newRoomId)
     window.history.pushState({}, '', url)
-  }, [title]);
+  }, []); // Removido dependency 'title' conforme aviso de linter
 
   const copyInviteLink = useCallback(() => {
     if (!currentRoomId) return
@@ -313,7 +306,7 @@ export function VideoPlayer({
   }
 
   return (
-    <div className={`fixed inset-0 z-[10000] bg-black flex hero-enter ${isGuest ? 'guest-fullscreen-fix' : ''}`}>
+    <div className={`fixed inset-0 z-[10000] bg-black flex hero-enter ${isGuest ? 'guest-fullscreen-fix' : ''} ${showChat ? 'flex-row' : 'flex-col'}`}>
       {/* Camada de Emojis Voadores */}
       {reactions.map(r => (
         <span 
@@ -370,7 +363,7 @@ export function VideoPlayer({
         <Image src="/logo.png" alt="" width={160} height={60} className="object-contain" />
       </div>
 
-      <div className="flex-1 h-full relative bg-black">
+      <div className={`flex-1 h-full relative bg-black ${showChat ? 'w-full lg:w-[calc(100%-320px)]' : 'w-full'}`}>
         <div className="w-full h-full">
           <div className={isGuest ? 'vjs-guest-mode' : ''}>
             {isYouTube ? (

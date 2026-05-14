@@ -151,7 +151,7 @@ export function HomeClient() {
         })
         setItemsMap(newMap)
 
-        // 4. Banner Pool: Rotação Real (Escolha entre conteúdos locais válidos)
+        // 4. Banner Pool: Rotação Real de 100k itens
         if (allLocalItems.length > 0) {
           const shuffled = [...allLocalItems].sort(() => Math.random() - 0.5).slice(0, 15)
           const hydratedBanners = await Promise.all(shuffled.map(async (item) => {
@@ -217,7 +217,7 @@ export function HomeClient() {
           <h2 className="text-section-title" style={{
             marginBottom:  'clamp(14px,1.5vw,22px)',
             color:         'var(--gold-primary)',
-            border:        '0',
+            borderLeft:    'none',
             paddingLeft:   0
           }}>Continuar Assistindo</h2>
           <RowLayout items={continueWatching} showProgress />
@@ -239,7 +239,7 @@ export function HomeClient() {
               <h2 className="text-section-title" style={{
                 marginBottom:  'clamp(14px,1.5vw,22px)',
                 color:         'var(--gold-primary)',
-                border:        '0',
+                borderLeft:    'none',
                 paddingLeft:   0
               }}>{sec.titulo}</h2>
 

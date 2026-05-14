@@ -54,9 +54,8 @@ function NavContent() {
           transform: translateX(-50%) !important;
           z-index: 5000;
 
-          width: 92vw !important;
-          max-width: 500px !important;
-          height: 80px !important;
+          width: min(95vw, 860px);
+          height: 80px;
 
           display: flex;
           justify-content: space-around;
@@ -146,10 +145,12 @@ function NavContent() {
           width: 48px !important;
           height: 48px !important;
           min-width: 48px !important;
+          min-height: 48px !important;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: all 0.2s ease;
+          color: rgba(255, 190, 90, 0.75);
+          transition: 0.2s ease;
         }
 
         .nav-item.active {
@@ -176,14 +177,22 @@ function NavContent() {
 
         @media (max-width: 768px) {
           .mobile-bottom-nav {
+            left: 50% !important; /* Força a centralização */
+            right: auto !important; /* Garante que 'right' não interfira */
+            transform: translateX(-50%) !important; /* Ajusta a centralização */
+            margin: 0 !important; /* Remove margens que possam empurrar */
+            
             height: 75px !important;
-            padding: 0 5px !important;
-            bottom: 15px !important;
+            border-radius: 30px;
+            padding: 0 2px;
+            bottom: 15px;
           }
-          .nav-item .icon { 
-            font-size: 48px !important;
-            width: 48px !important; 
+          .nav-item {
+            width: auto;
+            flex: 1;
+            height: 70px !important;
           }
+          .nav-item .icon { font-size: 48px !important; width: 48px !important; height: 48px !important; min-width: 48px !important; }
         }
       `}</style>
     </>
