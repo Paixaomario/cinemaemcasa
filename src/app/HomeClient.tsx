@@ -51,12 +51,9 @@ export function HomeClient() {
       const sb = createClient()
       const globalSeenIds = new Set<string | number>()
 
-      // Obter TODOS os IDs que temos no banco para validação e para o Banner Aleatório
-      const { data: allLocalItems } = await sb
-        .from('cinema')
-        .select('id, tmdb_id, type, titulo, poster, backdrop, banner, url, duration_seconds')
-      
-      const allowedTmdbIds = new Set(allLocalItems?.map(x => x.tmdb_id).filter(Boolean))
+      // Obter lista de IDs do TMDB que realmente existem no nosso acervo (tabela cinema)
+      const { data: dbCinemaItems } = await sb.from('cinema').select('tmdb_id')
+      const allowedTmdbIds = new Set(dbCinemaItems?.map(x => x.tmdb_id).filter(Boolean))
 
       try {
         // 1. Processar "Continuar Assistindo" PRIMEIRO
@@ -115,19 +112,29 @@ export function HomeClient() {
 
         // 3. Buscar e filtrar itens de cada seção (sequencialmente)
         const sectionsPromises = homeSections.map(async (sec) => {
-          if (sec.fonte !== 'cinema') return { id: sec.id, items: [] as CinemaItem[], limit: sec.limite }
-          
-          let q = sb.from('cinema').select('id,titulo,poster,banner,backdrop,year,rating,category,type,url,duration')
-          if (sec.categorias && sec.categorias.length > 0) q = q.in('category', sec.categorias)
-          
-          switch (sec.ordenacao) {
-            case 'rating_desc': q = q.order('rating', { ascending: false, nullsFirst: false }); break
-            case 'year_desc':   q = q.order('year', { ascending: false, nullsFirst: false }); break
-            default:            q = q.order('created_at', { ascending: false, nullsFirst: false }); break
+          if (sec.fonte === 'cinema') {
+            let q = sb.from('cinema').select('id,titulo,poster,banner,backdrop,year,rating,category,type,url,duration')
+            if (sec.categorias && sec.categorias.length > 0) q = q.in('category', sec.categorias)
+            switch (sec.ordenacao) {
+              case 'rating_desc': q = q.order('rating', { ascending: false, nullsFirst: false }); break
+              case 'year_desc':   q = q.order('year', { ascending: false, nullsFirst: false }); break
+              default:            q = q.order('created_at', { ascending: false, nullsFirst: false }); break
+            }
+            const { data } = await q.limit((sec.limite || 5) * 3)
+            return { id: sec.id, items: (data || []) as CinemaItem[], limit: sec.limite || 5 }
+          } else {
+            // Filtro Anti-Fake para fontes TMDB
+            try {
+              const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/rpc/get_tmdb_discover`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
+                body: JSON.stringify({ endpoint: sec.tmdb_endpoint, limit_count: (sec.limite || 5) * 4 })
+              });
+              const data = await res.json();
+              const filtered = data.filter((item: any) => allowedTmdbIds.has(item.id));
+              return { id: sec.id, items: filtered as CinemaItem[], limit: sec.limite || 5 };
+            } catch { return { id: sec.id, items: [], limit: 5 }; }
           }
-
-          const { data } = await q.limit((sec.limite || 5) * 3) // Buffer para filtragem
-          return { id: sec.id, items: (data || []) as CinemaItem[], limit: sec.limite || 5 }
         })
 
         const resolved = await Promise.all(sectionsPromises)
@@ -147,20 +154,10 @@ export function HomeClient() {
         })
         setItemsMap(newMap)
 
-        // 4. Banner Pool: Rotação Real de 100k conteúdos (Sorteio Local)
-        if (allLocalItems && allLocalItems.length > 0) {
-          const shuffledLocal = [...allLocalItems]
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 30); // Pega 30 aleatórios do seu banco
-          
-          const hydratedBanners = await Promise.all(shuffledLocal.map(async (item) => {
-            if (!item.tmdb_id) return null;
-            try {
-              return item.type === 'serie' ? await getShowDetails(item.tmdb_id) : await getMovieDetails(item.tmdb_id);
-            } catch { return null; }
-          }));
-          setBannerPool(hydratedBanners.filter(Boolean) as any[]);
-        }
+        // 4. Carregar Banner Pool (TMDB) filtrando apenas o que temos no banco
+        const rawPool = await buildBannerPool('all', 60) // Busca mais para ter margem de filtragem
+        const pool = rawPool.filter(item => allowedTmdbIds.has(item.id))
+        setBannerPool(pool.slice(0, 20))
 
       } catch (err) {
         console.error('Erro no carregamento da Home:', err)
@@ -306,8 +303,7 @@ function HomeCard({ item, showProgress }: { item: CinemaItem, showProgress?: boo
   const remainingText = remainingSecs > 0 ? formatRuntime(Math.floor(remainingSecs / 60)) : ''
 
   return (
-    <div
-      onMouseEnter={() => setHovered(true)}
+    <div className="group relative" onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onTouchStart={() => setHovered(true)}
       onTouchEnd={() => setHovered(false)}
@@ -356,13 +352,20 @@ function HomeCard({ item, showProgress }: { item: CinemaItem, showProgress?: boo
 
       {/* Barra de progresso Netflix */}
       {showProgress && item.last_position && item.last_position > 0 && (
-        <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 4, background: 'rgba(255,255,255,0.2)' }}>
-          <div style={{ 
-            width: `${Math.min(progressPercent, 100)}%`, 
-            height: '100%', 
-            background: 'var(--red-primary)',
-            boxShadow: '0 0 10px var(--red-primary)' 
-          }} />
+        <div className="absolute bottom-0 left-0 w-full p-2 bg-black/80 backdrop-blur-sm">
+          <div className="flex justify-between text-[10px] font-bold text-white mb-1 uppercase">
+            <span>{Math.round(progressPercent)}% exibido</span>
+            {remainingText && <span>Falta {remainingText}</span>}
+          </div>
+          <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.2)', borderRadius: 2 }}>
+            <div style={{ 
+              width: `${Math.min(progressPercent, 100)}%`, 
+              height: '100%', 
+              background: 'var(--red-primary)',
+              boxShadow: '0 0 10px var(--red-primary)',
+              borderRadius: 2
+            }} />
+          </div>
         </div>
       )}
     </div>

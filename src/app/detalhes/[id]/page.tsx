@@ -40,14 +40,14 @@ const CUSTOM_STYLES = `
   }
 
   .page-container {
-    max-width: 100vw;
+    width: 100%;
     min-height: calc(100vh - 120px);
     margin-top: clamp(60px, 8vh, 120px);
     border-radius: 0;
     border: none;
     overflow: visible;
     background: linear-gradient(180deg, #1f1a1a 0%, #121212 100%);
-    overflow-x: hidden;
+    overflow: hidden;
   }
 
   .hero {

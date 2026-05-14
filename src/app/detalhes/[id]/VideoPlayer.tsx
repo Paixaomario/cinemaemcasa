@@ -92,7 +92,7 @@ export function VideoPlayer({
   const videoRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<any>(null)
   const [currentRoomId, setCurrentRoomId] = useState(partyRoomId)
-  const [showChat, setShowChat] = useState(!!partyRoomId) // Só inicia se houver ID de sala
+  const [showChat, setShowChat] = useState(!!partyRoomId && hasJoined) 
   const [reactions, setReactions] = useState<any[]>([])
 
   // Controle de entrada na sala para convidados e anfitriões
@@ -382,7 +382,7 @@ export function VideoPlayer({
         <Image src="/logo.png" alt="" width={160} height={60} className="object-contain" />
       </div>
 
-      <div className={`flex-1 h-full relative bg-black ${showChat ? 'w-full sm:w-[calc(100%-320px)]' : 'w-full'}`}>
+      <div className={`flex-1 h-full relative bg-black ${showChat ? 'w-full lg:w-[calc(100%-320px)]' : 'w-full'}`}>
         <div className="w-full h-full">
           <div className={isGuest ? 'vjs-guest-mode' : ''}>
             {isYouTube ? (

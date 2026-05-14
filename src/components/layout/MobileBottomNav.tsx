@@ -55,7 +55,7 @@ function NavContent() {
           z-index: 5000;
 
           width: min(95vw, 860px);
-          height: 75px; /* Altura da barra ajustada para ícones de 48px */
+          height: 75px !important; 
 
           display: flex;
           justify-content: space-around;
@@ -141,10 +141,10 @@ function NavContent() {
         }
 
         .nav-item .icon {
-          font-size: 48px !important; /* Ícones grandes */
+          font-size: 48px !important;
           width: 48px !important;
           height: 48px !important;
-          min-width: 48px !important; /* Garante que não encolham */
+          min-width: 48px !important;
           min-height: 48px !important;
           display: flex;
           align-items: center;
