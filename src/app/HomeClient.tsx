@@ -86,7 +86,7 @@ export function HomeClient() {
           default:                q = q.order('created_at', { ascending: false, nullsFirst: false }); break
         }
 
-        q = q.limit(50)
+        q = q.limit(sec.limite || 5) // Respeita o limite da seção ou padrão de 5
 
         const { data, error: filmErr } = await q
 
@@ -111,7 +111,7 @@ export function HomeClient() {
           .eq('user_id', user.id)
           .eq('is_finished', false)
           .order('updated_at', { ascending: false })
-          .limit(10)
+          .limit(5) // Limitado a 5 para mobile
 
         if (progressData && progressData.length > 0) {
           const hydratedItems: any[] = await Promise.all(
@@ -256,6 +256,9 @@ function RowLayout({ items, showProgress }: { items: CinemaItem[]; showProgress?
     <div style={{
       display:'flex', gap:'clamp(12px, 1.5vw, 24px)',
       overflowX:'auto', paddingBottom:8, scrollbarWidth:'none',
+      width: '100%',
+      maxWidth: '100%',
+      WebkitOverflowScrolling: 'touch',
     } as CSSProperties}>
       {items.map(item => <HomeCard key={item.id} item={item} showProgress={showProgress} />)}
     </div>
