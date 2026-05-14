@@ -49,9 +49,9 @@ function NavContent() {
         .mobile-bottom-nav {
           position: fixed;
           bottom: 18px;
-          left: 50% !important; /* Força a centralização */
-          right: auto !important; /* Garante que 'right' não interfira */
-          transform: translateX(-50%) !important; /* Ajusta a centralização */
+          left: 50% !important;
+          right: auto !important;
+          transform: translateX(-50%) !important;
           z-index: 5000;
 
           width: min(95vw, 860px);
@@ -143,6 +143,8 @@ function NavContent() {
           font-size: 56px !important;
           width: 56px !important;
           height: 56px !important;
+          min-width: 56px !important; /* Impede o encolhimento */
+          min-height: 56px !important;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -188,9 +190,9 @@ function NavContent() {
           .nav-item {
             width: auto;
             flex: 1;
-            height: 100px !important; /* Altura do item ajustada */
+            height: 100px !important;
           }
-          .nav-item .icon { font-size: 56px !important; width: 56px !important; height: 56px !important; }
+          .nav-item .icon { font-size: 56px !important; width: 56px !important; height: 56px !important; min-width: 56px !important; }
         }
       `}</style>
     </>
