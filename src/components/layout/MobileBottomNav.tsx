@@ -49,10 +49,10 @@ function NavContent() {
         .mobile-bottom-nav {
           position: fixed;
           bottom: 18px;
-          left: 50%;
-          right: auto;
-          transform: translateX(-50%);
-          z-index: 5000;
+          left: 50% !important;
+          right: auto !important;
+          transform: translateX(-50%) !important;
+          z-index: 5000; /* Abaixo do VideoPlayer que é 10000 */
 
           width: min(95vw, 860px);
           height: 110px;
@@ -179,6 +179,7 @@ function NavContent() {
             right: auto !important;
             transform: translateX(-50%) !important;
             margin: 0 !important;
+            right: auto !important;
             
             height: 110px;
             border-radius: 30px;
