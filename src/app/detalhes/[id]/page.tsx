@@ -345,6 +345,18 @@ function DetailContent({ params }: Props) {
         if (!isNaN(tmdbId)) {
           console.log('TMDB ID detected:', tmdbId, 'type:', type)
           const isMovie = type === 'filme'
+
+          // VERIFICAÇÃO DE SEGURANÇA: Só busca no TMDB se o ID estiver no nosso banco
+          const { data: dbCheck } = await sb
+            .from('cinema')
+            .select('id')
+            .eq('tmdb_id', tmdbId)
+            .maybeSingle()
+
+          if (!dbCheck) {
+            throw new Error('Conteúdo não disponível na biblioteca local.')
+          }
+
           try {
             if (isMovie) {
               const movie = await getMovieDetails(tmdbId)
@@ -445,19 +457,31 @@ function DetailContent({ params }: Props) {
     loadMovieData()
   }, [resolvedParams, user])
 
-  // Efeito para embaralhar recomendações a cada carregamento
+  // Efeito para buscar e filtrar recomendações (apenas o que temos no banco)
   useEffect(() => {
     if (movieData) {
-      // Filtra as recomendações para garantir que o filme atual não apareça e que cada um seja individual
-      const rawRecs = (movieData.similar?.results || movieData.recommendations?.results || [])
-        .filter((movie: any) => String(movie.id) !== String(resolvedParams?.id?.split('-')[1]));
+      async function loadValidRecs() {
+        const sb = createClient()
+        const rawRecs = movieData.similar?.results || movieData.recommendations?.results || []
+        
+        if (rawRecs.length === 0) return
 
-      if (rawRecs.length > 0) {
-        const shuffled = [...rawRecs]
-          .sort(() => Math.random() - 0.5)
-          .slice(0, 8) // Aumentado para mostrar mais opções individuais
-        setShuffledRecommendations(shuffled)
+        // Verifica quais dessas recomendações existem no nosso banco
+        const ids = rawRecs.map((r: any) => r.id)
+        const { data: matches } = await sb.from('cinema').select('tmdb_id').in('tmdb_id', ids)
+        const matchSet = new Set(matches?.map(m => m.tmdb_id))
+
+        const currentId = resolvedParams?.id?.split('-')[1]
+        const filtered = rawRecs.filter((movie: any) => 
+          matchSet.has(movie.id) && String(movie.id) !== String(currentId)
+        )
+
+        if (filtered.length > 0) {
+          const shuffled = [...filtered].sort(() => Math.random() - 0.5).slice(0, 8)
+          setShuffledRecommendations(shuffled)
+        }
       }
+      loadValidRecs()
     }
   }, [movieData, resolvedParams])
 

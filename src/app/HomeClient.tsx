@@ -51,6 +51,10 @@ export function HomeClient() {
       const sb = createClient()
       const globalSeenIds = new Set<string | number>()
 
+      // Obter lista de IDs do TMDB que realmente existem no nosso acervo (tabela cinema)
+      const { data: dbCinemaItems } = await sb.from('cinema').select('tmdb_id')
+      const allowedTmdbIds = new Set(dbCinemaItems?.map(x => x.tmdb_id).filter(Boolean))
+
       try {
         // 1. Processar "Continuar Assistindo" PRIMEIRO
         if (user) {
@@ -140,9 +144,10 @@ export function HomeClient() {
         })
         setItemsMap(newMap)
 
-        // 4. Carregar Banner Pool (TMDB)
-        const pool = await buildBannerPool('all', 20)
-        setBannerPool(pool)
+        // 4. Carregar Banner Pool (TMDB) filtrando apenas o que temos no banco
+        const rawPool = await buildBannerPool('all', 60) // Busca mais para ter margem de filtragem
+        const pool = rawPool.filter(item => allowedTmdbIds.has(item.id))
+        setBannerPool(pool.slice(0, 20))
 
       } catch (err) {
         console.error('Erro no carregamento da Home:', err)
