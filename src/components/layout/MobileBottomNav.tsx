@@ -54,9 +54,9 @@ function NavContent() {
           transform: translateX(-50%) !important;
           z-index: 5000;
 
-          width: 95vw !important;
-          max-width: 550px !important;
-          height: 82px !important;
+          width: 92vw !important;
+          max-width: 500px !important;
+          height: 80px !important;
 
           display: flex;
           justify-content: space-around;
@@ -176,13 +176,13 @@ function NavContent() {
 
         @media (max-width: 768px) {
           .mobile-bottom-nav {
-            height: 78px !important;
-            padding: 0 4px !important;
-            bottom: 12px !important;
+            height: 75px !important;
+            padding: 0 5px !important;
+            bottom: 15px !important;
           }
           .nav-item .icon { 
-            font-size: 44px !important;
-            width: 44px !important; 
+            font-size: 48px !important;
+            width: 48px !important; 
           }
         }
       `}</style>

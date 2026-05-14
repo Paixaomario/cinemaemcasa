@@ -151,15 +151,15 @@ export function HomeClient() {
         })
         setItemsMap(newMap)
 
-        // 4. Banner Pool: Escolha aleatória real (Fim dos fakes)
+        // 4. Banner Pool: Rotação Real (Escolha entre conteúdos locais válidos)
         if (allLocalItems.length > 0) {
-          const shuffled = [...allLocalItems].sort(() => Math.random() - 0.5).slice(0, 20)
-          const hydrated = await Promise.all(shuffled.map(async (item) => {
+          const shuffled = [...allLocalItems].sort(() => Math.random() - 0.5).slice(0, 15)
+          const hydratedBanners = await Promise.all(shuffled.map(async (item) => {
             try {
               return item.type === 'serie' ? await getShowDetails(item.tmdb_id!) : await getMovieDetails(item.tmdb_id!)
             } catch { return null }
           }))
-          setBannerPool(hydrated.filter(Boolean) as any[])
+          setBannerPool(hydratedBanners.filter(Boolean) as any[])
         }
 
       } catch (err) {
