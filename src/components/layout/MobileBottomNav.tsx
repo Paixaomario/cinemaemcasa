@@ -140,7 +140,7 @@ function NavContent() {
         }
 
         .nav-item .icon {
-          font-size: 56px !important; /* Garante o tamanho do ícone */
+          font-size: 56px !important;
           width: 56px !important;
           height: 56px !important;
           display: flex;
