@@ -141,11 +141,11 @@ function NavContent() {
         }
 
         .nav-item .icon {
-          font-size: 48px !important;
-          width: 48px !important;
-          height: 48px !important;
-          min-width: 48px !important;
-          min-height: 48px !important;
+          font-size: 60px !important;
+          width: 60px !important;
+          height: 60px !important;
+          min-width: 60px !important;
+          min-height: 60px !important;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -184,7 +184,7 @@ function NavContent() {
             
             height: 75px !important;
             border-radius: 30px;
-            padding: 0 5px;
+            padding: 0 2px;
             bottom: 15px;
           }
           .nav-item {
@@ -192,7 +192,7 @@ function NavContent() {
             flex: 1;
             height: 100% !important;
           }
-          .nav-item .icon { font-size: 48px !important; width: 48px !important; height: 48px !important; min-width: 48px !important; }
+          .nav-item .icon { font-size: 60px !important; width: 60px !important; height: 60px !important; min-width: 60px !important; }
         }
       `}</style>
     </>
