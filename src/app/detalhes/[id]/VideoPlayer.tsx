@@ -92,7 +92,7 @@ export function VideoPlayer({
   const videoRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<any>(null)
   const [currentRoomId, setCurrentRoomId] = useState(partyRoomId)
-  const [showChat, setShowChat] = useState(!!currentRoomId && !isGuest)
+  const [showChat, setShowChat] = useState(!!partyRoomId && hasJoined)
   const [reactions, setReactions] = useState<any[]>([])
   
   // Controle de entrada na sala para convidados e anfitriões
@@ -152,15 +152,12 @@ export function VideoPlayer({
       
       videoRef.current.appendChild(videoElement)
 
-      // FORÇAR ROTAÇÃO HORIZONTAL
+      // ROTAÇÃO AUTOMÁTICA OBRIGATÓRIA (LANDSCAPE)
       if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-        const requestRotation = async () => {
-          try {
-            if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
-            if (window.screen.orientation && (window.screen.orientation as any).lock) await (window.screen.orientation as any).lock('landscape');
-          } catch (e) { console.warn("Orientação automática não suportada pelo navegador."); }
-        };
-        requestRotation();
+        try {
+          document.documentElement.requestFullscreen().catch(() => {});
+          (window.screen.orientation as any)?.lock('landscape').catch(() => {});
+        } catch (e) {}
       }
 
       const player = playerRef.current = videojs(videoElement, {

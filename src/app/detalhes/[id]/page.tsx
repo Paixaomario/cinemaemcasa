@@ -40,14 +40,13 @@ const CUSTOM_STYLES = `
   }
 
   .page-container {
-    width: 100% !important;
+    width: 100%;
     max-width: 100vw !important;
     min-height: calc(100vh - 120px);
     margin-top: clamp(60px, 8vh, 120px);
     border-radius: 0;
-    overflow: hidden;
-    background: linear-gradient(180deg, #1f1a1a 0%, #121212 100%);
     overflow-x: hidden !important;
+    background: linear-gradient(180deg, #1f1a1a 0%, #121212 100%);
   }
 
   .hero {
@@ -292,6 +291,13 @@ const CUSTOM_STYLES = `
   }
   .details-item { line-height: 1.6; color: rgba(255, 255, 255, 0.8); }
   .details-item b { color: #d9a23a; font-weight: 900; }
+
+  @media (max-width: 640px) {
+    .hero { height: auto; min-height: 50vh; padding-top: 40px; }
+    .text-hero-title { font-size: clamp(22px, 8vw, 36px) !important; white-space: normal !important; }
+    .hero-buttons { flex-direction: column; width: 100%; gap: 10px; }
+    .btn-primary, .btn-secondary { width: 100%; justify-content: center; height: 55px; }
+  }
 
   @media (max-width: 640px) {
     .hero { height: auto; min-height: 55vh; padding-top: 40px; }

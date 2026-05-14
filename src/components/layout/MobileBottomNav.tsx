@@ -54,9 +54,9 @@ function NavContent() {
           transform: translateX(-50%) !important;
           z-index: 5000;
 
-          width: 92vw !important;
-          max-width: 480px !important; /* Mantém a barra fina e centralizada */
-          height: 75px !important;
+          width: 95vw !important;
+          max-width: 550px !important;
+          height: 82px !important;
 
           display: flex;
           justify-content: space-around;
@@ -142,15 +142,17 @@ function NavContent() {
         }
 
         .nav-item .icon {
-          font-size: 42px !important; /* Tamanho proporcional para 7 itens */
-          width: 42px !important;
-          height: 42px !important;
-          min-width: 42px !important;
+          font-size: 48px !important;
+          width: 48px !important;
+          height: 48px !important;
+          min-width: 48px !important;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: transform 0.2s ease;
+          transition: all 0.2s ease;
         }
+
+        .nav-item.active {
           background: rgba(255, 0, 0, 0.06);
           border: 2px solid rgba(255, 60, 60, 0.15);
           box-shadow:
@@ -174,13 +176,13 @@ function NavContent() {
 
         @media (max-width: 768px) {
           .mobile-bottom-nav {
-            height: 72px !important;
-            padding: 0 8px !important;
-            bottom: 15px !important;
+            height: 78px !important;
+            padding: 0 4px !important;
+            bottom: 12px !important;
           }
           .nav-item .icon { 
-            font-size: 38px !important; /* Ajuste para não quebrar a largura do celular */
-            width: 38px !important; 
+            font-size: 44px !important;
+            width: 44px !important; 
           }
         }
       `}</style>
