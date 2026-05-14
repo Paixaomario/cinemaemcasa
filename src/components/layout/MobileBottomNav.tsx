@@ -55,7 +55,7 @@ function NavContent() {
           z-index: 5000;
 
           width: min(95vw, 860px);
-          height: 125px;
+          height: 80px;
 
           display: flex;
           justify-content: space-around;
@@ -128,8 +128,9 @@ function NavContent() {
         .nav-item {
           position: relative;
           z-index: 5;
-          width: 95px;
-          height: 70px;
+          width: auto;
+          height: 100%;
+          flex: 1;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -140,11 +141,11 @@ function NavContent() {
         }
 
         .nav-item .icon {
-          font-size: 48px !important;
-          width: 48px !important;
-          height: 48px !important;
-          min-width: 48px !important; /* Impede o encolhimento */
-          min-height: 48px !important;
+          font-size: 44px !important;
+          width: 44px !important;
+          height: 44px !important;
+          min-width: 44px !important;
+          min-height: 44px !important;
           display: flex;
           align-items: center;
           justify-content: center;
