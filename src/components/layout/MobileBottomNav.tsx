@@ -177,21 +177,20 @@ function NavContent() {
 
         @media (max-width: 768px) {
           .mobile-bottom-nav {
-            /* Centralização forçada para evitar desalinhamento à direita */
             left: 50% !important; /* Força a centralização */
             right: auto !important; /* Garante que 'right' não interfira */
             transform: translateX(-50%) !important; /* Ajusta a centralização */
             margin: 0 !important; /* Remove margens que possam empurrar */
             
-            height: 120px !important; /* Altura ajustada para ícones maiores */
+            height: 75px !important;
             border-radius: 30px;
-            padding: 4px;
+            padding: 0 5px;
             bottom: 15px;
           }
           .nav-item {
             width: auto;
             flex: 1;
-            height: 100px !important;
+            height: 100% !important;
           }
           .nav-item .icon { font-size: 48px !important; width: 48px !important; height: 48px !important; min-width: 48px !important; }
         }
