@@ -51,9 +51,12 @@ export function HomeClient() {
       const sb = createClient()
       const globalSeenIds = new Set<string | number>()
 
-      // Obter lista de IDs do TMDB que realmente existem no nosso acervo (tabela cinema)
-      const { data: dbCinemaItems } = await sb.from('cinema').select('tmdb_id')
-      const allowedTmdbIds = new Set(dbCinemaItems?.map(x => x.tmdb_id).filter(Boolean))
+      // Obter TODOS os IDs que temos no banco para validação e para o Banner Aleatório
+      const { data: allLocalItems } = await sb
+        .from('cinema')
+        .select('id, tmdb_id, type, titulo, poster, backdrop, banner, url, duration_seconds')
+      
+      const allowedTmdbIds = new Set(allLocalItems?.map(x => x.tmdb_id).filter(Boolean))
 
       try {
         // 1. Processar "Continuar Assistindo" PRIMEIRO
@@ -144,10 +147,20 @@ export function HomeClient() {
         })
         setItemsMap(newMap)
 
-        // 4. Carregar Banner Pool (TMDB) filtrando apenas o que temos no banco
-        const rawPool = await buildBannerPool('all', 60) // Busca mais para ter margem de filtragem
-        const pool = rawPool.filter(item => allowedTmdbIds.has(item.id))
-        setBannerPool(pool.slice(0, 20))
+        // 4. Banner Pool: Rotação Real de 100k conteúdos (Sorteio Local)
+        if (allLocalItems && allLocalItems.length > 0) {
+          const shuffledLocal = [...allLocalItems]
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 30); // Pega 30 aleatórios do seu banco
+          
+          const hydratedBanners = await Promise.all(shuffledLocal.map(async (item) => {
+            if (!item.tmdb_id) return null;
+            try {
+              return item.type === 'serie' ? await getShowDetails(item.tmdb_id) : await getMovieDetails(item.tmdb_id);
+            } catch { return null; }
+          }));
+          setBannerPool(hydratedBanners.filter(Boolean) as any[]);
+        }
 
       } catch (err) {
         console.error('Erro no carregamento da Home:', err)
@@ -289,6 +302,8 @@ function HomeCard({ item, showProgress }: { item: CinemaItem, showProgress?: boo
   
   const detailUrl = `/detalhes/${item.id}`
   const progressPercent = (item.last_position && item.duration_seconds) ? (item.last_position / item.duration_seconds) * 100 : 0
+  const remainingSecs = (item.duration_seconds || 0) - (item.last_position || 0)
+  const remainingText = remainingSecs > 0 ? formatRuntime(Math.floor(remainingSecs / 60)) : ''
 
   return (
     <div
@@ -341,13 +356,20 @@ function HomeCard({ item, showProgress }: { item: CinemaItem, showProgress?: boo
 
       {/* Barra de progresso Netflix */}
       {showProgress && item.last_position && item.last_position > 0 && (
-        <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 4, background: 'rgba(255,255,255,0.2)' }}>
-          <div style={{ 
-            width: `${Math.min(progressPercent, 100)}%`, 
-            height: '100%', 
-            background: 'var(--red-primary)',
-            boxShadow: '0 0 10px var(--red-primary)' 
-          }} />
+        <div className="absolute bottom-0 left-0 w-full p-2 bg-black/80 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+          <div className="flex justify-between text-[10px] font-bold text-white mb-1 uppercase">
+            <span>{Math.round(progressPercent)}% exibido</span>
+            <span>Faltam {remainingText}</span>
+          </div>
+          <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.2)', borderRadius: 2 }}>
+            <div style={{ 
+              width: `${Math.min(progressPercent, 100)}%`, 
+              height: '100%', 
+              background: 'var(--red-primary)',
+              boxShadow: '0 0 10px var(--red-primary)',
+              borderRadius: 2
+            }} />
+          </div>
         </div>
       )}
     </div>

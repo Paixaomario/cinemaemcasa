@@ -182,17 +182,16 @@ function NavContent() {
             transform: translateX(-50%) !important; /* Ajusta a centralização */
             margin: 0 !important; /* Remove margens que possam empurrar */
             
-            height: 75px !important;
+            height: 70px !important;
             border-radius: 30px;
-            padding: 0 2px;
+            padding: 0 10px;
             bottom: 15px;
           }
           .nav-item {
-            width: auto;
             flex: 1;
-            height: 100% !important;
+            max-width: 50px;
           }
-          .nav-item .icon { font-size: 60px !important; width: 60px !important; height: 60px !important; min-width: 60px !important; }
+          .nav-item .icon { font-size: 34px !important; }
         }
       `}</style>
     </>

@@ -191,11 +191,7 @@ function CinemaRow({ items }: { items: Cinema[] }) {
 /* ── Grade responsiva ── */
 function CinemaGridFull({ items }: { items: Cinema[] }) {
   return (
-    <div style={{
-      display:             'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(100px,13vw,180px),1fr))',
-      gap:                 'clamp(8px,1.2vw,14px)',
-    }}>
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
       {items.map(f => <CinemaCard key={f.id} film={f} />)}
     </div>
   )
