@@ -12,10 +12,13 @@ export function MobileBottomNav() {
   if (pathname?.startsWith('/detalhes')) return null
 
   const navItems = [
-    { href: '/', label: 'Início', icon: '🏠' },
+    { href: '/', label: 'Home', icon: '🏠' },
     { href: '/filmes', label: 'Filmes', icon: '🎬' },
     { href: '/series', label: 'Séries', icon: '📺' },
-    { href: user ? '/perfil' : '/login', label: user ? 'Perfil' : 'Entrar', icon: '👤' },
+    { href: '/perfil', label: 'Favoritos', icon: '❤️' },
+    { href: '/perfil', label: 'Assistir Depois', icon: '⏰' },
+    { href: '/localizar', label: 'Localizar', icon: '🔍' },
+    { href: user ? '/perfil' : '/login', label: 'Perfil', icon: '👤' },
   ]
 
   return (
@@ -172,18 +175,21 @@ export function MobileBottomNav() {
           color: rgba(255, 220, 150, 0.95);
         }
 
-        @media (max-width: 520px) {
+        @media (max-width: 640px) {
           .mobile-bottom-nav {
-            height: 88px;
-            border-radius: 34px;
-            padding: 10px 10px;
+            height: 82px;
+            border-radius: 25px;
+            padding: 8px 4px;
+            bottom: 12px;
           }
           .nav-item {
-            width: 70px;
-            height: 68px;
+            width: auto;
+            flex: 1;
+            height: 60px;
+            gap: 2px;
           }
-          .nav-item .icon { font-size: 22px; }
-          .nav-item span { font-size: 12px; }
+          .nav-item .icon { font-size: 18px; }
+          .nav-item span { font-size: 9px; text-align: center; line-height: 1.1; }
         }
       `}</style>
     </>
