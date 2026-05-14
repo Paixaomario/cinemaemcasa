@@ -49,8 +49,9 @@ function NavContent() {
         .mobile-bottom-nav {
           position: fixed;
           bottom: 18px;
-          left: 50%;
-          transform: translateX(-50%);
+          left: 50% !important;
+          right: auto !important;
+          transform: translateX(-50%) !important;
           z-index: 5000; /* Abaixo do VideoPlayer que é 10000 */
 
           width: min(95vw, 860px);
