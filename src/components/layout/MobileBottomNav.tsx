@@ -49,9 +49,9 @@ function NavContent() {
         .mobile-bottom-nav {
           position: fixed;
           bottom: 18px;
-          left: 50%;
-          right: auto;
-          transform: translateX(-50%);
+          left: 50% !important; /* Força a centralização */
+          right: auto !important; /* Garante que 'right' não interfira */
+          transform: translateX(-50%) !important; /* Ajusta a centralização */
           z-index: 5000;
 
           width: min(95vw, 860px);
@@ -140,9 +140,9 @@ function NavContent() {
         }
 
         .nav-item .icon {
-          font-size: 56px;
-          width: 56px;
-          height: 56px;
+          font-size: 56px !important; /* Garante o tamanho do ícone */
+          width: 56px !important;
+          height: 56px !important;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -175,12 +175,12 @@ function NavContent() {
         @media (max-width: 768px) {
           .mobile-bottom-nav {
             /* Centralização forçada para evitar desalinhamento à direita */
-            left: 50% !important;
-            right: auto !important;
-            transform: translateX(-50%) !important;
-            margin: 0 !important;
+            left: 50% !important; /* Força a centralização */
+            right: auto !important; /* Garante que 'right' não interfira */
+            transform: translateX(-50%) !important; /* Ajusta a centralização */
+            margin: 0 !important; /* Remove margens que possam empurrar */
             
-            height: 120px;
+            height: 120px !important; /* Altura ajustada para ícones maiores */
             border-radius: 30px;
             padding: 4px;
             bottom: 15px;
@@ -188,9 +188,9 @@ function NavContent() {
           .nav-item {
             width: auto;
             flex: 1;
-            height: 100px;
+            height: 100px !important; /* Altura do item ajustada */
           }
-          .nav-item .icon { font-size: 56px; width: 56px; height: 56px; }
+          .nav-item .icon { font-size: 56px !important; width: 56px !important; height: 56px !important; }
         }
       `}</style>
     </>
