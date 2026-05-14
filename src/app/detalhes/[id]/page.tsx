@@ -47,7 +47,7 @@ const CUSTOM_STYLES = `
     border: none;
     overflow: visible;
     background: linear-gradient(180deg, #1f1a1a 0%, #121212 100%);
-    overflow: hidden;
+    overflow-x: hidden;
   }
 
   .hero {
@@ -294,13 +294,15 @@ const CUSTOM_STYLES = `
   .details-item b { color: #d9a23a; font-weight: 900; }
 
   @media (max-width: 640px) {
-    .hero { height: auto; min-height: 50vh; padding-top: 40px; }
-    .hero-content { padding: 20px 15px; width: 100%; overflow: hidden; }
+    .hero { height: auto; min-height: 55vh; padding-top: 40px; }
+    .hero-content { padding: 20px 15px; width: 100%; }
+    .text-hero-title { font-size: clamp(24px, 8vw, 36px) !important; white-space: normal; }
     .text-hero-title { font-size: clamp(20px, 7vw, 32px) !important; }
     .hero-buttons { flex-direction: column; width: 100%; }
     .btn-primary, .btn-secondary { width: 100%; justify-content: center; height: 50px; }
+    .middle-sections { grid-template-columns: 1fr; padding: 20px 15px; }
+    .cast-grid { overflow-x: auto; padding-bottom: 15px; display: flex; gap: 15px; }
     .details-box { grid-template-columns: 1fr; }
-    .cast-grid { overflow-x: auto; padding-bottom: 10px; }
   }
 
   /* Ajustes finos de responsividade */

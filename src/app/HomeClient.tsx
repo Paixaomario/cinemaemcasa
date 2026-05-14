@@ -51,7 +51,7 @@ export function HomeClient() {
       const sb = createClient()
       const globalSeenIds = new Set<string | number>()
 
-      // Obter TODOS os IDs que temos no banco para validação e para o Banner Aleatório
+      // Obter TODOS os IDs locais para validação "Anti-Fake" e Rotação do Banner
       const { data: allLocalItems } = await sb
         .from('cinema')
         .select('id, tmdb_id, type, titulo, poster, backdrop, banner, url, duration_seconds')
@@ -147,11 +147,11 @@ export function HomeClient() {
         })
         setItemsMap(newMap)
 
-        // 4. Banner Pool: Rotação Real de 100k conteúdos (Sorteio entre itens locais válidos)
+        // 4. Banner Pool: Rotação Real entre todos os 100k conteúdos (Sorteio Local)
         if (allLocalItems && allLocalItems.length > 0) {
           const shuffledLocal = [...allLocalItems]
             .sort(() => Math.random() - 0.5)
-            .slice(0, 30); // Pega 30 aleatórios do seu banco
+            .slice(0, 30); // Pega 30 aleatórios do acervo real
           
           const hydratedBanners = await Promise.all(shuffledLocal.map(async (item) => {
             if (!item.tmdb_id) return null;
@@ -306,7 +306,8 @@ function HomeCard({ item, showProgress }: { item: CinemaItem, showProgress?: boo
   const remainingText = remainingSecs > 0 ? formatRuntime(Math.floor(remainingSecs / 60)) : ''
 
   return (
-    <div className="group relative" onMouseEnter={() => setHovered(true)}
+    <div
+      onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onTouchStart={() => setHovered(true)}
       onTouchEnd={() => setHovered(false)}
@@ -353,22 +354,15 @@ function HomeCard({ item, showProgress }: { item: CinemaItem, showProgress?: boo
         <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', fontSize:40 }}>🎬</div>
       )}
 
-      {/* Barra de progresso Netflix Detalhada */}
+      {/* Barra de progresso Netflix */}
       {showProgress && item.last_position && item.last_position > 0 && (
-        <div className="absolute bottom-0 left-0 w-full p-2 bg-black/80 backdrop-blur-sm">
-          <div className="flex justify-between text-[10px] font-bold text-white mb-1 uppercase">
-            <span>{Math.round(progressPercent)}% exibido</span>
-            {remainingText && <span>Falta {remainingText}</span>}
-          </div>
-          <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.2)', borderRadius: 2 }}>
-            <div style={{ 
-              width: `${Math.min(progressPercent, 100)}%`, 
-              height: '100%', 
-              background: 'var(--red-primary)',
-              boxShadow: '0 0 10px var(--red-primary)',
-              borderRadius: 2
-            }} />
-          </div>
+        <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 4, background: 'rgba(255,255,255,0.2)' }}>
+          <div style={{ 
+            width: `${Math.min(progressPercent, 100)}%`, 
+            height: '100%', 
+            background: 'var(--red-primary)',
+            boxShadow: '0 0 10px var(--red-primary)' 
+          }} />
         </div>
       )}
     </div>
