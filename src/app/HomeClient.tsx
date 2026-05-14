@@ -51,14 +51,17 @@ export function HomeClient() {
       const sb = createClient()
       const globalSeenIds = new Set<string | number>()
 
-      // Obter TODOS os IDs locais para validação "Anti-Fake" e Rotação do Banner
+      try {
+        setLoading(true)
+
+        // Obter IDs essenciais para validação e banner (limitado para performance)
       const { data: allLocalItems } = await sb
         .from('cinema')
-        .select('id, tmdb_id, type, titulo, poster, backdrop, banner, url, duration_seconds')
+          .select('id, tmdb_id, type, titulo, poster, backdrop, banner, duration_seconds')
+          .limit(1000) // Pega uma amostra grande o suficiente para rotatividade
       
       const allowedTmdbIds = new Set(allLocalItems?.map(x => x.tmdb_id).filter(Boolean))
 
-      try {
         // 1. Processar "Continuar Assistindo" PRIMEIRO
         if (user) {
           const { data: progressData } = await sb
@@ -126,7 +129,7 @@ export function HomeClient() {
             default:            q = q.order('created_at', { ascending: false, nullsFirst: false }); break
           }
 
-          const { data } = await q.limit((sec.limite || 5) * 3) // Buffer para filtragem
+          const { data } = await q.limit((sec.limite || 5) * 3)
           return { id: sec.id, items: (data || []) as CinemaItem[], limit: sec.limite || 5 }
         })
 
@@ -139,7 +142,7 @@ export function HomeClient() {
             const idKey = String(item.id)
             if (idKey && !globalSeenIds.has(idKey)) {
               filtered.push(item)
-              globalSeenIds.add(idKey) // Bloqueia este ID para que nunca repita na página
+              globalSeenIds.add(idKey)
             }
             if (filtered.length >= (res.limit || 5)) break
           }
@@ -147,19 +150,15 @@ export function HomeClient() {
         })
         setItemsMap(newMap)
 
-        // 4. Banner Pool: Rotação Real entre todos os 100k conteúdos (Sorteio Local)
+        // 4. Banner Pool: Rotação Real
         if (allLocalItems && allLocalItems.length > 0) {
-          const shuffledLocal = [...allLocalItems]
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 30); // Pega 30 aleatórios do acervo real
-          
-          const hydratedBanners = await Promise.all(shuffledLocal.map(async (item) => {
-            if (!item.tmdb_id) return null;
+          const shuffled = [...allLocalItems].sort(() => Math.random() - 0.5).slice(0, 15)
+          const hydrated = await Promise.all(shuffled.map(async (item) => {
             try {
-              return item.type === 'serie' ? await getShowDetails(item.tmdb_id) : await getMovieDetails(item.tmdb_id);
+              return item.type === 'serie' ? await getShowDetails(item.tmdb_id!) : await getMovieDetails(item.tmdb_id!)
             } catch { return null; }
           }));
-          setBannerPool(hydratedBanners.filter(Boolean) as any[]);
+          setBannerPool(hydrated.filter(Boolean) as any[])
         }
 
       } catch (err) {

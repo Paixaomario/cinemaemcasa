@@ -54,7 +54,8 @@ function NavContent() {
           transform: translateX(-50%) !important;
           z-index: 5000;
 
-          width: min(95vw, 860px);
+          width: 92vw !important;
+          max-width: 500px !important; /* Limita a largura para não ficar esticada */
           height: 75px !important; 
 
           display: flex;
