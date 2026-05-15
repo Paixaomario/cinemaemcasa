@@ -173,6 +173,11 @@ export function HomeClient() {
     load()
   }, [user])
 
+  useEffect(() => {
+    console.log('HomeClient: bannerPool length:', bannerPool.length);
+    console.log('HomeClient: continueWatching length:', continueWatching.length);
+  }, [bannerPool, continueWatching])
+
   if (loading) {
     return (
       <div style={{ paddingBottom: 60 }}>
@@ -208,19 +213,13 @@ export function HomeClient() {
   return (
     <div style={{ paddingBottom: 60 }}>
       {/* Hero Banner */}
-      {bannerPool.length > 0 && (
+      {bannerPool.length > 0 ? (
         <HeroBanner type="all" initialPool={bannerPool} />
       ) : (
         <div style={{ height: 'clamp(260px,50vw,650px)', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '18px' }}>
           Nenhum banner disponível. Verifique a tabela 'cinema' e os 'tmdb_id's.
         </div>
       )}
-
-      {/* Debugging: Log bannerPool and continueWatching */}
-      {useEffect(() => {
-        console.log('HomeClient: bannerPool length:', bannerPool.length);
-        console.log('HomeClient: continueWatching length:', continueWatching.length);
-      }, [bannerPool, continueWatching])}
 
       {/* Seção Continuar Assistindo */}
       {continueWatching.length > 0 && (
