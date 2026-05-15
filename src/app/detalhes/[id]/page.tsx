@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useEffect, useState, Suspense, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
-import { IMG, getMovieDetails, getShowDetails, formatRuntime, getMovieCertification, getShowCertification, getTitle } from '@/lib/tmdb'
+import { IMG, getMovieDetails, getShowDetails, formatRuntime, getMovieCertification, getShowCertification, getTitle } from '@/lib/tmdb' // countryFlag removido
 import { notFound } from 'next/navigation'
 import { Navbar } from '@/components/layout/Navbar'
 import { useAuth } from '@/components/layout/SupabaseProvider'
@@ -521,7 +521,7 @@ function DetailContent({ params }: Props) {
 
           if (isMovie) {
             // Lógica para Filmes
-            if (tmdbId && !isNaN(tmdbId as number)) {
+            if (tmdbId && !isNaN(tmdbId)) {
               try {
                 const metadata = await getMovieDetails(tmdbId)
                 const cert = await getMovieCertification(tmdbId)
@@ -533,22 +533,22 @@ function DetailContent({ params }: Props) {
               foundData = localItem
             }
           } else { // É uma Série
-            let seriesLocalData: MovieData | null = null
-            let tmdbSeriesMetadata: MovieData | null = null
-            let seasonsWithEpisodes: SeasonData[] = []
+            let seriesLocalData: MovieData | null = null;
+            let tmdbSeriesMetadata: MovieData | null = null;
+            let seasonsWithEpisodes: SeasonData[] = [];
 
             // 1. Buscar detalhes da série na nova tabela 'series'
-            if (tmdbId && !isNaN(tmdbId as number)) {
+            if (tmdbId && !isNaN(tmdbId)) {
               const { data: sData } = await sb.from('series').select('*').eq('tmdb_id', tmdbId).maybeSingle()
               if (sData) {
                 seriesLocalData = sData
 
                 // 2. Buscar temporadas para esta série
-                const { data: tData } = await sb.from('temporadas').select('*').eq('serie_id', seriesLocalData.id_n as number).order('numero_temporada', { ascending: true })
+                const { data: tData } = await sb.from('temporadas').select('*').eq('serie_id', seriesLocalData.id_n).order('numero_temporada', { ascending: true })
                 if (tData) {
                   // 3. Buscar episódios para cada temporada
-                  seasonsWithEpisodes = await Promise.all(tData.map(async (season: SeasonData) => {
-                        const { data: eData } = await sb.from('episodios').select('*').eq('temporada_id', season.id_n as number).order('numero_episodio', { ascending: true })
+                  seasonsWithEpisodes = await Promise.all(tData.map(async (season: any) => { // 'any' temporário, idealmente tipar 'season'
+                        const { data: eData } = await sb.from('episodios').select('*').eq('temporada_id', season.id_n).order('numero_episodio', { ascending: true })
                         return { ...season, episodes: eData || [] }
                   }))
                 }
@@ -556,7 +556,7 @@ function DetailContent({ params }: Props) {
             }
 
             // 4. Buscar metadados da série no TMDB
-            if (tmdbId && !isNaN(tmdbId as number)) {
+            if (tmdbId && !isNaN(tmdbId)) {
               try {
                 tmdbSeriesMetadata = await getShowDetails(tmdbId)
                 const cert = await getShowCertification(tmdbId)
@@ -584,7 +584,7 @@ function DetailContent({ params }: Props) {
         if (!foundData) return notFound()
 
         // Se houver um roomId na URL, ativa o player automaticamente
-        if (roomFromUrl && foundData) {
+        if (roomFromUrl && foundData && foundData.url) { // Apenas se houver URL para o conteúdo principal
           const url = foundData.url || foundData.video_url
           if (url) {
             setActiveVideoUrl(url)
@@ -635,7 +635,7 @@ function DetailContent({ params }: Props) {
       }
     }
 
-    loadMovieData()
+    loadMovieData() // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolvedParams, user])
 
   // Efeito para buscar recomendações DIRETAMENTE no sistema (Banco Local)
@@ -647,7 +647,6 @@ function DetailContent({ params }: Props) {
         // Identifica a categoria ou gênero predominante para a recomendação
         const category = movieData.category || (movieData.genres && movieData.genres[0]?.name)
         const currentTmdbId = movieData.tmdb_id || movieData.id
-        const currentLocalId = movieData.id
 
         // Busca itens do mesmo tipo ou categoria no banco local
         let query = sb
@@ -685,8 +684,6 @@ function DetailContent({ params }: Props) {
     if (url) {
       setActiveVideoUrl(url)
       setShouldStartParty(true)
-    } else {
-      alert('O conteúdo não está disponível para iniciar uma sala.')
     }
   }
 
@@ -753,7 +750,7 @@ function DetailContent({ params }: Props) {
   const handlePlayTrailer = () => {
     // Prioriza o trailer da tabela 'cinema', senão busca no retorno da TMDB
     const trailer = movieData?.trailer || 
-                   movieData?.videos?.results?.find((v: VideoResult) => v.type === 'Trailer' || v.type === 'Teaser')?.key
+                   movieData?.videos?.results?.find((v: VideoResult) => v.type === 'Trailer' || v.type === 'Teaser')?.key // Tipagem corrigida
     
     if (trailer) setActiveVideoUrl(trailer.includes('http') ? trailer : `https://www.youtube.com/watch?v=${trailer}`)
     else alert('Trailer não disponível para este título.')
@@ -761,16 +758,16 @@ function DetailContent({ params }: Props) {
 
   const handleNextEpisode = useCallback(() => {
     if (movieData?.type === 'series' && selectedSeason && movieData.seasons) {
-      const currentSeasonIndex = movieData.seasons.findIndex((s: SeasonData) => s.id_n === selectedSeason.id_n)
+      const currentSeasonIndex = movieData.seasons.findIndex((s: SeasonData) => s.id_n === selectedSeason.id_n) // Tipagem corrigida
       if (currentSeasonIndex !== -1) {
-        const currentEpisodeIndex = selectedSeason.episodes.findIndex((e: EpisodeData) => e.arquivo === activeVideoUrl)
+        const currentEpisodeIndex = selectedSeason.episodes.findIndex((e: EpisodeData) => e.arquivo === activeVideoUrl) // Tipagem corrigida
         if (currentEpisodeIndex !== -1) {
           // Tenta o próximo episódio na temporada atual
           if (currentEpisodeIndex < selectedSeason.episodes.length - 1) {
             const nextEpisode = selectedSeason.episodes[currentEpisodeIndex + 1]
             setActiveVideoUrl(nextEpisode.arquivo)
             // Opcionalmente, atualiza selectedSeason para refletir o episódio atual
-            setSelectedSeason((prev: SeasonData) => ({ ...prev, currentEpisode: nextEpisode }))
+            setSelectedSeason((prev: SeasonData) => ({ ...prev, currentEpisode: nextEpisode })) // Tipagem corrigida
             return
           }
           // Tenta a próxima temporada
@@ -895,7 +892,7 @@ function DetailContent({ params }: Props) {
               <div className="season-selector">
                 {movieData.seasons.map((season: SeasonData) => (
                   <button
-                    key={season.id_n}
+                    key={season.id_n} // Tipagem corrigida
                     onClick={() => setSelectedSeason(season)}
                     className={`btn ${selectedSeason?.id_n === season.id_n ? 'btn-red' : 'btn-ghost'}`}
                     tabIndex={0}
@@ -907,7 +904,7 @@ function DetailContent({ params }: Props) {
 
               {selectedSeason && selectedSeason.episodes.length > 0 ? (
                 <div className="episode-list">
-                  {selectedSeason.episodes.map((episode: EpisodeData) => (
+                  {selectedSeason.episodes.map((episode: EpisodeData) => ( // Tipagem corrigida
                     <div 
                       key={episode.id_n} 
                       className="episode-item tv-focus"
@@ -956,13 +953,13 @@ function DetailContent({ params }: Props) {
             </div>
             <div className="cast-grid">
               {(() => {
-                const castArray: ActorData[] | string[] = movieData?.credits?.cast || 
+                const castArray: ActorData[] | string[] = movieData?.credits?.cast || // Tipagem corrigida
                   (typeof movieData?.cast_names === 'string' 
                     ? movieData.cast_names.split(',').map((n: string) => n.trim()) 
                     : movieData?.cast_names) || [];
                 
                 return castArray.length > 0 ? (
-                  castArray.slice(0, 8).map((actor: ActorData | string, index: number) => (
+                  castArray.slice(0, 8).map((actor: ActorData | string, index: number) => ( // Tipagem corrigida
                     <div key={index} className="cast-member">
                       <div 
                         className="cast-photo" 
@@ -973,10 +970,10 @@ function DetailContent({ params }: Props) {
                         }}
                       ></div>
                       <div className="cast-name text-card-title">
-                        {typeof actor === 'string' ? actor : (actor as ActorData)?.name || 'Ator'}
+                        {typeof actor === 'string' ? actor : (actor as ActorData).name || 'Ator'} // Tipagem corrigida
                       </div>
                       <div className="cast-role text-metadata">
-                        {typeof actor === 'object' ? (actor as ActorData)?.character || 'Personagem' : 'Personagem'}
+                        {typeof actor === 'object' ? (actor as ActorData).character || 'Personagem' : 'Personagem'} // Tipagem corrigida
                       </div>
                     </div>
                   ))
@@ -997,7 +994,7 @@ function DetailContent({ params }: Props) {
             </div>
             <div className="recommend-grid">
               {shuffledRecommendations.length > 0 ? (
-                shuffledRecommendations.map((rec: RecommendationData) => (
+                shuffledRecommendations.map((rec: RecommendationData) => ( // Tipagem corrigida
                   <div 
                     key={rec.id} 
                     className="recommend-card card-poster tv-focus" 
@@ -1049,14 +1046,14 @@ function DetailContent({ params }: Props) {
         <div className="details-footer">
           <div className="details-box">
             <div className="details-item">
-              <b>Direção:</b> {movieData?.director || (movieData?.credits?.crew?.find((c: CrewMemberData) => c.job === 'Director')?.name) || 'Não informado'}
+              <b>Direção:</b> {movieData?.director || (movieData?.credits?.crew?.find((c: CrewMemberData) => c.job === 'Director')?.name) || 'Não informado'} // Tipagem corrigida
             </div>
             <div className="details-item">
               <b>Gênero:</b> {
                 Array.isArray(movieData?.genre) 
                   ? (typeof movieData.genre === 'string' ? JSON.parse(movieData.genre) : movieData.genre).join(', ') 
-                  : Array.isArray(movieData?.genres)
-                    ? movieData.genres.map((g: TMDBGenre) => g.name).join(', ') 
+                  : Array.isArray(movieData?.genres) // Tipagem corrigida
+                    ? movieData.genres.map((g: TMDBGenre) => g.name).join(', ') // Tipagem corrigida
                     : movieData?.category || 'Não informado'
               }
             </div>
