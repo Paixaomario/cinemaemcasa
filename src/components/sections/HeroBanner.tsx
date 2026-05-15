@@ -62,7 +62,7 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
   return (
     <div
       className="relative w-full overflow-hidden"
-      style={{ height: 'clamp(450px, 80vw, 800px)', background: '#000', borderBottom: '4px solid var(--red-main)' }}
+      style={{ height: 'clamp(450px, 80vw, 800px)', background: '#000' }}
     >
       {/* Backdrop image — 4K/original */}
       {backdropUrl && (

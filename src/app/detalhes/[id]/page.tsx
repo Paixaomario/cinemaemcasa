@@ -56,8 +56,7 @@ const CUSTOM_STYLES = `
     background: var(--bg-absolute);
     position: relative;
     overflow: hidden;
-    margin-bottom: 60px;
-    border-bottom: 3px solid var(--red-main);
+    margin-bottom: 40px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.9);
   }
 
