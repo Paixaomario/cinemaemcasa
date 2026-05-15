@@ -41,7 +41,7 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
   const item = pool[index]
   if (!item) {
     return (
-      <div className="skeleton w-full" style={{ height: 'clamp(260px, 55vw, 680px)' }} />
+      <div className="skeleton w-full" style={{ height: 'clamp(312px, 66vw, 680px)' }} />
     )
   }
 
@@ -57,7 +57,7 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
   return (
     <div
       className="relative w-full overflow-hidden"
-      style={{ height: 'clamp(260px, 55vw, 680px)', background: '#000' }}
+      style={{ height: 'clamp(312px, 66vw, 680px)', background: '#000' }}
     >
       {/* Backdrop image — 4K/original */}
       {backdropUrl && (

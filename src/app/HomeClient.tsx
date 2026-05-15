@@ -181,7 +181,7 @@ export function HomeClient() {
   if (loading) {
     return (
       <div style={{ paddingBottom: 60 }}>
-        <div className="skeleton" style={{ width:'100%', height:'clamp(260px,50vw,650px)' }} />
+        <div className="skeleton" style={{ width:'100%', height:'clamp(312px,60vw,650px)' }} />
         <div style={{ padding:'24px clamp(16px,4vw,60px)' }}>
           {[1,2,3].map(i => (
             <div key={i} style={{ marginBottom:32 }}>
@@ -216,7 +216,7 @@ export function HomeClient() {
       {bannerPool.length > 0 ? (
         <HeroBanner type="all" initialPool={bannerPool} />
       ) : (
-        <div style={{ height: 'clamp(260px,50vw,650px)', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '18px' }}>
+        <div style={{ height: 'clamp(312px,60vw,650px)', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '18px' }}>
           Nenhum banner disponível. Verifique a tabela 'cinema' e os 'tmdb_id's.
         </div>
       )}

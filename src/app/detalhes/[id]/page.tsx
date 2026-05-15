@@ -315,7 +315,7 @@ const CUSTOM_STYLES = `
   }
 
   @media (max-width: 768px) {
-    .hero { height: auto; min-height: 55vh; padding-top: 40px; }
+    .hero { height: auto; min-height: 66vh; padding-top: 40px; }
     .hero-content { padding: 20px 15px; width: 100%; }
     .text-hero-title { font-size: clamp(24px, 8vw, 36px) !important; white-space: normal; }
     .hero-buttons { flex-direction: column; width: 100%; gap: 10px; }
