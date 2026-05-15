@@ -96,13 +96,14 @@ const CUSTOM_STYLES = `
   }
 
   .text-hero-title { font-size: clamp(28px, 4vw, 52px) !important; font-weight: 800; }
-  .text-hero-desc { 
-    font-size: 18px !important;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+  .text-hero-desc, .movie-description { 
+    font-size: clamp(14px, 1.2vw, 18px) !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
     max-width: 650px;
+    line-height: 1.5;
   }
 
   .movie-meta {

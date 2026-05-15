@@ -56,28 +56,15 @@ export function HomeClient() {
     async function load() {
       const sb = createClient()
       
-      // Verifica se já carregou nesta sessão para evitar splash screen em navegações internas
       const hasLoadedBefore = sessionStorage.getItem('paixaoflix_loaded')
-      if (hasLoadedBefore) {
-        setLoading(false)
-      }
 
-      // Conjunto para rastrear TMDB IDs e evitar repetição de temporadas/coleções
+      // Conjunto de IDs únicos do banco para evitar QUALQUER repetição na mesma tela
       const seenContentKeys = new Set<string>()
 
       try {
         setLoading(true)
         setProgress(10)
-
-        // 1. Obter amostra do acervo para validação Anti-Fake e Banner
-        const { data: allLocalItems } = await sb
-          .from('cinema')
-          .select('id, tmdb_id, type, titulo, poster, backdrop, banner, duration_seconds')
-          .limit(500)
         setProgress(25)
-
-        const localItems = allLocalItems || []
-        const allowedTmdbIds = new Set(localItems.map(x => x.tmdb_id).filter(Boolean))
 
         // 2. Processar "Continuar Assistindo" PRIMEIRO
         if (user) {
@@ -164,6 +151,20 @@ export function HomeClient() {
         }) as HomeSection[]
 
         setSections(homeSections)
+        
+        // 4. Banner Pool: Puxa 20 itens aleatórios de TODO o banco via RPC
+        const { data: bannerItems } = await sb.rpc('get_random_content_pool', { cnt: 20 })
+
+        if (bannerItems && bannerItems.length > 0) {
+          const hydratedBanners = await Promise.all(bannerItems.map(async (item: any) => {
+            try {
+              // Marca o ID do banco como visto
+              seenContentKeys.add(String(item.id))
+              return item.type === 'serie' ? await getShowDetails(item.tmdb_id!) : await getMovieDetails(item.tmdb_id!)
+            } catch { return null }
+          }))
+          setBannerPool(hydratedBanners.filter(Boolean) as any[])
+        }
         setProgress(60)
 
         // 3. Buscar e filtrar itens de cada seção (sequencialmente)
@@ -184,33 +185,16 @@ export function HomeClient() {
         resolved.forEach(res => {
           const filtered: CinemaItem[] = []
           for (const item of res.items) {
-            const contentKey = item.tmdb_id ? `tmdb-${item.tmdb_id}` : `local-${item.id}`
-            
-            // Garante que o item não apareceu no Banner nem em seções acima
-            if (!seenContentKeys.has(contentKey)) {
+            const idKey = String(item.id)
+            if (!seenContentKeys.has(idKey)) {
               filtered.push(item)
-              seenContentKeys.add(contentKey)
+              seenContentKeys.add(idKey)
             }
-            // Preenche até o limite visual (5), mas sem duplicar nada
             if (filtered.length >= res.limit) break
           }
           newMap[res.id] = filtered
         })
         setItemsMap(newMap)
-
-        // 4. Banner Pool: Puxa 20 itens aleatórios de todo o banco via RPC
-        const { data: bannerItems } = await sb.rpc('get_random_content_pool', { cnt: 20 })
-
-        if (bannerItems && bannerItems.length > 0) {
-          const hydratedBanners = await Promise.all(bannerItems.map(async (item: any) => {
-            try {
-              // Marca o TMDB_ID como "visto" para que ele não apareça nas fileiras abaixo do banner
-              seenContentKeys.add(`tmdb-${item.tmdb_id}`)
-              return item.type === 'serie' ? await getShowDetails(item.tmdb_id!) : await getMovieDetails(item.tmdb_id!)
-            } catch { return null }
-          }))
-          setBannerPool(hydratedBanners.filter(Boolean) as any[])
-        }
         
         setProgress(100)
         sessionStorage.setItem('paixaoflix_loaded', 'true')
@@ -225,7 +209,15 @@ export function HomeClient() {
       }
     }
 
-    load()
+    // Só roda o carregamento completo (com Splash) se não estiver em navegação interna
+    const hasLoaded = sessionStorage.getItem('paixaoflix_loaded')
+    if (hasLoaded) {
+      setLoading(false)
+      // Carrega dados em background para não travar a UI
+      load()
+    } else {
+      load()
+    }
   }, [user])
 
   useEffect(() => {
@@ -311,9 +303,9 @@ export function HomeClient() {
   }
 
   return (
-    <div style={{ paddingBottom: 100 }}>
+    <div style={{ paddingBottom: 120 }}>
       {/* Hero Banner */}
-      <div style={{ marginBottom: 'clamp(40px, 8vh, 80px)' }}>
+      <div style={{ marginBottom: 'clamp(60px, 10vh, 120px)' }}>
         {bannerPool.length > 0 ? (
         <HeroBanner type="all" initialPool={bannerPool} />
       ) : (
