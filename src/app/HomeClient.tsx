@@ -212,22 +212,32 @@ export function HomeClient() {
 
   if (loading) {
     return (
-      <div style={{ paddingBottom: 60 }}>
-        <div className="skeleton" style={{ width:'100%', height:'clamp(312px,60vw,650px)' }} />
-        <div style={{ padding:'24px clamp(16px,4vw,60px)' }}>
-          {[1,2,3].map(i => (
-            <div key={i} style={{ marginBottom:32 }}>
-              <div className="skeleton" style={{ width:240, height:30, borderRadius:6, marginBottom:14 }} />
-              <div style={{ display:'flex', gap:12 }}>
-                {Array.from({ length:5 }).map((_,j) => (
-                  <div key={j} className="skeleton" style={{ width:'var(--card-poster-w)', aspectRatio:'2/3', borderRadius:10, flexShrink:0 }} />
-                ))}
-              </div>
-            </div>
-          ))}
+      <div style={{ 
+        position: 'fixed', 
+        inset: 0, 
+        backgroundColor: '#000', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        zIndex: 100000 
+      }}>
+        <div style={{ 
+          width: 'min(500px, 85vw)', 
+          height: 'auto',
+          aspectRatio: '200 / 80',
+          position: 'relative'
+        }}>
+          <Image
+            src="/logo.png"
+            alt="PAIXAOFLIX"
+            fill
+            priority
+            style={{ objectFit: 'contain' }}
+            className="animate-pulse"
+          />
         </div>
       </div>
-    )
+    );
   }
 
   if (dbError) {
