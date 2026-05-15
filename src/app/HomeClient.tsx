@@ -120,8 +120,12 @@ export function HomeClient() {
 
         if (secErr) throw secErr
         
-        const now = new Date() // Current local date/time
-        const currentUtcDate = new Date(now.toISOString()) // Current UTC date/time for consistent date range comparison
+        // Para garantir que as datas sejam interpretadas corretamente,
+        // é crucial que `data_inicio` e `data_fim` sejam inseridas no Supabase
+        // no formato ISO 8601 (YYYY-MM-DD HH:MM:SS) ou que o DateStyle do PostgreSQL
+        // esteja configurado para DMY.
+        const now = new Date() // Data/hora local atual
+        const currentUtcDate = new Date(now.toISOString()) // Data/hora UTC atual para comparação consistente de intervalos de data
         const currentTimeMinutes = now.getHours() * 60 + now.getMinutes() // Current local time in minutes for daily schedule comparison
 
         // Filtragem por Agendamento (Hora e Data)
