@@ -3,27 +3,28 @@
 @tailwind utilities;
 
 :root {
-  /* PALETA PAIXAOFLIX PREMIUM */
-  --bg-absolute: #000000;         /* Fundo Principal */
-  --bg-charcoal: #0B0B0E;         /* Camada 2 - Menus */
-  --bg-reddish: #120507;          /* Camada 3 - Cards/Detalhes */
+  /* PALETA PAIXAOFLIX PREMIUM - HIERARQUIA DE 3 NÍVEIS */
+  --bg-absolute: #000000;         /* Nível 1: Fundo Principal */
+  --bg-charcoal: #0B0B0E;         /* Nível 2: Menus e Sidebars */
+  --bg-reddish: #120507;          /* Nível 3: Cards e Áreas de Detalhe */
   --bg-card: #120507;
 
-  --text-premium: #F5F5F5;        /* Branco Suave */
-  --text-gray: #B8B8B8;           /* Cinza Leitura */
-  --text-gray-secondary: #7A7A7A; /* Cinza Desativado */
+  /* TEXTOS E HIGHLIGHTS */
+  --text-premium: #F5F5F5;
+  --text-gray: #B8B8B8;
+  --text-gray-secondary: #7A7A7A;
 
-  --gold-premium: #D7A84B;        /* Dourado Principal */
-  --gold-light: #FFD37A;          /* Dourado Brilho */
+  --gold-premium: #D7A84B;
+  --gold-light: #FFD37A;
   --bronze-dark: #A87422;
 
-  --red-main: #B40000;            /* Vermelho Identidade */
-  --red-glow: #FF2A2A;            /* Vermelho Destaque */
+  --red-main: #B40000;
+  --red-glow: #FF2A2A;
   --red-dark: #5A0000;
 
+  /* EFEITOS E BORDAS */
   --border-subtle: rgba(215, 168, 75, 0.15);
   --border-gold: rgba(215, 168, 75, 0.4);
-
   --shadow-premium: 0 20px 40px rgba(0,0,0,0.8);
   --shadow-glow-red: 0 0 15px rgba(180, 0, 0, 0.3);
   --r-card: 14px;

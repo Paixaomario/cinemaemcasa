@@ -46,7 +46,7 @@ const CUSTOM_STYLES = `
     margin-top: clamp(60px, 8vh, 120px);
     border-radius: 0;
     overflow-x: hidden !important;
-    background: linear-gradient(180deg, #1f1a1a 0%, #121212 100%);
+    background: var(--bg-absolute) !important;
   }
 
   .hero {
