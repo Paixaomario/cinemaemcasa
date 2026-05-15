@@ -62,8 +62,8 @@ export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' })
   useEffect(() => {
     const sb = createClient()
     sb.from('cinema')
-      .eq('type', contentType) // Filtra por tipo de conteúdo
       .select('id,titulo,tmdb_id,url,trailer,year,rating,description,poster,category,type,created_at,banner,backdrop,duration')
+      .eq('type', contentType) // Filtra por tipo de conteúdo
       .order('created_at', { ascending: false })
       .then(({ data, error: err }) => {
         if (err) {

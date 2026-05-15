@@ -790,8 +790,8 @@ function DetailContent({ params }: Props) {
       }
     }
     alert('Fim da série ou próximo episódio não disponível.')
-    onClose() // Fecha o player se não houver próximo episódio
-  }, [movieData, selectedSeason, activeVideoUrl, onClose]);
+    setActiveVideoUrl(null) // Fecha o player se não houver próximo episódio
+  }, [movieData, selectedSeason, activeVideoUrl]);
 
   if (loading) {
     return (
