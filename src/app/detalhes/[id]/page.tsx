@@ -56,7 +56,7 @@ const CUSTOM_STYLES = `
     background: var(--bg-absolute);
     position: relative;
     overflow: hidden;
-    margin-bottom: 40px;
+    margin-bottom: 40px; /* Espaçamento abaixo do banner */
     box-shadow: 0 20px 50px rgba(0,0,0,0.9);
   }
 

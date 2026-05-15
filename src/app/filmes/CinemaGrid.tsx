@@ -53,7 +53,7 @@ interface Cinema {
   duration: string | null
 }
 
-export function CinemaGrid() {
+export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' }) {
   const [films,      setFilms]      = useState<Cinema[]>([])
   const [loading,    setLoading]    = useState(true)
   const [error,      setError]      = useState('')
@@ -62,6 +62,7 @@ export function CinemaGrid() {
   useEffect(() => {
     const sb = createClient()
     sb.from('cinema')
+      .eq('type', contentType) // Filtra por tipo de conteúdo
       .select('id,titulo,tmdb_id,url,trailer,year,rating,description,poster,category,type,created_at,banner,backdrop,duration')
       .order('created_at', { ascending: false })
       .then(({ data, error: err }) => {
@@ -216,7 +217,7 @@ function CinemaCard({ film }: { film: Cinema }) {
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault()
-          handleNavigate()
+          handleNavigate() // Garante que o foco funcione como clique
         }
       }}
       tabIndex={0}
@@ -225,15 +226,15 @@ function CinemaCard({ film }: { film: Cinema }) {
         flexShrink:  0,
         width:       'calc((100vw - (2 * clamp(16px, 4vw, 60px)) - (2 * clamp(10px, 1.5vw, 20px))) / 3)', 
         aspectRatio: '2/3',
-        borderRadius: 10,
+        borderRadius: 'var(--r-card)',
         overflow:    'hidden',
         position:    'relative',
         cursor:      'pointer',
-        background:  '#1a0000',
-        boxShadow:   '0 4px 18px rgba(0,0,0,0.75), 0 1px 3px rgba(0,0,0,0.5)',
-        transform:   hovered ? 'scale(1.08) translateY(-4px)' : 'scale(1)',
-        transition:  'all 0.2s ease-out',
-        outline:     'none',
+        background:  'var(--bg-card)',
+        boxShadow:   'var(--shadow-premium)',
+        transform:   hovered ? 'scale(1.03) translateY(-5px)' : 'scale(1)',
+        transition:  'all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1)',
+        outline:     'none', // O outline é tratado por :focus-visible no globals.css
       }}
     >
       {img ? (

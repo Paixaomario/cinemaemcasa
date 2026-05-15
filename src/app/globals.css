@@ -47,8 +47,8 @@
 /* Foco Universal Suave para Smart TVs e Teclado */
 *:focus-visible {
   outline: none;
-  border: 2px solid var(--gold-primary) !important;
-  box-shadow: 0 0 15px rgba(245, 199, 107, 0.25) !important;
+  border: 2px solid var(--gold-premium) !important;
+  box-shadow: 0 0 20px var(--shadow-glow-red) !important;
   transform: scale(1.05);
   z-index: 50;
 }
