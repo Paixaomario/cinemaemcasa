@@ -43,7 +43,7 @@ const CUSTOM_STYLES = `
     width: 100%;
     max-width: 100vw !important;
     min-height: calc(100vh - 120px);
-    margin-top: clamp(60px, 8vh, 120px);
+    margin-top: clamp(60px, 8vh, 120px); /* Ajuste para não colidir com a Navbar */
     border-radius: 0;
     overflow-x: hidden !important;
     background: var(--bg-absolute) !important;
@@ -56,7 +56,7 @@ const CUSTOM_STYLES = `
     background: var(--bg-absolute);
     position: relative;
     overflow: hidden;
-    margin-bottom: 40px; /* Espaçamento abaixo do banner */
+    margin-bottom: 40px; /* Espaçamento abaixo do Hero para a primeira seção */
     box-shadow: 0 20px 50px rgba(0,0,0,0.9);
   }
 
@@ -67,7 +67,7 @@ const CUSTOM_STYLES = `
     inset: 0;
     background-size: cover;
     background-position: center;
-    filter: brightness(0.6) contrast(1.1);
+    filter: brightness(0.6) contrast(1.1); /* Escurece o fundo para o texto se destacar */
   }
 
   .hero-overlay {
@@ -77,9 +77,9 @@ const CUSTOM_STYLES = `
     inset: 0;
     background: linear-gradient(
       to right,
-      rgba(0, 0, 0, 0.95) 0%,
-      rgba(0, 0, 0, 0.7) 35%,
-      rgba(0, 0, 0, 0.2) 100%
+      rgba(0, 0, 0, 0.95) 0%, /* Mais escuro à esquerda */
+      rgba(0, 0, 0, 0.7) 35%, /* Transição suave */
+      rgba(0, 0, 0, 0.2) 100% /* Mais claro à direita */
     );
   }
 
@@ -94,13 +94,13 @@ const CUSTOM_STYLES = `
     gap: 14px;
   }
 
-  .text-hero-title { font-size: clamp(32px, 5vw, 64px) !important; font-weight: 800; color: #fff; text-shadow: 0 10px 20px rgba(0,0,0,0.8); }
+  .text-hero-title { font-family: 'Poppins', sans-serif; font-size: clamp(36px, 7vw, 92px) !important; font-weight: 800; color: #fff; text-shadow: 0 0 40px rgba(0,0,0,1); }
   
   .text-hero-desc, .movie-description {
     font-family: 'Inter', sans-serif !important;
     font-size: clamp(15px, 1.3vw, 19px) !important;
     display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
+    -webkit-line-clamp: 2 !important; /* Limita a descrição a 2 linhas */
     -webkit-box-orient: vertical !important;
     overflow: hidden !important;
     max-width: 700px !important;
@@ -111,24 +111,19 @@ const CUSTOM_STYLES = `
   .movie-meta {
     display: flex;
     gap: 22px;
-    color: rgba(255, 255, 255, 0.75);
+    color: var(--text-gray);
     align-items: center;
+    font-weight: 600;
   }
 
   .meta-age {
     padding: 3px 10px;
     border-radius: 6px;
     font-weight: 900;
-    background: rgba(255, 180, 40, 0.15);
-    border: 2px solid rgba(255, 180, 40, 0.55);
-    color: #ffd36b;
-  }
-
-  .movie-description {
-    width: 100%;
-    max-width: 650px;
-    line-height: 1.5;
-    color: rgba(255, 255, 255, 0.82);
+    background: var(--red-dark);
+    border: 1.5px solid var(--red-main);
+    color: #fff;
+    box-shadow: var(--shadow-glow-red);
   }
 
   .hero-buttons {
@@ -141,55 +136,81 @@ const CUSTOM_STYLES = `
     height: 62px;
     padding: 0 28px;
     border-radius: 10px;
-    border: 2px solid rgba(255, 0, 0, 0.6);
-    background: linear-gradient(180deg, #c20000 0%, #6a0000 100%);
-    color: #ffcc55;
-    font-size: 18px;
-    font-weight: 900;
-    display: flex;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: linear-gradient(180deg, var(--red-main) 0%, var(--red-dark) 100%);
+    color: var(--gold-premium);
+    border-top: 1.5px solid rgba(255,255,255,0.3);
+    box-shadow: 0 15px 30px rgba(180, 0, 0, 0.4);
+    display: inline-flex;
     align-items: center;
     gap: 12px;
     cursor: pointer;
-    transition: 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .btn-primary:hover { transform: scale(1.04); }
+  .btn-primary:hover { 
+    transform: scale(1.04); 
+    background: linear-gradient(180deg, var(--red-glow) 0%, var(--red-main) 100%);
+    box-shadow: 0 18px 35px rgba(180, 0, 0, 0.6);
+  }
+  .btn-primary:active { transform: scale(0.98); }
 
   .btn-secondary {
     height: 62px;
     padding: 0 28px;
     border-radius: 10px;
-    border: 2px solid rgba(255, 180, 40, 0.55);
-    background: rgba(0, 0, 0, 0.55);
-    color: #ffd36b;
-    font-size: 18px;
-    font-weight: 900;
-    display: flex;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: var(--bg-absolute);
+    color: var(--gold-premium);
+    border: 2px solid var(--gold-premium);
+    box-shadow: inset 0 0 10px rgba(215, 168, 75, 0.1);
+    display: inline-flex;
     align-items: center;
     gap: 12px;
     cursor: pointer;
-    transition: 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .btn-secondary:hover { transform: scale(1.04); border-color: rgba(255, 220, 120, 0.85); }
+  .btn-secondary:hover { 
+    transform: scale(1.04); 
+    background: var(--bg-charcoal);
+    border-color: var(--gold-light);
+    color: var(--gold-light);
+  }
+  .btn-secondary:active { transform: scale(0.98); }
 
   .btn-tertiary {
     height: 62px;
     padding: 0 28px;
     border-radius: 10px;
-    border: 2px solid rgba(255, 180, 40, 0.4);
-    background: rgba(0, 0, 0, 0.35);
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 18px;
-    font-weight: 800;
-    display: flex;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: var(--bg-reddish);
+    color: var(--text-premium);
+    border: 1.5px solid var(--border-subtle);
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.3);
+    display: inline-flex;
     align-items: center;
     gap: 12px;
     cursor: pointer;
-    transition: 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .btn-tertiary:hover { transform: scale(1.04); border-color: rgba(255, 220, 120, 0.75); color: #ffd36b; }
+  .btn-tertiary:hover { 
+    transform: scale(1.04); 
+    border-color: var(--gold-premium);
+    color: var(--gold-premium);
+    box-shadow: inset 0 0 15px rgba(215, 168, 75, 0.2);
+  }
+  .btn-tertiary:active { transform: scale(0.98); }
 
   .action-icons { display: flex; gap: 34px; margin-top: 18px; }
 
@@ -197,25 +218,35 @@ const CUSTOM_STYLES = `
     display: flex;
     align-items: center;
     gap: 10px;
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--text-gray);
     font-size: 16px;
     cursor: pointer;
-    transition: 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .action-item:hover { color: #ffd36b; transform: scale(1.05); }
+  .action-item:hover { 
+    color: var(--gold-light); 
+    transform: scale(1.05); 
+    text-shadow: 0 0 8px rgba(255, 211, 122, 0.4);
+  }
 
   .action-item .icon {
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    border: 2px solid rgba(255, 180, 40, 0.5);
-    background: rgba(255, 180, 40, 0.06);
+    border: 1.5px solid var(--border-gold);
+    background: var(--bg-charcoal);
     display: flex;
     justify-content: center;
     align-items: center;
-    color: #d9a23a;
+    color: var(--gold-premium);
     font-size: 18px;
+    box-shadow: inset 0 0 10px rgba(215, 168, 75, 0.1);
+  }
+
+  .action-item:hover .icon {
+    border-color: var(--gold-light);
+    box-shadow: inset 0 0 15px rgba(255, 211, 122, 0.2), 0 0 15px rgba(255, 211, 122, 0.2);
   }
 
   .middle-sections {
@@ -223,30 +254,34 @@ const CUSTOM_STYLES = `
     grid-template-columns: 1fr 1.3fr;
     gap: 18px;
     padding: 20px var(--container-px);
-    margin-top: 60px;
+    margin-top: 40px;
     min-width: 0;
   }
 
   .box {
-    background: rgba(35, 35, 35, 0.7);
-    border-radius: 18px;
-    border: 2px solid rgba(255, 180, 40, 0.25);
-    padding: 18px;
+    background: var(--bg-reddish);
+    border-radius: 24px;
+    border: 1.5px solid var(--border-subtle);
+    padding: 24px;
     min-width: 0;
     overflow: hidden;
+    box-shadow: var(--shadow-premium);
   }
 
   .box-title {
-    text-transform: uppercase;
-    color: #d9a23a;
-    margin-bottom: 14px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: var(--gold-premium);
+    margin-bottom: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    text-shadow: 0 0 8px rgba(215, 168, 75, 0.2);
   }
 
-  .box-title span { color: rgba(255, 255, 255, 0.65); cursor: pointer; }
-  .box-title span:hover { color: #ffd36b; }
+  .box-title span { color: var(--text-gray); cursor: pointer; transition: color 0.2s ease; }
+  .box-title span:hover { color: var(--gold-light); }
 
   .cast-grid { 
     display: flex; 
@@ -254,7 +289,7 @@ const CUSTOM_STYLES = `
     justify-content: flex-start; 
     overflow-x: auto; 
     padding-bottom: 15px;
-    -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch; /* Melhorar scroll em iOS */
   }
   .cast-member { width: 140px; text-align: center; }
   .cast-photo {
@@ -262,19 +297,20 @@ const CUSTOM_STYLES = `
     height: 95px;
     border-radius: 50%;
     margin: 0 auto 10px auto;
-    border: 3px solid rgba(255, 180, 40, 0.55);
+    border: 2px solid var(--gold-premium);
     background-size: cover;
     background-position: center;
+    box-shadow: 0 0 15px rgba(215, 168, 75, 0.2);
   }
-  .cast-name { font-weight: 900; color: #ffd36b; }
-  .cast-role { margin-top: 4px; color: rgba(255, 255, 255, 0.65); }
+  .cast-name { font-weight: 700; color: var(--text-premium); font-family: 'Poppins', sans-serif; }
+  .cast-role { margin-top: 4px; color: var(--text-gray); font-size: 0.85em; }
 
   .recommend-grid { 
     display: flex; 
     gap: 14px; 
     overflow-x: auto; 
     padding-bottom: 15px;
-    -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch; /* Melhorar scroll em iOS */
   }
   .recommend-grid::-webkit-scrollbar { height: 6px; }
   .recommend-grid::-webkit-scrollbar-thumb { background: rgba(255, 180, 40, 0.35); border-radius: 10px; }
@@ -283,16 +319,21 @@ const CUSTOM_STYLES = `
     min-width: 140px;
     height: 210px;
     border-radius: 14px;
-    border: 2px solid rgba(255, 0, 0, 0.4);
+    border: 1.5px solid var(--border-subtle);
     overflow: hidden;
     cursor: pointer;
     position: relative;
-    background: #111;
-    transition: 0.2s ease;
+    background: var(--bg-charcoal);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
   }
 
-  .recommend-card:hover { transform: scale(1.04); border-color: rgba(255, 180, 40, 0.7); }
-  .recommend-poster { width: 100%; height: 100%; background-size: cover; background-position: center; filter: brightness(0.9); }
+  .recommend-card:hover { 
+    transform: scale(1.05) translateY(-3px); 
+    border-color: var(--gold-premium);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.8), 0 0 10px rgba(215, 168, 75, 0.3);
+  }
+  .recommend-poster { width: 100%; height: 100%; background-size: cover; background-position: center; filter: brightness(0.85); }
   .recommend-rating {
     position: absolute;
     bottom: 10px;
@@ -300,24 +341,26 @@ const CUSTOM_STYLES = `
     padding: 6px 10px;
     border-radius: 10px;
     font-weight: 900;
-    background: rgba(0, 0, 0, 0.65);
-    border: 1px solid rgba(255, 180, 40, 0.45);
-    color: #ffd36b;
+    background: var(--bg-absolute);
+    border: 1px solid var(--border-gold);
+    color: var(--gold-light);
+    box-shadow: 0 0 8px rgba(215, 168, 75, 0.2);
   }
 
   .details-footer { width: 100%; padding: 18px var(--container-px) 28px var(--container-px); position: relative; z-index: 15; }
   .details-box {
     width: 100%;
-    border-radius: 18px;
-    border: 2px solid rgba(255, 180, 40, 0.25);
-    background: rgba(0, 0, 0, 0.55);
-    padding: 18px;
+    border-radius: 24px;
+    border: 1.5px solid var(--border-subtle);
+    background: var(--bg-reddish);
+    padding: 24px;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 18px;
+    box-shadow: var(--shadow-premium);
   }
-  .details-item { line-height: 1.6; color: rgba(255, 255, 255, 0.8); }
-  .details-item b { color: #d9a23a; font-weight: 900; }
+  .details-item { line-height: 1.6; color: var(--text-gray); font-family: 'Inter', sans-serif; font-size: 0.95em; }
+  .details-item b { color: var(--gold-premium); font-weight: 700; font-family: 'Poppins', sans-serif; }
 
   /* Responsividade Global */
   @media (max-width: 1024px) {
@@ -326,19 +369,17 @@ const CUSTOM_STYLES = `
   }
 
   @media (max-width: 768px) {
-    .hero { height: auto; min-height: 60vh; padding-top: 40px; }
-    .hero-bg { filter: brightness(1.1) contrast(1.05) !important; }
+    .hero { height: auto; min-height: 66vh; padding-top: 40px; }
+    .hero-bg { filter: brightness(1.2) contrast(1.05) !important; }
     .hero-content { padding: 20px 15px; width: 100%; }
-    .text-hero-title { font-size: clamp(24px, 8vw, 36px) !important; white-space: normal; }
+    .text-hero-title { font-size: clamp(28px, 8vw, 42px) !important; white-space: normal; }
     .hero-buttons { flex-direction: column; width: 100%; gap: 10px; }
     .btn-primary, .btn-secondary { width: 100%; justify-content: center; height: 55px; font-size: 14px; }
     .action-icons { overflow-x: auto; padding-bottom: 10px; width: 100%; justify-content: flex-start; }
     .details-box { grid-template-columns: 1fr; }
-    .movie-description { 
-      display: -webkit-box; 
-      -webkit-line-clamp: 2; 
-      -webkit-box-orient: vertical; 
-      overflow: hidden; 
+    .text-hero-desc, .movie-description {
+      font-size: clamp(14px, 1.5vw, 18px) !important;
+      -webkit-line-clamp: 3 !important; /* 3 linhas no mobile para melhor leitura */
     }
     .cast-grid, .recommend-grid { gap: 12px; }
   }
@@ -348,7 +389,83 @@ const CUSTOM_STYLES = `
     .hero-buttons { flex-direction: column; gap: 12px; }
   }
 
-  ::-webkit-scrollbar-thumb:hover { background: var(--px-red); }
+  /* Estilos para a seção de Temporadas e Episódios */
+  .season-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .episode-list {
+    display: grid;
+    gap: 15px;
+  }
+
+  .episode-item {
+    display: flex;
+    gap: 15px;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--bg-charcoal);
+    border: 1px solid var(--border-subtle);
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .episode-item:hover {
+    background: var(--bg-reddish);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+  }
+
+  .episode-item:focus-visible {
+    outline: none;
+    border-color: var(--gold-premium);
+    box-shadow: 0 0 15px rgba(215, 168, 75, 0.3);
+  }
+
+  .episode-thumbnail {
+    position: relative;
+    width: 120px;
+    height: 70px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .episode-info h3 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: var(--text-premium);
+    font-size: 1.1em;
+    margin-bottom: 4px;
+  }
+
+  .episode-info p {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-gray);
+    font-size: 0.9em;
+    line-height: 1.4;
+  }
+
+  .episode-info .duration {
+    color: var(--text-gray-secondary);
+    font-size: 0.8em;
+    margin-top: 5px;
+  }
+
+  /* Responsividade para Episódios */
+  @media (max-width: 768px) {
+    .episode-item {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .episode-thumbnail {
+      width: 100%;
+      height: 180px; /* Maior no mobile */
+    }
+  }
 `;
 
 function DetailContent({ params }: Props) {
@@ -361,6 +478,7 @@ function DetailContent({ params }: Props) {
   const [isWatchLater, setIsWatchLater] = useState(false)
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null)
   const [isPartyMode, setIsPartyMode] = useState(false)
+  const [selectedSeason, setSelectedSeason] = useState<any>(null); // New state for selected season
   const [loading, setLoading] = useState(true)
   const [shouldStartParty, setShouldStartParty] = useState(false) // New state for party initiation
   const [shuffledRecommendations, setShuffledRecommendations] = useState<any[]>([])
@@ -383,40 +501,84 @@ function DetailContent({ params }: Props) {
         const sb = createClient()
         const id = resolvedParams.id
         let foundData = null
-        let localStreamData = null
+        let localItem = null
         
         // 1. Identificar se o ID é formatado (filme-123) ou ID local (123)
         const [type, rawId] = id.split('-')
-        const parsedId = parseInt(rawId || id, 10)
-        let isMovie = type === 'filme' || !id.includes('serie')
-        let tmdbId: number | null = null
+        const parsedId = rawId || id
 
-        // 2. BUSCA OBRIGATÓRIA NO BANCO LOCAL PRIMEIRO (Para garantir URL e existência)
-        const { data: localItem } = await sb
+        // 2. BUSCA OBRIGATÓRIA NO BANCO LOCAL (Fonte de verdade para URL e tipo)
+        const { data: dbData } = await sb
           .from('cinema')
           .select('*')
-          .or(`id.eq.${parsedId},tmdb_id.eq.${parsedId}`)
+          .or(`id.eq.${isNaN(Number(parsedId)) ? -1 : parsedId},tmdb_id.eq.${isNaN(Number(parsedId)) ? -1 : parsedId}`)
           .maybeSingle()
 
-        if (localItem) {
-          localStreamData = localItem
-          tmdbId = localItem.tmdb_id ? Number(localItem.tmdb_id) : null
-          isMovie = localItem.type === 'movie' || localItem.type === 'filme'
-        }
+        if (dbData) {
+          localItem = dbData
+          const tmdbId = dbData.tmdb_id ? Number(dbData.tmdb_id) : null
+          const isMovie = dbData.type === 'movie' || dbData.type === 'filme' || type === 'filme'
 
-        // 3. ENRIQUECIMENTO VIA TMDB (Apenas metadados)
-        if (tmdbId && !isNaN(tmdbId)) {
-          try {
-            const metadata = isMovie ? await getMovieDetails(tmdbId) : await getShowDetails(tmdbId)
-            const cert = isMovie ? await getMovieCertification(tmdbId) : await getShowCertification(tmdbId)
-            foundData = { ...metadata, ...localStreamData, certification: cert }
-          } catch (e) {
-            console.warn('Falha ao carregar metadados do TMDB, tentando fallback local.', e)
+          if (isMovie) {
+            // Lógica para Filmes
+            if (tmdbId && !isNaN(tmdbId)) {
+              try {
+                const metadata = await getMovieDetails(tmdbId)
+                const cert = await getMovieCertification(tmdbId)
+                foundData = { ...metadata, ...localItem, certification: cert }
+              } catch (e) {
+                foundData = localItem
+              }
+            } else {
+              foundData = localItem
+            }
+          } else { // É uma Série
+            let seriesLocalData: any = null
+            let tmdbSeriesMetadata: any = null
+            let seasonsWithEpisodes: any[] = []
+
+            // 1. Buscar detalhes da série na nova tabela 'series'
+            if (tmdbId && !isNaN(tmdbId)) {
+              const { data: sData } = await sb.from('series').select('*').eq('tmdb_id', tmdbId).maybeSingle()
+              if (sData) {
+                seriesLocalData = sData
+
+                // 2. Buscar temporadas para esta série
+                const { data: tData } = await sb.from('temporadas').select('*').eq('serie_id', seriesLocalData.id_n).order('numero_temporada', { ascending: true })
+                if (tData) {
+                  // 3. Buscar episódios para cada temporada
+                  seasonsWithEpisodes = await Promise.all(tData.map(async (season: any) => {
+                        const { data: eData } = await sb.from('episodios').select('*').eq('temporada_id', season.id_n).order('numero_episodio', { ascending: true })
+                        return { ...season, episodes: eData || [] }
+                  }))
+                }
+              }
+            }
+
+            // 4. Buscar metadados da série no TMDB
+            if (tmdbId && !isNaN(tmdbId)) {
+              try {
+                tmdbSeriesMetadata = await getShowDetails(tmdbId)
+                const cert = await getShowCertification(tmdbId)
+                tmdbSeriesMetadata.certification = cert
+              } catch (e) {
+                console.warn('Falha ao carregar metadados TMDB para série.', e)
+              }
+            }
+
+            // Mesclar dados locais da série, temporadas/episódios e metadados TMDB
+            foundData = {
+              ...tmdbSeriesMetadata, // Metadados TMDB (overview, cast, etc.)
+              ...localItem,          // Dados da tabela cinema (url, type, etc.)
+              ...seriesLocalData,    // Dados da nova tabela series (capa, banner, etc.)
+              seasons: seasonsWithEpisodes,
+              media_type: 'tv'
+            }
+            // Define a primeira temporada como selecionada por padrão
+            if (seasonsWithEpisodes.length > 0) {
+              setSelectedSeason(seasonsWithEpisodes[0])
+            }
           }
-        }
-        
-        if (!foundData) {
-          foundData = localStreamData
         }
 
         if (!foundData) return notFound()
@@ -565,10 +727,29 @@ function DetailContent({ params }: Props) {
   }
 
   const handlePlayContent = () => {
-    const url = movieData?.url || movieData?.video_url
-    setIsPartyMode(false)
-    if (url) setActiveVideoUrl(url)
-    else alert('O conteúdo principal não está disponível no momento.')
+    if (movieData.type === 'series' && movieData.seasons && movieData.seasons.length > 0) {
+      const firstEpisode = movieData.seasons[0].episodes[0]
+      if (firstEpisode && firstEpisode.arquivo) {
+        setIsPartyMode(false)
+        setActiveVideoUrl(firstEpisode.arquivo)
+      } else {
+        alert('Primeiro episódio não disponível para esta série.')
+      }
+    } else {
+      const url = movieData?.url || movieData?.video_url
+      setIsPartyMode(false)
+      if (url) setActiveVideoUrl(url)
+      else alert('O conteúdo principal não está disponível no momento.')
+    }
+  }
+
+  const handlePlayEpisode = (episodeUrl: string) => {
+    if (episodeUrl) {
+      setIsPartyMode(false)
+      setActiveVideoUrl(episodeUrl)
+    } else {
+      alert('Este episódio não possui um arquivo de vídeo disponível.')
+    }
   }
 
   const handlePlayTrailer = () => {
@@ -582,9 +763,35 @@ function DetailContent({ params }: Props) {
   }
 
   const handleNextEpisode = useCallback(() => {
-    // Lógica para ir para o próximo episódio (se for série)
-    console.log('Próximo episódio!')
-  }, []);
+    if (movieData.type === 'series' && selectedSeason && movieData.seasons) {
+      const currentSeasonIndex = movieData.seasons.findIndex((s: any) => s.id_n === selectedSeason.id_n)
+      if (currentSeasonIndex !== -1) {
+        const currentEpisodeIndex = selectedSeason.episodes.findIndex((e: any) => e.arquivo === activeVideoUrl)
+        if (currentEpisodeIndex !== -1) {
+          // Tenta o próximo episódio na temporada atual
+          if (currentEpisodeIndex < selectedSeason.episodes.length - 1) {
+            const nextEpisode = selectedSeason.episodes[currentEpisodeIndex + 1]
+            setActiveVideoUrl(nextEpisode.arquivo)
+            // Opcionalmente, atualiza selectedSeason para refletir o episódio atual
+            setSelectedSeason((prev: any) => ({ ...prev, currentEpisode: nextEpisode }))
+            return
+          }
+          // Tenta a próxima temporada
+          if (currentSeasonIndex < movieData.seasons.length - 1) {
+            const nextSeason = movieData.seasons[currentSeasonIndex + 1]
+            if (nextSeason.episodes.length > 0) {
+              const firstEpisodeOfNextSeason = nextSeason.episodes[0]
+              setSelectedSeason(nextSeason)
+              setActiveVideoUrl(firstEpisodeOfNextSeason.arquivo)
+              return
+            }
+          }
+        }
+      }
+    }
+    alert('Fim da série ou próximo episódio não disponível.')
+    onClose() // Fecha o player se não houver próximo episódio
+  }, [movieData, selectedSeason, activeVideoUrl, onClose]);
 
   if (loading) {
     return (
@@ -614,7 +821,7 @@ function DetailContent({ params }: Props) {
           <div className="hero-bg" style={{ 
             backgroundImage: movieData?.backdrop || movieData?.banner || movieData?.backdrop_url
               ? `url(${movieData.backdrop || movieData.banner || movieData.backdrop_url})` 
-              : movieData?.backdrop_path 
+              : movieData?.backdrop_path
                 ? `url(${IMG.original(movieData.backdrop_path)})`
                 : 'url(https://via.placeholder.com/1920x470)' 
           }}></div>
@@ -624,7 +831,7 @@ function DetailContent({ params }: Props) {
             <h1 className="text-hero-title uppercase tracking-wider text-white">
               {movieData?.titulo || movieData?.title || getTitle?.(movieData) || 'NOME DO FILME'}
             </h1>
-            
+
             <div className="movie-meta text-metadata">
               <span>{movieData?.year || new Date(movieData?.release_date || movieData?.first_air_date).getFullYear()}</span>
               {movieData?.duration && (
@@ -647,7 +854,7 @@ function DetailContent({ params }: Props) {
               )}
             </div>
 
-            <p className="text-hero-desc max-w-[650px] leading-relaxed text-gray-200">
+            <p className="text-hero-desc movie-description max-w-[700px] leading-relaxed text-gray-200">
               {movieData?.description || movieData?.overview || 'Descrição não disponível.'}
             </p>
 

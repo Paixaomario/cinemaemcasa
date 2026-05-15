@@ -221,7 +221,7 @@ function CinemaCard({ film }: { film: Cinema }) {
         }
       }}
       tabIndex={0}
-      role="button"
+      role="link"
       style={{
         flexShrink:  0,
         width:       'calc((100vw - (2 * clamp(16px, 4vw, 60px)) - (2 * clamp(10px, 1.5vw, 20px))) / 3)', 
