@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { Navbar } from '@/components/layout/Navbar'
-import { CinemaGrid } from './CinemaGrid'
+import { CinemaGrid } from '../filmes/CinemaGrid'
 
 export default function SeriesPage() {
     return (

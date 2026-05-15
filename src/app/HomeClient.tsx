@@ -49,7 +49,7 @@ export function HomeClient() {
   const [continueWatching, setContinueWatching] = useState<CinemaItem[]>([])
   const [bannerPool, setBannerPool] = useState<Array<TMDBMovie | TMDBShow>>([])
   const [progress,   setProgress]   = useState(0)
-  const [loading,    setLoading]    = useState(true)
+  const [loading, setLoading] = useState(() => (typeof window !== 'undefined' ? !sessionStorage.getItem('paixaoflix_loaded') : true))
   const [dbError,    setDbError]    = useState('')
 
   useEffect(() => {
