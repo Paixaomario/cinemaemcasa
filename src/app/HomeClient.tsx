@@ -163,6 +163,7 @@ export function HomeClient() {
         }
 
       } catch (err) {
+        setDbError('Erro ao carregar dados da Home. Verifique o console para mais detalhes.')
         console.error('Erro no carregamento da Home:', err)
       } finally {
         setLoading(false)
@@ -195,7 +196,7 @@ export function HomeClient() {
   if (dbError) {
     return (
       <div style={{ textAlign:'center', padding:'80px 20px' }}>
-        <span className="text-hero-title">⚠️</span>
+        <span className="text-hero-title" style={{ fontSize: '48px' }}>⚠️</span>
         <p className="text-section-title" style={{ color:'#ff6b6b', marginTop:16 }}>{dbError}</p>
         <p className="text-metadata" style={{ color:'#888', marginTop:8 }}>
           Execute o SQL <code style={{color:'#d9a23a'}}>fix_cinema_rls.sql</code> no Supabase
@@ -209,7 +210,17 @@ export function HomeClient() {
       {/* Hero Banner */}
       {bannerPool.length > 0 && (
         <HeroBanner type="all" initialPool={bannerPool} />
+      ) : (
+        <div style={{ height: 'clamp(260px,50vw,650px)', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '18px' }}>
+          Nenhum banner disponível. Verifique a tabela 'cinema' e os 'tmdb_id's.
+        </div>
       )}
+
+      {/* Debugging: Log bannerPool and continueWatching */}
+      {useEffect(() => {
+        console.log('HomeClient: bannerPool length:', bannerPool.length);
+        console.log('HomeClient: continueWatching length:', continueWatching.length);
+      }, [bannerPool, continueWatching])}
 
       {/* Seção Continuar Assistindo */}
       {continueWatching.length > 0 && (
@@ -221,6 +232,16 @@ export function HomeClient() {
             paddingLeft:   0
           }}>Continuar Assistindo</h2>
           <RowLayout items={continueWatching} showProgress />
+        </section>
+      )}
+      {continueWatching.length === 0 && user && !loading && (
+        <section style={{ padding:'0 var(--container-px) var(--section-gap)', textAlign: 'center', color: '#888', fontSize: '16px' }}>
+          Nenhum conteúdo para continuar assistindo. Comece a ver algo!
+        </section>
+      )}
+      {continueWatching.length === 0 && !user && !loading && (
+        <section style={{ padding:'0 var(--container-px) var(--section-gap)', textAlign: 'center', color: '#888', fontSize: '16px' }}>
+          Faça login para ver seu histórico de visualização.
         </section>
       )}
 
