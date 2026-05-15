@@ -151,20 +151,13 @@ export function HomeClient() {
 
         // 3. Buscar e filtrar itens de cada seção (sequencialmente)
         const sectionsPromises = homeSections.map(async (sec) => {
-          if (sec.fonte !== 'cinema') return { id: sec.id, items: [] as CinemaItem[], limit: sec.limite }
-          
-          let q = sb.from('cinema').select('id,titulo,poster,banner,backdrop,year,rating,category,type,url,duration,tmdb_id')
-          if (sec.categorias && sec.categorias.length > 0) q = q.in('category', sec.categorias)
-          
-          switch (sec.ordenacao) {
-            case 'random': q = q.order('id', { ascending: Math.random() > 0.5 }); break // Simula random via sorteio de ID
-            case 'rating_desc': q = q.order('rating', { ascending: false, nullsFirst: false }); break
-            case 'year_desc':   q = q.order('year', { ascending: false, nullsFirst: false }); break
-            default:            q = q.order('created_at', { ascending: false, nullsFirst: false }); break
+          // Chamada via RPC para garantir aleatoriedade real do Postgres
+          const { data } = await sb.rpc('get_home_section_v2', { section_id: sec.id })
+          return { 
+            id: sec.id, 
+            items: (data || []) as CinemaItem[], 
+            limit: sec.limite || 5 
           }
-
-          const { data } = await q.limit((sec.limite || 5) * 3)
-          return { id: sec.id, items: (data || []) as CinemaItem[], limit: sec.limite || 5 }
         })
 
         const resolved = await Promise.all(sectionsPromises)
@@ -173,32 +166,28 @@ export function HomeClient() {
         resolved.forEach(res => {
           const filtered: CinemaItem[] = []
           for (const item of res.items) {
-            // Usamos tmdb_id como chave principal de duplicidade para agrupar temporadas/coleções
-            // Se não tiver tmdb_id, usamos o ID local
             const contentKey = item.tmdb_id ? `tmdb-${item.tmdb_id}` : `local-${item.id}`
             
+            // Garante que o item não apareceu no Banner nem em seções acima
             if (!seenContentKeys.has(contentKey)) {
               filtered.push(item)
               seenContentKeys.add(contentKey)
             }
-            if (filtered.length >= (res.limit || 5)) break
+            // Preenche até o limite visual (5), mas sem duplicar nada
+            if (filtered.length >= res.limit) break
           }
           newMap[res.id] = filtered
         })
         setItemsMap(newMap)
 
-        // 4. Banner Pool: Rotação Real (Escolha entre conteúdos locais válidos)
-        // Buscamos uma amostra aleatória maior para garantir variedade em 100k itens
-        const { data: bannerItems } = await sb
-          .from('cinema')
-          .select('id, tmdb_id, type, titulo, poster, backdrop, banner')
-          .not('tmdb_id', 'is', null)
-          .limit(100) // Pegamos 100 de cada vez para performance, mas sem "trava" fixa
+        // 4. Banner Pool: Puxa 20 itens aleatórios de todo o banco via RPC
+        const { data: bannerItems } = await sb.rpc('get_random_content_pool', { cnt: 20 })
 
         if (bannerItems && bannerItems.length > 0) {
-          const shuffled = [...bannerItems].sort(() => Math.random() - 0.5)
-          const hydratedBanners = await Promise.all(shuffled.map(async (item) => {
+          const hydratedBanners = await Promise.all(bannerItems.map(async (item: any) => {
             try {
+              // Marca o TMDB_ID como "visto" para que ele não apareça nas fileiras abaixo do banner
+              seenContentKeys.add(`tmdb-${item.tmdb_id}`)
               return item.type === 'serie' ? await getShowDetails(item.tmdb_id!) : await getMovieDetails(item.tmdb_id!)
             } catch { return null }
           }))
