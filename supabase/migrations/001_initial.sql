@@ -97,9 +97,8 @@ CREATE TABLE IF NOT EXISTS public.home_sections (
   -- 'row'       = carrossel de posters (2:3)
   -- 'row_wide'  = carrossel de cards wide (16:9)
   -- 'grid'      = grade de posters
-  -- 'live'      = secao de lives ao vivo
   layout         TEXT NOT NULL DEFAULT 'row'
-                 CHECK (layout IN ('hero', 'row', 'row_wide', 'grid', 'live')),
+                 CHECK (layout IN ('hero', 'row', 'row_wide', 'grid')),
 
   -- Filtros (multiplos valores, combinados com OR dentro de cada campo)
   content_types  TEXT[] DEFAULT '{}',   -- ex: ARRAY['movie','series']
@@ -133,7 +132,6 @@ CREATE INDEX IF NOT EXISTS idx_home_sections_position ON public.home_sections(po
 -- Secoes padrao (voce pode editar no admin depois)
 INSERT INTO public.home_sections (title, layout, content_types, genres, categories, order_by, item_limit, position) VALUES
   ('Destaques',         'hero',     ARRAY['movie','series'],  ARRAY[]::TEXT[], ARRAY[]::TEXT[],        'created_at_desc', 5,  0),
-  ('Ao Vivo Agora',     'live',     ARRAY[]::TEXT[],          ARRAY[]::TEXT[], ARRAY[]::TEXT[],        'created_at_desc', 6,  1),
   ('Lancamentos',       'row',      ARRAY['movie','series'],  ARRAY[]::TEXT[], ARRAY['Lancamentos'],   'created_at_desc', 20, 2),
   ('Filmes em Alta',    'row',      ARRAY['movie'],           ARRAY[]::TEXT[], ARRAY[]::TEXT[],        'views_desc',      20, 3),
   ('Series Populares',  'row',      ARRAY['series'],          ARRAY[]::TEXT[], ARRAY[]::TEXT[],        'views_desc',      20, 4),
@@ -141,21 +139,6 @@ INSERT INTO public.home_sections (title, layout, content_types, genres, categori
   ('Comedia',           'row',      ARRAY['movie','series'],  ARRAY['Comedia'], ARRAY[]::TEXT[],       'created_at_desc', 20, 6),
   ('Documentarios',     'row_wide', ARRAY['movie'],           ARRAY['Documentario'], ARRAY[]::TEXT[],  'year_desc',       20, 7),
   ('Top 10 da Semana',  'grid',     ARRAY['movie','series'],  ARRAY[]::TEXT[], ARRAY['Top 10'],        'views_desc',      10, 8);
-
--- ============================================================
--- TABELA: lives
--- ============================================================
-CREATE TABLE IF NOT EXISTS public.lives (
-  id            UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  title         TEXT NOT NULL,
-  description   TEXT,
-  stream_url    TEXT NOT NULL,
-  thumbnail_url TEXT,
-  is_live       BOOLEAN DEFAULT FALSE,
-  scheduled_at  TIMESTAMPTZ,
-  created_by    UUID REFERENCES auth.users(id),
-  created_at    TIMESTAMPTZ DEFAULT NOW()
-);
 
 -- ============================================================
 -- TABELA: watch_history
@@ -191,7 +174,6 @@ CREATE INDEX IF NOT EXISTS idx_favorites_user ON public.favorites(user_id);
 ALTER TABLE public.profiles       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.content        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.home_sections  ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.lives          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.watch_history  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.favorites      ENABLE ROW LEVEL SECURITY;
 
@@ -210,10 +192,6 @@ CREATE POLICY "content_admin_write" ON public.content FOR ALL TO authenticated
 
 CREATE POLICY "home_sections_read"        ON public.home_sections FOR SELECT TO authenticated USING (true);
 CREATE POLICY "home_sections_admin_write" ON public.home_sections FOR ALL TO authenticated
-  USING (is_admin()) WITH CHECK (is_admin());
-
-CREATE POLICY "lives_select"      ON public.lives FOR SELECT TO authenticated USING (true);
-CREATE POLICY "lives_admin_write" ON public.lives FOR ALL TO authenticated
   USING (is_admin()) WITH CHECK (is_admin());
 
 CREATE POLICY "watch_history_own" ON public.watch_history FOR ALL TO authenticated

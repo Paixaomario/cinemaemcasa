@@ -13,7 +13,6 @@ const NAV_LINKS = [
 
 const ICON_LINKS = [
   { href: '/favoritos',    icon: '❤',  title: 'Favoritos'       },
-  { href: '/ao-vivo',      icon: '📡', title: 'TV ao Vivo'      },
   { href: '/assistir',     icon: '🕒', title: 'Assistir Depois' },
   { href: '/modo-cinema',  icon: '🎬', title: 'Modo Cinema'     },
 ]
