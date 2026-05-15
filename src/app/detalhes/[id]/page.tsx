@@ -472,35 +472,44 @@ function DetailContent({ params }: Props) {
     loadMovieData()
   }, [resolvedParams, user])
 
-  // Efeito para buscar e filtrar recomendações (apenas o que temos no banco)
+  // Efeito para buscar recomendações DIRETAMENTE no sistema (Banco Local)
   useEffect(() => {
     if (movieData) {
-      async function loadValidRecs() {
+      async function loadSystemRecs() {
         const sb = createClient()
-        // Pega recomendações da API TMDB que já estão hidratadas no movieData
-        const rawRecs = movieData.similar?.results || movieData.recommendations?.results || []
-        
-        if (rawRecs.length === 0) return
 
-        // 1. Coletar IDs das recomendações do TMDB
-        const ids = rawRecs.map((r: any) => r.id)
-        
-        // 2. Buscar no nosso banco apenas os itens que possuímos
-        const { data: matches } = await sb
+        // Identifica a categoria ou gênero predominante para a recomendação
+        const category = movieData.category || (movieData.genres && movieData.genres[0]?.name)
+        const currentTmdbId = movieData.tmdb_id || movieData.id
+        const currentLocalId = movieData.id
+
+        // Busca itens do mesmo tipo ou categoria no banco local
+        let query = sb
           .from('cinema')
-          .select('id, titulo, poster, tmdb_id, rating')
-          .in('tmdb_id', ids)
+          .select('id, titulo, poster, rating, tmdb_id')
 
-        if (matches && matches.length > 0) {
-          // 3. Remover o próprio filme da lista de recomendações
-          const filtered = matches.filter(m => String(m.tmdb_id) !== String(movieData.id))
-          
-          // 4. Embaralhar e limitar
-          const shuffled = [...filtered].sort(() => Math.random() - 0.5).slice(0, 10)
+        if (category) {
+          query = query.eq('category', category)
+        }
+
+        const { data: localMatches } = await query
+          .neq('tmdb_id', currentTmdbId)
+          .limit(15)
+
+        if (localMatches && localMatches.length > 0) {
+          // Embaralha para dar dinamismo à interface
+          const shuffled = [...localMatches].sort(() => Math.random() - 0.5).slice(0, 8)
           setShuffledRecommendations(shuffled)
+        } else {
+          // Fallback: se não houver da mesma categoria, pega itens aleatórios do acervo
+          const { data: randomFallback } = await sb
+            .from('cinema')
+            .select('id, titulo, poster, rating, tmdb_id')
+            .limit(8)
+          setShuffledRecommendations(randomFallback || [])
         }
       }
-      loadValidRecs()
+      loadSystemRecs()
     }
   }, [movieData, resolvedParams])
 
