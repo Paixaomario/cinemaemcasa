@@ -48,6 +48,7 @@ export function HomeClient() {
   const [itemsMap,   setItemsMap]   = useState<Record<string, CinemaItem[]>>({})
   const [continueWatching, setContinueWatching] = useState<CinemaItem[]>([])
   const [bannerPool, setBannerPool] = useState<Array<TMDBMovie | TMDBShow>>([])
+  const [progress,   setProgress]   = useState(0)
   const [loading,    setLoading]    = useState(true)
   const [dbError,    setDbError]    = useState('')
 
@@ -59,12 +60,14 @@ export function HomeClient() {
 
       try {
         setLoading(true)
+        setProgress(10)
 
         // 1. Obter amostra do acervo para validação Anti-Fake e Banner
         const { data: allLocalItems } = await sb
           .from('cinema')
           .select('id, tmdb_id, type, titulo, poster, backdrop, banner, duration_seconds')
           .limit(500)
+        setProgress(25)
 
         const localItems = allLocalItems || []
         const allowedTmdbIds = new Set(localItems.map(x => x.tmdb_id).filter(Boolean))
@@ -110,6 +113,7 @@ export function HomeClient() {
             setContinueWatching(hydrated.filter(Boolean) as CinemaItem[])
           }
         }
+        setProgress(45)
 
         // 2. Buscar definições de seções
         const { data: secs, error: secErr } = await sb
@@ -153,6 +157,7 @@ export function HomeClient() {
         }) as HomeSection[]
 
         setSections(homeSections)
+        setProgress(60)
 
         // 3. Buscar e filtrar itens de cada seção (sequencialmente)
         const sectionsPromises = homeSections.map(async (sec) => {
@@ -167,6 +172,7 @@ export function HomeClient() {
 
         const resolved = await Promise.all(sectionsPromises)
         const newMap: Record<string, CinemaItem[]> = {}
+        setProgress(80)
 
         resolved.forEach(res => {
           const filtered: CinemaItem[] = []
@@ -198,12 +204,16 @@ export function HomeClient() {
           }))
           setBannerPool(hydratedBanners.filter(Boolean) as any[])
         }
+        
+        setProgress(100)
+        // Pequeno delay para o usuário ver a barra completa antes de entrar
+        setTimeout(() => setLoading(false), 600)
 
       } catch (err) {
         setDbError('Erro ao carregar dados da Home. Verifique o console para mais detalhes.')
         console.error('Erro no carregamento da Home:', err)
       } finally {
-        setLoading(false)
+        // O loading é controlado pelo progresso agora
       }
     }
 
