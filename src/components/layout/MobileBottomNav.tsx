@@ -10,9 +10,6 @@ function NavContent() {
   const currentTab = searchParams.get('tab')
   const { user } = useAuth()
 
-  // Não exibir na página de exibição (detalhes/player)
-  if (pathname?.startsWith('/detalhes')) return null
-
   const navItems = [
     { href: '/', label: 'Home', icon: '🏠', active: pathname === '/' },
     { href: '/filmes', label: 'Filmes', icon: '🎬', active: pathname === '/filmes' },

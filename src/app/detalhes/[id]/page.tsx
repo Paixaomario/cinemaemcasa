@@ -95,8 +95,15 @@ const CUSTOM_STYLES = `
     gap: 14px;
   }
 
-  .text-hero-title { font-size: 38px !important; }
-  .text-hero-desc { font-size: 18px !important; }
+  .text-hero-title { font-size: clamp(28px, 4vw, 52px) !important; font-weight: 800; }
+  .text-hero-desc { 
+    font-size: 18px !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-width: 650px;
+  }
 
   .movie-meta {
     display: flex;
@@ -373,47 +380,40 @@ function DetailContent({ params }: Props) {
         const sb = createClient()
         const id = resolvedParams.id
         let foundData = null
+        let localStreamData = null
         
         // 1. Identificar se o ID é formatado (filme-123) ou ID local (123)
         const [type, rawId] = id.split('-')
-        let tmdbId: number | null = parseInt(rawId || id, 10)
+        const parsedId = parseInt(rawId || id, 10)
         let isMovie = type === 'filme' || !id.includes('serie')
+        let tmdbId: number | null = null
 
-        // 2. Se for ID numérico simples (local), buscar o tmdb_id correspondente no banco
-        if (!id.includes('-')) {
-          const { data: localData } = await sb
-            .from('cinema')
-            .select('tmdb_id, type')
-            .eq('id', id)
-            .single()
-          
-          if (localData?.tmdb_id) {
-            tmdbId = Number(localData.tmdb_id)
-            isMovie = localData.type === 'movie' || localData.type === 'filme'
-          }
+        // 2. BUSCA OBRIGATÓRIA NO BANCO LOCAL PRIMEIRO (Para garantir URL e existência)
+        const { data: localItem } = await sb
+          .from('cinema')
+          .select('*')
+          .or(`id.eq.${parsedId},tmdb_id.eq.${parsedId}`)
+          .maybeSingle()
+
+        if (localItem) {
+          localStreamData = localItem
+          tmdbId = localItem.tmdb_id ? Number(localItem.tmdb_id) : null
+          isMovie = localItem.type === 'movie' || localItem.type === 'filme'
         }
 
-        // 3. CARREGAMENTO OBRIGATÓRIO VIA TMDB
+        // 3. ENRIQUECIMENTO VIA TMDB (Apenas metadados)
         if (tmdbId && !isNaN(tmdbId)) {
           try {
-            if (isMovie) {
-              const movie = await getMovieDetails(tmdbId)
-              const cert = await getMovieCertification(tmdbId)
-              foundData = { ...movie, certification: cert, media_type: 'movie' }
-            } else {
-              const show = await getShowDetails(tmdbId)
-              const cert = await getShowCertification(tmdbId)
-              foundData = { ...show, certification: cert, media_type: 'tv' }
-            }
+            const metadata = isMovie ? await getMovieDetails(tmdbId) : await getShowDetails(tmdbId)
+            const cert = isMovie ? await getMovieCertification(tmdbId) : await getShowCertification(tmdbId)
+            foundData = { ...metadata, ...localStreamData, certification: cert }
           } catch (e) {
             console.warn('Falha ao carregar metadados do TMDB, tentando fallback local.', e)
           }
         }
         
-        // 4. Fallback Local se o TMDB falhar ou não houver mapeamento
         if (!foundData) {
-          const { data } = await sb.from('cinema').select('*').eq('id', isNaN(Number(id)) ? 0 : id).single()
-          foundData = data
+          foundData = localStreamData
         }
 
         if (!foundData) return notFound()
@@ -649,6 +649,9 @@ function DetailContent({ params }: Props) {
             </p>
 
             <div className="hero-buttons">
+              <button className="btn-secondary text-button" onClick={() => router.push('/filmes')} style={{ width: 'auto', padding: '0 20px' }}>
+                ← VOLTAR
+              </button>
               <button className="btn-primary text-button" onClick={handlePlayContent} tabIndex={0}>
                 ▶️ ASSISTIR AGORA
               </button>

@@ -55,6 +55,13 @@ export function HomeClient() {
   useEffect(() => {
     async function load() {
       const sb = createClient()
+      
+      // Verifica se já carregou nesta sessão para evitar splash screen em navegações internas
+      const hasLoadedBefore = sessionStorage.getItem('paixaoflix_loaded')
+      if (hasLoadedBefore) {
+        setLoading(false)
+      }
+
       // Conjunto para rastrear TMDB IDs e evitar repetição de temporadas/coleções
       const seenContentKeys = new Set<string>()
 
@@ -206,6 +213,7 @@ export function HomeClient() {
         }
         
         setProgress(100)
+        sessionStorage.setItem('paixaoflix_loaded', 'true')
         // Pequeno delay para o usuário ver a barra completa antes de entrar
         setTimeout(() => setLoading(false), 600)
 
@@ -303,15 +311,17 @@ export function HomeClient() {
   }
 
   return (
-    <div style={{ paddingBottom: 60 }}>
+    <div style={{ paddingBottom: 100 }}>
       {/* Hero Banner */}
-      {bannerPool.length > 0 ? (
+      <div style={{ marginBottom: 'clamp(40px, 8vh, 80px)' }}>
+        {bannerPool.length > 0 ? (
         <HeroBanner type="all" initialPool={bannerPool} />
       ) : (
         <div style={{ height: 'clamp(312px,60vw,650px)', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '18px' }}>
           Nenhum banner disponível. Verifique a tabela 'cinema' e os 'tmdb_id's.
         </div>
-      )}
+        )}
+      </div>
 
       {/* Seção Continuar Assistindo */}
       {continueWatching.length > 0 && (
