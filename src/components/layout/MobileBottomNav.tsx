@@ -10,7 +10,7 @@ function NavContent() {
   const currentTab = searchParams.get('tab')
   const { user } = useAuth()
 
-  // Nunca ocultar, exceto se estiver explicitamente no player fullscreen (controlado via CSS/Z-index)
+  // Visível em todas as páginas, o player usará Z-index superior para cobrir
   const navItems = [
     { href: '/', label: 'Home', icon: '🏠', active: pathname === '/' },
     { href: '/filmes', label: 'Filmes', icon: '🎬', active: pathname === '/filmes' },

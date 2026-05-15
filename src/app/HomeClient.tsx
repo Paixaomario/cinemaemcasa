@@ -55,15 +55,13 @@ export function HomeClient() {
   useEffect(() => {
     async function load() {
       const sb = createClient()
-      
-      const hasLoadedBefore = sessionStorage.getItem('paixaoflix_loaded')
+      const hasLoadedBefore = typeof window !== 'undefined' && sessionStorage.getItem('paixaoflix_loaded')
 
       // Conjunto de IDs únicos do banco para evitar QUALQUER repetição na mesma tela
       const seenContentKeys = new Set<string>()
 
       try {
-        setLoading(true)
-        setProgress(10)
+        if (!hasLoadedBefore) setLoading(true)
         setProgress(25)
 
         // 2. Processar "Continuar Assistindo" PRIMEIRO
@@ -151,6 +149,7 @@ export function HomeClient() {
         }) as HomeSection[]
 
         setSections(homeSections)
+        setProgress(60)
         
         // 4. Banner Pool: Puxa 20 itens aleatórios de TODO o banco via RPC
         const { data: bannerItems } = await sb.rpc('get_random_content_pool', { cnt: 20 })
@@ -165,7 +164,6 @@ export function HomeClient() {
           }))
           setBannerPool(hydratedBanners.filter(Boolean) as any[])
         }
-        setProgress(60)
 
         // 3. Buscar e filtrar itens de cada seção (sequencialmente)
         const sectionsPromises = homeSections.map(async (sec) => {
@@ -197,7 +195,7 @@ export function HomeClient() {
         setItemsMap(newMap)
         
         setProgress(100)
-        sessionStorage.setItem('paixaoflix_loaded', 'true')
+        if (typeof window !== 'undefined') sessionStorage.setItem('paixaoflix_loaded', 'true')
         // Pequeno delay para o usuário ver a barra completa antes de entrar
         setTimeout(() => setLoading(false), 600)
 
@@ -303,9 +301,9 @@ export function HomeClient() {
   }
 
   return (
-    <div style={{ paddingBottom: 120 }}>
+    <div style={{ paddingBottom: 140 }}>
       {/* Hero Banner */}
-      <div style={{ marginBottom: 'clamp(60px, 10vh, 120px)' }}>
+      <div style={{ marginBottom: 'clamp(80px, 15vh, 140px)' }}>
         {bannerPool.length > 0 ? (
         <HeroBanner type="all" initialPool={bannerPool} />
       ) : (

@@ -177,11 +177,11 @@ function CinemaRow({ items }: { items: Cinema[] }) {
   return (
     <div style={{
       display:          'flex',
-      gap:              'clamp(8px,1.1vw,14px)',
+      gap:              'clamp(10px, 1.5vw, 20px)',
       overflowX:        'auto',
       paddingBottom:    6,
       scrollbarWidth:   'none',
-      msOverflowStyle:  'none',
+      WebkitOverflowScrolling: 'touch',
     } as React.CSSProperties}>
       {items.map(f => <CinemaCard key={f.id} film={f} />)}
     </div>
@@ -223,7 +223,7 @@ function CinemaCard({ film }: { film: Cinema }) {
       role="button"
       style={{
         flexShrink:  0,
-        width:       'clamp(100px,13vw,180px)',
+        width:       'clamp(115px, 28vw, 220px)', // Ajustado para garantir 3 capas por linha no mobile
         aspectRatio: '2/3',
         borderRadius: 10,
         overflow:    'hidden',

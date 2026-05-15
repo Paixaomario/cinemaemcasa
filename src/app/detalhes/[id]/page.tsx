@@ -95,15 +95,18 @@ const CUSTOM_STYLES = `
     gap: 14px;
   }
 
-  .text-hero-title { font-size: clamp(28px, 4vw, 52px) !important; font-weight: 800; }
-  .text-hero-desc, .movie-description { 
-    font-size: clamp(14px, 1.2vw, 18px) !important;
+  .text-hero-title { font-size: clamp(32px, 5vw, 64px) !important; font-weight: 800; color: #fff; text-shadow: 0 10px 20px rgba(0,0,0,0.8); }
+  
+  .text-hero-desc, .movie-description {
+    font-family: 'Inter', sans-serif !important;
+    font-size: clamp(15px, 1.3vw, 19px) !important;
     display: -webkit-box !important;
     -webkit-line-clamp: 2 !important;
     -webkit-box-orient: vertical !important;
     overflow: hidden !important;
-    max-width: 650px;
-    line-height: 1.5;
+    max-width: 700px !important;
+    line-height: 1.6 !important;
+    color: var(--text-gray) !important;
   }
 
   .movie-meta {
