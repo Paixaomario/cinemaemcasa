@@ -330,6 +330,7 @@ function DetailContent({ params }: Props) {
   const roomFromUrl = searchParams.get('room')
   const [movieData, setMovieData] = useState<any>(null)
   const [isFavorite, setIsFavorite] = useState(false)
+  const [isWatchLater, setIsWatchLater] = useState(false)
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null)
   const [isPartyMode, setIsPartyMode] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -458,6 +459,17 @@ function DetailContent({ params }: Props) {
           if (fav) setIsFavorite(true)
         }
 
+        // Verifica se está na lista de Assistir Depois
+        if (user && id) {
+          const { data: wl } = await sb
+            .from('watch_later')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('content_id', id)
+            .maybeSingle()
+          if (wl) setIsWatchLater(true)
+        }
+
         // Carrega o último progresso de visualização
         if (user && id) {
           const { data: progress } = await sb
@@ -534,6 +546,23 @@ function DetailContent({ params }: Props) {
       const { error } = await sb.from('favorites').insert({ user_id: user.id, content_id: resolvedParams.id })
       if (!error) setIsFavorite(true)
       else console.error('Erro ao favoritar:', error.message)
+    }
+  }
+
+  async function handleToggleWatchLater() {
+    if (!user) {
+      alert('Faça login para adicionar à sua lista!')
+      return
+    }
+    if (!resolvedParams?.id) return
+
+    const sb = createClient()
+    if (isWatchLater) {
+      const { error } = await sb.from('watch_later').delete().eq('user_id', user.id).eq('content_id', resolvedParams.id)
+      if (!error) setIsWatchLater(false)
+    } else {
+      const { error } = await sb.from('watch_later').insert({ user_id: user.id, content_id: resolvedParams.id })
+      if (!error) setIsWatchLater(true)
     }
   }
 
@@ -648,8 +677,10 @@ function DetailContent({ params }: Props) {
                 </div>
                 <span>{isFavorite ? 'Remover' : 'Favorito'}</span>
               </div>
-              <div className="action-item">
-                <div className="icon">⏰</div>
+              <div className="action-item" onClick={handleToggleWatchLater} tabIndex={0}>
+                <div className="icon" style={{ color: isWatchLater ? 'var(--gold-primary)' : 'inherit' }}>
+                  {isWatchLater ? '⏳' : '⏰'}
+                </div>
                 <span>Assistir Depois</span>
               </div>
               <div className="action-item">
