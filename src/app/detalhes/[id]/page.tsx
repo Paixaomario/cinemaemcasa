@@ -384,40 +384,36 @@ function DetailContent({ params }: Props) {
         const sb = createClient()
         const id = resolvedParams.id
         let foundData = null
-        let localStreamData = null
+        let localItem = null
         
         // 1. Identificar se o ID é formatado (filme-123) ou ID local (123)
         const [type, rawId] = id.split('-')
-        const parsedId = parseInt(rawId || id, 10)
-        let isMovie = type === 'filme' || !id.includes('serie')
-        let tmdbId: number | null = null
+        const parsedId = rawId || id
 
-        // 2. BUSCA OBRIGATÓRIA NO BANCO LOCAL PRIMEIRO (Para garantir URL e existência)
-        const { data: localItem } = await sb
+        // 2. BUSCA OBRIGATÓRIA NO BANCO LOCAL (Fonte única de verdade para URL)
+        const { data: dbData } = await sb
           .from('cinema')
           .select('*')
-          .or(`id.eq.${parsedId},tmdb_id.eq.${parsedId}`)
+          .or(`id.eq.${isNaN(Number(parsedId)) ? -1 : parsedId},tmdb_id.eq.${isNaN(Number(parsedId)) ? -1 : parsedId}`)
           .maybeSingle()
 
-        if (localItem) {
-          localStreamData = localItem
-          tmdbId = localItem.tmdb_id ? Number(localItem.tmdb_id) : null
-          isMovie = localItem.type === 'movie' || localItem.type === 'filme'
-        }
+        if (dbData) {
+          localItem = dbData
+          const tmdbId = dbData.tmdb_id ? Number(dbData.tmdb_id) : null
+          const isMovie = dbData.type === 'movie' || dbData.type === 'filme' || type === 'filme'
 
-        // 3. ENRIQUECIMENTO VIA TMDB (Apenas metadados)
-        if (tmdbId && !isNaN(tmdbId)) {
+          // 3. ENRIQUECIMENTO VIA TMDB
+          if (tmdbId && !isNaN(tmdbId)) {
           try {
-            const metadata = isMovie ? await getMovieDetails(tmdbId) : await getShowDetails(tmdbId)
-            const cert = isMovie ? await getMovieCertification(tmdbId) : await getShowCertification(tmdbId)
-            foundData = { ...metadata, ...localStreamData, certification: cert }
+              const metadata = isMovie ? await getMovieDetails(tmdbId) : await getShowDetails(tmdbId)
+              const cert = isMovie ? await getMovieCertification(tmdbId) : await getShowCertification(tmdbId)
+              foundData = { ...metadata, ...localItem, certification: cert }
           } catch (e) {
-            console.warn('Falha ao carregar metadados do TMDB, tentando fallback local.', e)
+              foundData = localItem
           }
-        }
-        
-        if (!foundData) {
-          foundData = localStreamData
+          } else {
+            foundData = localItem
+          }
         }
 
         if (!foundData) return notFound()

@@ -223,7 +223,7 @@ function CinemaCard({ film }: { film: Cinema }) {
       role="button"
       style={{
         flexShrink:  0,
-        width:       'clamp(115px, 28vw, 220px)', // Ajustado para garantir 3 capas por linha no mobile
+        width:       'calc((100vw - (2 * clamp(16px, 4vw, 60px)) - 24px) / 3)', 
         aspectRatio: '2/3',
         borderRadius: 10,
         overflow:    'hidden',
