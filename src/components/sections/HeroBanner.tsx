@@ -140,6 +140,7 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
               maxWidth: '520px',
             }}
           >{desc}</p>
+        </div>
       </div>
     </div>
   )
