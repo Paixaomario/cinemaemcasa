@@ -120,14 +120,15 @@ export function HomeClient() {
 
         if (secErr) throw secErr
         
-        const now = new Date()
-        const currentTime = now.getHours() * 60 + now.getMinutes()
+        const now = new Date() // Current local date/time
+        const currentUtcDate = new Date(now.toISOString()) // Current UTC date/time for consistent date range comparison
+        const currentTimeMinutes = now.getHours() * 60 + now.getMinutes() // Current local time in minutes for daily schedule comparison
 
         // Filtragem por Agendamento (Hora e Data)
         const homeSections = (secs || []).filter((sec: HomeSection) => {
           // 1. Checagem por Data (Sazonal)
-          if (sec.data_inicio && new Date(sec.data_inicio) > now) return false
-          if (sec.data_fim && new Date(sec.data_fim) < now) return false
+          if (sec.data_inicio && new Date(sec.data_inicio) > currentUtcDate) return false
+          if (sec.data_fim && new Date(sec.data_fim) < currentUtcDate) return false
 
           // 2. Checagem por Horário (Diário)
           if (sec.hora_inicio && sec.hora_fim) {
@@ -138,10 +139,10 @@ export function HomeClient() {
 
             if (startVal < endVal) {
               // Horário normal (ex: 08:00 as 18:00)
-              if (currentTime < startVal || currentTime > endVal) return false
+              if (currentTimeMinutes < startVal || currentTimeMinutes > endVal) return false
             } else {
               // Horário que vira a noite (ex: 23:59 as 05:59)
-              if (currentTime < startVal && currentTime > endVal) return false
+              if (currentTimeMinutes < startVal && currentTimeMinutes > endVal) return false
             }
           }
           return true
