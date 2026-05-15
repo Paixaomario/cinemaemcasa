@@ -62,7 +62,7 @@ function NavContent() {
           justify-content: space-around;
           align-items: center;
 
-          padding: 12px 18px;
+          padding: 12px 6px;
           border-radius: 40px;
 
           /* efeito glass / fosco */
@@ -142,11 +142,7 @@ function NavContent() {
         }
 
         .nav-item .icon {
-          font-size: 48px !important;
-          width: 48px !important;
-          height: 48px !important;
-          min-width: 48px !important;
-          min-height: 48px !important;
+          font-size: 62px !important;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -185,7 +181,7 @@ function NavContent() {
             
             height: 75px !important;
             border-radius: 30px;
-            padding: 0 2px;
+            padding: 0 4px;
             bottom: 15px;
           }
           .nav-item {
@@ -193,7 +189,7 @@ function NavContent() {
             flex: 1;
             height: 70px !important;
           }
-          .nav-item .icon { font-size: 48px !important; width: 48px !important; height: 48px !important; min-width: 48px !important; }
+          .nav-item .icon { font-size: 58px !important; }
         }
       `}</style>
     </>
