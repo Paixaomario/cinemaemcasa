@@ -22,9 +22,9 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
       // Sorteia a ordem inicial para nunca começar com a mesma capa
       const shuffled = [...initialPool].sort(() => Math.random() - 0.5);
       setPool(shuffled);
-      return;
+      return
     }
-    buildBannerPool(type, 20).then(p => setPool(p))
+    // Se não houver initialPool, não carrega nada (evita TMDB direto)
   }, [type, initialPool])
 
   // Auto-rotate every 7s with fade transition

@@ -16,7 +16,7 @@ export function ContentCard({ item, variant = 'poster' }: Props) {
   const imgUrl   = variant === 'poster'
     ? IMG.poster(item.poster_path, 'w500')
     : IMG.backdrop(item.backdrop_path, 'w780')
-  const detailUrl = `/detalhes/${isMovie ? 'filme' : 'serie'}-${item.id}`
+  const detailUrl = `/detalhes/${item.id}` // Sempre usa o ID local para a rota
 
   return (
     <Link href={detailUrl} className={`${variant === 'poster' ? 'card-poster' : 'card-wide'} tv-focus`} title={title}

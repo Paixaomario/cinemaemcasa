@@ -37,13 +37,15 @@ export default function AssistirDespoisPage() {
         const hydrated = await Promise.all(
           wlData.map(async (p: any) => {
             const idStr = String(p.content_id)
+            // Busca o item diretamente do banco local
             let item: any = null
-            
-            if (!idStr.includes('-')) {
-              const { data } = await sb.from('cinema').select('*').eq('id', p.content_id).single()
-              item = data
-            } else {
-              const [type, rawId] = idStr.split('-')
+            const { data: localData } = await sb.from('cinema').select('*').eq('id', idStr).single()
+            item = localData
+
+            // Se o item local tiver tmdb_id, enriquece com metadados do TMDB
+            if (item && item.tmdb_id) {
+              const type = item.type === 'movie' ? 'filme' : 'serie'
+              const rawId = item.tmdb_id
               try {
                 item = type === 'filme' ? await getMovieDetails(Number(rawId)) : await getShowDetails(Number(rawId))
               } catch { return null }

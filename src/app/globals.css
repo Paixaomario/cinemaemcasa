@@ -3,28 +3,27 @@
 @tailwind utilities;
 
 :root {
-  /* PALETA PAIXAOFLIX PREMIUM - HIERARQUIA DE 3 NÍVEIS */
-  --bg-absolute: #000000;         /* Nível 1: Fundo Principal */
-  --bg-charcoal: #0B0B0E;         /* Nível 2: Menus e Sidebars */
-  --bg-reddish: #120507;          /* Nível 3: Cards e Áreas de Detalhe */
+  /* PALETA PAIXAOFLIX PREMIUM */
+  --bg-absolute: #000000;         /* Fundo Principal */
+  --bg-charcoal: #0B0B0E;         /* Camada 2 - Menus */
+  --bg-reddish: #120507;          /* Camada 3 - Cards/Detalhes */
   --bg-card: #120507;
 
-  /* TEXTOS E HIGHLIGHTS */
-  --text-premium: #F5F5F5;
-  --text-gray: #B8B8B8;
-  --text-gray-secondary: #7A7A7A;
+  --text-premium: #F5F5F5;        /* Branco Suave */
+  --text-gray: #B8B8B8;           /* Cinza Leitura */
+  --text-gray-secondary: #7A7A7A; /* Cinza Desativado */
 
-  --gold-premium: #D7A84B;
-  --gold-light: #FFD37A;
+  --gold-premium: #D7A84B;        /* Dourado Principal */
+  --gold-light: #FFD37A;          /* Dourado Brilho */
   --bronze-dark: #A87422;
 
-  --red-main: #B40000;
-  --red-glow: #FF2A2A;
+  --red-main: #B40000;            /* Vermelho Identidade */
+  --red-glow: #FF2A2A;            /* Vermelho Destaque */
   --red-dark: #5A0000;
 
-  /* EFEITOS E BORDAS */
   --border-subtle: rgba(215, 168, 75, 0.15);
   --border-gold: rgba(215, 168, 75, 0.4);
+
   --shadow-premium: 0 20px 40px rgba(0,0,0,0.8);
   --shadow-glow-red: 0 0 15px rgba(180, 0, 0, 0.3);
   --r-card: 14px;
@@ -401,43 +400,30 @@ h2,
 
 /* ─── Button styles (Inter font enforced) ────────── */
 .btn {
-  font-family: 'Poppins', sans-serif;
-  font-weight: 700;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 600;
   border: none;
-  border-radius: 12px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background 0.18s ease, transform 0.1s ease, opacity 0.18s;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  position: relative;
-  overflow: hidden;
+  font-size: clamp(0.875rem, 2vw, 1.75rem);
+  padding: clamp(8px, 1.2vw, 18px) clamp(18px, 2.5vw, 28px);
 }
-.btn:active { transform: scale(0.95); }
+.btn:active { transform: scale(0.96); }
 
 .btn-red {
-  background: linear-gradient(180deg, #B40000 0%, #5A0000 100%);
-  color: var(--gold-premium);
-  border-top: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 0 10px 20px rgba(180, 0, 0, 0.3), inset 0 -4px 0 rgba(0,0,0,0.2);
+  background: var(--px-red);
+  color: #fff;
 }
-.btn-red:hover { 
-  background: linear-gradient(180deg, #FF2A2A 0%, #B40000 100%);
-  box-shadow: 0 15px 25px rgba(180, 0, 0, 0.5);
-}
+.btn-red:hover { background: var(--px-red-h); }
 
 .btn-ghost {
-  background: var(--bg-absolute);
-  color: var(--gold-premium);
-  border: 2px solid var(--gold-premium);
-  box-shadow: inset 0 0 10px rgba(215, 168, 75, 0.1);
-}
-.btn-ghost:hover { 
-  background: var(--bg-charcoal);
-  border-color: var(--gold-light);
-  color: var(--gold-light);
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.15);
 }
 
 .btn-sm {

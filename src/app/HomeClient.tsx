@@ -55,13 +55,15 @@ export function HomeClient() {
   useEffect(() => {
     async function load() {
       const sb = createClient()
-      const hasLoadedBefore = typeof window !== 'undefined' && sessionStorage.getItem('paixaoflix_loaded')
+      
+      const hasLoadedBefore = sessionStorage.getItem('paixaoflix_loaded')
 
       // Conjunto de IDs únicos do banco para evitar QUALQUER repetição na mesma tela
       const seenContentKeys = new Set<string>()
 
       try {
-        if (!hasLoadedBefore) setLoading(true)
+        setLoading(true)
+        setProgress(10)
         setProgress(25)
 
         // 2. Processar "Continuar Assistindo" PRIMEIRO
