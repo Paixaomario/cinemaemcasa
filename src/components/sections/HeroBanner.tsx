@@ -62,7 +62,7 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
   return (
     <div
       className="relative w-full overflow-hidden"
-      style={{ height: 'clamp(312px, 66vw, 680px)', background: '#000' }}
+      style={{ height: 'clamp(450px, 80vw, 800px)', background: '#000', borderBottom: '4px solid var(--red-main)' }}
     >
       {/* Backdrop image — 4K/original */}
       {backdropUrl && (
@@ -124,7 +124,7 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
           </div>
 
           {/* Title */}
-          <h1 className="text-hero-title mb-2 text-white drop-shadow-lg">{title}</h1>
+          <h1 className="text-hero-title mb-4 text-white font-extrabold uppercase tracking-tighter" style={{ fontFamily: 'Poppins, sans-serif', fontSize: 'clamp(36px, 7vw, 92px)', textShadow: '0 0 40px rgba(0,0,0,1)' }}>{title}</h1>
 
           {/* Year */}
           <p className="text-metadata mb-2" style={{ fontSize: '20px' }}>{year}</p>

@@ -17,9 +17,9 @@ function NavContent() {
     { href: '/', label: 'Home', icon: '🏠', active: pathname === '/' },
     { href: '/filmes', label: 'Filmes', icon: '🎬', active: pathname === '/filmes' },
     { href: '/series', label: 'Séries', icon: '📺', active: pathname === '/series' },
-    { href: '/perfil?tab=fav', label: 'Favoritos', icon: '❤️', active: pathname === '/perfil' && currentTab === 'fav' },
-    { href: '/perfil?tab=later', label: 'Assistir Depois', icon: '⏰', active: pathname === '/perfil' && currentTab === 'later' },
-    { href: '/localizar', label: 'Localizar', icon: '🔍', active: pathname === '/localizar' },
+    { href: '/favoritos', label: 'Favoritos', icon: '❤️', active: pathname === '/favoritos' },
+    { href: '/assistir', label: 'Assistir Depois', icon: '⏰', active: pathname === '/assistir' },
+    { href: '/search', label: 'Localizar', icon: '🔍', active: pathname === '/search' },
     { href: user ? '/perfil' : '/login', label: 'Perfil', icon: '👤', active: pathname === '/perfil' && !currentTab },
   ]
 

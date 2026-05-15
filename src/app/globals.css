@@ -3,34 +3,33 @@
 @tailwind utilities;
 
 :root {
-  /* FUNDOS */
-  --bg-primary: #0B0B0F;
-  --bg-secondary: #141414;
-  --bg-card: #1A1A1F;
+  /* PALETA PAIXAOFLIX PREMIUM */
+  --bg-absolute: #000000;         /* Fundo Principal */
+  --bg-charcoal: #0B0B0E;         /* Camada 2 - Menus */
+  --bg-reddish: #120507;          /* Camada 3 - Cards/Detalhes */
+  --bg-card: #120507;
 
-  /* TEXTOS */
-  --text-primary: #ECECEC;
-  --text-secondary: #A1A1AA;
+  --text-premium: #F5F5F5;        /* Branco Suave */
+  --text-gray: #B8B8B8;           /* Cinza Leitura */
+  --text-gray-secondary: #7A7A7A; /* Cinza Desativado */
 
-  /* DESTAQUES */
-  --gold-primary: #F5C76B;
-  --gold-hover: #FFD67A;
+  --gold-premium: #D7A84B;        /* Dourado Principal */
+  --gold-light: #FFD37A;          /* Dourado Brilho */
+  --bronze-dark: #A87422;
 
-  /* AÇÕES */
-  --red-primary: #E50914;
-  --red-hover: #FF1F2D;
+  --red-main: #B40000;            /* Vermelho Identidade */
+  --red-glow: #FF2A2A;            /* Vermelho Destaque */
+  --red-dark: #5A0000;
 
-  /* BORDAS */
-  --border-primary: rgba(255,255,255,0.08);
-  --border-gold: rgba(245,199,107,0.45);
+  --border-subtle: rgba(215, 168, 75, 0.15);
+  --border-gold: rgba(215, 168, 75, 0.4);
 
-  /* SOMBRAS */
-  --shadow-gold: 0 0 18px rgba(245,199,107,0.15);
-  --shadow-red: 0 0 18px rgba(229,9,20,0.25);
-  --r-card: 10px;
+  --shadow-premium: 0 20px 40px rgba(0,0,0,0.8);
+  --shadow-glow-red: 0 0 15px rgba(180, 0, 0, 0.3);
+  --r-card: 14px;
 
   /* ESPAÇAMENTOS FLUIDOS */
-  --container-px: clamp(1rem, 3vw, 3.5rem);
+  --container-px: clamp(1.5rem, 5vw, 6rem);
   --section-gap: clamp(2rem, 6vw, 5rem);
 
   /* PADRONIZAÇÃO DE CAPAS (Padrão 5 por linha) */
@@ -65,9 +64,9 @@ html {
 }
 
 body {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: "Inter", "Open Sans", sans-serif;
+  background: var(--bg-absolute);
+  color: var(--text-premium);
+  font-family: "Inter", sans-serif;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
@@ -90,9 +89,10 @@ h1, h2, h3, h4, h5, h6 {
 /* ─── Card shadow & rounded ─────────────────────── */
 .card-base {
   border-radius: var(--r-card);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-premium);
   overflow: hidden;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  border: 1px solid var(--border-subtle);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .card-base:hover {
   transform: scale(1.04) translateY(-2px);
@@ -105,18 +105,16 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
   border-radius: var(--r-card);
   overflow: hidden;
-  outline: none;
-  text-decoration: none;
-  transition: all 0.2s ease-out;
+  background: var(--bg-charcoal);
+  border: 1.5px solid rgba(255,255,255,0.03);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
-.card-poster:focus-visible, .card-wide:focus-visible {
-  outline: 3px solid #b40000;
-  outline-offset: 2px;
-}
-
-.card-poster:focus-visible > div, .card-wide:focus-visible > div {
-  transform: scale(1.08);
+.card-poster:hover {
+  transform: scale(1.03) translateY(-5px);
+  border-color: var(--red-main);
+  box-shadow: var(--shadow-glow-red);
 }
 
 /* ─── Horizontal scroll row ─────────────────────── */
@@ -402,32 +400,44 @@ h2,
 
 /* ─── Button styles (Inter font enforced) ────────── */
 .btn {
-  font-family: 'Inter', system-ui, sans-serif;
-  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: background 0.18s ease, transform 0.1s ease, opacity 0.18s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: clamp(0.875rem, 2vw, 1.75rem);
-  padding: clamp(8px, 1.2vw, 18px) clamp(18px, 2.5vw, 28px);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
 }
-.btn:active { transform: scale(0.96); }
+.btn:active { transform: scale(0.95); }
 
 .btn-red {
-  background: var(--px-red);
-  color: #fff;
+  background: linear-gradient(180deg, #B40000 0%, #5A0000 100%);
+  color: var(--gold-premium);
+  border-top: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 10px 20px rgba(180, 0, 0, 0.3), inset 0 -4px 0 rgba(0,0,0,0.2);
 }
-.btn-red:hover { background: var(--px-red-h); }
+.btn-red:hover { 
+  background: linear-gradient(180deg, #FF2A2A 0%, #B40000 100%);
+  box-shadow: 0 15px 25px rgba(180, 0, 0, 0.5);
+}
 
 .btn-ghost {
-  background: rgba(255,255,255,0.1);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.15);
+  background: var(--bg-absolute);
+  color: var(--gold-premium);
+  border: 2px solid var(--gold-premium);
+  box-shadow: inset 0 0 10px rgba(215, 168, 75, 0.1);
 }
-.btn-ghost:hover { background: rgba(255,255,255,0.18); }
+.btn-ghost:hover { 
+  background: var(--bg-charcoal);
+  border-color: var(--gold-light);
+  color: var(--gold-light);
+}
 
 .btn-sm {
   font-size: clamp(0.8rem, 1.5vw, 1.25rem);

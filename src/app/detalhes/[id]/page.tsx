@@ -53,10 +53,12 @@ const CUSTOM_STYLES = `
     width: 100%;
     height: 470px;
     display: flex;
-    background: #000;
+    background: var(--bg-absolute);
     position: relative;
     overflow: hidden;
-    margin-bottom: 50px;
+    margin-bottom: 60px;
+    border-bottom: 3px solid var(--red-main);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.9);
   }
 
   .hero-bg {
@@ -66,7 +68,7 @@ const CUSTOM_STYLES = `
     inset: 0;
     background-size: cover;
     background-position: center;
-    filter: brightness(0.9) contrast(1.05);
+    filter: brightness(0.6) contrast(1.1);
   }
 
   .hero-overlay {
@@ -75,11 +77,10 @@ const CUSTOM_STYLES = `
     position: absolute;
     inset: 0;
     background: linear-gradient(
-      90deg,
-      rgba(0, 0, 0, 0.4) 0%,
-      rgba(0, 0, 0, 0.3) 35%,
-      rgba(0, 0, 0, 0.1) 70%,
-      rgba(0, 0, 0, 0.05) 100%
+      to right,
+      rgba(0, 0, 0, 0.95) 0%,
+      rgba(0, 0, 0, 0.7) 35%,
+      rgba(0, 0, 0, 0.2) 100%
     );
   }
 
