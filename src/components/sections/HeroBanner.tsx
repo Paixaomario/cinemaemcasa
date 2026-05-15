@@ -135,23 +135,6 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
               maxWidth: '520px',
             }}
           >{desc}</p>
-        </div>
-
-        {/* Progress dots — no arrows, no icons */}
-        {pool.length > 1 && (
-          <div className="mt-4 flex gap-1.5">
-            {pool.slice(0, Math.min(pool.length, 12)).map((_, i) => (
-              <div
-                key={i}
-                className="h-0.5 rounded-full transition-all duration-700"
-                style={{
-                  width: i === index ? '24px' : '6px',
-                  background: i === index ? '#fff' : 'rgba(255,255,255,0.3)',
-                }}
-              />
-            ))}
-          </div>
-        )}
       </div>
     </div>
   )

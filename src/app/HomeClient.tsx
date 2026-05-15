@@ -152,8 +152,15 @@ export function HomeClient() {
         setItemsMap(newMap)
 
         // 4. Banner Pool: Rotação Real (Escolha entre conteúdos locais válidos)
-        if (localItems.length > 0) {
-          const shuffled = [...localItems].sort(() => Math.random() - 0.5).slice(0, 15)
+        // Buscamos uma amostra aleatória maior para garantir variedade em 100k itens
+        const { data: bannerItems } = await sb
+          .from('cinema')
+          .select('id, tmdb_id, type, titulo, poster, backdrop, banner')
+          .not('tmdb_id', 'is', null)
+          .limit(100) // Pegamos 100 de cada vez para performance, mas sem "trava" fixa
+
+        if (bannerItems && bannerItems.length > 0) {
+          const shuffled = [...bannerItems].sort(() => Math.random() - 0.5)
           const hydratedBanners = await Promise.all(shuffled.map(async (item) => {
             try {
               return item.type === 'serie' ? await getShowDetails(item.tmdb_id!) : await getMovieDetails(item.tmdb_id!)
