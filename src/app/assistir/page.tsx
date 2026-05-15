@@ -69,6 +69,25 @@ export default function AssistirDespoisPage() {
     }
   }
 
+  async function handleRemove(contentId: string) {
+    if (!user) return
+    
+    try {
+      const sb = createClient()
+      const { error } = await sb
+        .from('watch_later')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('content_id', contentId)
+
+      if (!error) {
+        setItems(prev => prev.filter(item => item.id_route !== contentId))
+      }
+    } catch (err) {
+      console.error('Erro ao remover item:', err)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black">
@@ -133,6 +152,19 @@ export default function AssistirDespoisPage() {
                 
                 {/* Overlay no Hover */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
+                  
+                  {/* Botão de Remover */}
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemove(item.id_route);
+                    }}
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-red-600/20 hover:bg-red-600 border border-red-500/50 flex items-center justify-center text-white transition-all transform hover:scale-110 active:scale-95 z-20"
+                    title="Remover da lista"
+                  >
+                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>✕</span>
+                  </button>
+
                   <p className="text-white font-bold text-sm leading-tight mb-2 line-clamp-2">
                     {item.display_title}
                   </p>
