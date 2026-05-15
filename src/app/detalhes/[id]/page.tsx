@@ -315,13 +315,20 @@ const CUSTOM_STYLES = `
   }
 
   @media (max-width: 768px) {
-    .hero { height: auto; min-height: 66vh; padding-top: 40px; }
+    .hero { height: auto; min-height: 60vh; padding-top: 40px; }
+    .hero-bg { filter: brightness(1.1) contrast(1.05) !important; }
     .hero-content { padding: 20px 15px; width: 100%; }
     .text-hero-title { font-size: clamp(24px, 8vw, 36px) !important; white-space: normal; }
     .hero-buttons { flex-direction: column; width: 100%; gap: 10px; }
     .btn-primary, .btn-secondary { width: 100%; justify-content: center; height: 55px; font-size: 14px; }
     .action-icons { overflow-x: auto; padding-bottom: 10px; width: 100%; justify-content: flex-start; }
     .details-box { grid-template-columns: 1fr; }
+    .movie-description { 
+      display: -webkit-box; 
+      -webkit-line-clamp: 2; 
+      -webkit-box-orient: vertical; 
+      overflow: hidden; 
+    }
     .cast-grid, .recommend-grid { gap: 12px; }
   }
 
@@ -366,85 +373,49 @@ function DetailContent({ params }: Props) {
         const id = resolvedParams.id
         let foundData = null
         
-        console.log('Loading movie data for ID:', id)
-        
-        // Tentar parse TMDB ID primeiro (formato filme-id ou serie-id)
+        // 1. Identificar se o ID é formatado (filme-123) ou ID local (123)
         const [type, rawId] = id.split('-')
-        const tmdbId = parseInt(rawId, 10)
-        
-        if (!isNaN(tmdbId)) {
-          console.log('TMDB ID detected:', tmdbId, 'type:', type)
-          const isMovie = type === 'filme'
+        let tmdbId: number | null = parseInt(rawId || id, 10)
+        let isMovie = type === 'filme' || !id.includes('serie')
 
-          // VERIFICAÇÃO DE SEGURANÇA: Só busca no TMDB se o ID estiver no nosso banco
-          const { data: dbCheck } = await sb
+        // 2. Se for ID numérico simples (local), buscar o tmdb_id correspondente no banco
+        if (!id.includes('-')) {
+          const { data: localData } = await sb
             .from('cinema')
-            .select('id')
-            .eq('tmdb_id', tmdbId)
-            .maybeSingle()
-
-          if (!dbCheck) {
-            throw new Error('Conteúdo não disponível na biblioteca local.')
+            .select('tmdb_id, type')
+            .eq('id', id)
+            .single()
+          
+          if (localData?.tmdb_id) {
+            tmdbId = Number(localData.tmdb_id)
+            isMovie = localData.type === 'movie' || localData.type === 'filme'
           }
+        }
 
+        // 3. CARREGAMENTO OBRIGATÓRIO VIA TMDB
+        if (tmdbId && !isNaN(tmdbId)) {
           try {
             if (isMovie) {
               const movie = await getMovieDetails(tmdbId)
               const cert = await getMovieCertification(tmdbId)
-              movie.certification = cert
-              movie.media_type = 'movie'
-              foundData = movie
-              console.log('TMDB movie loaded:', movie.title)
+              foundData = { ...movie, certification: cert, media_type: 'movie' }
             } else {
               const show = await getShowDetails(tmdbId)
               const cert = await getShowCertification(tmdbId)
-              show.certification = cert
-              show.media_type = 'tv'
-              foundData = show
-              console.log('TMDB show loaded:', show.name)
+              foundData = { ...show, certification: cert, media_type: 'tv' }
             }
-          } catch (tmdbError) {
-            console.error('TMDB error:', tmdbError)
-            // Se TMDB falhar, tentar Supabase
+          } catch (e) {
+            console.warn('Falha ao carregar metadados do TMDB, tentando fallback local.', e)
           }
         }
         
-        // Se não encontrou na TMDB ou não é formato TMDB, buscar no Supabase
+        // 4. Fallback Local se o TMDB falhar ou não houver mapeamento
         if (!foundData) {
-          // Verifica se é um UUID para evitar erro 400 no console
-          const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
-          
-          if (isUUID) {
-            console.log('Trying Supabase for ID:', id)
-          const { data: content, error } = await sb
-            .from('content')
-            .select('*')
-            .eq('id', id)
-            .single()
-
-          if (content) {
-            console.log('Supabase content found:', content.title)
-            foundData = content
-          }
-          }
-
-          if (!foundData) {
-            // Tentar tabela 'cinema' também
-            console.log('Trying cinema table for ID:', id)
-            const { data: cinemaData, error: cinemaError } = await sb
-              .from('cinema')
-              .select('*')
-              .eq('id', parseInt(id))
-              .single()
-
-            if (cinemaData) {
-              console.log('Cinema data found:', cinemaData.titulo)
-              foundData = cinemaData
-            } else {
-              console.log('No content found anywhere for ID:', id)
-            }
-          }
+          const { data } = await sb.from('cinema').select('*').eq('id', isNaN(Number(id)) ? 0 : id).single()
+          foundData = data
         }
+
+        if (!foundData) return notFound()
 
         // Se houver um roomId na URL, ativa o player automaticamente
         if (roomFromUrl && foundData) {
@@ -506,22 +477,26 @@ function DetailContent({ params }: Props) {
     if (movieData) {
       async function loadValidRecs() {
         const sb = createClient()
+        // Pega recomendações da API TMDB que já estão hidratadas no movieData
         const rawRecs = movieData.similar?.results || movieData.recommendations?.results || []
         
         if (rawRecs.length === 0) return
 
-        // Verifica quais dessas recomendações existem no nosso banco
+        // 1. Coletar IDs das recomendações do TMDB
         const ids = rawRecs.map((r: any) => r.id)
-        const { data: matches } = await sb.from('cinema').select('tmdb_id').in('tmdb_id', ids)
-        const matchSet = new Set(matches?.map(m => m.tmdb_id))
+        
+        // 2. Buscar no nosso banco apenas os itens que possuímos
+        const { data: matches } = await sb
+          .from('cinema')
+          .select('id, titulo, poster, tmdb_id, rating')
+          .in('tmdb_id', ids)
 
-        const currentId = resolvedParams?.id?.split('-')[1]
-        const filtered = rawRecs.filter((movie: any) => 
-          matchSet.has(movie.id) && String(movie.id) !== String(currentId)
-        )
-
-        if (filtered.length > 0) {
-          const shuffled = [...filtered].sort(() => Math.random() - 0.5).slice(0, 8)
+        if (matches && matches.length > 0) {
+          // 3. Remover o próprio filme da lista de recomendações
+          const filtered = matches.filter(m => String(m.tmdb_id) !== String(movieData.id))
+          
+          // 4. Embaralhar e limitar
+          const shuffled = [...filtered].sort(() => Math.random() - 0.5).slice(0, 10)
           setShuffledRecommendations(shuffled)
         }
       }
@@ -752,28 +727,28 @@ function DetailContent({ params }: Props) {
             </div>
             <div className="recommend-grid">
               {shuffledRecommendations.length > 0 ? (
-                shuffledRecommendations.map((movie: any) => (
+                shuffledRecommendations.map((rec: any) => (
                   <div 
-                    key={movie.id} 
+                    key={rec.id} 
                     className="recommend-card card-poster tv-focus" 
                     tabIndex={0}
                     onFocus={(e) => e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })}
-                    onClick={() => router.push(`/detalhes/${movie.media_type === 'tv' ? 'serie' : 'filme'}-${movie.id}`)}
+                    onClick={() => router.push(`/detalhes/${rec.id}`)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
-                        router.push(`/detalhes/${movie.media_type === 'tv' ? 'serie' : 'filme'}-${movie.id}`)
+                        router.push(`/detalhes/${rec.id}`)
                       }
                     }}
                   >
                     <div 
                       className="recommend-poster" 
                       style={{ 
-                        backgroundImage: movie?.poster_path 
-                          ? `url(${IMG.poster(movie.poster_path, 'w500')})` 
-                          : 'url(https://via.placeholder.com/140x210)' 
+                        backgroundImage: rec.poster 
+                          ? `url(${rec.poster})` 
+                          : 'url(https://via.placeholder.com/140x210/1a1a1f/F5C76B?text=Sem+Capa)' 
                       }}
-                    ></div>
-                    <div className="recommend-rating text-metadata">⭐ {movie?.vote_average?.toFixed(1) || 'N/A'}</div>
+                    />
+                    <div className="recommend-rating text-metadata">⭐ {rec.rating || 'N/A'}</div>
                   </div>
                 ))
               ) : (
