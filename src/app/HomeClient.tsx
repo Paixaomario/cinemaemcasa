@@ -4,7 +4,7 @@ import { useEffect, useState, CSSProperties } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { HeroBanner } from '@/components/sections/HeroBanner'
-import { buildBannerPool, getMovieDetails, getShowDetails, TMDBMovie, TMDBShow } from '@/lib/tmdb'
+import { buildBannerPool, getMovieDetails, getShowDetails, TMDBMovie, TMDBShow, formatRuntime } from '@/lib/tmdb'
 import Image from 'next/image'
 import { useAuth } from '@/components/layout/SupabaseProvider'
 
