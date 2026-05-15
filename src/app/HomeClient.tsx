@@ -236,20 +236,55 @@ export function HomeClient() {
         justifyContent: 'center', 
         zIndex: 100000 
       }}>
-        <div style={{ 
-          width: 'min(500px, 85vw)', 
-          height: 'auto',
-          aspectRatio: '200 / 80',
-          position: 'relative'
-        }}>
-          <Image
-            src="/logo.png"
-            alt="PAIXAOFLIX"
-            fill
-            priority
-            style={{ objectFit: 'contain' }}
-            className="animate-pulse"
-          />
+        <div className="flex flex-col items-center gap-12" style={{ width: '100%', maxWidth: '800px', padding: '0 20px' }}>
+          {/* Logotipo Ampliado (3x impacto visual no mobile) */}
+          <div style={{ 
+            width: 'min(800px, 100vw)', 
+            height: 'auto',
+            aspectRatio: '200 / 80',
+            position: 'relative',
+            transform: 'scale(1.4)',
+            filter: 'drop-shadow(0 0 20px rgba(229, 9, 20, 0.2))'
+          }}>
+            <Image
+              src="/logo.png"
+              alt="PAIXAOFLIX"
+              fill
+              priority
+              style={{ objectFit: 'contain' }}
+              className="animate-pulse"
+            />
+          </div>
+          
+          {/* Barra de Carregamento Dinâmica 0-100% */}
+          <div className="flex flex-col items-center gap-4" style={{ width: 'min(450px, 90vw)', marginTop: '40px' }}>
+            <div style={{ 
+              width: '100%', 
+              height: '8px', 
+              background: 'rgba(255, 0, 0, 0.15)', 
+              borderRadius: '20px',
+              overflow: 'hidden',
+              border: '1px solid rgba(255, 255, 255, 0.05)'
+            }}>
+              <div style={{ 
+                width: `${progress}%`, 
+                height: '100%', 
+                background: 'linear-gradient(90deg, #E50914 0%, #F5C76B 100%)',
+                boxShadow: '0 0 20px rgba(229, 9, 20, 0.6)',
+                transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+              }} />
+            </div>
+            <span style={{ 
+              color: 'var(--gold-primary)', 
+              fontSize: '18px', 
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: '900', 
+              letterSpacing: '4px',
+              textShadow: '0 0 10px rgba(245, 199, 107, 0.3)'
+            }}>
+              {progress}%
+            </span>
+          </div>
         </div>
       </div>
     );
