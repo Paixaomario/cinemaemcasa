@@ -18,7 +18,12 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
 
   // Fetch pool client-side if not provided
   useEffect(() => {
-    if (initialPool && initialPool.length > 0) { setPool(initialPool); return }
+    if (initialPool && initialPool.length > 0) {
+      // Sorteia a ordem inicial para nunca começar com a mesma capa
+      const shuffled = [...initialPool].sort(() => Math.random() - 0.5);
+      setPool(shuffled);
+      return;
+    }
     buildBannerPool(type, 20).then(p => setPool(p))
   }, [type, initialPool])
 

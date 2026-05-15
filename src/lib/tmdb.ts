@@ -182,6 +182,10 @@ export async function getMovieDetails(id: number) {
 }
 
 // ─── TV Shows ─────────────────────────────────────
+export async function getTrendingShows(page = 1) {
+  return tmdb<TMDBPage<TMDBShow>>('/trending/tv/week', { page: String(page) })
+}
+
 export async function getPopularShows(page = 1) {
   return tmdb<TMDBPage<TMDBShow>>('/tv/popular', { page: String(page) })
 }
