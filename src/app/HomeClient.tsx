@@ -19,6 +19,10 @@ interface HomeSection {
   ordenacao: string
   posicao: number
   ativo: boolean
+  hora_inicio: string | null
+  hora_fim: string | null
+  data_inicio: string | null
+  data_fim: string | null
 }
 
 export interface CinemaItem {
@@ -35,6 +39,7 @@ export interface CinemaItem {
   duration: string | null
   last_position?: number
   duration_seconds?: number
+  tmdb_id?: number | null
 }
 
 export function HomeClient() {
@@ -49,7 +54,8 @@ export function HomeClient() {
   useEffect(() => {
     async function load() {
       const sb = createClient()
-      const globalSeenIds = new Set<string>()
+      // Conjunto para rastrear TMDB IDs e evitar repetição de temporadas/coleções
+      const seenContentKeys = new Set<string>()
 
       try {
         setLoading(true)
@@ -89,7 +95,6 @@ export function HomeClient() {
                   } catch { return null }
                 }
                 if (item) {
-                  globalSeenIds.add(idStr) // Bloqueia ID do histórico para o resto da home
                   return {
                     ...item,
                     id: idStr,
@@ -109,22 +114,50 @@ export function HomeClient() {
         // 2. Buscar definições de seções
         const { data: secs, error: secErr } = await sb
           .from('home_sections')
-          .select('id,titulo,categorias,fonte,tmdb_endpoint,layout,limite,ordenacao,posicao,ativo')
+          .select('*')
           .eq('ativo', true)
           .order('posicao', { ascending: true })
 
         if (secErr) throw secErr
-        const homeSections = (secs || []) as HomeSection[]
+        
+        const now = new Date()
+        const currentTime = now.getHours() * 60 + now.getMinutes()
+
+        // Filtragem por Agendamento (Hora e Data)
+        const homeSections = (secs || []).filter((sec: HomeSection) => {
+          // 1. Checagem por Data (Sazonal)
+          if (sec.data_inicio && new Date(sec.data_inicio) > now) return false
+          if (sec.data_fim && new Date(sec.data_fim) < now) return false
+
+          // 2. Checagem por Horário (Diário)
+          if (sec.hora_inicio && sec.hora_fim) {
+            const [hStart, mStart] = sec.hora_inicio.split(':').map(Number)
+            const [hEnd, mEnd] = sec.hora_fim.split(':').map(Number)
+            const startVal = hStart * 60 + mStart
+            const endVal = hEnd * 60 + mEnd
+
+            if (startVal < endVal) {
+              // Horário normal (ex: 08:00 as 18:00)
+              if (currentTime < startVal || currentTime > endVal) return false
+            } else {
+              // Horário que vira a noite (ex: 23:59 as 05:59)
+              if (currentTime < startVal && currentTime > endVal) return false
+            }
+          }
+          return true
+        }) as HomeSection[]
+
         setSections(homeSections)
 
         // 3. Buscar e filtrar itens de cada seção (sequencialmente)
         const sectionsPromises = homeSections.map(async (sec) => {
           if (sec.fonte !== 'cinema') return { id: sec.id, items: [] as CinemaItem[], limit: sec.limite }
           
-          let q = sb.from('cinema').select('id,titulo,poster,banner,backdrop,year,rating,category,type,url,duration')
+          let q = sb.from('cinema').select('id,titulo,poster,banner,backdrop,year,rating,category,type,url,duration,tmdb_id')
           if (sec.categorias && sec.categorias.length > 0) q = q.in('category', sec.categorias)
           
           switch (sec.ordenacao) {
+            case 'random': q = q.order('id', { ascending: Math.random() > 0.5 }); break // Simula random via sorteio de ID
             case 'rating_desc': q = q.order('rating', { ascending: false, nullsFirst: false }); break
             case 'year_desc':   q = q.order('year', { ascending: false, nullsFirst: false }); break
             default:            q = q.order('created_at', { ascending: false, nullsFirst: false }); break
@@ -140,10 +173,13 @@ export function HomeClient() {
         resolved.forEach(res => {
           const filtered: CinemaItem[] = []
           for (const item of res.items) {
-            const idKey = String(item.id)
-            if (idKey && !globalSeenIds.has(idKey)) {
+            // Usamos tmdb_id como chave principal de duplicidade para agrupar temporadas/coleções
+            // Se não tiver tmdb_id, usamos o ID local
+            const contentKey = item.tmdb_id ? `tmdb-${item.tmdb_id}` : `local-${item.id}`
+            
+            if (!seenContentKeys.has(contentKey)) {
               filtered.push(item)
-              globalSeenIds.add(idKey)
+              seenContentKeys.add(contentKey)
             }
             if (filtered.length >= (res.limit || 5)) break
           }
