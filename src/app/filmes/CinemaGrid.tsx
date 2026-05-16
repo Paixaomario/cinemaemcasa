@@ -76,7 +76,7 @@ export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' })
             return
           }
           // Mapeia colunas da tabela series para a interface Cinema para compatibilidade visual
-          const rows = (data || []).map((s: { id_n: number; titulo: string | null; tmdb_id: number | null; ano: number | null; rating: number | null; descricao: string | null; capa: string | null; poster: string | null; banner: string | null; trailer: string | null; genero: string | null; created_at: string | null }) => ({
+          const rows = (data || []).map((s: any) => ({
             id: s.id_n,
             titulo: s.titulo,
             tmdb_id: s.tmdb_id,
@@ -87,7 +87,7 @@ export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' })
             category: s.genero,
             type: 'series',
             banner: s.banner,
-            backdrop: s.banner || s.poster || s.capa, // Fallback para a coluna inexistente
+            backdrop: s.banner || s.poster || s.capa || null, 
             trailer: s.trailer,
             created_at: s.created_at,
             url: null,

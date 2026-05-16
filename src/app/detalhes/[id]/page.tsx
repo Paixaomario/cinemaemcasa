@@ -598,7 +598,7 @@ function DetailContent({ params }: Props) {
         if (!dbData) {
           const { data: sData } = await sb
             .from('series')
-            .select('*')
+            .select('id_n,titulo,tmdb_id,ano,rating,descricao,capa,poster,banner,trailer,genero,created_at')
             .or(`id_n.eq.${isNaN(Number(parsedId)) ? -1 : parsedId},tmdb_id.eq.${isNaN(Number(parsedId)) ? -1 : parsedId}`)
             .maybeSingle()
           
@@ -642,7 +642,7 @@ function DetailContent({ params }: Props) {
             if (!seriesLocalData) {
                const { data: sData } = await sb
                 .from('series')
-                .select('*')
+                .select('id_n,titulo,tmdb_id,ano,rating,descricao,capa,poster,banner,trailer,genero,created_at')
                 .or(`tmdb_id.eq.${tmdbId || -1},id_n.eq.${dbData.id}`)
                 .maybeSingle()
                seriesLocalData = sData

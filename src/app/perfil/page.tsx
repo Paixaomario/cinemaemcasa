@@ -7,17 +7,23 @@ import { Navbar } from '@/components/layout/Navbar'
 import { useAuth } from '@/components/layout/SupabaseProvider'
 import { getMovieDetails, getShowDetails } from '@/lib/tmdb'
 
+interface ProfileItem {
+  id: string | number;
+  titulo: string | null;
+  poster: string | null;
+  backdrop?: string | null;
+}
+
 export default function PerfilPage() {
   const { user, loading: authLoading } = useAuth()
-  const [favorites, setFavorites] = useState<any[]>([])
-  const [history, setHistory] = useState<any[]>([])
+  const [favorites, setFavorites] = useState<ProfileItem[]>([])
+  const [history, setHistory] = useState<ProfileItem[]>([])
   const [loading, setLoading] = useState(true)
-  const sb = createClient()
 
   useEffect(() => {
     if (!user) return
-
     async function loadData() {
+      const sb = createClient()
       // 1. Buscar Favoritos
       const { data: favs } = await sb
         .from('favorites')
@@ -36,10 +42,11 @@ export default function PerfilPage() {
             const [type, rawId] = idStr.split('-')
             try {
               const data = type === 'filme' ? await getMovieDetails(Number(rawId)) : await getShowDetails(Number(rawId))
+              const item = data as any;
               return {
                 id: idStr,
-                titulo: (data as any).title || (data as any).name,
-                poster: (data as any).poster_path ? `https://image.tmdb.org/t/p/w500${(data as any).poster_path}` : null,
+                titulo: item.title || item.name,
+                poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
               }
             } catch { return null }
           })
@@ -65,10 +72,11 @@ export default function PerfilPage() {
             const [type, rawId] = idStr.split('-')
             try {
               const data = type === 'filme' ? await getMovieDetails(Number(rawId)) : await getShowDetails(Number(rawId))
+              const item = data as any;
               return {
                 id: idStr,
-                titulo: (data as any).title || (data as any).name,
-                poster: (data as any).poster_path ? `https://image.tmdb.org/t/p/w500${(data as any).poster_path}` : null,
+                titulo: item.title || item.name,
+                poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
               }
             } catch { return null }
           })
@@ -80,7 +88,7 @@ export default function PerfilPage() {
     }
 
     loadData()
-  }, [user, sb])
+  }, [user])
 
   if (authLoading || (user && loading)) {
     return <div className="min-h-screen bg-black flex items-center justify-center text-[var(--gold-primary)] font-bold uppercase tracking-tighter text-2xl animate-pulse">Carregando Perfil Premium...</div>
