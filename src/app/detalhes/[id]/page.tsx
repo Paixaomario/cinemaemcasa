@@ -369,7 +369,8 @@ const CUSTOM_STYLES = `
   .recommend-grid::-webkit-scrollbar-thumb { background: rgba(255, 180, 40, 0.35); border-radius: 10px; }
 
   .recommend-card {
-    min-width: 180px; /* Aumentado para não cortar a imagem */
+    width: var(--card-poster-w);
+    min-width: var(--card-poster-w);
     aspect-ratio: 2 / 3;
     height: auto;
     border-radius: 14px;

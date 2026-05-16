@@ -40,6 +40,15 @@
   --card-wide-w: calc((100vw - (var(--container-px) * 2) - (2 * var(--card-gap))) / 3.15);
 }
 
+/* Dispositivos Móveis (Celulares) - Forçar 3 capas por linha */
+@media (max-width: 768px) {
+  :root {
+    --grid-cols: 3;
+    --card-gap: 10px;
+    --card-poster-w: calc((100vw - (var(--container-px) * 2) - (2 * var(--card-gap))) / 3.15);
+  }
+}
+
 /* ─── Reset & Base ─────────────────────────────── */
 * {
   margin: 0;
