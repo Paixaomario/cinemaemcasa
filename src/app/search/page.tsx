@@ -98,7 +98,11 @@ function SearchContent() {
             <p className="text-2xl font-black uppercase">Nenhum conteúdo localizado</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-12">
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(var(--grid-cols, 5), 1fr)', 
+            gap: 'var(--card-gap, 24px)' 
+          }}>
             {results.map((item) => (
               <Link key={item.id} href={`/detalhes/${item.id}`} className="card-poster group tv-focus">
                 {item.poster || item.backdrop ? (

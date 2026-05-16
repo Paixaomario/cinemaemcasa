@@ -134,7 +134,11 @@ export default function AssistirDespoisPage() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 sm:gap-6">
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(var(--grid-cols, 5), 1fr)', 
+            gap: 'var(--card-gap, 16px)' 
+          }}>
             {items.map((item) => (
               <div 
                 key={item.id_route}
