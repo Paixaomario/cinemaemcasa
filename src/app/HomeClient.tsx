@@ -74,6 +74,11 @@ export function HomeClient() {
             .order('updated_at', { ascending: false })
             .limit(5)
 
+          // Adiciona os IDs do continuar assistindo para evitar duplicatas na home
+          if (progressData) {
+            progressData.forEach(p => seenContentKeys.add(String(p.content_id)))
+          }
+
           if (progressData && progressData.length > 0) {
             const hydrated = await Promise.all(
               progressData.map(async (p) => {
@@ -303,7 +308,7 @@ export function HomeClient() {
   return (
     <div style={{ paddingBottom: 140 }}>
       {/* Hero Banner */}
-      <div style={{ marginBottom: '40px' }}>
+      <div style={{ marginBottom: 'clamp(60px, 8vw, 100px)' }}>
         {bannerPool.length > 0 ? (
         <HeroBanner type="all" initialPool={bannerPool} />
       ) : (

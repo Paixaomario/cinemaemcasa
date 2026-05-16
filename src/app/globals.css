@@ -9,7 +9,7 @@
   --bg-reddish: #120507;          /* Camada 3 - Cards/Detalhes */
   --bg-card: #120507;
 
-  --text-premium: #F5F5F5;        /* Branco Suave */
+  --text-premium: #FFFFFF;        /* Branco Puro para brilho */
   --text-gray: #B8B8B8;           /* Cinza Leitura */
   --text-gray-secondary: #7A7A7A; /* Cinza Desativado */
 
@@ -33,8 +33,10 @@
   --section-gap: clamp(2rem, 6vw, 5rem);
 
   /* PADRONIZAÇÃO DE CAPAS (Padrão 5 por linha) */
-  --card-poster-w: clamp(163px, 17.34vw, 510px);
-  --card-wide-w: clamp(184px, 22.44vw, 326px);
+  --card-gap: clamp(12px, 1.5vw, 24px);
+  /* Cálculo: (100% - (gaps)) / colunas */
+  --card-poster-w: calc((100vw - (var(--container-px) * 2) - (4 * var(--card-gap))) / 5.2);
+  --card-wide-w: calc((100vw - (var(--container-px) * 2) - (2 * var(--card-gap))) / 3.2);
 }
 
 /* ─── Reset & Base ─────────────────────────────── */
@@ -42,6 +44,14 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* Telas Gigantes e Projetores (Acima de 2K/4K) */
+@media (min-width: 2500px) {
+  :root {
+    --card-poster-w: calc((100vw - (var(--container-px) * 2) - (6 * var(--card-gap))) / 7.2);
+    --card-wide-w: calc((100vw - (var(--container-px) * 2) - (4 * var(--card-gap))) / 5.2);
+  }
 }
 
 /* Foco Universal Suave para Smart TVs e Teclado */
@@ -517,6 +527,11 @@ body, p, span, a, input, label, .font-body {
 
 /* ─── PAIXAOFLIX PREMIUM PLAYER (CLAPPR + PLYR UI) ──────────────── */
 
+.clappr-player {
+  z-index: 1;
+  pointer-events: auto !important;
+}
+
 /* Esconder elementos nativos do Clappr que não combinam com Plyr */
 .clappr-player .player-poster[data-poster] {
   background-size: cover !important;
@@ -524,13 +539,17 @@ body, p, span, a, input, label, .font-body {
 
 /* Barra de Controles - Gradiente Estilo Plyr */
 .clappr-player .media-control {
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%) !important;
-  padding: 20px 10px 5px 10px !important;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0,0,0,0.5) 50%, transparent 100%) !important;
+  padding: 40px 20px 20px 20px !important;
+  display: flex !important; /* Garantir visibilidade */
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 /* Cor Principal (Vermelho #BC2A1D) na Barra de Progresso */
 .clappr-player .clappr-slider .clappr-slider-progress {
   background-color: #BC2A1D !important;
+  height: 6px !important;
 }
 
 /* Scrubber Button - Customização Especial: Pipoca 🍿 */

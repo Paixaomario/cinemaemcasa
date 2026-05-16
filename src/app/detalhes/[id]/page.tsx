@@ -105,12 +105,12 @@ const CUSTOM_STYLES = `
 
   .hero {
     width: 100%;
-    height: 470px;
+    min-height: 550px;
     display: flex;
     background: var(--bg-absolute);
     position: relative;
     overflow: hidden;
-    margin-bottom: 40px; /* Espaçamento abaixo do Hero para a primeira seção */
+    margin-bottom: 60px; /* Mais espaço abaixo do hero */
     box-shadow: 0 20px 50px rgba(0,0,0,0.9);
   }
 
@@ -154,7 +154,7 @@ const CUSTOM_STYLES = `
     font-family: 'Inter', sans-serif !important;
     font-size: clamp(15px, 1.3vw, 19px) !important;
     display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important; /* Limita a descrição a 2 linhas */
+    -webkit-line-clamp: 4 !important; /* Aumentado para 4 linhas para evitar corte excessivo */
     -webkit-box-orient: vertical !important;
     overflow: hidden !important;
     max-width: 700px !important;
@@ -315,7 +315,7 @@ const CUSTOM_STYLES = `
   .box {
     background: var(--bg-reddish);
     border-radius: 24px;
-    border: 1.5px solid var(--border-subtle);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     padding: 24px;
     min-width: 0;
     overflow: hidden;
@@ -370,8 +370,8 @@ const CUSTOM_STYLES = `
   .recommend-grid::-webkit-scrollbar-thumb { background: rgba(255, 180, 40, 0.35); border-radius: 10px; }
 
   .recommend-card {
-    min-width: 140px;
-    height: 210px;
+    min-width: 180px; /* Aumentado para não cortar a imagem */
+    aspect-ratio: 2 / 3; /* Proporção correta de poster */
     border-radius: 14px;
     border: 1.5px solid var(--border-subtle);
     overflow: hidden;
@@ -387,7 +387,7 @@ const CUSTOM_STYLES = `
     border-color: var(--gold-premium);
     box-shadow: 0 12px 25px rgba(0,0,0,0.8), 0 0 10px rgba(215, 168, 75, 0.3);
   }
-  .recommend-poster { width: 100%; height: 100%; background-size: cover; background-position: center; filter: brightness(0.85); }
+  .recommend-poster { width: 100%; height: 100%; background-size: cover; background-position: center top; filter: brightness(0.9); }
   .recommend-rating {
     position: absolute;
     bottom: 10px;
@@ -591,17 +591,21 @@ function DetailContent({ params }: Props) {
             let seasonsWithEpisodes: SeasonData[] = [];
 
             // 1. Buscar detalhes da série na nova tabela 'series'
-            if (tmdbId && !isNaN(tmdbId)) {
-              const { data: sData } = await sb.from('series').select('*').eq('tmdb_id', tmdbId).maybeSingle()
-              if (sData) {
-                seriesLocalData = sData
-                const { data: tData } = await sb.from('temporadas').select('*').eq('serie_id', sData.id_n).order('numero_temporada', { ascending: true })
-                if (tData) {
-                  seasonsWithEpisodes = await Promise.all(tData.map(async (season) => {
-                    const { data: eData } = await sb.from('episodios').select('*').eq('temporada_id', season.id_n).order('numero_episodio', { ascending: true })
-                    return { ...season, episodes: eData || [] }
-                  }))
-                }
+            // Tenta localizar por TMDB ID ou pelo ID local (id_n) que vincula com a tabela cinema
+            const { data: sData } = await sb
+              .from('series')
+              .select('*')
+              .or(`tmdb_id.eq.${tmdbId && !isNaN(tmdbId) ? tmdbId : -1},id_n.eq.${dbData.id}`)
+              .maybeSingle()
+
+            if (sData) {
+              seriesLocalData = sData
+              const { data: tData } = await sb.from('temporadas').select('*').eq('serie_id', sData.id_n).order('numero_temporada', { ascending: true })
+              if (tData) {
+                seasonsWithEpisodes = await Promise.all(tData.map(async (season) => {
+                  const { data: eData } = await sb.from('episodios').select('*').eq('temporada_id', season.id_n).order('numero_episodio', { ascending: true })
+                  return { ...season, episodes: eData || [] }
+                }))
               }
             }
 

@@ -120,6 +120,13 @@ export function VideoPlayer({
     const url = new URL(window.location.href)
     url.searchParams.set('room', newRoomId)
     window.history.pushState({}, '', url)
+    
+    // Cria e copia o convite automaticamente ao iniciar a sala
+    const inviteMsg = `🍿 Vamos assistir "${title}" comigo no PAIXAOFLIX? Acesse: ${url.toString()}`
+    navigator.clipboard.writeText(inviteMsg).then(() => {
+      alert('🎉 Sala criada e link de convite copiado para sua área de transferência!')
+    })
+
   }, []); // Removido dependency 'title' conforme aviso de linter
 
   const copyInviteLink = useCallback(() => {
