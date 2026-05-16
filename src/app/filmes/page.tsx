@@ -8,7 +8,9 @@ export default function FilmesPage() {
   return (
     <div className="min-h-screen" style={{ background: '#000' }}>
       <Navbar />
-      <HeroBanner type="movie" /> {/* Banner específico para filmes */}
+      <div style={{ marginBottom: '35px', position: 'relative', zIndex: 10 }}>
+        <HeroBanner type="movie" /> {/* Banner específico para filmes */}
+      </div>
       <CinemaGrid contentType="movie" />
     </div>
   )

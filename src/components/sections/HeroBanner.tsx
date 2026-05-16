@@ -2,7 +2,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { TMDBMovie, TMDBShow, IMG, countryFlag, getTitle, getYear, getOriginCountry, getGenreNames } from '@/lib/tmdb'
+import { createClient } from '@/lib/supabase'
+import { TMDBMovie, TMDBShow, IMG, countryFlag, getTitle, getYear, getOriginCountry, getGenreNames, getMovieDetails, getShowDetails } from '@/lib/tmdb'
 
 interface Props {
   type?: 'all' | 'movie' | 'tv'
@@ -24,7 +25,41 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
       setPool(shuffled);
       return
     }
-    // Se não houver initialPool, não carrega nada (evita TMDB direto)
+
+    // Busca pool de banners de forma autônoma se não for fornecido
+    async function loadAutonomousPool() {
+      try {
+        const sb = createClient()
+        const { data: bannerItems } = await sb.rpc('get_random_content_pool', { cnt: 20 })
+        
+        if (bannerItems && bannerItems.length > 0) {
+          // Filtra pelo tipo solicitado
+          let filtered = bannerItems;
+          if (type === 'movie') {
+            filtered = bannerItems.filter((i: any) => i.type === 'filme' || i.type === 'movie')
+          } else if (type === 'tv') {
+            filtered = bannerItems.filter((i: any) => i.type === 'serie' || i.type === 'series' || i.type === 'tv')
+          }
+
+          const hydrated = await Promise.all(filtered.map(async (item: any) => {
+            try {
+              // Filtra coleções e itens sem ID do TMDB
+              if (!item.tmdb_id) return null;
+              if (item.titulo?.toLowerCase().includes('coleção') || item.titulo?.toLowerCase().includes('collection')) return null;
+              
+              const isSerie = item.type === 'serie' || item.type === 'series' || item.type === 'tv'
+              return isSerie ? await getShowDetails(Number(item.tmdb_id)) : await getMovieDetails(Number(item.tmdb_id))
+            } catch { return null }
+          }))
+
+          const validPool = hydrated.filter(Boolean) as Array<TMDBMovie | TMDBShow>
+          if (validPool.length > 0) {
+            setPool(validPool.sort(() => Math.random() - 0.5))
+          }
+        }
+      } catch (err) { console.error('Erro no HeroBanner pool:', err) }
+    }
+    loadAutonomousPool()
   }, [type, initialPool])
 
   // Auto-rotate every 7s with fade transition
