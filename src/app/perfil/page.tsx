@@ -12,6 +12,7 @@ interface ProfileItem {
   titulo: string | null;
   poster: string | null;
   backdrop?: string | null;
+  type?: string | null;
 }
 
 export default function PerfilPage() {
@@ -37,7 +38,7 @@ export default function PerfilPage() {
             // Verifica se é um ID numérico puro (Cinema local)
             if (!isNaN(Number(idStr)) && !idStr.includes('-')) {
               const { data } = await sb.from('cinema').select('*').eq('id', f.content_id).single()
-              return data
+              return { ...data, type: 'filme' }
             }
             const [type, rawId] = idStr.split('-')
             try {
@@ -45,6 +46,7 @@ export default function PerfilPage() {
               const item = data as TMDBMovie & TMDBShow;
               return {
                 id: idStr,
+                type: type,
                 titulo: item.title || item.name,
                 poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
               }
@@ -67,7 +69,7 @@ export default function PerfilPage() {
             const idStr = String(p.content_id)
             if (!idStr.includes('-')) {
               const { data } = await sb.from('cinema').select('*').eq('id', p.content_id).single()
-              return { ...data, id: idStr }
+              return { ...data, id: idStr, type: 'filme' }
             }
             const [type, rawId] = idStr.split('-')
             try {
@@ -75,6 +77,7 @@ export default function PerfilPage() {
               const item = data as TMDBMovie & TMDBShow;
               return {
                 id: idStr,
+                type: type,
                 titulo: item.title || item.name,
                 poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
               }

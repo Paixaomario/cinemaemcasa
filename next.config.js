@@ -3,6 +3,7 @@ const nextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'image.tmdb.org' },
+      { protocol: 'https', hostname: 'media.themoviedb.org' },
       { protocol: 'https', hostname: '*.supabase.co' },
       { protocol: 'https', hostname: 'raw.githubusercontent.com' },
     ],

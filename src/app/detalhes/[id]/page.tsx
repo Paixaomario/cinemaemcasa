@@ -643,7 +643,7 @@ function DetailContent({ params }: Props) {
                const { data: sData } = await sb
                 .from('series')
                 .select('id_n,titulo,tmdb_id,ano,rating,descricao,capa,poster,banner,trailer,genero,created_at')
-                .or(`tmdb_id.eq.${tmdbId || -1},id_n.eq.${dbData.id}`)
+                .or(`tmdb_id.eq.${tmdbId || -1},id_n.eq.${dbData.id || searchId}`)
                 .maybeSingle()
                seriesLocalData = sData
             }
@@ -670,7 +670,7 @@ function DetailContent({ params }: Props) {
 
             foundData = {
               ...tmdbSeriesMetadata, // Metadados TMDB (overview, cast, etc.)
-              ...localItem,          // Dados da tabela cinema (url, type, etc.)
+              ...dbData,             // Dados do banco local
               ...seriesLocalData,    // Dados da nova tabela series (capa, banner, etc.)
               seasons: seasonsWithEpisodes,
               type: 'series' as const
@@ -1023,7 +1023,6 @@ function DetailContent({ params }: Props) {
         )}
 
         {/* MIDDLE SECTIONS (APENAS PARA FILMES OU SEÇÕES DE SÉRIES QUE NÃO SÃO DE TEMPORADAS) */}
-        {movieData?.type !== 'series' && (
           <div className="middle-sections">
           {/* ELENCO */}
           <div className="box">
@@ -1115,7 +1114,6 @@ function DetailContent({ params }: Props) {
             </div>
           </div>
         </div>
-        )}
 
         {/* FOOTER DETALHES */}
         <div className="details-footer">

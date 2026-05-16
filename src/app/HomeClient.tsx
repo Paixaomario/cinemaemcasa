@@ -437,7 +437,8 @@ function HomeCard({ item, showProgress }: { item: CinemaItem, showProgress?: boo
   const [hovered, setHovered] = useState(false)
   const img = item.poster || item.banner || item.backdrop
   
-  const detailUrl = `/detalhes/${item.id}`
+  const prefix = (item.type === 'serie' || item.type === 'series') ? 'serie' : 'filme'
+  const detailUrl = `/detalhes/${prefix}-${item.id}`
   const progressPercent = (item.last_position && item.duration_seconds) ? (item.last_position / item.duration_seconds) * 100 : 0
   const remainingSecs = (item.duration_seconds || 0) - (item.last_position || 0)
   const remainingText = remainingSecs > 0 ? formatRuntime(Math.floor(remainingSecs / 60)) : ''
