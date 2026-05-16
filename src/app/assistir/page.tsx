@@ -48,11 +48,11 @@ export default function AssistirDespoisPage() {
             }
 
             if (item) {
-              const itemData = item as CinemaItem & TMDBMovie & TMDBShow;
+              const itemData = item as any; // Cast para evitar erros de união de tipos no JSX
               return {
                 ...item,
                 id_route: idStr,
-                display_title: itemData.titulo || itemData.title || itemData.name,
+                display_title: itemData.titulo || itemData.title || itemData.name || 'Sem título',
                 display_poster: itemData.poster || (itemData.poster_path ? `https://image.tmdb.org/t/p/w500${itemData.poster_path}` : null)
               }
             }

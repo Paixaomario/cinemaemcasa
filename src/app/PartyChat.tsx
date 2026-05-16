@@ -17,11 +17,11 @@ interface PartyChatProps {
   roomId: string, 
   userName: string, 
   userAvatar?: string, 
-  isHost?: boolean,
+  isHost?: boolean, 
   onReaction?: (emoji: string) => void 
 }
 
-export function PartyChat({ roomId, userName, userAvatar, onReaction }: PartyChatProps) {
+export function PartyChat({ roomId, userName, userAvatar, isHost, onReaction }: PartyChatProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [users, setUsers] = useState<UserPresence[]>([])
   const [input, setInput] = useState('')

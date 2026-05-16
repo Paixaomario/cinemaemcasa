@@ -642,7 +642,7 @@ function DetailContent({ params }: Props) {
             if (!seriesLocalData) {
                const { data: sData } = await sb
                 .from('series')
-                .select('id_n,titulo,tmdb_id,ano,rating,descricao,capa,poster,banner,trailer,genero,created_at')
+                .select('id_n,titulo,tmdb_id,ano,rating,descricao,capa,poster,banner,trailer,genero')
                 .or(`tmdb_id.eq.${tmdbId || -1},id_n.eq.${dbData.id || searchId}`)
                 .maybeSingle()
                seriesLocalData = sData
