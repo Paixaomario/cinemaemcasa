@@ -838,7 +838,7 @@ function DetailContent({ params }: Props) {
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#000' }}>
         <div style={{ color: '#d9a23a', fontSize: '24px' }}>Carregando...</div>
       </div>
-    )
+    );
   }
 
   if (!movieData) {
@@ -846,7 +846,7 @@ function DetailContent({ params }: Props) {
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#000' }}>
         <div style={{ color: '#d9a23a', fontSize: '24px' }}>Filme não encontrado</div>
       </div>
-    )
+    );
   }
 
   return (
