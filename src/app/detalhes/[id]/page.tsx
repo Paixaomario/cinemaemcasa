@@ -140,7 +140,7 @@ const CUSTOM_STYLES = `
   .hero-content {
     position: relative;
     z-index: 10;
-    width: 100%;
+    width: 100%; height: 100%;
     padding: 40px var(--container-px);
     display: flex;
     flex-direction: column;
@@ -371,7 +371,8 @@ const CUSTOM_STYLES = `
 
   .recommend-card {
     min-width: 180px; /* Aumentado para não cortar a imagem */
-    aspect-ratio: 2 / 3; /* Proporção correta de poster */
+    aspect-ratio: 2 / 3;
+    height: auto;
     border-radius: 14px;
     border: 1.5px solid var(--border-subtle);
     overflow: hidden;
@@ -387,7 +388,7 @@ const CUSTOM_STYLES = `
     border-color: var(--gold-premium);
     box-shadow: 0 12px 25px rgba(0,0,0,0.8), 0 0 10px rgba(215, 168, 75, 0.3);
   }
-  .recommend-poster { width: 100%; height: 100%; background-size: cover; background-position: center top; filter: brightness(0.9); }
+  .recommend-poster { width: 100%; height: 100%; background-size: cover !important; background-position: center !important; filter: brightness(0.9); }
   .recommend-rating {
     position: absolute;
     bottom: 10px;
@@ -838,7 +839,7 @@ function DetailContent({ params }: Props) {
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#000' }}>
         <div style={{ color: '#d9a23a', fontSize: '24px' }}>Carregando...</div>
       </div>
-    );
+    )
   }
 
   if (!movieData) {
@@ -846,7 +847,7 @@ function DetailContent({ params }: Props) {
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#000' }}>
         <div style={{ color: '#d9a23a', fontSize: '24px' }}>Filme não encontrado</div>
       </div>
-    );
+    )
   }
 
   return (

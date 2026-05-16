@@ -121,12 +121,24 @@ export function VideoPlayer({
     url.searchParams.set('room', newRoomId)
     window.history.pushState({}, '', url)
     
-    // Cria e copia o convite automaticamente ao iniciar a sala
+    // Cria e copia o convite automaticamente ao iniciar a sala com Fallback
     const inviteMsg = `🍿 Vamos assistir "${title}" comigo no PAIXAOFLIX? Acesse: ${url.toString()}`
-    navigator.clipboard.writeText(inviteMsg).then(() => {
-      alert('🎉 Sala criada e link de convite copiado para sua área de transferência!')
-    })
+    
+    const tryCopy = async () => {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(inviteMsg);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = inviteMsg;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+      }
+      alert('🎉 Sala criada e convite copiado!');
+    };
 
+    tryCopy();
   }, []); // Removido dependency 'title' conforme aviso de linter
 
   const copyInviteLink = useCallback(() => {

@@ -57,7 +57,7 @@ export function HomeClient() {
       const sb = createClient()
       const hasLoadedBefore = typeof window !== 'undefined' && sessionStorage.getItem('paixaoflix_loaded')
 
-      // Conjunto de IDs únicos do banco para evitar QUALQUER repetição na mesma tela
+      // Conjunto de chaves únicas para evitar duplicatas (ID, tmdb_id, slug)
       const seenContentKeys = new Set<string>()
 
       try {
@@ -76,7 +76,12 @@ export function HomeClient() {
 
           // Adiciona os IDs do continuar assistindo para evitar duplicatas na home
           if (progressData) {
-            progressData.forEach(p => seenContentKeys.add(String(p.content_id)))
+            progressData.forEach(p => {
+              const idKey = String(p.content_id)
+              seenContentKeys.add(idKey)
+              // Se for formato "filme-123", extrai o ID numérico também
+              if (idKey.includes('-')) seenContentKeys.add(idKey.split('-')[1])
+            })
           }
 
           if (progressData && progressData.length > 0) {
@@ -162,8 +167,16 @@ export function HomeClient() {
         if (bannerItems && bannerItems.length > 0) {
           const hydratedBanners = await Promise.all(bannerItems.map(async (item: any) => {
             try {
-              // Marca o ID do banco como visto
-              seenContentKeys.add(String(item.id))
+              const idKey = String(item.id)
+              const tmdbId = item.tmdb_id ? String(item.tmdb_id) : null
+              
+              // Marca IDs como vistos
+              seenContentKeys.add(idKey)
+              if (tmdbId) seenContentKeys.add(tmdbId)
+              
+              // Filtra "Coleções" (geralmente não têm runtime ou têm "Collection" no nome)
+              if (item.titulo?.toLowerCase().includes('coleção') || item.titulo?.toLowerCase().includes('collection')) return null;
+
               return item.type === 'serie' ? await getShowDetails(item.tmdb_id!) : await getMovieDetails(item.tmdb_id!)
             } catch { return null }
           }))
@@ -188,10 +201,19 @@ export function HomeClient() {
         resolved.forEach(res => {
           const filtered: CinemaItem[] = []
           for (const item of res.items) {
-            const idKey = String(item.id)
-            if (!seenContentKeys.has(idKey)) {
+            const idKey   = String(item.id)
+            const tmdbId  = item.tmdb_id ? String(item.tmdb_id) : null
+            
+            // Verifica duplicata em múltiplos formatos
+            const isDuplicate = seenContentKeys.has(idKey) || 
+                               (tmdbId && seenContentKeys.has(tmdbId)) ||
+                               (tmdbId && seenContentKeys.has(`filme-${tmdbId}`)) ||
+                               (tmdbId && seenContentKeys.has(`serie-${tmdbId}`))
+
+            if (!isDuplicate) {
               filtered.push(item)
               seenContentKeys.add(idKey)
+              if (tmdbId) seenContentKeys.add(tmdbId)
             }
             if (filtered.length >= res.limit) break
           }
@@ -308,7 +330,7 @@ export function HomeClient() {
   return (
     <div style={{ paddingBottom: 140 }}>
       {/* Hero Banner */}
-      <div style={{ marginBottom: 'clamp(60px, 8vw, 100px)' }}>
+      <div style={{ marginBottom: 'clamp(80px, 10vw, 120px)' }}>
         {bannerPool.length > 0 ? (
         <HeroBanner type="all" initialPool={bannerPool} />
       ) : (
@@ -320,7 +342,7 @@ export function HomeClient() {
 
       {/* Seção Continuar Assistindo */}
       {continueWatching.length > 0 && (
-        <section style={{ padding:'0 var(--container-px) var(--section-gap)' }}>
+        <section style={{ padding:'20px var(--container-px) var(--section-gap)' }}>
           <h2 className="text-section-title" style={{
             marginBottom:  'clamp(14px,1.5vw,22px)',
             color:         'var(--gold-primary)',
