@@ -66,8 +66,8 @@ export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' })
     if (isSeries) {
       // Busca na tabela 'series' conforme migração 007 enviada
       sb.from('series')
-        .select('id_n,titulo,tmdb_id,ano,rating,descricao,capa,poster,banner,trailer,genero,created_at')
-        .order('created_at', { ascending: false })
+        .select('id_n,titulo,tmdb_id,ano,rating,descricao,capa,poster,banner,trailer,genero')
+        .order('id_n', { ascending: false }) // Ordena pelo ID já que created_at não existe
         .then(({ data, error: err }) => {
           if (err) {
             console.error('Supabase error (series):', err)
@@ -76,7 +76,7 @@ export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' })
             return
           }
           // Mapeia colunas da tabela series para a interface Cinema para compatibilidade visual
-          const rows = (data || []).map((s: any) => ({
+          const rows = (data || []).map((s: { id_n: number; titulo: string | null; tmdb_id: number | null; ano: number | null; rating: number | null; descricao: string | null; capa: string | null; poster: string | null; banner: string | null; trailer: string | null; genero: string | null }) => ({
             id: s.id_n,
             titulo: s.titulo,
             tmdb_id: s.tmdb_id,
@@ -89,7 +89,7 @@ export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' })
             banner: s.banner,
             backdrop: s.banner || s.poster || s.capa || null, 
             trailer: s.trailer,
-            created_at: s.created_at,
+            created_at: null,
             url: null,
             duration: null
           })) as Cinema[]

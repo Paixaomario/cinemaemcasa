@@ -42,7 +42,7 @@ export default function PerfilPage() {
             const [type, rawId] = idStr.split('-')
             try {
               const data = type === 'filme' ? await getMovieDetails(Number(rawId)) : await getShowDetails(Number(rawId))
-              const item = data as any;
+              const item = data as TMDBMovie & TMDBShow;
               return {
                 id: idStr,
                 titulo: item.title || item.name,
@@ -72,7 +72,7 @@ export default function PerfilPage() {
             const [type, rawId] = idStr.split('-')
             try {
               const data = type === 'filme' ? await getMovieDetails(Number(rawId)) : await getShowDetails(Number(rawId))
-              const item = data as any;
+              const item = data as TMDBMovie & TMDBShow;
               return {
                 id: idStr,
                 titulo: item.title || item.name,
@@ -143,7 +143,7 @@ export default function PerfilPage() {
   )
 }
 
-function Section({ title, items, color, emptyMsg }: { title: string, items: any[], color: string, emptyMsg: string }) {
+function Section({ title, items, color, emptyMsg }: { title: string, items: ProfileItem[], color: string, emptyMsg: string }) {
   return (
     <section className="animate-in fade-in slide-in-from-left-4 duration-1000">
       <h2 className="text-3xl font-black uppercase tracking-tighter mb-8 flex items-center gap-4" style={{ color }}>

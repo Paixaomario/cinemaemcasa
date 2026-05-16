@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
-import Image from 'next/image'
 
 interface Message {
   id: string
@@ -18,10 +17,11 @@ interface PartyChatProps {
   roomId: string, 
   userName: string, 
   userAvatar?: string, 
+  isHost?: boolean,
   onReaction?: (emoji: string) => void 
 }
 
-export function PartyChat({ roomId, userName, userAvatar, isHost, onReaction }: PartyChatProps) {
+export function PartyChat({ roomId, userName, userAvatar, onReaction }: PartyChatProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [users, setUsers] = useState<UserPresence[]>([])
   const [input, setInput] = useState('')
@@ -53,9 +53,9 @@ export function PartyChat({ roomId, userName, userAvatar, isHost, onReaction }: 
     presenceChannel
       .on('presence', { event: 'sync' }, () => {
         const newState = presenceChannel.presenceState()
-        const presentUsers: UserPresence[] = Object.values(newState).flat().filter((p: any) => !!p.name).map((p: any) => ({
-          name: p.name,
-          avatarUrl: p.avatarUrl
+        const presentUsers: UserPresence[] = Object.values(newState).flat().filter((p: unknown) => !!(p as UserPresence).name).map((p: unknown) => ({
+          name: (p as UserPresence).name,
+          avatarUrl: (p as UserPresence).avatarUrl
         }))
         setUsers(presentUsers)
       })
@@ -73,7 +73,7 @@ export function PartyChat({ roomId, userName, userAvatar, isHost, onReaction }: 
       sb.removeChannel(channel)
       sb.removeChannel(presenceChannel)
     }
-  }, [roomId, sb, userName])
+  }, [roomId, sb, userName, userAvatar])
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })

@@ -48,11 +48,12 @@ export default function AssistirDespoisPage() {
             }
 
             if (item) {
+              const itemData = item as CinemaItem & TMDBMovie & TMDBShow;
               return {
                 ...item,
                 id_route: idStr,
-                display_title: item.titulo || item.title || item.name,
-                display_poster: item.poster || (item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null)
+                display_title: itemData.titulo || itemData.title || itemData.name,
+                display_poster: itemData.poster || (itemData.poster_path ? `https://image.tmdb.org/t/p/w500${itemData.poster_path}` : null)
               }
             }
             return null
