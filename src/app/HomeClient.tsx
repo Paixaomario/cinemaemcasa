@@ -49,7 +49,7 @@ export function HomeClient() {
   const [continueWatching, setContinueWatching] = useState<CinemaItem[]>([])
   const [bannerPool, setBannerPool] = useState<Array<TMDBMovie | TMDBShow>>([])
   const [progress, setProgress] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true) // Sempre começa em true para evitar hydration errors
   const [dbError,    setDbError]    = useState('')
 
   useEffect(() => {
@@ -104,8 +104,8 @@ export function HomeClient() {
                   return {
                     ...item,
                     id: idStr,
-                    titulo: itemData.titulo || itemData.title || itemData.name,
-                    poster: itemData.poster || (itemData.poster_path ? `https://image.tmdb.org/t/p/w500${itemData.poster_path}` : null),
+                    titulo: itemData.titulo || itemData.title || itemData.name || 'Sem título',
+                    poster: (itemData.poster && itemData.poster.length > 5) ? itemData.poster : (itemData.poster_path ? `https://image.tmdb.org/t/p/w500${itemData.poster_path}` : null),
                     last_position: p.last_position,
                     duration_seconds: itemData.duration_seconds || (itemData.runtime ? itemData.runtime * 60 : 3600)
                   }
@@ -234,16 +234,9 @@ export function HomeClient() {
         // O loading é controlado pelo progresso agora
       }
     }
-
-    // Só roda o carregamento completo (com Splash) se não estiver em navegação interna
-    const hasLoaded = sessionStorage.getItem('paixaoflix_loaded')
-    if (hasLoaded) {
-      setLoading(false)
-      // Carrega dados em background para não travar a UI
-      load()
-    } else {
-      load()
-    }
+    
+    // Removido o atalho do hasLoaded para garantir que as imagens e banners estejam prontos antes de remover o Splash
+    load()
   }, [user])
 
   useEffect(() => {

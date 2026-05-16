@@ -6,10 +6,14 @@ const TMDB_BASE = 'https://api.themoviedb.org/3'
 const TMDB_TOKEN = process.env.NEXT_PUBLIC_TMDB_TOKEN!
 const TMDB_KEY   = process.env.NEXT_PUBLIC_TMDB_KEY!
 
+// Helper para validar se a string do path é válida
+const isValidPath = (p: string | null | undefined) => 
+  p && typeof p === 'string' && p.length > 5 && p !== 'null' && p !== 'undefined';
+
 export const IMG = {
-  poster:   (p: string | null, size = 'w500')  => p ? `https://image.tmdb.org/t/p/${size}${p}` : null,
-  backdrop: (p: string | null, size = 'w1280') => p ? `https://image.tmdb.org/t/p/${size}${p}` : null,
-  original: (p: string | null)                 => p ? `https://image.tmdb.org/t/p/original${p}` : null,
+  poster:   (p: string | null, size = 'w500')  => isValidPath(p) ? `https://image.tmdb.org/t/p/${size}${p}` : null,
+  backdrop: (p: string | null, size = 'w1280') => isValidPath(p) ? `https://image.tmdb.org/t/p/${size}${p}` : null,
+  original: (p: string | null)                 => isValidPath(p) ? `https://image.tmdb.org/t/p/original${p}` : null,
 }
 
 async function tmdb<T>(path: string, params: Record<string, string> = {}): Promise<T> {
