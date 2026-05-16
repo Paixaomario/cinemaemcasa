@@ -159,11 +159,18 @@ function Section({ title, items, color, emptyMsg }: { title: string, items: Prof
           {emptyMsg}
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-6">
-          {items.map(item => (
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(var(--grid-cols, 5), 1fr)', 
+          gap: 'var(--card-gap, 16px)' 
+        }}>
+          {items.map(item => {
+            const prefix = (item.type === 'serie' || item.type === 'series') ? 'serie' : 'filme'
+            const finalId = String(item.id).includes('-') ? item.id : `${prefix}-${item.id}`
+            return (
             <Link 
               key={item.id} 
-              href={`/detalhes/${item.id}`}
+              href={`/detalhes/${finalId}`}
               className="card-poster group"
             >
               {item.poster || item.backdrop ? (
@@ -180,7 +187,7 @@ function Section({ title, items, color, emptyMsg }: { title: string, items: Prof
                 <p className="text-xs font-black uppercase truncate text-white drop-shadow-md">{item.titulo}</p>
               </div>
             </Link>
-          ))}
+          )})}
         </div>
       )}
     </section>
