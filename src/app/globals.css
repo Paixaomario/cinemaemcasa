@@ -527,11 +527,6 @@ body, p, span, a, input, label, .font-body {
 
 /* ─── PAIXAOFLIX PREMIUM PLAYER (CLAPPR + PLYR UI) ──────────────── */
 
-.clappr-player {
-  z-index: 1;
-  pointer-events: auto !important;
-}
-
 /* Esconder elementos nativos do Clappr que não combinam com Plyr */
 .clappr-player .player-poster[data-poster] {
   background-size: cover !important;
@@ -539,17 +534,13 @@ body, p, span, a, input, label, .font-body {
 
 /* Barra de Controles - Gradiente Estilo Plyr */
 .clappr-player .media-control {
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0,0,0,0.5) 50%, transparent 100%) !important;
-  padding: 40px 20px 20px 20px !important;
-  display: flex !important; /* Garantir visibilidade */
-  opacity: 1 !important;
-  pointer-events: auto !important;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%) !important;
+  padding: 20px 10px 5px 10px !important;
 }
 
 /* Cor Principal (Vermelho #BC2A1D) na Barra de Progresso */
 .clappr-player .clappr-slider .clappr-slider-progress {
   background-color: #BC2A1D !important;
-  height: 6px !important;
 }
 
 /* Scrubber Button - Customização Especial: Pipoca 🍿 */
