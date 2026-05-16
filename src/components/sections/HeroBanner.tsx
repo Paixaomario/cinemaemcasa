@@ -44,7 +44,7 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
           const hydrated = await Promise.all(filtered.map(async (item: any) => {
             try {
               // Filtra coleções e itens sem ID do TMDB
-              if (!item.tmdb_id) return null;
+              if (!item.tmdb_id || isNaN(Number(item.tmdb_id))) return null;
               if (item.titulo?.toLowerCase().includes('coleção') || item.titulo?.toLowerCase().includes('collection')) return null;
               
               const isSerie = item.type === 'serie' || item.type === 'series' || item.type === 'tv'

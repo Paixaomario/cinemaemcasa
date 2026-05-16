@@ -224,8 +224,8 @@ export function HomeClient() {
         
         setProgress(100)
         if (typeof window !== 'undefined') sessionStorage.setItem('paixaoflix_loaded', 'true')
-        // Pequeno delay para o usuário ver a barra completa antes de entrar
-        setTimeout(() => setLoading(false), 600)
+        // Delay sincronizado com a animação de progresso
+        setTimeout(() => setLoading(false), 800)
 
       } catch (err) {
         setDbError('Erro ao carregar dados da Home. Verifique o console para mais detalhes.')
