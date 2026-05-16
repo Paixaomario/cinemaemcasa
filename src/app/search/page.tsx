@@ -1,10 +1,10 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
 import { createClient } from '@/lib/supabase'
-import { Navbar } from '@/components/layout/Navbar'
 import { IMG, TMDBItem, TMDBMovie, TMDBShow, getTitle } from '@/lib/tmdb'
+import { Navbar } from '@/components/layout/Navbar'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -29,10 +29,16 @@ interface SearchResult {
 
 function SearchContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const query = searchParams.get('q') || ''
+  const [searchInput, setSearchInput] = useState(query)
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
   const sb = createClient()
+
+  useEffect(() => {
+    setSearchInput(query)
+  }, [query])
 
   useEffect(() => {
     if (!query.trim()) {
@@ -51,7 +57,7 @@ function SearchContent() {
           .limit(20)
 
         // 2. Busca na TMDB API (Multi-search)
-        const TMDB_KEY = 'c80875e533c3933c04f981d33190df09' 
+        const TMDB_KEY = 'c80875e533c3933c04f981d33190df09'
         const tmdbRes = await fetch(
           `https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(query)}&language=pt-BR`
         ).then(r => r.json())
@@ -89,12 +95,29 @@ function SearchContent() {
     return () => clearTimeout(timer)
   }, [query, sb])
 
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault()
+    if (searchInput.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchInput.trim())}`)
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#0B0B0F] text-white">
       <Navbar />
       
       <div className="pt-32 md:pt-40 px-[var(--container-px)] pb-20 max-w-[2400px] mx-auto">
-        <header className="mb-12">
+        <header className="mb-8">
+          <form onSubmit={handleSearch} className="mb-6">
+            <input
+              type="text"
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              placeholder="Digite para buscar..."
+              className="w-full max-w-2xl px-6 py-4 bg-white/10 border-2 border-white/20 rounded-xl text-white text-xl focus:outline-none focus:border-[var(--gold-primary)] focus:shadow-lg transition-all"
+              autoFocus
+            />
+          </form>
           <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter">
             Busca: <span className="text-[var(--gold-primary)]">{query || '...'}</span>
           </h1>

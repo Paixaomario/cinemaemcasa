@@ -38,9 +38,10 @@ async function tmdb<T>(path: string, params: Record<string, string> = {}): Promi
   })
 
   if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}))
-    console.error('TMDB API Detailed Error:', errorData)
-    throw new Error(`TMDB error: ${res.status} - ${errorData.status_message || path}`)
+    const errorText = await res.text().catch(() => 'No error text')
+    console.error(`TMDB API Error: ${res.status} ${res.statusText} for ${path}`)
+    console.error(`Response body: ${errorText}`)
+    throw new Error(`TMDB error: ${res.status} - ${res.statusText}`)
   }
 
   return res.json()

@@ -97,7 +97,10 @@ export function HomeClient() {
                   try {
                     // Busca direta pelo ID do filme para evitar dados de coleção agrupados
                     item = type === 'filme' ? await getMovieDetails(Number(rawId)) : await getShowDetails(Number(rawId))
-                  } catch { return null }
+                  } catch (error) {
+                    console.warn('Failed to fetch TMDB details for continue watching:', idStr, error)
+                    return null
+                  }
                 }
                 if (item) {
                   const itemData = item as CinemaItem & TMDBMovie & TMDBShow;
@@ -178,8 +181,14 @@ export function HomeClient() {
               // Filtra "Coleções" (geralmente não têm runtime ou têm "Collection" no nome)
               if (item.titulo?.toLowerCase().includes('coleção') || item.titulo?.toLowerCase().includes('collection')) return null;
 
-              return item.type === 'serie' ? await getShowDetails(item.tmdb_id!) : await getMovieDetails(item.tmdb_id!)
-            } catch { return null }
+              if (item.tmdb_id) {
+                return item.type === 'serie' ? await getShowDetails(item.tmdb_id) : await getMovieDetails(item.tmdb_id)
+              }
+              return null
+            } catch (error) {
+              console.warn('Failed to fetch TMDB details for item:', item.id, error)
+              return null
+            }
           }))
           setBannerPool(hydratedBanners.filter(Boolean) as Array<TMDBMovie | TMDBShow>)
         }
