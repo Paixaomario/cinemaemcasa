@@ -331,7 +331,7 @@ export function HomeClient() {
   return (
     <div style={{ paddingBottom: 140 }}>
       {/* Hero Banner */}
-      <div style={{ marginBottom: 'clamp(80px, 10vw, 120px)' }}>
+      <div style={{ marginBottom: '35px' }}>
         {bannerPool.length > 0 ? (
         <HeroBanner type="all" initialPool={bannerPool} />
       ) : (
