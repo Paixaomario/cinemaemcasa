@@ -3,28 +3,25 @@
 import { useAuth } from '@/components/layout/SupabaseProvider'
 import { Navbar } from '@/components/layout/Navbar'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
-import { getMovieDetails, getShowDetails } from '@/lib/tmdb'
+import { getMovieDetails, getShowDetails, TMDBMovie, TMDBShow } from '@/lib/tmdb'
 import Image from 'next/image'
+import { CinemaItem } from '../HomeClient'
+
+interface WatchLaterItem extends Partial<CinemaItem> {
+  id_route: string;
+  display_title: string;
+  display_poster: string | null;
+}
 
 export default function AssistirDespoisPage() {
   const { user } = useAuth()
   const router = useRouter()
-  const [items, setItems] = useState<any[]>([])
+  const [items, setItems] = useState<WatchLaterItem[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (user) {
-      loadWatchLater()
-    } else {
-      // Se após 2s não houver user, redireciona (evita flash no loading)
-      const timer = setTimeout(() => { if(!user) router.push('/login') }, 2000)
-      return () => clearTimeout(timer)
-    }
-  }, [user, router])
-
-  async function loadWatchLater() {
+  const loadWatchLater = useCallback(async () => {
     try {
       const sb = createClient()
       const { data: wlData } = await sb
@@ -35,12 +32,11 @@ export default function AssistirDespoisPage() {
 
       if (wlData && wlData.length > 0) {
         const hydrated = await Promise.all(
-          wlData.map(async (p: any) => {
+          wlData.map(async (p) => {
             const idStr = String(p.content_id)
             // Busca o item diretamente do banco local
-            let item: any = null
             const { data: localData } = await sb.from('cinema').select('*').eq('id', idStr).single()
-            item = localData
+            let item: CinemaItem | TMDBMovie | TMDBShow | null = localData as CinemaItem
 
             // Se o item local tiver tmdb_id, enriquece com metadados do TMDB
             if (item && item.tmdb_id) {
@@ -69,7 +65,17 @@ export default function AssistirDespoisPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadWatchLater()
+    } else {
+      // Se após 2s não houver user, redireciona (evita flash no loading)
+      const timer = setTimeout(() => { if(!user) router.push('/login') }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [user, router, loadWatchLater])
 
   async function handleRemove(contentId: string) {
     if (!user) return

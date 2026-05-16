@@ -57,7 +57,7 @@ export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' })
   const [films,      setFilms]      = useState<Cinema[]>([])
   const [loading,    setLoading]    = useState(true)
   const [error,      setError]      = useState('')
-  const [category,   setCategory]   = useState('all')
+  const [category]                  = useState('all')
 
   useEffect(() => {
     const sb = createClient()
@@ -76,7 +76,7 @@ export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' })
             return
           }
           // Mapeia colunas da tabela series para a interface Cinema para compatibilidade visual
-          const rows = (data || []).map((s: any) => ({
+          const rows = (data || []).map((s: { id_n: number; titulo: string | null; tmdb_id: number | null; ano: number | null; rating: number | null; descricao: string | null; capa: string | null; poster: string | null; banner: string | null; backdrop: string | null; trailer: string | null; genero: string | null; created_at: string | null }) => ({
             id: s.id_n,
             titulo: s.titulo,
             tmdb_id: s.tmdb_id,

@@ -249,7 +249,7 @@ export function getOriginCountry(item: TMDBMovie | TMDBShow): string {
 }
 
 export function getGenreNames(item: TMDBMovie | TMDBShow): string[] {
-  const isMovie = (item as any).media_type === 'movie'
+  const isMovie = (item as TMDBItem).media_type === 'movie' || 'title' in item
   const map = isMovie ? GENRE_NAMES_MOVIE : GENRE_NAMES_TV
   return (item.genre_ids || []).slice(0, 3).map(id => map[id]).filter(Boolean)
 }

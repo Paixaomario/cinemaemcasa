@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { TMDBMovie, TMDBShow, IMG, countryFlag, getTitle, getYear, getOriginCountry, getGenreNames, getMovieDetails, getShowDetails } from '@/lib/tmdb'
+import { CinemaItem } from '@/app/HomeClient'
 
 interface Props {
   type?: 'all' | 'movie' | 'tv'
@@ -36,12 +37,12 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
           // Filtra pelo tipo solicitado
           let filtered = bannerItems;
           if (type === 'movie') {
-            filtered = bannerItems.filter((i: any) => i.type === 'filme' || i.type === 'movie')
+            filtered = bannerItems.filter((i: CinemaItem) => i.type === 'filme' || i.type === 'movie')
           } else if (type === 'tv') {
-            filtered = bannerItems.filter((i: any) => i.type === 'serie' || i.type === 'series' || i.type === 'tv')
+            filtered = bannerItems.filter((i: CinemaItem) => i.type === 'serie' || i.type === 'series' || i.type === 'tv')
           }
 
-          const hydrated = await Promise.all(filtered.map(async (item: any) => {
+          const hydrated = await Promise.all(filtered.map(async (item: CinemaItem) => {
             try {
               // Filtra coleções e itens sem ID do TMDB
               if (!item.tmdb_id || isNaN(Number(item.tmdb_id))) return null;

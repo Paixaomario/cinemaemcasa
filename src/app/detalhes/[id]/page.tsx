@@ -626,7 +626,7 @@ function DetailContent({ params }: Props) {
                 const metadata = await getMovieDetails(tmdbId)
                 const cert = await getMovieCertification(tmdbId)
                 foundData = { ...metadata, ...localItem, certification: cert }
-              } catch (e) {
+              } catch {
                 foundData = localItem
               }
             } else {
