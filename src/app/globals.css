@@ -35,8 +35,9 @@
   /* PADRONIZAÇÃO DE CAPAS (Padrão 5 por linha) */
   --card-gap: clamp(12px, 1.5vw, 24px);
   /* Cálculo: (100% - (gaps)) / colunas */
-  --card-poster-w: calc((100vw - (var(--container-px) * 2) - (4 * var(--card-gap))) / 5.2);
-  --card-wide-w: calc((100vw - (var(--container-px) * 2) - (2 * var(--card-gap))) / 3.2);
+  --grid-cols: 5;
+  --card-poster-w: calc((100vw - (var(--container-px) * 2) - (4 * var(--card-gap))) / 5.15);
+  --card-wide-w: calc((100vw - (var(--container-px) * 2) - (2 * var(--card-gap))) / 3.15);
 }
 
 /* ─── Reset & Base ─────────────────────────────── */
@@ -49,8 +50,9 @@
 /* Telas Gigantes e Projetores (Acima de 2K/4K) */
 @media (min-width: 2500px) {
   :root {
-    --card-poster-w: calc((100vw - (var(--container-px) * 2) - (6 * var(--card-gap))) / 7.2);
-    --card-wide-w: calc((100vw - (var(--container-px) * 2) - (4 * var(--card-gap))) / 5.2);
+    --grid-cols: 7;
+    --card-poster-w: calc((100vw - (var(--container-px) * 2) - (6 * var(--card-gap))) / 7.15);
+    --card-wide-w: calc((100vw - (var(--container-px) * 2) - (4 * var(--card-gap))) / 5.15);
   }
 }
 

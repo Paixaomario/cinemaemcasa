@@ -539,7 +539,7 @@ function DetailContent({ params }: Props) {
   const [id, setId] = useState<string | null>(null)
 
   // Título e Metadados centralizados para evitar complexidade no parsing do JSX
-  const displayTitle = movieData?.titulo || movieData?.title || movieData?.name || (movieData ? getTitle(movieData as unknown as (TMDBMovie | TMDBShow)) : '') || 'NOME DO FILME';
+  const displayTitle = movieData?.titulo || movieData?.title || movieData?.name || (movieData ? getTitle(movieData as TMDBMovie | TMDBShow) : '') || 'NOME DO FILME';
 
   // Pre-calcula metadados para simplificar o JSX e evitar erros de parsing
   const displayYear = movieData?.year || movieData?.release_date?.split('-')[0] || movieData?.first_air_date?.split('-')[0] || '';
@@ -554,16 +554,16 @@ function DetailContent({ params }: Props) {
     (Array.isArray(movieData?.genres) ? movieData.genres.map(g => g.name).join(', ') : 
     (movieData?.category || 'Não informado'));
 
-  const displayDirector = movieData?.director || movieData?.credits?.crew?.find((c: any) => c.job === 'Director')?.name || 'Não informado';
+  const displayDirector = movieData?.director || movieData?.credits?.crew?.find((c: CrewMemberData) => c.job === 'Director')?.name || 'Não informado';
   
   const dateOpts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
   const displayReleaseDate = movieData?.release_date 
     ? new Date(movieData.release_date).toLocaleDateString('pt-BR', dateOpts) 
     : (movieData?.first_air_date ? new Date(movieData.first_air_date).toLocaleDateString('pt-BR', dateOpts) : (movieData?.year?.toString() || 'Não informado'));
 
-  const displayProduction = movieData?.production_companies?.map((c: any) => c.name)?.join(', ') 
+  const displayProduction = movieData?.production_companies?.map((c: { name: string }) => c.name)?.join(', ') 
     || movieData?.category 
-    || movieData?.production_countries?.map((c: any) => c.name)?.join(', ') 
+    || movieData?.production_countries?.map((c: { name: string }) => c.name)?.join(', ') 
     || 'Não informado';
 
   const displayBackdrop = movieData?.backdrop || movieData?.banner || movieData?.backdrop_url || (movieData?.backdrop_path ? IMG.original(movieData.backdrop_path) : 'https://via.placeholder.com/1920x470');

@@ -412,13 +412,17 @@ function EmptyState() {
 function RowLayout({ items, showProgress }: { items: CinemaItem[]; showProgress?: boolean }) {
   return (
     <div style={{
-      display:'flex', gap:'clamp(12px, 1.5vw, 24px)',
+      display:'flex', gap:'var(--card-gap)',
       overflowX:'auto', paddingBottom:8, scrollbarWidth:'none',
       width: '100%',
       maxWidth: '100%',
       WebkitOverflowScrolling: 'touch',
-    } as CSSProperties}>
-      {items.map(item => <HomeCard key={item.id} item={item} showProgress={showProgress} />)}
+    } as CSSProperties} className="scroll-row no-scrollbar">
+      {items.map(item => (
+        <div key={item.id} style={{ width: 'var(--card-poster-w)', flexShrink: 0 }}>
+          <HomeCard item={item} showProgress={showProgress} />
+        </div>
+      ))}
     </div>
   )
 }
@@ -426,9 +430,9 @@ function RowLayout({ items, showProgress }: { items: CinemaItem[]; showProgress?
 function GridLayout({ items }: { items: CinemaItem[] }) {
   return (
     <div style={{
-      display:'grid',
-      gridTemplateColumns:'repeat(5, 1fr)',
-      gap:'clamp(16px, 2vw, 32px)',
+      display: 'grid',
+      gridTemplateColumns: 'repeat(var(--grid-cols, 5), 1fr)',
+      gap: 'var(--card-gap, 16px)',
     }}>
       {items.map(item => <HomeCard key={item.id} item={item} />)}
     </div>
@@ -464,8 +468,7 @@ function HomeCard({ item, showProgress }: { item: CinemaItem, showProgress?: boo
       tabIndex={0}
       role="link"
       style={{
-        flexShrink:  0,
-        width:       'var(--card-poster-w)',
+        width:       '100%',
         aspectRatio: '2/3',
         borderRadius: 14,
         overflow:    'hidden',

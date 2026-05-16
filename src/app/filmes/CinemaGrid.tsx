@@ -112,8 +112,8 @@ export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' })
         <div style={{ padding:'0 clamp(16px,4vw,60px)' }}>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(100px,13vw,180px),1fr))',
-            gap: 'clamp(8px,1.2vw,14px)',
+            gridTemplateColumns: 'repeat(var(--grid-cols, 5), 1fr)',
+            gap: 'var(--card-gap, 16px)',
           }}>
             {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="skeleton" style={{ aspectRatio:'2/3', borderRadius:10 }} />
@@ -178,13 +178,17 @@ function CinemaRow({ items }: { items: Cinema[] }) {
   return (
     <div style={{
       display:          'flex',
-      gap:              'clamp(10px, 1.5vw, 20px)',
+      gap:              'var(--card-gap)',
       overflowX:        'auto',
       paddingBottom:    6,
       scrollbarWidth:   'none',
       WebkitOverflowScrolling: 'touch',
     } as React.CSSProperties}>
-      {items.map(f => <CinemaCard key={f.id} film={f} />)}
+      {items.map(f => (
+        <div key={f.id} style={{ width: 'var(--card-poster-w)', flexShrink: 0 }}>
+          <CinemaCard film={f} />
+        </div>
+      ))}
     </div>
   )
 }
@@ -192,7 +196,11 @@ function CinemaRow({ items }: { items: Cinema[] }) {
 /* ── Grade responsiva ── */
 function CinemaGridFull({ items }: { items: Cinema[] }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(var(--grid-cols, 5), 1fr)',
+      gap: 'var(--card-gap, 16px)',
+    }}>
       {items.map(f => <CinemaCard key={f.id} film={f} />)}
     </div>
   )
@@ -223,8 +231,7 @@ function CinemaCard({ film }: { film: Cinema }) {
       tabIndex={0}
       role="link"
       style={{
-        flexShrink:  0,
-        width:       'calc((100vw - (2 * clamp(16px, 4vw, 60px)) - (2 * clamp(10px, 1.5vw, 20px))) / 3)', 
+        width:       '100%',
         aspectRatio: '2/3',
         borderRadius: 'var(--r-card)',
         overflow:    'hidden',
