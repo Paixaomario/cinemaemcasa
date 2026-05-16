@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
 import { createClient } from '@/lib/supabase'
 import { Navbar } from '@/components/layout/Navbar'
-import { IMG } from '@/lib/tmdb'
+import { IMG, TMDBItem, TMDBMovie, TMDBShow, getTitle } from '@/lib/tmdb'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -18,10 +18,19 @@ export default function SearchPage() {
   )
 }
 
+interface SearchResult {
+  id: string | number;
+  titulo: string | null;
+  poster: string | null;
+  backdrop: string | null;
+  rating: number;
+  year: number | null;
+}
+
 function SearchContent() {
   const searchParams = useSearchParams()
   const query = searchParams.get('q') || ''
-  const [results, setResults] = useState<any[]>([])
+  const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
   const sb = createClient()
 
@@ -47,20 +56,22 @@ function SearchContent() {
           `https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(query)}&language=pt-BR`
         ).then(r => r.json())
 
-        const tmdbItems = tmdbRes.results
-          ?.filter((i: any) => i.media_type === 'movie' || i.media_type === 'tv')
-          .map((item: any) => ({
+        const tmdbItems: SearchResult[] = tmdbRes.results
+          ?.filter((i: TMDBItem) => i.media_type === 'movie' || i.media_type === 'tv')
+          .map((item: TMDBItem) => ({
             id: `${item.media_type === 'tv' ? 'serie' : 'filme'}-${item.id}`,
-            titulo: item.title || item.name,
+            titulo: getTitle(item),
             poster: item.poster_path ? IMG.poster(item.poster_path, 'w500') : null,
             backdrop: item.backdrop_path ? IMG.backdrop(item.backdrop_path, 'w780') : null,
             rating: item.vote_average,
-            year: item.release_date ? new Date(item.release_date).getFullYear() : item.first_air_date ? new Date(item.first_air_date).getFullYear() : null
+            year: item.media_type === 'movie'
+              ? ((item as TMDBMovie).release_date ? new Date((item as TMDBMovie).release_date).getFullYear() : null)
+              : ((item as TMDBShow).first_air_date ? new Date((item as TMDBShow).first_air_date).getFullYear() : null)
           })) || []
 
         // Combinar resultados sem duplicados
-        const combined = [...(localItems || [])]
-        tmdbItems.forEach((tmdb: any) => {
+        const combined: SearchResult[] = [...((localItems as unknown as SearchResult[]) || [])]
+        tmdbItems.forEach((tmdb) => {
             if (!combined.find(c => String(c.id) === String(tmdb.id))) {
                 combined.push(tmdb)
             }

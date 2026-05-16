@@ -588,20 +588,40 @@ function DetailContent({ params }: Props) {
         const parsedId = rawId || id
 
         // 2. BUSCA OBRIGATÓRIA NO BANCO LOCAL (Fonte de verdade para URL e tipo)
-        const { data: dbData } = await sb
+        let { data: dbData } = await sb
           .from('cinema')
           .select('*')
           .or(`id.eq.${isNaN(Number(parsedId)) ? -1 : parsedId},tmdb_id.eq.${isNaN(Number(parsedId)) ? -1 : parsedId}`)
           .maybeSingle()
 
+        // Se não encontrar na tabela cinema, tenta na tabela series (migração 007)
+        if (!dbData) {
+          const { data: sData } = await sb
+            .from('series')
+            .select('*')
+            .or(`id_n.eq.${isNaN(Number(parsedId)) ? -1 : parsedId},tmdb_id.eq.${isNaN(Number(parsedId)) ? -1 : parsedId}`)
+            .maybeSingle()
+          
+          if (sData) {
+            dbData = { 
+              ...sData, 
+              id: sData.id_n, 
+              type: 'series',
+              poster: sData.poster || sData.capa,
+              year: sData.ano,
+              description: sData.descricao
+            }
+          }
+        }
+
         if (dbData) {
-          localItem = dbData
-          const tmdbId = dbData.tmdb_id ? Number(dbData.tmdb_id) : null
           const isMovie = dbData.type === 'movie' || dbData.type === 'filme' || type === 'filme'
+          const tmdbId = dbData.tmdb_id ? Number(dbData.tmdb_id) : null
 
           if (isMovie) {
             // Lógica para Filmes
-            if (tmdbId && !isNaN(tmdbId)) {
+            localItem = dbData
+            if (tmdbId) {
               try {
                 const metadata = await getMovieDetails(tmdbId)
                 const cert = await getMovieCertification(tmdbId)
@@ -613,21 +633,23 @@ function DetailContent({ params }: Props) {
               foundData = localItem
             }
           } else { // É uma Série
-            let seriesLocalData: MovieData | null = null;
+            localItem = dbData
             let tmdbSeriesMetadata: MovieData | null = null;
             let seasonsWithEpisodes: SeasonData[] = [];
 
-            // 1. Buscar detalhes da série na nova tabela 'series'
-            // Tenta localizar por TMDB ID ou pelo ID local (id_n) que vincula com a tabela cinema
-            const { data: sData } = await sb
-              .from('series')
-              .select('*')
-              .or(`tmdb_id.eq.${tmdbId && !isNaN(tmdbId) ? tmdbId : -1},id_n.eq.${dbData.id}`)
-              .maybeSingle()
+            // Tenta garantir que temos os dados da tabela series
+            let seriesLocalData = dbData.type === 'series' ? dbData : null
+            if (!seriesLocalData) {
+               const { data: sData } = await sb
+                .from('series')
+                .select('*')
+                .or(`tmdb_id.eq.${tmdbId || -1},id_n.eq.${dbData.id}`)
+                .maybeSingle()
+               seriesLocalData = sData
+            }
 
-            if (sData) {
-              seriesLocalData = sData
-              const { data: tData } = await sb.from('temporadas').select('*').eq('serie_id', sData.id_n).order('numero_temporada', { ascending: true })
+            if (seriesLocalData) {
+              const { data: tData } = await sb.from('temporadas').select('*').eq('serie_id', seriesLocalData.id_n || seriesLocalData.id).order('numero_temporada', { ascending: true })
               if (tData) {
                 seasonsWithEpisodes = await Promise.all(tData.map(async (season) => {
                   const { data: eData } = await sb.from('episodios').select('*').eq('temporada_id', season.id_n).order('numero_episodio', { ascending: true })
@@ -637,7 +659,7 @@ function DetailContent({ params }: Props) {
             }
 
             // 4. Buscar metadados da série no TMDB
-            if (tmdbId && !isNaN(tmdbId)) {
+            if (tmdbId) {
               try {
                 tmdbSeriesMetadata = await getShowDetails(tmdbId)
                 tmdbSeriesMetadata.certification = await getShowCertification(tmdbId)

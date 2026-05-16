@@ -61,22 +61,60 @@ export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' })
 
   useEffect(() => {
     const sb = createClient()
-    sb.from('cinema')
-      .select('id,titulo,tmdb_id,url,trailer,year,rating,description,poster,category,type,created_at,banner,backdrop,duration')
-      .eq('type', contentType) // Filtra por tipo de conteúdo
-      .order('created_at', { ascending: false })
-      .then(({ data, error: err }) => {
-        if (err) {
-          console.error('Supabase error:', err)
-          setError(`Erro ao carregar: ${err.message}`)
+    const isSeries = contentType === 'series'
+    
+    if (isSeries) {
+      // Busca na tabela 'series' conforme migração 007 enviada
+      sb.from('series')
+        .select('id_n,titulo,tmdb_id,ano,rating,descricao,capa,poster,banner,backdrop,trailer,genero,created_at')
+        .order('created_at', { ascending: false })
+        .then(({ data, error: err }) => {
+          if (err) {
+            console.error('Supabase error (series):', err)
+            setError(`Erro ao carregar séries: ${err.message}`)
+            setLoading(false)
+            return
+          }
+          // Mapeia colunas da tabela series para a interface Cinema para compatibilidade visual
+          const rows = (data || []).map((s: any) => ({
+            id: s.id_n,
+            titulo: s.titulo,
+            tmdb_id: s.tmdb_id,
+            year: s.ano,
+            rating: s.rating,
+            description: s.descricao,
+            poster: s.poster || s.capa,
+            category: s.genero,
+            type: 'series',
+            banner: s.banner,
+            backdrop: s.backdrop,
+            trailer: s.trailer,
+            created_at: s.created_at,
+            url: null,
+            duration: null
+          })) as Cinema[]
+          setFilms(rows)
           setLoading(false)
-          return
-        }
-        const rows = (data || []) as Cinema[]
-        setFilms(rows)
-        setLoading(false)
-      })
-  }, [])
+        })
+    } else {
+      // Busca na tabela 'cinema' (padrão para filmes)
+      sb.from('cinema')
+        .select('id,titulo,tmdb_id,url,trailer,year,rating,description,poster,category,type,created_at,banner,backdrop,duration')
+        .eq('type', contentType)
+        .order('created_at', { ascending: false })
+        .then(({ data, error: err }) => {
+          if (err) {
+            console.error('Supabase error:', err)
+            setError(`Erro ao carregar: ${err.message}`)
+            setLoading(false)
+            return
+          }
+          const rows = (data || []) as Cinema[]
+          setFilms(rows)
+          setLoading(false)
+        })
+    }
+  }, [contentType])
 
   // Função para extrair categorias válidas de um filme
   const getFilmCategories = (filmCategory: string | null): string[] => {
@@ -126,7 +164,7 @@ export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' })
         <div style={{ textAlign:'center', padding:'60px 20px' }}>
           <p style={{ color:'#ff6b6b', fontFamily:"'Open Sans',sans-serif", fontSize:14 }}>{error}</p>
           <p style={{ color:'#888', fontFamily:"'Open Sans',sans-serif", fontSize:12, marginTop:8 }}>
-            Verifique se a tabela <code style={{color:'#d9a23a'}}>cinema</code> existe no Supabase e as RLS estão configuradas.
+            Verifique se a tabela <code style={{color:'#d9a23a'}}>{contentType === 'series' ? 'series' : 'cinema'}</code> existe no Supabase e as RLS estão configuradas.
           </p>
         </div>
       )}
@@ -135,10 +173,10 @@ export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' })
         <div style={{ textAlign:'center', padding:'80px 20px' }}>
           <span style={{ fontSize:56 }}>🎬</span>
           <p style={{ color:'#d9a23a', fontFamily:"'Inter',sans-serif", fontWeight:700, fontSize:18, marginTop:16 }}>
-            Nenhum filme na tabela cinema
+            Nenhum conteúdo localizado
           </p>
           <p style={{ color:'#666', fontFamily:"'Open Sans',sans-serif", fontSize:13, marginTop:8 }}>
-            Adicione registros na tabela <strong style={{color:'#d9a23a'}}>cinema</strong> no Supabase
+            Adicione registros na tabela <strong style={{color:'#d9a23a'}}>{contentType === 'series' ? 'series' : 'cinema'}</strong> no Supabase
           </p>
         </div>
       )}
