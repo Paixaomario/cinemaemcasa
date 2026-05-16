@@ -4,7 +4,7 @@ import { useEffect, useState, CSSProperties } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { HeroBanner } from '@/components/sections/HeroBanner'
-import { buildBannerPool, getMovieDetails, getShowDetails, TMDBMovie, TMDBShow, formatRuntime } from '@/lib/tmdb'
+import { getMovieDetails, getShowDetails, TMDBMovie, TMDBShow, formatRuntime } from '@/lib/tmdb'
 import Image from 'next/image'
 import { useAuth } from '@/components/layout/SupabaseProvider'
 
@@ -49,7 +49,7 @@ export function HomeClient() {
   const [continueWatching, setContinueWatching] = useState<CinemaItem[]>([])
   const [bannerPool, setBannerPool] = useState<Array<TMDBMovie | TMDBShow>>([])
   const [progress, setProgress] = useState(0)
-  const [loading, setLoading] = useState(() => (typeof window !== 'undefined' ? !sessionStorage.getItem('paixaoflix_loaded') : true))
+  const [loading, setLoading] = useState(true)
   const [dbError,    setDbError]    = useState('')
 
   useEffect(() => {
@@ -88,10 +88,10 @@ export function HomeClient() {
             const hydrated = await Promise.all(
               progressData.map(async (p) => {
                 const idStr = String(p.content_id)
-                let item: any = null
+                let item: TMDBMovie | TMDBShow | CinemaItem | null = null
                 if (!idStr.includes('-')) {
                   const { data } = await sb.from('cinema').select('*').eq('id', p.content_id).single()
-                  item = data
+                  item = data as CinemaItem
                 } else {
                   const [type, rawId] = idStr.split('-')
                   try {
@@ -100,13 +100,14 @@ export function HomeClient() {
                   } catch { return null }
                 }
                 if (item) {
+                  const itemData = item as CinemaItem & TMDBMovie & TMDBShow;
                   return {
                     ...item,
                     id: idStr,
-                    titulo: item.titulo || item.title || item.name,
-                    poster: item.poster || (item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null),
+                    titulo: itemData.titulo || itemData.title || itemData.name,
+                    poster: itemData.poster || (itemData.poster_path ? `https://image.tmdb.org/t/p/w500${itemData.poster_path}` : null),
                     last_position: p.last_position,
-                    duration_seconds: item.duration_seconds || (item.runtime * 60) || 3600
+                    duration_seconds: itemData.duration_seconds || (itemData.runtime ? itemData.runtime * 60 : 3600)
                   }
                 }
                 return null
@@ -165,7 +166,7 @@ export function HomeClient() {
         const { data: bannerItems } = await sb.rpc('get_random_content_pool', { cnt: 20 })
 
         if (bannerItems && bannerItems.length > 0) {
-          const hydratedBanners = await Promise.all(bannerItems.map(async (item: any) => {
+          const hydratedBanners = await Promise.all(bannerItems.map(async (item: CinemaItem) => {
             try {
               const idKey = String(item.id)
               const tmdbId = item.tmdb_id ? String(item.tmdb_id) : null
@@ -180,7 +181,7 @@ export function HomeClient() {
               return item.type === 'serie' ? await getShowDetails(item.tmdb_id!) : await getMovieDetails(item.tmdb_id!)
             } catch { return null }
           }))
-          setBannerPool(hydratedBanners.filter(Boolean) as any[])
+          setBannerPool(hydratedBanners.filter(Boolean) as Array<TMDBMovie | TMDBShow>)
         }
 
         // 3. Buscar e filtrar itens de cada seção (sequencialmente)
@@ -335,7 +336,7 @@ export function HomeClient() {
         <HeroBanner type="all" initialPool={bannerPool} />
       ) : (
         <div style={{ height: 'clamp(312px,60vw,650px)', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '18px' }}>
-          Nenhum banner disponível. Verifique a tabela 'cinema' e os 'tmdb_id's.
+          Nenhum banner disponível. Verifique a tabela &apos;cinema&apos; e os &apos;tmdb_id&apos;s.
         </div>
         )}
       </div>

@@ -139,7 +139,7 @@ export function VideoPlayer({
     };
 
     tryCopy();
-  }, []); // Removido dependency 'title' conforme aviso de linter
+  }, [title]);
 
   const copyInviteLink = useCallback(() => {
     if (!currentRoomId) return

@@ -5,12 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useEffect, useState, Suspense, useCallback } from 'react'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
-import { IMG, getMovieDetails, getShowDetails, formatRuntime, getMovieCertification, getShowCertification, getTitle } from '@/lib/tmdb'
+import { IMG, getMovieDetails, getShowDetails, formatRuntime, getMovieCertification, getShowCertification, getTitle, TMDBMovie, TMDBShow } from '@/lib/tmdb'
 import { notFound } from 'next/navigation'
 import { Navbar } from '@/components/layout/Navbar'
 import { useAuth } from '@/components/layout/SupabaseProvider'
 import NextDynamic from 'next/dynamic'
-import { TMDBMovie, TMDBShow } from '@/lib/tmdb'
 
 interface TMDBGenre { id: number; name: string; }
 interface VideoResult { type: string; key: string; }
@@ -537,23 +536,49 @@ function DetailContent({ params }: Props) {
   const [shouldStartParty, setShouldStartParty] = useState(false)
   const [shuffledRecommendations, setShuffledRecommendations] = useState<RecommendationData[]>([])
   const [lastPosition, setLastPosition] = useState(0) // For resume playback
-  const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(null)
+  const [id, setId] = useState<string | null>(null)
+
+  // Título e Metadados centralizados para evitar complexidade no parsing do JSX
+  const displayTitle = movieData?.titulo || movieData?.title || movieData?.name || (movieData ? getTitle(movieData as unknown as (TMDBMovie | TMDBShow)) : '') || 'NOME DO FILME';
+
+  // Pre-calcula metadados para simplificar o JSX e evitar erros de parsing
+  const displayYear = movieData?.year || movieData?.release_date?.split('-')[0] || movieData?.first_air_date?.split('-')[0] || '';
+  
+  const displayDuration = movieData?.duration || 
+    (movieData?.duration_seconds ? formatRuntime(Math.floor(movieData.duration_seconds / 60)) : 
+    (movieData?.runtime ? formatRuntime(movieData.runtime) : '')) || 'Não informado';
+    
+  const displayRating = movieData?.rating || movieData?.certification;
+  
+  const displayGenres = Array.isArray(movieData?.genre) ? movieData.genre.join(', ') : 
+    (Array.isArray(movieData?.genres) ? movieData.genres.map(g => g.name).join(', ') : 
+    (movieData?.category || 'Não informado'));
+
+  const displayDirector = movieData?.director || movieData?.credits?.crew?.find((c: any) => c.job === 'Director')?.name || 'Não informado';
+  
+  const dateOpts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+  const displayReleaseDate = movieData?.release_date 
+    ? new Date(movieData.release_date).toLocaleDateString('pt-BR', dateOpts) 
+    : (movieData?.first_air_date ? new Date(movieData.first_air_date).toLocaleDateString('pt-BR', dateOpts) : (movieData?.year?.toString() || 'Não informado'));
+
+  const displayProduction = movieData?.production_companies?.map((c: any) => c.name)?.join(', ') 
+    || movieData?.category 
+    || movieData?.production_countries?.map((c: any) => c.name)?.join(', ') 
+    || 'Não informado';
+
+  const displayBackdrop = movieData?.backdrop || movieData?.banner || movieData?.backdrop_url || (movieData?.backdrop_path ? IMG.original(movieData.backdrop_path) : 'https://via.placeholder.com/1920x470');
+
+  const castList = movieData?.credits?.cast || 
+    (typeof movieData?.cast_names === 'string' ? movieData.cast_names.split(',').map(n => n.trim()) : movieData?.cast_names) || [];
 
   useEffect(() => {
-    async function resolveParams() {
-      const resolved = await params
-      setResolvedParams(resolved)
-    }
-    resolveParams()
-  }, [params])
-
-  useEffect(() => {
-    if (!resolvedParams) return
-
     async function loadMovieData() {
       try {
         const sb = createClient()
-        const id = resolvedParams.id
+        const { id: resolvedId } = await params
+        setId(resolvedId)
+        
+        const id = resolvedId
         let foundData: MovieData | null = null
         let localItem: MovieData | null = null
         
@@ -587,8 +612,8 @@ function DetailContent({ params }: Props) {
               foundData = localItem
             }
           } else { // É uma Série
-            let seriesLocalData: any = null;
-            let tmdbSeriesMetadata: any = null;
+            let seriesLocalData: MovieData | null = null;
+            let tmdbSeriesMetadata: MovieData | null = null;
             let seasonsWithEpisodes: SeasonData[] = [];
 
             // 1. Buscar detalhes da série na nova tabela 'series'
@@ -687,7 +712,7 @@ function DetailContent({ params }: Props) {
     }
 
     loadMovieData()
-  }, [resolvedParams, user])
+  }, [params, user, roomFromUrl])
 
   // Efeito para buscar recomendações DIRETAMENTE no sistema (Banco Local)
   useEffect(() => {
@@ -727,7 +752,7 @@ function DetailContent({ params }: Props) {
       }
       loadSystemRecs()
     }
-  }, [movieData, resolvedParams])
+  }, [movieData, id])
 
   const handleStartParty = () => {
     if (!user) return alert('Faça login para criar uma sala de Assistir Juntos!')
@@ -743,14 +768,14 @@ function DetailContent({ params }: Props) {
       alert('Faça login para adicionar aos favoritos!')
       return
     }
-    if (!resolvedParams?.id) return
+    if (!id) return
 
     const sb = createClient()
     if (isFavorite) {
-      const { error } = await sb.from('favorites').delete().eq('user_id', user.id).eq('content_id', resolvedParams.id)
+      const { error } = await sb.from('favorites').delete().eq('user_id', user.id).eq('content_id', id)
       if (!error) setIsFavorite(false)
     } else {
-      const { error } = await sb.from('favorites').insert({ user_id: user.id, content_id: resolvedParams.id })
+      const { error } = await sb.from('favorites').insert({ user_id: user.id, content_id: id })
       if (!error) setIsFavorite(true)
       else console.error('Erro ao favoritar:', error.message)
     }
@@ -761,14 +786,14 @@ function DetailContent({ params }: Props) {
       alert('Faça login para adicionar à sua lista!')
       return
     }
-    if (!resolvedParams?.id) return
+    if (!id) return
 
     const sb = createClient()
     if (isWatchLater) {
-      const { error } = await sb.from('watch_later').delete().eq('user_id', user.id).eq('content_id', resolvedParams.id)
+      const { error } = await sb.from('watch_later').delete().eq('user_id', user.id).eq('content_id', id)
       if (!error) setIsWatchLater(false)
     } else {
-      const { error } = await sb.from('watch_later').insert({ user_id: user.id, content_id: resolvedParams.id })
+      const { error } = await sb.from('watch_later').insert({ user_id: user.id, content_id: id })
       if (!error) setIsWatchLater(true)
     }
   }
@@ -859,36 +884,21 @@ function DetailContent({ params }: Props) {
 
         {/* HERO SECTION */}
         <div className="hero">
-          <div className="hero-bg" style={{ 
-            backgroundImage: movieData?.backdrop || movieData?.banner || movieData?.backdrop_url
-              ? `url(${movieData.backdrop || movieData.banner || movieData.backdrop_url})` 
-              : movieData?.backdrop_path
-                ? `url(${IMG.original(movieData.backdrop_path)})`
-                : 'url(https://via.placeholder.com/1920x470)' 
-          }}></div>
+          <div className="hero-bg" style={{ backgroundImage: `url(${displayBackdrop})` }}></div>
           <div className="hero-overlay"></div>
           
           <div className="hero-content">
             <h1 className="text-hero-title uppercase tracking-wider text-white">
-              {movieData?.titulo || movieData?.title || (movieData ? getTitle(movieData as unknown as (TMDBMovie | TMDBShow)) : '') || 'NOME DO FILME'}
+              {displayTitle}
             </h1>
 
             <div className="movie-meta text-metadata">
-              <span>{movieData?.year || new Date(movieData?.release_date || movieData?.first_air_date).getFullYear()}</span>
-              {movieData?.duration && (
-                <span>{movieData.duration}</span>
+              <span>{displayYear}</span>
+              {displayDuration !== 'Não informado' && (
+                <span>{displayDuration}</span>
               )}
-              {movieData?.duration_seconds && (
-                <span>{formatRuntime(movieData.duration_seconds / 60)}</span>
-              )}
-              {movieData?.runtime && (
-                <span>{formatRuntime(movieData.runtime)}</span>
-              )}
-              {movieData?.rating && (
-                <span className="meta-age">{movieData.rating}</span>
-              )}
-              {movieData?.certification && (
-                <span className="meta-age">{movieData.certification}</span>
+              {displayRating !== 'Não informado' && (
+                <span className="meta-age">{displayRating}</span>
               )}
               {movieData?.vote_average && (
                 <span>⭐ {movieData.vote_average?.toFixed(1)}</span>
@@ -999,22 +1009,16 @@ function DetailContent({ params }: Props) {
               <span className="text-metadata">Ver todos</span>
             </div>
             <div className="cast-grid">
-              {(() => {
-                const castArray: ActorData[] | string[] = movieData?.credits?.cast || 
-                  (typeof movieData?.cast_names === 'string' 
-                    ? movieData.cast_names.split(',').map((n: string) => n.trim()) 
-                    : movieData?.cast_names) || [];
-                
-                return castArray.length > 0 ? (
-                  castArray.slice(0, 8).map((actor: string | ActorData, index: number) => (
+              {castList.length > 0 ? (
+                  castList.slice(0, 8).map((actor: ActorData | string, index: number) => {
+                    const photoUrl = (typeof actor === 'object' && (actor.profile_path || actor.image))
+                      ? IMG.poster(actor.profile_path || actor.image, 'w185')
+                      : 'https://placehold.co/95x95/1a1a1f/F5C76B?text=Ator';
+                    return (
                     <div key={index} className="cast-member">
                       <div 
                         className="cast-photo" 
-                        style={{ 
-                          backgroundImage: (typeof actor === 'object' && (actor.profile_path || actor.image))
-                            ? `url(${IMG.poster(actor.profile_path || actor.image, 'w185')})` 
-                            : 'url(https://placehold.co/95x95/1a1a1f/F5C76B?text=Ator)'
-                        }}
+                        style={{ backgroundImage: `url(${photoUrl})` }}
                       ></div>
                       <div className="cast-name text-card-title">
                         {typeof actor === 'string' ? actor : (actor as ActorData).name || 'Ator'}
@@ -1023,13 +1027,13 @@ function DetailContent({ params }: Props) {
                         {typeof actor === 'object' ? (actor as ActorData).character || 'Personagem' : 'Personagem'}
                       </div>
                     </div>
-                  ))
-                ) : (
+                    );
+                  })
+              ) : (
                   <div className="text-gray-400 italic py-10 text-center w-full">
                     Informações de elenco não disponíveis para este título.
                   </div>
-                )
-              })()}
+              )}
             </div>
           </div>
 
@@ -1088,33 +1092,28 @@ function DetailContent({ params }: Props) {
             </div>
           </div>
         </div>
+        )}
 
         {/* FOOTER DETALHES */}
         <div className="details-footer">
           <div className="details-box">
             <div className="details-item">
-              <b>Direção:</b> {movieData?.director || (movieData?.credits?.crew?.find((c: CrewMemberData) => c.job === 'Director')?.name) || 'Não informado'}
+            <b>Direção:</b> {displayDirector}
             </div>
             <div className="details-item">
-              <b>Gênero:</b> {
-                Array.isArray(movieData?.genre) 
-                  ? (typeof movieData.genre === 'string' ? JSON.parse(movieData.genre) : movieData.genre).join(', ') 
-                  : Array.isArray(movieData?.genres)
-                    ? movieData.genres.map((g: any) => g.name).join(', ')
-                    : movieData?.category || 'Não informado'
-              }
+              <b>Gênero:</b> {displayGenres}
             </div>
             <div className="details-item">
-              <b>Lançamento:</b> {movieData?.release_date ? new Date(movieData.release_date).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }) : movieData?.first_air_date ? new Date(movieData.first_air_date).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }) : movieData?.year || 'Não informado'}
+            <b>Lançamento:</b> {displayReleaseDate}
             </div>
             <div className="details-item">
-              <b>Duração:</b> {movieData?.duration || movieData?.duration_seconds ? formatRuntime(movieData.duration_seconds / 60) : movieData?.runtime ? formatRuntime(movieData.runtime) : 'Não informado'}
+              <b>Duração:</b> {displayDuration}
             </div>
             <div className="details-item">
-              <b>Classificação:</b> {movieData?.rating || movieData?.certification || 'Não informado'}
+              <b>Classificação:</b> {displayRating}
             </div>
             <div className="details-item">
-              <b>Produção:</b> {movieData?.production_companies?.map((c: { name: string }) => c.name).join(', ') || movieData?.category || (movieData?.production_countries?.map((c: { name: string }) => c.name).join(', ')) || 'Não informado'}
+            <b>Produção:</b> {displayProduction}
             </div>
           </div>
         </div>
@@ -1124,14 +1123,15 @@ function DetailContent({ params }: Props) {
       {activeVideoUrl && (
         <VideoPlayer 
           src={activeVideoUrl} 
-          title={(activeVideoUrl === movieData?.trailer ? "Trailer: " : "") + (movieData?.titulo || movieData?.title || "")}
-          contentId={resolvedParams?.id}
+          title={(activeVideoUrl === movieData?.trailer ? "Trailer: " : "") + displayTitle}
+          contentId={id}
           userId={user?.id}
           startOffset={roomFromUrl ? 0 : lastPosition} // Convidados começam do início ou tempo do host
           onClose={() => setActiveVideoUrl(null)} 
           onNext={handleNextEpisode}
           partyRoomId={roomFromUrl || (activeVideoUrl && activeVideoUrl !== movieData?.trailer ? user?.id : null)}
           isGuest={!!roomFromUrl}
+          shouldStartParty={shouldStartParty}
         />
       )}
     </div>
