@@ -315,7 +315,7 @@ const CUSTOM_STYLES = `
   .box {
     background: var(--bg-reddish);
     border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1.5px solid var(--border-subtle);
     padding: 24px;
     min-width: 0;
     overflow: hidden;
