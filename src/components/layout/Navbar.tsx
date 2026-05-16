@@ -21,14 +21,13 @@ export function Navbar() {
   const pathname = usePathname()
   const router   = useRouter()
   const { user, signOut } = useAuth()
-  const [scrolled,     setScrolled]     = useState(false)
   const [searchOpen,   setSearchOpen]   = useState(false)
   const [query,        setQuery]        = useState('')
   const [profileOpen,  setProfileOpen]  = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 8)
+    const fn = () => {} // window.scrollY check removido se não for usar a var scrolled
     window.addEventListener('scroll', fn, { passive: true })
     return () => window.removeEventListener('scroll', fn)
   }, [])

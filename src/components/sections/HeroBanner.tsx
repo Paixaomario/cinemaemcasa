@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { TMDBMovie, TMDBShow, IMG, countryFlag, getTitle, getYear, getOriginCountry, getGenreNames, buildBannerPool } from '@/lib/tmdb'
+import { TMDBMovie, TMDBShow, IMG, countryFlag, getTitle, getYear, getOriginCountry, getGenreNames } from '@/lib/tmdb'
 
 interface Props {
   type?: 'all' | 'movie' | 'tv'

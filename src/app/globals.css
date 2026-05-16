@@ -478,97 +478,6 @@ body, p, span, a, input, label, .font-body {
 /* Scrollbar vermelha */
 ::-webkit-scrollbar-thumb { background: #5a0000; }
 
-/* ─── Video.js Netflix Skin ─────────────────────── */
-.vjs-netflix-skin {
-  width: 100% !important;
-  height: 100% !important;
-  font-family: 'Inter', sans-serif !important;
-}
-
-.vjs-netflix-skin .vjs-control-bar {
-  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%) !important;
-  height: 100px !important;
-  display: flex !important;
-  align-items: center !important;
-  padding: 0 40px !important;
-}
-
-/* Garante que o painel de volume seja visível e estilizado */
-.vjs-netflix-skin .vjs-volume-panel {
-  display: flex !important;
-}
-
-.vjs-netflix-skin .vjs-play-progress {
-  background-color: var(--red-primary) !important;
-}
-
-.vjs-netflix-skin .vjs-play-progress:before {
-  font-size: 1.5em !important;
-  top: -0.3em !important;
-}
-
-.vjs-netflix-skin .vjs-slider {
-  background-color: rgba(255,255,255,0.2) !important;
-  border-radius: 4px !important;
-}
-
-.vjs-netflix-skin .vjs-big-play-button {
-  background-color: rgba(0, 0, 0, 0.5) !important;
-  border: 3px solid #fff !important;
-  width: 120px !important;
-  height: 120px !important;
-  line-height: 120px !important;
-  border-radius: 50% !important;
-  top: 50% !important;
-  left: 50% !important;
-  margin-top: -60px !important;
-  margin-left: -60px !important;
-  transition: all 0.3s ease !important;
-  font-size: 4em !important;
-}
-
-.vjs-netflix-skin:hover .vjs-big-play-button {
-  background-color: var(--red-primary) !important;
-  border-color: var(--red-primary) !important;
-  transform: scale(1.1);
-}
-
-/* ─── PAIXÃOFLIX PREMIUM PLAYER SKIN ──────────────── */
-.vjs-netflix-skin.video-js {
-  color: var(--text-primary);
-  font-family: 'Inter', sans-serif;
-}
-
-/* Barra de Progresso Vermelha Netflix */
-.vjs-netflix-skin .vjs-play-progress, 
-.vjs-netflix-skin .vjs-volume-level {
-  background-color: var(--red-primary) !important;
-}
-
-/* Slider e Buffer */
-.vjs-netflix-skin .vjs-load-progress {
-  background: rgba(255, 255, 255, 0.2) !important;
-}
-
-/* Botão de Play Gigante Centralizado */
-.vjs-netflix-skin .vjs-big-play-button {
-  background-color: rgba(0, 0, 0, 0.6) !important;
-  border: 2px solid #fff !important;
-  width: 2em !important;
-  height: 2em !important;
-  line-height: 1.9em !important;
-  border-radius: 50% !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-.vjs-netflix-skin:hover .vjs-big-play-button,
-.vjs-netflix-skin .vjs-big-play-button:focus {
-  background-color: var(--red-primary) !important;
-  border-color: var(--red-primary) !important;
-  transform: scale(1.1);
-  box-shadow: var(--shadow-red) !important;
-}
-
 /* Ícones dos botões de Seek (10s) e Glow de Foco */
 .vjs-netflix-skin .vjs-icon-replay-10:before { content: "\f119" !important; font-family: VideoJS !important; }
 .vjs-netflix-skin .vjs-icon-forward-10:before { content: "\f11a" !important; font-family: VideoJS !important; }
@@ -601,17 +510,106 @@ body, p, span, a, input, label, .font-body {
   transition: all 0.3s ease-out;
 }
 
-/* Restrições para Convidados no Player */
-.vjs-guest-mode .vjs-play-control,
-.vjs-guest-mode .vjs-progress-control,
-.vjs-guest-mode .vjs-skip-backward,
-.vjs-guest-mode .vjs-skip-forward {
-  display: none !important;
-}
-
 /* Ajuste para o Player não ser coberto pelo header no mobile */
 @media (max-width: 640px) {
   .emoji-reaction { font-size: 1.5rem; }
 }
 
+/* ─── PAIXAOFLIX PREMIUM PLAYER (CLAPPR + PLYR UI) ──────────────── */
+
+/* Esconder elementos nativos do Clappr que não combinam com Plyr */
+.clappr-player .player-poster[data-poster] {
+  background-size: cover !important;
+}
+
+/* Barra de Controles - Gradiente Estilo Plyr */
+.clappr-player .media-control {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%) !important;
+  padding: 20px 10px 5px 10px !important;
+}
+
+/* Cor Principal (Vermelho #BC2A1D) na Barra de Progresso */
+.clappr-player .clappr-slider .clappr-slider-progress {
+  background-color: #BC2A1D !important;
+}
+
+/* Scrubber Button - Customização Especial: Pipoca 🍿 */
+.clappr-player .clappr-slider .clappr-slider-scrubber {
+  background-color: transparent !important;
+  width: 28px !important;
+  height: 28px !important;
+  margin-top: -12px !important; /* Ajuste para centralizar o emoji */
+  border: none !important;
+  box-shadow: none !important;
+  transition: transform 0.2s ease !important;
+}
+
+.clappr-player .clappr-slider .clappr-slider-scrubber::after {
+  content: '🍿';
+  font-size: 26px;
+  display: block;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.clappr-player .clappr-slider:hover .clappr-slider-scrubber {
+  transform: scale(1.2);
+}
+
+/* Cores de Destaque (Dourado #E19D33) nos Elementos Ativos e Hovers */
+.clappr-player .media-control .media-control-button:hover svg path,
+.clappr-player .media-control .media-control-button:hover svg rect {
+  fill: #E19D33 !important;
+}
+
+/* Seletor de Qualidade e Legendas - Customização Premium */
+.clappr-player [data-level-selector], .clappr-player [data-subtitle-selector] {
+  font-family: 'Inter', sans-serif !important;
+}
+
+.clappr-player [data-level-selector] li:hover,
+.clappr-player [data-subtitle-selector] li:hover {
+  color: #E19D33 !important;
+  background: rgba(225, 157, 51, 0.1) !important;
+}
+
+/* Marca d'água no canto superior direito */
+.paixaoflix-watermark {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  z-index: 1001;
+  opacity: 0.6;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  width: clamp(80px, 10vw, 150px);
+}
+
+/* Esconder marca d'água quando os controles somem */
+.media-control-hide .paixaoflix-watermark {
+  opacity: 0;
+}
+
+/* Ajuste de Volume Estilo Plyr */
+.clappr-player .clappr-slider .clappr-slider-volume-filled {
+  background-color: #E19D33 !important;
+}
+
+/* Tooltips de Miniaturas (clappr-thumbnails-plugin) */
+.clappr-player .clappr-thumbnails-plugin {
+  border: 2px solid #E19D33 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+}
+
+/* Botão Chromecast Dourado no Hover */
+.clappr-player .media-control-button[data-chromecast]:hover svg {
+  fill: #E19D33 !important;
+}
+
+/* Ajuste Geral de Ícones para parecer Plyr */
+.clappr-player .media-control-button {
+  margin: 0 8px !important;
+}
 ::-webkit-scrollbar-thumb:hover { background: var(--px-red); }

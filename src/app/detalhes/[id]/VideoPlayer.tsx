@@ -1,74 +1,86 @@
 'use client'
-import React, { useEffect, useRef, useState, useCallback } from 'react'
+import React, { useRef, useState, useCallback, useEffect } from 'react'
 import Image from 'next/image'
-import videojs from 'video.js'
 import { createClient } from '@/lib/supabase'
 import { PartyChat } from '../../PartyChat'
 import { IMG } from '@/lib/tmdb' 
-import 'video.js/dist/video-js.css'
 
-// Plugins Premium
-import 'videojs-hotkeys'
-import 'videojs-mobile-ui'
-import 'videojs-hls-quality-selector'
-import 'videojs-contrib-quality-levels'
-import chromecast from '@silvermine/videojs-chromecast'
-import '@silvermine/videojs-chromecast/dist/silvermine-videojs-chromecast.css'
-import 'videojs-vtt-thumbnails'
-import 'videojs-overlay'
+interface ClapprPlayer {
+  destroy(): void;
+  play(): void;
+  pause(): void;
+  seek(time: number): void;
+  getCurrentTime(): number;
+  isPlaying(): boolean;
+  on(event: string, callback: (...args: unknown[]) => void): void;
+}
 
-// Registro de botões de Seek customizados (substituindo o plugin incompatível)
-const registerPlayerPlugins = (vjs: any) => {
-  const Button = vjs.getComponent('Button');
-  
-  // Define ícones padrão caso a fonte falhe, ensure it's only added once
-  if (!document.getElementById('vjs-custom-icons-style')) {
-    const style = document.createElement('style');
-    style.id = 'vjs-custom-icons-style';
-    style.innerHTML = `
-      .vjs-icon-replay-10:before { content: "\\f119" !important; }
-      .vjs-icon-forward-10:before { content: "\\f11a" !important; }
-    `;
-    document.head.appendChild(style);
-  }
+interface ClapprLevel {
+  level: {
+    height: number;
+    name: string;
+  };
+}
 
-  if (!vjs.getComponent('SeekBackward')) {
-    // Register SeekBackward button
-    class SeekBackward extends (Button as any) {
-      constructor(player: any, options: any) {
-        super(player, options);
-        this.controlText("Voltar 10s");
-      }
-      handleClick() {
-        this.player().currentTime(this.player().currentTime() - 10);
-      }
-      buildCSSClass() {
-        return 'vjs-icon-replay-10 vjs-control vjs-button';
-      }
-    }
-    vjs.registerComponent('SeekBackward', SeekBackward as any);
+interface ClapprConfig {
+  source: string;
+  parentId: string;
+  plugins?: unknown[];
+  baseUrl?: string;
+  poster?: string;
+  autoPlay?: boolean;
+  width?: string | number;
+  height?: string | number;
+  hideMediaControl?: boolean;
+  playback?: {
+    playInline?: boolean;
+    recycleVideo?: boolean;
+  };
+  events?: {
+    onReady?: () => void;
+    onEnded?: () => void;
+  };
+  levelSelectorConfig?: {
+    title?: string;
+    labelCallback?: (playbackLevel: ClapprLevel) => string;
+  };
+  playbackSpeedConfig?: {
+    defaultValue?: string;
+    options?: { value: string; label: string }[];
+  };
+  markers?: {
+    markers?: unknown[];
+  };
+  chromecast?: {
+    appId?: string;
+    contentType?: string;
+  };
+  scrubThumbnails?: {
+    backdropHeight?: number;
+    spotlightHeight?: number;
+    thumbs?: unknown[];
+  };
+  [key: string]: unknown;
+}
 
-    // Register SeekForward button
-    class SeekForward extends (Button as any) {
-      constructor(player: any, options: any) {
-        super(player, options);
-        this.controlText("Avançar 10s");
-      }
-      handleClick() {
-        this.player().currentTime(this.player().currentTime() + 10);
-      }
-      buildCSSClass() {
-        return 'vjs-icon-forward-10 vjs-control vjs-button';
-      }
-    }
-    vjs.registerComponent('SeekForward', SeekForward as any);
-  }
-
-  // Inicializa o plugin do Chromecast se ainda não foi registrado
-  if (typeof vjs.getComponent('ChromecastButton') === 'undefined') {
-    chromecast(vjs);
-  }
+declare const Clappr: {
+  Player: new (config: ClapprConfig) => ClapprPlayer;
+  Events: Record<string, string>;
 };
+declare const HlsjsPlayback: unknown;
+declare const DashShakaPlayback: unknown;
+declare const LevelSelector: unknown;
+declare const PlaybackSpeed: unknown;
+declare const ClapprMarkersPlugin: unknown;
+declare const ClapprSubtitlePlugin: unknown;
+declare const ChromecastPlugin: unknown;
+declare const ClapprThumbnailsPlugin: unknown;
+
+interface Reaction {
+  id: number;
+  emoji: string;
+  left: number;
+}
 
 interface Props {
   src: string
@@ -78,7 +90,6 @@ interface Props {
   startOffset?: number | null
   onClose: () => void
   onNext?: () => void
-  thumbnailsVtt?: string // URL para o arquivo VTT de thumbnails
   partyRoomId?: string | null
   isGuest?: boolean
   backdrop?: string | null
@@ -87,19 +98,14 @@ interface Props {
 
 export function VideoPlayer({ 
   src, title, contentId, userId, startOffset = 0, 
-  onClose, onNext, thumbnailsVtt, partyRoomId, isGuest, backdrop, shouldStartParty
+  onClose, onNext, partyRoomId, isGuest, backdrop, shouldStartParty
 }: Props) {
   const videoRef = useRef<HTMLDivElement>(null)
-  const playerRef = useRef<any>(null)
+  const playerRef = useRef<ClapprPlayer | null>(null)
   
-  // Controle de entrada na sala (hasJoined deve vir antes de showChat)
-  const [hasJoined, setHasJoined] = useState(!isGuest)
-  const [nameInput, setNameInput] = useState(isGuest ? '' : 'Anfitrião')
-  const [activeUserName, setActiveUserName] = useState(isGuest ? '' : 'Anfitrião')
-
   const [currentRoomId, setCurrentRoomId] = useState(partyRoomId)
-  const [showChat, setShowChat] = useState(!!partyRoomId && hasJoined)
-  const [reactions, setReactions] = useState<any[]>([])
+  const [showChat, setShowChat] = useState(!!partyRoomId)
+  const [reactions, setReactions] = useState<Reaction[]>([])
 
   const isYouTube = src.includes('youtube.com') || src.includes('youtu.be')
   const youtubeId = isYouTube ? (src.includes('v=') ? src.split('v=')[1]?.split('&')[0] : src.split('/').pop()) : null
@@ -133,129 +139,117 @@ export function VideoPlayer({
     }
   }, [currentRoomId, title]);
 
+  // EFEITO: Inicialização do Clappr
   useEffect(() => {
-    if (!isYouTube && !playerRef.current && videoRef.current && hasJoined) {
-      registerPlayerPlugins(videojs);
-      const videoElement = document.createElement('video-js')
-      videoElement.classList.add('vjs-netflix-skin', 'vjs-big-play-centered', 'vjs-show-big-play-button-on-pause')
-      
-      // Atributos essenciais para iOS/Safari e Smart TVs
-      videoElement.setAttribute('playsinline', 'true')
-      videoElement.setAttribute('webkit-playsinline', 'true')
-      videoElement.setAttribute('x-webkit-airplay', 'allow')
-      
-      videoRef.current.appendChild(videoElement)
-
-      // ROTAÇÃO AUTOMÁTICA OBRIGATÓRIA (LANDSCAPE)
-      if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-        try {
-          document.documentElement.requestFullscreen().catch(() => {});
-          (window.screen.orientation as any)?.lock('landscape').catch(() => {});
-        } catch (e) {}
+    if (
+      !isYouTube && 
+      videoRef.current && 
+      typeof Clappr !== 'undefined' && 
+      typeof HlsjsPlayback !== 'undefined' &&
+      typeof DashShakaPlayback !== 'undefined' &&
+      typeof LevelSelector !== 'undefined' &&
+      typeof PlaybackSpeed !== 'undefined' &&
+      typeof ClapprMarkersPlugin !== 'undefined' &&
+      typeof ClapprSubtitlePlugin !== 'undefined' &&
+      typeof ChromecastPlugin !== 'undefined' &&
+      typeof ClapprThumbnailsPlugin !== 'undefined'
+    ) {
+      // Limpar player anterior se existir
+      if (playerRef.current) {
+        playerRef.current.destroy();
       }
 
-      const player = playerRef.current = videojs(videoElement, {
-        autoplay: true, // Força o play automático para convidados
-        controls: true,
-        responsive: true,
+      const player = new Clappr.Player({
+        source: src,
+        parentId: `#clappr-player`,
+        plugins: [HlsjsPlayback, DashShakaPlayback, LevelSelector, PlaybackSpeed, ClapprMarkersPlugin, ClapprSubtitlePlugin, ChromecastPlugin, ClapprThumbnailsPlugin],
+        levelSelectorConfig: {
+          title: 'Qualidade',
+          labelCallback: function(playbackLevel: ClapprLevel) {
+            return playbackLevel.level.height ? playbackLevel.level.height + 'p' : playbackLevel.level.name;
+          }
+        },
+        playbackSpeedConfig: {
+          defaultValue: '1.0',
+          options: [
+            {value: '0.5', label: '0.5x'},
+            {value: '1.0', label: 'Normal'},
+            {value: '1.25', label: '1.25x'},
+            {value: '1.5', label: '1.5x'},
+            {value: '2.0', label: '2.0x'},
+          ]
+        },
+        scrubThumbnails: {
+          backdropHeight: 64,
+          spotlightHeight: 84,
+          thumbs: [] // Pode ser preenchido dinamicamente com URLs de miniaturas ou arquivo VTT
+        },
+        markers: {
+          markers: [] // Aqui você pode injetar instâncias de new ClapprMarkersPlugin.Marker(time, tooltip)
+        },
+        chromecast: {
+          appId: '9DFB77C0', // AppId padrão do Clappr
+          contentType: 'video/mp4',
+        },
+        subtitleConfig: {
+          title: 'Legendas',
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          fontWeight: 'bold',
+        },
+        baseUrl: 'https://cdn.jsdelivr.net/npm/clappr@latest/dist',
         poster: backdrop ? (backdrop.startsWith('http') ? backdrop : IMG.original(backdrop)) : undefined,
-        fluid: true,
-        preload: 'auto',
-        playbackRates: [0.5, 0.75, 1, 1.25, 1.5, 2],
-        sources: [{ src, type: src.includes('.m3u8') ? 'application/x-mpegURL' : 'video/mp4' }],
-        controlBar: {
-          volumePanel: {
-            inline: false,
-            vertical: true,
+        autoPlay: true,
+        width: '100%',
+        height: '100%',
+        hideMediaControl: false,
+        playback: {
+          playInline: true,
+          recycleVideo: true,
+        },
+        events: {
+          onReady: () => {
+            if (startOffset && startOffset > 0) {
+              player.seek(startOffset);
+            }
           },
-          children: [
-            'playToggle',
-            'SeekBackward',
-            'SeekForward',
-            'volumePanel',
-            'currentTimeDisplay',
-            'progressControl',
-            'remainingTimeDisplay',
-            'playbackRateMenuButton',
-            'subsCapsButton',
-            'audioTrackButton',
-            'pictureInPictureToggle',
-            'chromecastButton',
-            'fullscreenToggle',
-          ],
+          onEnded: () => {
+            if (onNext) onNext();
+          }
         }
-      })
-
-      player.ready(() => {
-        // 1. Atalhos de Teclado
-        (player as any).hotkeys({ volumeStep: 0.1, seekStep: 10, alwaysCaptureHotkeys: true });
-        
-        // 2. Interface Mobile
-        (player as any).mobileUi();
-        
-        // 3. Seletor de Qualidade HLS
-        if (src.includes('.m3u8')) {
-          (player as any).hlsQualitySelector({ displayCurrentQuality: true });
-        }
-
-        // 4. Thumbnails no hover (se fornecido)
-        if (thumbnailsVtt) {
-          (player as any).vttThumbnails({ src: thumbnailsVtt });
-        }
-
-        // 5. Exemplo de Skip Intro (Overlay)
-        // Pode ser expandido futuramente puxando os tempos do banco de dados
-        (player as any).overlay({
-          overlays: [{
-            start: 10,
-            end: 40,
-            content: '<button class="vjs-skip-button" onclick="this.parentElement.parentElement.player.currentTime(41)">PULAR ABERTURA</button>',
-            align: 'bottom-right'
-          }]
-        });
-
-        // 6. Retomar de onde parou
-        if (startOffset > 0) {
-          player.currentTime(startOffset);
-        }
-      })
-
-      player.on('ended', () => {
-        if (onNext) onNext();
       });
+
+      playerRef.current = player;
     }
+
     return () => {
       if (playerRef.current) {
-        playerRef.current.dispose();
+        playerRef.current.destroy();
         playerRef.current = null;
       }
-      // Clean up the dynamically added style tag
-      const styleTag = document.getElementById('vjs-custom-icons-style');
-      if (styleTag) {
-        document.head.removeChild(styleTag);
-      }
     };
-  }, [src, isYouTube, hasJoined, backdrop, startOffset, thumbnailsVtt, onNext]); 
+  }, [src, isYouTube, backdrop, startOffset, onNext]);
 
-  // NOVO EFEITO: Apenas para Sincronização e Realtime
+  // EFEITO: Sincronização e Realtime adaptado para Clappr
   useEffect(() => {
     if (currentRoomId && playerRef.current) {
       const player = playerRef.current;
       const channel = sb.channel(`sync-${currentRoomId}`);
       
       if (!isGuest) {
-        player.on('play', () => channel.send({ type: 'broadcast', event: 'play', payload: { time: player.currentTime() } }));
-        player.on('pause', () => channel.send({ type: 'broadcast', event: 'pause' }));
-        player.on('seeking', () => channel.send({ type: 'broadcast', event: 'seek', payload: { time: player.currentTime() } }));
+        // Lógica do Host: envia eventos
+        player.on(Clappr.Events.PLAYER_PLAY, () => channel.send({ type: 'broadcast', event: 'play', payload: { time: player.getCurrentTime() } }));
+        player.on(Clappr.Events.PLAYER_PAUSE, () => channel.send({ type: 'broadcast', event: 'pause' }));
+        player.on(Clappr.Events.PLAYER_SEEK, (time: number) => channel.send({ type: 'broadcast', event: 'seek', payload: { time } }));
       } else {
+        // Lógica do Convidado: recebe eventos
         channel
           .on('broadcast', { event: 'play' }, ({ payload }) => {
-            const drift = Math.abs(player.currentTime() - payload.time);
-            if (drift > 2) player.currentTime(payload.time);
+            const drift = Math.abs(player.getCurrentTime() - payload.time);
+            if (drift > 2) player.seek(payload.time);
             player.play();
           })
           .on('broadcast', { event: 'pause' }, () => player.pause())
-          .on('broadcast', { event: 'seek' }, ({ payload }) => player.currentTime(payload.time));
+          .on('broadcast', { event: 'seek' }, ({ payload }) => player.seek(payload.time));
       }
 
       channel.on('broadcast', { event: 'reaction' }, ({ payload }) => {
@@ -266,23 +260,24 @@ export function VideoPlayer({
 
       return () => { sb.removeChannel(channel); };
     }
-  }, [currentRoomId, isGuest, sb]);
+  }, [currentRoomId, sb, isGuest]);
 
-  // Efeito para salvar progresso
+  // Efeito para salvar progresso (Clappr)
   useEffect(() => {
     if (playerRef.current && userId && contentId && !isGuest) {
       const player = playerRef.current;
-      let lastSaved = 0;
-      player.on('timeupdate', () => {
-        const now = Math.floor(player.currentTime());
-        if (now > 0 && now % 10 === 0 && now !== lastSaved) {
-          lastSaved = now;
-          sb.from('view_progress').upsert(
-            { user_id: userId, content_id: String(contentId), last_position: now },
-            { onConflict: 'user_id,content_id' }
-          );
+      const interval = setInterval(() => {
+        if (player.isPlaying()) {
+          const now = Math.floor(player.getCurrentTime());
+          if (now > 0 && now % 10 === 0) {
+            sb.from('view_progress').upsert(
+              { user_id: userId, content_id: String(contentId), last_position: now, updated_at: new Date().toISOString() },
+              { onConflict: 'user_id,content_id' }
+            ).then();
+          }
         }
-      });
+      }, 10000); // Checa a cada 10 segundos
+      return () => clearInterval(interval);
     }
   }, [userId, contentId, isGuest, sb]);
 
@@ -313,7 +308,7 @@ export function VideoPlayer({
         <span 
           key={r.id} 
           className="emoji-reaction" 
-          style={{ left: `${r.left}%`, '--emoji-drift': `${(Math.random() - 0.5) * 200}px` } as any}
+          style={{ left: `${r.left}%`, '--emoji-drift': `${(Math.random() - 0.5) * 200}px` } as React.CSSProperties}
         >
           {r.emoji}
         </span>
@@ -364,9 +359,16 @@ export function VideoPlayer({
         <Image src="/logo.png" alt="" width={160} height={60} className="object-contain" />
       </div>
 
-      <div className={`flex-1 h-full relative bg-black ${showChat ? 'w-full lg:w-[calc(100%-320px)]' : 'w-full'}`}>
-        <div className="w-full h-full">
-          <div className={isGuest ? 'vjs-guest-mode' : ''}>
+      <div className={`flex-1 h-full relative bg-black ${showChat ? 'w-full lg:w-[calc(100%-320px)]' : 'w-full'}`} id="player-container">
+        <div className="w-full h-full relative" id="clappr-player">
+          {/* Marca d'água PaixaoFlix no canto superior direito */}
+          {!isYouTube && (
+            <div className="paixaoflix-watermark">
+               <Image src="/logo.png" alt="PaixaoFlix" width={150} height={60} className="object-contain" />
+            </div>
+          )}
+          
+          <div className="w-full h-full">
             {isYouTube ? (
               <iframe
                 src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1&controls=1`}
@@ -383,7 +385,7 @@ export function VideoPlayer({
 
       {/* Chat Lateral PAIXÃOFLIX Premium */}
       {currentRoomId && showChat && (
-        <PartyChat roomId={currentRoomId} userName={activeUserName} onReaction={sendReaction} />
+        <PartyChat roomId={currentRoomId} userName={isGuest ? 'Convidado' : 'Anfitrião'} onReaction={sendReaction} />
       )}
     </div>
   )

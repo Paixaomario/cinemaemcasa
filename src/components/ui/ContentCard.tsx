@@ -12,7 +12,7 @@ interface Props {
 export function ContentCard({ item, variant = 'poster' }: Props) {
   const [hovered, setHovered] = useState(false)
   const title    = getTitle(item)
-  const isMovie  = (item as any).media_type === 'movie' || (item as TMDBMovie).title !== undefined
+  const isMovie  = 'title' in item || (item as { media_type?: string }).media_type === 'movie'
   const imgUrl   = variant === 'poster'
     ? IMG.poster(item.poster_path, 'w500')
     : IMG.backdrop(item.backdrop_path, 'w780')
