@@ -26,9 +26,9 @@ function NavContent() {
       <nav className="mobile-bottom-nav">
         {navItems.map((item) => {
           return (
-            <Link 
-              key={item.href} 
-              href={item.href} 
+            <Link
+              key={item.href}
+              href={item.href}
               className={`nav-item ${item.active ? 'active' : ''}`}
               aria-label={item.label}
               title={item.label}
@@ -148,6 +148,13 @@ function NavContent() {
           transition: 0.2s ease;
         }
 
+        /* Sobrescrever estilo inline em mobile */
+        @media (max-width: 768px) {
+          .nav-item .icon {
+            font-size: 90px !important;
+          }
+        }
+
         .nav-item.active {
           background: rgba(255, 0, 0, 0.06);
           border: 2px solid rgba(255, 60, 60, 0.15);
@@ -187,7 +194,6 @@ function NavContent() {
             flex: 1;
             height: 70px !important;
           }
-          .nav-item .icon { font-size: 90px !important; }
         }
       `}</style>
     </>
