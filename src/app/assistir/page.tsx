@@ -147,9 +147,9 @@ export default function AssistirDespoisPage() {
             gap: 'var(--card-gap, 16px)' 
           }}>
             {items.map((item) => (
-              <div 
+              <div
                 key={item.id_route}
-                onClick={() => router.push(`/detalhes/${item.id_route}`)}
+                onClick={() => router.push(item.type === 'series' || item.type === 'serie' ? `/series/${item.id_route}` : `/detalhes/${item.id_route}`)}
                 className="group relative aspect-[2/3] rounded-xl overflow-hidden cursor-pointer transition-all duration-500 hover:scale-105 hover:z-10 bg-[#1A1A1F] ring-1 ring-white/10 hover:ring-[var(--gold-primary)]/50"
               >
                 {item.display_poster ? (

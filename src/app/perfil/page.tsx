@@ -165,12 +165,12 @@ function Section({ title, items, color, emptyMsg }: { title: string, items: Prof
           gap: 'var(--card-gap, 16px)' 
         }}>
           {items.map(item => {
-            const prefix = (item.type === 'serie' || item.type === 'series') ? 'serie' : 'filme'
-            const finalId = String(item.id).includes('-') ? item.id : `${prefix}-${item.id}`
+            const isSeries = (item.type === 'serie' || item.type === 'series')
+            const finalId = String(item.id).includes('-') ? item.id : `${isSeries ? 'serie' : 'filme'}-${item.id}`
             return (
-            <Link 
-              key={item.id} 
-              href={`/detalhes/${finalId}`}
+            <Link
+              key={item.id}
+              href={isSeries ? `/series/${item.id}` : `/detalhes/${finalId}`}
               className="card-poster group"
             >
               {item.poster || item.backdrop ? (

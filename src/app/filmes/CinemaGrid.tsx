@@ -250,8 +250,8 @@ function CinemaCard({ film }: { film: Cinema }) {
   const img = film.poster || film.banner || film.backdrop
 
   const handleNavigate = () => {
-    const prefix = film.type === 'series' ? 'serie' : 'filme'
-    window.location.href = `/detalhes/${prefix}-${film.id}`
+    const isSeries = film.type === 'series'
+    window.location.href = isSeries ? `/series/${film.id}` : `/detalhes/filme-${film.id}`
   }
 
   return (

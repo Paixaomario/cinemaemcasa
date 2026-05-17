@@ -56,7 +56,7 @@ export default function FavoritosPage() {
           ) : (
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
               {favorites.map((fav: any) => fav.content && (
-                <Link key={fav.id} href={`/detalhes/${fav.content_id}`}
+                <Link key={fav.id} href={fav.content.type === 'series' ? `/series/${fav.content_id}` : `/detalhes/${fav.content_id}`}
                   className="card-poster block">
                   <div className="relative h-full w-full" style={{ background: '#1a1a1a' }}>
                     {fav.content.thumbnail_url ? (

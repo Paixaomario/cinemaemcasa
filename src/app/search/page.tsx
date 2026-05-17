@@ -302,7 +302,7 @@ function SearchContent() {
             gap: 'var(--card-gap, 24px)' 
           }}>
             {results.map((item) => (
-              <Link key={item.id} href={`/detalhes/${item.id}`} className="card-poster group tv-focus">
+              <Link key={item.id} href={item.type === 'series' ? `/series/${item.id}` : `/detalhes/${item.id}`} className="card-poster group tv-focus">
                 {item.poster || item.backdrop ? (
                   <Image 
                     src={item.poster || item.backdrop} 

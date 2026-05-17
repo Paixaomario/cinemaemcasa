@@ -129,7 +129,7 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
         style={{ paddingBottom: 'clamp(20px, 4vw, 60px)', opacity: visible ? 1 : 0, transition: 'opacity 0.6s ease' }}
         onClick={() => {
           const isMovie = item.media_type === 'movie' || 'title' in item
-          const detailUrl = `/detalhes/${isMovie ? 'filme' : 'serie'}-${item.id}`
+          const detailUrl = isMovie ? `/detalhes/filme-${item.id}` : `/series/${item.id}`
           router.push(detailUrl)
         }}
         onFocus={(e) => e.currentTarget.scrollIntoView({ behavior: 'smooth' })}
@@ -137,7 +137,7 @@ export function HeroBanner({ type = 'all', initialPool }: Props) {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault()
             const isMovie = item.media_type === 'movie' || 'title' in item
-            const detailUrl = `/detalhes/${isMovie ? 'filme' : 'serie'}-${item.id}`
+            const detailUrl = isMovie ? `/detalhes/filme-${item.id}` : `/series/${item.id}`
             router.push(detailUrl)
           }
         }}
