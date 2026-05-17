@@ -176,7 +176,7 @@ function NavContent() {
             right: auto !important; /* Garante que 'right' não interfira */
             transform: translateX(-50%) !important; /* Ajusta a centralização */
             margin: 0 !important; /* Remove margens que possam empurrar */
-            
+
             height: 75px !important;
             border-radius: 30px;
             padding: 0 4px;
@@ -187,7 +187,7 @@ function NavContent() {
             flex: 1;
             height: 70px !important;
           }
-          .nav-item .icon { font-size: 58px !important; }
+          .nav-item .icon { font-size: 90px !important; }
         }
       `}</style>
     </>

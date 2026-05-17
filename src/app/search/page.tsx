@@ -62,10 +62,10 @@ function SearchContent() {
         let cinemaQuery = sb.from('cinema').select('*')
         let seriesQuery = sb.from('series').select('*')
 
-        // Filtrar por texto de busca
+        // Filtrar por texto de busca (case insensitive)
         if (searchInput.trim()) {
-          cinemaQuery = cinemaQuery.ilike('titulo', `%${searchInput}%`)
-          seriesQuery = seriesQuery.ilike('titulo', `%${searchInput}%`)
+          cinemaQuery = cinemaQuery.ilike('titulo', `%${searchInput.trim()}%`)
+          seriesQuery = seriesQuery.ilike('titulo', `%${searchInput.trim()}%`)
         }
 
         // Filtrar por categoria/gênero
@@ -77,6 +77,10 @@ function SearchContent() {
         // Buscar dados sem limite
         const { data: cinemaItems } = await cinemaQuery
         const { data: seriesItems } = await seriesQuery
+
+        console.log('Busca:', searchInput, 'Categoria:', categoryFilter)
+        console.log('Cinema itens:', cinemaItems?.length)
+        console.log('Series itens:', seriesItems?.length)
 
         // Converter resultados para formato unificado
         const cinemaResults: SearchResult[] = (cinemaItems || []).map((item: any) => ({
@@ -210,7 +214,14 @@ function SearchContent() {
             ].map(f => (
               <button
                 key={f.value}
-                onClick={() => setFilter(f.value as any)}
+                onClick={() => {
+                  // Se clicar no mesmo filtro, desmarca
+                  if (filter === f.value) {
+                    setFilter('')
+                  } else {
+                    setFilter(f.value as any)
+                  }
+                }}
                 className={`px-4 py-2 rounded-lg border font-bold text-sm transition-all ${
                   filter === f.value
                     ? 'bg-[#B40000]/22 border-[#B40000]/35 text-[#FF7878]'
