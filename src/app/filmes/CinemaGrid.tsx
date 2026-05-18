@@ -68,6 +68,7 @@ export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' })
       sb.from('series')
         .select('id_n,titulo,tmdb_id,ano,rating,descricao,capa,poster,banner,trailer,genero')
         .order('id_n', { ascending: false }) // Ordena pelo ID já que created_at não existe
+        .limit(1000) // Remove limite para mostrar todas as séries
         .then(({ data, error: err }) => {
           if (err) {
             console.error('Supabase error (series):', err)
@@ -131,9 +132,10 @@ export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' })
     ? films
     : films.filter(f => getFilmCategories(f.category).includes(category))
 
-  // Group by category when showing all
+  // Para séries, mostra tudo em grade sem agrupamento por categoria
+  const isSeriesContentType = contentType === 'series'
   const grouped: Record<string, Cinema[]> = {}
-  if (category === 'all') {
+  if (!isSeriesContentType && category === 'all') {
     CATEGORY_ORDER.forEach(cat => {
       const items = films.filter(f => getFilmCategories(f.category).includes(cat))
       if (items.length) grouped[cat] = items
@@ -182,8 +184,13 @@ export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' })
       )}
 
       {!loading && !error && films.length > 0 && (
-        category === 'all' ? (
-          // Grouped by category
+        isSeriesContentType ? (
+          // Séries - grade única sem categorias
+          <section style={{ padding:'0 clamp(16px,4vw,60px)' }}>
+            <CinemaGridFull items={films} />
+          </section>
+        ) : category === 'all' ? (
+          // Filmes - agrupado por categoria
           Object.entries(grouped).map(([cat, items]) => (
             <section key={cat} style={{ padding:'0 clamp(16px,4vw,60px) clamp(20px,2.5vw,36px)' }}>
               <h2 style={{

@@ -9,6 +9,7 @@ import { notFound } from 'next/navigation'
 import { Navbar } from '@/components/layout/Navbar'
 import { useAuth } from '@/components/layout/SupabaseProvider'
 import NextDynamic from 'next/dynamic'
+import { getShowDetails, getShowCertification, IMG } from '@/lib/tmdb'
 
 interface EpisodeData { id_n: number; arquivo: string; imagem_342?: string; imagem_185?: string; titulo: string; numero_episodio: number; descricao?: string; duracao?: string; }
 interface SeasonData { id_n: number; numero_temporada: number; episodes: EpisodeData[]; }
@@ -648,7 +649,7 @@ function SeriesDetailContent({ params }: Props) {
         const sb = createClient()
         const { id: resolvedId } = await params
         setId(resolvedId)
-        
+
         const parsedId = resolvedId
 
         let { data: sData } = await sb
@@ -656,7 +657,7 @@ function SeriesDetailContent({ params }: Props) {
           .select('*')
           .or(`id_n.eq.${isNaN(Number(parsedId)) ? -1 : parsedId},tmdb_id.eq.${isNaN(Number(parsedId)) ? -1 : parsedId}`)
           .maybeSingle()
-        
+
         if (!sData) return notFound()
 
         let seasonsWithEpisodes: SeasonData[] = [];
@@ -668,12 +669,28 @@ function SeriesDetailContent({ params }: Props) {
           }))
         }
 
+        // Buscar metadados do TMDB para enriquecer com elenco, gêneros, etc.
+        let tmdbMetadata: any = null
+        if (sData.tmdb_id) {
+          try {
+            tmdbMetadata = await getShowDetails(Number(sData.tmdb_id))
+            const certification = await getShowCertification(Number(sData.tmdb_id))
+            if (certification) {
+              tmdbMetadata.certification = certification
+            }
+          } catch (e) {
+            console.warn('Falha ao carregar metadados TMDB:', e)
+          }
+        }
+
         const foundData: SeriesData = {
           ...sData,
+          ...tmdbMetadata, // Mescla metadados do TMDB (elenco, gêneros, overview, etc.)
           id: sData.id_n,
-          poster: sData.poster || sData.capa,
-          year: sData.ano,
-          description: sData.descricao,
+          poster: sData.poster || sData.capa || tmdbMetadata?.poster_path ? IMG.poster(tmdbMetadata.poster_path, 'w500') : null,
+          backdrop: sData.banner || sData.poster || sData.capa || tmdbMetadata?.backdrop_path ? IMG.original(tmdbMetadata.backdrop_path) : null,
+          year: sData.ano || (tmdbMetadata?.first_air_date?.split('-')[0]),
+          description: sData.descricao || tmdbMetadata?.overview,
           seasons: seasonsWithEpisodes,
           type: 'series' as const
         }
@@ -886,7 +903,7 @@ function SeriesDetailContent({ params }: Props) {
         </div>
 
         {/* EPISÓDIOS */}
-        {seriesData.seasons && seriesData.seasons.length > 0 && (
+        {seriesData.seasons && seriesData.seasons.length > 0 ? (
           <div className="series-page">
             <section className="panel">
               <div className="panel-title">
