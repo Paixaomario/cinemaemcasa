@@ -30,15 +30,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
         {/* Clappr Player */}
-        <Script src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js" strategy="beforeInteractive" />
-        <Script src="https://cdn.jsdelivr.net/npm/clappr-hls-playback@latest/dist/clappr-hls-playback.min.js" strategy="beforeInteractive" />
-        <Script src="https://cdn.jsdelivr.net/npm/dash-shaka-playback@latest/dist/dash-shaka-playback.min.js" strategy="beforeInteractive" />
-        <Script src="https://cdn.jsdelivr.net/npm/clappr-level-selector-plugin@latest/dist/level-selector.min.js" strategy="beforeInteractive" />
-        <Script src="https://cdn.jsdelivr.net/npm/clappr-playback-speed-plugin@latest/dist/clappr-playback-speed-plugin.min.js" strategy="beforeInteractive" />
-        <Script src="https://cdn.jsdelivr.net/npm/clappr-markers-plugin@latest/dist/clappr-markers-plugin.js" strategy="beforeInteractive" />
-        <Script src="https://cdn.jsdelivr.net/npm/clappr-subtitle-plugin@latest/dist/clappr-subtitle-plugin.js" strategy="beforeInteractive" />
-        <Script src="https://cdn.jsdelivr.net/npm/@clappr/chromecast-plugin@latest/dist/clappr-chromecast-plugin.min.js" strategy="beforeInteractive" />
-        <Script src="https://cdn.jsdelivr.net/npm/clappr-thumbnails-plugin@latest/dist/clappr-thumbnails-plugin.js" strategy="beforeInteractive" />
+        <Script src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js" strategy="lazyOnload" />
+        <Script src="https://cdn.jsdelivr.net/npm/clappr-hls-playback@latest/dist/clappr-hls-playback.min.js" strategy="lazyOnload" />
+        <Script src="https://cdn.jsdelivr.net/npm/dash-shaka-playback@latest/dist/dash-shaka-playback.min.js" strategy="lazyOnload" />
+        <Script src="https://cdn.jsdelivr.net/npm/clappr-level-selector-plugin@latest/dist/level-selector.min.js" strategy="lazyOnload" />
+        <Script src="https://cdn.jsdelivr.net/npm/clappr-playback-speed-plugin@latest/dist/clappr-playback-speed-plugin.min.js" strategy="lazyOnload" />
+        <Script src="https://cdn.jsdelivr.net/npm/clappr-markers-plugin@latest/dist/clappr-markers-plugin.js" strategy="lazyOnload" />
+        <Script src="https://cdn.jsdelivr.net/npm/clappr-subtitle-plugin@latest/dist/clappr-subtitle-plugin.js" strategy="lazyOnload" />
+        <Script src="https://cdn.jsdelivr.net/npm/@clappr/chromecast-plugin@latest/dist/clappr-chromecast-plugin.min.js" strategy="lazyOnload" />
+        <Script src="https://cdn.jsdelivr.net/npm/clappr-thumbnails-plugin@latest/dist/clappr-thumbnails-plugin.js" strategy="lazyOnload" />
         {/* Google Cast SDK para compartilhamento de tela */}
         <Script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1" strategy="lazyOnload" />
       </head>

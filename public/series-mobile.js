@@ -41,74 +41,41 @@ if (safe(laterBtn)) {
 }
 
 // ===========================
-// TEMPORADAS (SIMULAÇÃO REAL)
+// LOGICA DE RENDERIZAÇÃO
 // ===========================
-const seasons = {
-  "1": [
-    { title: "Capítulo 1: O Início", duration: "52min", progress: 90 },
-    { title: "Capítulo 2: A Jornada", duration: "48min", progress: 35 },
-    { title: "Capítulo 3: O Segredo", duration: "55min", progress: 0 },
-    { title: "Capítulo 4: A Verdade", duration: "50min", progress: 0 },
-    { title: "Capítulo 5: O Caos", duration: "47min", progress: 0 },
-  ],
-  "2": [
-    { title: "Capítulo 1: O Retorno", duration: "49min", progress: 70 },
-    { title: "Capítulo 2: O Confronto", duration: "53min", progress: 0 },
-    { title: "Capítulo 3: A Escolha", duration: "50min", progress: 0 },
-    { title: "Capítulo 4: O Final", duration: "57min", progress: 0 },
-  ]
-};
-
-function renderEpisodes(seasonKey) {
-  if (!safe(episodesList)) return;
-
-  episodesList.innerHTML = "";
-
-  const list = seasons[seasonKey] || [];
-
-  list.forEach((ep, index) => {
-    const item = document.createElement("div");
-    item.className = "episode-item";
-
-    item.innerHTML = `
-      <div class="ep-thumb" style="background-image:url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=900&q=80')">
-        <div class="ep-play">▶</div>
-      </div>
-
-      <div class="ep-info">
-        <strong>${index + 1}. ${ep.title}</strong>
-        <span>${ep.duration}</span>
-
-        <div class="progress-bar">
-          <div class="progress-fill" style="width:${ep.progress}%"></div>
-        </div>
-      </div>
-    `;
-
+function setupEpisodeClick() {
+  const items = document.querySelectorAll(".episode-item");
+  items.forEach(item => {
     item.addEventListener("click", () => {
-      showToast(`Reproduzindo: ${ep.title}`);
+      const title = item.querySelector("strong")?.textContent || "Episódio";
+      showToast(`Reproduzindo: ${title}`);
     });
-
-    episodesList.appendChild(item);
   });
 }
 
 // Evento de mudança temporada
 if (safe(seasonSelect)) {
   seasonSelect.addEventListener("change", () => {
-    renderEpisodes(seasonSelect.value);
-    showToast(`Temporada ${seasonSelect.value} carregada`);
+    // O React já lida com a mudança de estado e re-renderiza o DOM,
+    // aqui apenas notificamos o usuário e re-aplicamos eventos se necessário.
+    showToast(`Temporada ${seasonSelect.options[seasonSelect.selectedIndex].text} carregada`);
+    
+    // Timeout pequeno para garantir que o React terminou de renderizar os novos episódios
+    setTimeout(setupEpisodeClick, 100);
   });
 }
 
 // Inicialização
-if (safe(seasonSelect)) {
-  renderEpisodes(seasonSelect.value);
+window.addEventListener('load', () => {
+    setupEpisodeClick();
+});
+
+// Observador de mutação para quando o React trocar os episódios via seletor
+if (safe(episodesList)) {
+    const observer = new MutationObserver(() => setupEpisodeClick());
+    observer.observe(episodesList, { childList: true });
 }
 
-// Fechar toast com ESC
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") {
-    if (safe(toast)) toast.classList.remove("show");
-  }
+  if (e.key === "Escape" && safe(toast)) toast.classList.remove("show");
 });

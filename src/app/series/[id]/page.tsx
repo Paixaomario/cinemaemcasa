@@ -863,7 +863,122 @@ function SeriesDetailContent({ params }: Props) {
   return (
     <div className="min-h-screen bg-black">
       <Navbar />
-      <style dangerouslySetInnerHTML={{ __html: CUSTOM_STYLES }} />
+      <link rel="stylesheet" href="/series-mobile.css" />
+
+      {/* FUNDO VIVO MOBILE */}
+      <div className="mobile-bg-glow"></div>
+
+      {/* MOBILE HEADER */}
+      <header className="series-mobile-header">
+        <div className="brand">
+          <h1>PAIXAOFLIX</h1>
+          <div className="mini-icons">
+            <button className="mini-btn">🔍</button>
+            <button className="mini-btn">🎬</button>
+            <button className="mini-btn">👤</button>
+          </div>
+        </div>
+      </header>
+
+      {/* MOBILE HERO COMPACTO */}
+      <section className="series-hero-mini">
+        <div className="series-hero-top">
+          <div className="series-mini-poster">
+            <Image 
+              src={displayPoster} 
+              alt={displayTitle} 
+              width={92} 
+              height={132} 
+              unoptimized 
+            />
+          </div>
+
+          <div className="series-mini-info">
+            <h2>{displayTitle}</h2>
+
+            <div className="series-mini-meta">
+              <span>{displayYear}</span>
+              <span>{seriesData.genero || 'Série'}</span>
+              {seriesData.seasons && (
+                <span>{seriesData.seasons.length} Temporadas</span>
+              )}
+              {seriesData.vote_average && (
+                <span className="meta-rating">★ {seriesData.vote_average?.toFixed(1)}</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="series-mini-desc">
+          {displayDescription}
+        </div>
+
+        <div className="series-actions">
+          <button className="btn-primary" onClick={handlePlayContent}>▶ Continuar Assistindo</button>
+
+          <div className="btn-row">
+            <button className="btn-secondary" onClick={handlePlayTrailer}>🎞 Trailer</button>
+            <button className={`btn-icon ${isFavorite ? 'active' : ''}`} id="btnFavorito" onClick={handleToggleFavorite}>❤</button>
+            <button className={`btn-icon ${isWatchLater ? 'active' : ''}`} id="btnAssistirDepois" onClick={handleToggleWatchLater}>🕒</button>
+          </div>
+        </div>
+      </section>
+
+      {/* MOBILE MAIN CONTENT */}
+      <main className="series-mobile-page">
+        {/* EPISÓDIOS */}
+        {seriesData.seasons && seriesData.seasons.length > 0 && (
+          <section className="panel">
+            <div className="panel-header">
+              <h3>Episódios</h3>
+              <select 
+                className="season-select" 
+                id="seasonSelect"
+                value={selectedSeason?.id_n || ''}
+                onChange={(e) => {
+                  const season = seriesData.seasons?.find((s: SeasonData) => s.id_n === Number(e.target.value))
+                  if (season) setSelectedSeason(season)
+                }}
+              >
+                {seriesData.seasons.map((season: SeasonData) => (
+                  <option key={season.id_n} value={season.id_n}>
+                    Temporada {season.numero_temporada}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="episodes-list" id="episodesList">
+              {selectedSeason?.episodes.map((episode: EpisodeData, index: number) => (
+                <div 
+                  key={episode.id_n} 
+                  className="episode-item"
+                  onClick={() => handlePlayEpisode(episode.arquivo)}
+                >
+                  <div 
+                    className="ep-thumb" 
+                    style={{ backgroundImage: `url(${episode.imagem_342 || episode.imagem_185 || 'https://via.placeholder.com/342x185'})` }}
+                  >
+                    <div className="ep-play">▶</div>
+                  </div>
+
+                  <div className="ep-info">
+                    <strong>{index + 1}. {episode.titulo}</strong>
+                    <span>{episode.duracao || 'Duração não informada'}</span>
+
+                    <div className="progress-bar">
+                      <div className="progress-fill" style={{ width: '0%' }}></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+      </main>
+
+      <div className="toast" id="toast"></div>
+      <script src="/series-mobile.js" defer></script>
 
       <div className="page-container">
         <div className="series-bg-glow"></div>

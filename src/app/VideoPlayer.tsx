@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useRef, useCallback } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 
 interface ClapprPlayer {
@@ -72,7 +72,7 @@ interface Props {
   shouldStartParty?: boolean
 }
 
-export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, onClose, onNext, partyRoomId, isGuest, shouldStartParty }: Props) {
+export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, onClose, onNext }: Props) {
   const videoRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<ClapprPlayer | null>(null)
   const sb = createClient()
@@ -171,7 +171,7 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
         playerRef.current.destroy();
       }
     };
-  }, [src]);
+  }, [src, contentId, onNext, sb, startOffset, userId]);
   
   return (
     <div className="fixed inset-0 z-[10000] bg-black flex items-center justify-center hero-enter">

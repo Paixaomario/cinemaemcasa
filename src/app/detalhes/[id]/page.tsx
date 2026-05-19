@@ -643,7 +643,7 @@ function DetailContent({ params }: Props) {
                const { data: sData } = await sb
                 .from('series')
                 .select('id_n,titulo,tmdb_id,ano,rating,descricao,capa,poster,banner,trailer,genero')
-                .or(`tmdb_id.eq.${tmdbId || -1},id_n.eq.${dbData.id || searchId}`)
+                .or(`tmdb_id.eq.${tmdbId || -1},id_n.eq.${dbData.id || parsedId}`)
                 .maybeSingle()
                seriesLocalData = sData
             }
@@ -902,7 +902,6 @@ function DetailContent({ params }: Props) {
     <div className="min-h-screen bg-black">
       <Navbar />
       <style dangerouslySetInnerHTML={{ __html: CUSTOM_STYLES }} />
-      <link rel="stylesheet" href="/series-mobile.css" />
 
       {/* FUNDO VIVO MOBILE */}
       <div className="mobile-bg-glow"></div>

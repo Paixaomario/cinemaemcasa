@@ -30,18 +30,18 @@
   --shadow-glow-gold: 0px 0px 18px rgba(255, 211, 122, 0.10);
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: Inter, Arial, sans-serif;
+/* Esconder elementos mobile em telas grandes */
+@media (min-width: 769px) {
+  .series-mobile-header, .series-hero-mini, .series-mobile-page, .mobile-bg-glow {
+    display: none !important;
+  }
 }
 
-body {
-  background: linear-gradient(180deg, var(--black-1), var(--black-0));
-  color: var(--text-main);
-  padding-bottom: 120px;
-  overflow-x: hidden;
+/* Esconder elementos desktop em telas pequenas */
+@media (max-width: 768px) {
+  .main-navbar, .page-container {
+    display: none !important;
+  }
 }
 
 /* FUNDO VIVO */
@@ -57,15 +57,12 @@ body {
   opacity: 0.95;
 }
 
-/* ==========================
-   HEADER COMPACTO
-========================== */
+/* HEADER COMPACTO */
 .series-mobile-header {
   position: sticky;
   top: 0;
   z-index: 999;
   padding: 16px 16px 14px 16px;
-
   background: rgba(0,0,0,0.75);
   border-bottom: 1px solid rgba(255, 211, 122, 0.10);
   backdrop-filter: blur(14px);
@@ -95,17 +92,13 @@ body {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-
   border: 1px solid rgba(255, 211, 122, 0.16);
   background: rgba(0,0,0,0.35);
-
   cursor: pointer;
   transition: var(--anim-fast);
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   font-size: 16px;
   color: rgba(255, 211, 122, 0.72);
 }
@@ -116,19 +109,14 @@ body {
   border-color: rgba(255, 211, 122, 0.35);
 }
 
-/* ==========================
-   HERO COMPACTO (POSTER + INFO)
-========================== */
+/* HERO COMPACTO */
 .series-hero-mini {
   width: min(1000px, 95vw);
   margin: 16px auto 0 auto;
-
   border-radius: 24px;
   overflow: hidden;
-
   border: 1px solid rgba(255, 211, 122, 0.12);
   background: rgba(18, 5, 7, 0.45);
-
   box-shadow: var(--shadow-strong);
   backdrop-filter: blur(14px);
 }
@@ -144,7 +132,6 @@ body {
   width: 92px;
   height: 132px;
   border-radius: 18px;
-
   overflow: hidden;
   border: 2px solid rgba(255, 42, 42, 0.16);
   background: rgba(0,0,0,0.50);
@@ -184,10 +171,8 @@ body {
 .meta-rating {
   padding: 6px 10px;
   border-radius: 14px;
-
   border: 1px solid rgba(255, 211, 122, 0.20);
   background: rgba(0,0,0,0.40);
-
   color: rgba(255, 211, 122, 0.88);
   font-weight: 900;
 }
@@ -200,9 +185,7 @@ body {
   color: rgba(245,245,245,0.72);
 }
 
-/* ==========================
-   BOTÕES DE AÇÃO
-========================== */
+/* BOTÕES DE AÇÃO */
 .series-actions {
   padding: 0 16px 16px 16px;
   display: flex;
@@ -214,17 +197,18 @@ body {
   height: 52px;
   border-radius: 18px;
   border: 1px solid rgba(255, 42, 42, 0.35);
-
   background: linear-gradient(180deg, rgba(180,0,0,0.95), rgba(90,0,0,0.95));
   color: var(--gold-light);
-
   font-family: Poppins, sans-serif;
   font-weight: 900;
   font-size: 14px;
-
   cursor: pointer;
   transition: var(--anim-fast);
   box-shadow: 0px 0px 18px rgba(255, 42, 42, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .btn-primary:hover {
@@ -241,17 +225,18 @@ body {
   flex: 1;
   height: 48px;
   border-radius: 18px;
-
   border: 1px solid rgba(255, 211, 122, 0.18);
   background: rgba(0,0,0,0.45);
-
   font-family: Poppins, sans-serif;
   font-weight: 900;
   font-size: 13px;
-
   cursor: pointer;
   transition: var(--anim-fast);
   color: rgba(255, 211, 122, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .btn-secondary:hover {
@@ -264,15 +249,15 @@ body {
   width: 52px;
   height: 48px;
   border-radius: 18px;
-
   border: 1px solid rgba(255, 211, 122, 0.14);
   background: rgba(0,0,0,0.40);
-
   cursor: pointer;
   transition: var(--anim-fast);
-
   font-size: 16px;
   color: rgba(255, 211, 122, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-icon:hover {
@@ -287,9 +272,7 @@ body {
   box-shadow: 0px 0px 16px rgba(255, 42, 42, 0.14);
 }
 
-/* ==========================
-   CONTEÚDO PRINCIPAL
-========================== */
+/* CONTEÚDO PRINCIPAL */
 .series-mobile-page {
   width: min(1000px, 95vw);
   margin: 16px auto;
@@ -327,18 +310,14 @@ body {
   height: 44px;
   padding: 0 12px;
   border-radius: 14px;
-
   border: 1px solid rgba(255, 211, 122, 0.14);
   background: rgba(0,0,0,0.35);
-
   color: rgba(255, 211, 122, 0.85);
   font-weight: 900;
   outline: none;
 }
 
-/* ==========================
-   LISTA DE EPISÓDIOS (FOCO MOBILE)
-========================== */
+/* LISTA DE EPISÓDIOS */
 .episodes-list {
   display: flex;
   flex-direction: column;
@@ -350,10 +329,8 @@ body {
   gap: 12px;
   padding: 12px;
   border-radius: 20px;
-
   border: 1px solid rgba(255, 42, 42, 0.14);
   background: rgba(0,0,0,0.45);
-
   cursor: pointer;
   transition: var(--anim-mid);
   position: relative;
@@ -389,21 +366,16 @@ body {
   bottom: 8px;
   right: 8px;
   z-index: 4;
-
   width: 32px;
   height: 32px;
   border-radius: 50%;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   border: 1px solid rgba(255, 42, 42, 0.35);
   background: rgba(180,0,0,0.25);
-
   color: rgba(255, 120, 120, 0.95);
   font-size: 12px;
-
   box-shadow: 0px 0px 14px rgba(255, 42, 42, 0.14);
 }
 
@@ -436,135 +408,12 @@ body {
 
 .progress-fill {
   height: 100%;
-  width: 35%;
   border-radius: 12px;
   background: linear-gradient(90deg, rgba(180,0,0,0.95), rgba(255, 42, 42, 0.75));
   box-shadow: 0px 0px 12px rgba(255, 42, 42, 0.18);
 }
 
-/* ==========================
-   ELENCO
-========================== */
-.cast-row {
-  display: flex;
-  gap: 14px;
-  overflow-x: auto;
-  padding-bottom: 6px;
-}
-
-.cast-row::-webkit-scrollbar {
-  height: 6px;
-}
-
-.cast-row::-webkit-scrollbar-thumb {
-  background: rgba(255, 211, 122, 0.22);
-  border-radius: 20px;
-}
-
-.cast-card {
-  min-width: 110px;
-  text-align: center;
-  cursor: pointer;
-  transition: var(--anim-fast);
-}
-
-.cast-card:hover {
-  transform: translateY(-4px);
-}
-
-.cast-avatar {
-  width: 86px;
-  height: 86px;
-  border-radius: 50%;
-  margin: 0 auto;
-
-  border: 2px solid rgba(255, 211, 122, 0.18);
-  background: rgba(0,0,0,0.45);
-
-  box-shadow: 0px 14px 30px rgba(0,0,0,0.70);
-  overflow: hidden;
-}
-
-.cast-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: brightness(0.92);
-}
-
-.cast-card strong {
-  display: block;
-  margin-top: 10px;
-  font-weight: 900;
-  font-size: 12px;
-}
-
-.cast-card span {
-  display: block;
-  margin-top: 4px;
-  font-size: 11px;
-  color: rgba(245,245,245,0.65);
-  font-weight: 700;
-}
-
-/* ==========================
-   RECOMENDAÇÕES
-========================== */
-.recommend-row {
-  display: flex;
-  gap: 14px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-}
-
-.recommend-row::-webkit-scrollbar {
-  height: 6px;
-}
-
-.recommend-row::-webkit-scrollbar-thumb {
-  background: rgba(255, 211, 122, 0.22);
-  border-radius: 20px;
-}
-
-.recommend-card {
-  min-width: 150px;
-  height: 220px;
-  border-radius: 20px;
-  overflow: hidden;
-
-  border: 1px solid rgba(255, 42, 42, 0.14);
-  background: rgba(0,0,0,0.45);
-
-  cursor: pointer;
-  transition: var(--anim-mid);
-  box-shadow: 0px 14px 35px rgba(0,0,0,0.75);
-}
-
-.recommend-card:hover {
-  transform: translateY(-5px) scale(1.03);
-  border-color: rgba(255, 211, 122, 0.20);
-  box-shadow: 0px 18px 45px rgba(0,0,0,0.88),
-              0px 0px 18px rgba(255, 42, 42, 0.14);
-}
-
-.recommend-poster {
-  height: 100%;
-  background-size: cover;
-  background-position: center;
-  filter: brightness(0.9) contrast(1.1);
-  position: relative;
-}
-
-.recommend-poster::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.05) 60%, rgba(0,0,0,0.95) 100%);
-}
-
-/* ==========================
-   TOAST
-========================== */
+/* TOAST */
 .toast {
   position: fixed;
   bottom: 110px;
@@ -572,19 +421,15 @@ body {
   transform: translateX(-50%) translateY(20px);
   padding: 12px 18px;
   border-radius: 18px;
-
   border: 1px solid rgba(255, 211, 122, 0.14);
   background: rgba(0,0,0,0.75);
   backdrop-filter: blur(14px);
-
   font-weight: 900;
   font-size: 13px;
   color: rgba(255, 211, 122, 0.88);
-
   opacity: 0;
   pointer-events: none;
   transition: 220ms ease;
-
   box-shadow: 0px 18px 40px rgba(0,0,0,0.85);
   z-index: 9999;
 }
@@ -592,36 +437,4 @@ body {
 .toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0px);
-}
-
-/* ==========================
-   RESPONSIVE (APENAS MOBILE)
-========================== */
-@media (max-width: 900px) {
-  /* Oculta conteúdo desktop */
-  .page-container .hero,
-  .page-container .middle-sections {
-    display: none !important;
-  }
-
-  /* Mostra conteúdo mobile */
-  .series-mobile-header,
-  .series-hero-mini,
-  .series-mobile-page {
-    display: flex !important;
-  }
-
-  body {
-    padding-bottom: 120px;
-  }
-}
-
-/* Desktop (NUNCA ALTERAR) */
-@media (min-width: 901px) {
-  .series-mobile-header,
-  .series-hero-mini,
-  .series-mobile-page,
-  .mobile-bg-glow {
-    display: none !important;
-  }
 }
