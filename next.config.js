@@ -6,6 +6,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'media.themoviedb.org' },
       { protocol: 'https', hostname: '*.supabase.co' },
       { protocol: 'https', hostname: 'raw.githubusercontent.com' },
+      { protocol: 'https', hostname: 'i.imgur.com' },
     ],
     formats: ['image/avif', 'image/webp'],
   },

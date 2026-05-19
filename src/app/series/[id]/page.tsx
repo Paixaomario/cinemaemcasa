@@ -186,11 +186,11 @@ function SeriesDetailContent({ params }: Props) {
         const { data: localMatches } = await query.neq('tmdb_id', currentTmdbId).limit(8)
 
         if (localMatches && localMatches.length > 0) {
-          const shuffled = localMatches.map(m => ({ ...m, id: m.id_n, poster: m.poster, rating: m.rating })).sort(() => Math.random() - 0.5).slice(0, 8)
+          const shuffled = localMatches.map(m => ({ id: m.id_n, poster: m.poster, rating: m.rating })).sort(() => Math.random() - 0.5).slice(0, 8)
           setShuffledRecommendations(shuffled as RecommendationData[])
         } else {
           const { data: randomFallback } = await sb.from('series').select('id_n, titulo, poster, rating, tmdb_id').limit(8)
-          const mappedFallback = (randomFallback || []).map(m => ({ ...m, id: m.id_n, poster: m.poster, rating: m.rating }))
+          const mappedFallback = (randomFallback || []).map(m => ({ id: m.id_n, poster: m.poster, rating: m.rating }))
           setShuffledRecommendations(mappedFallback as RecommendationData[])
         }
       }
