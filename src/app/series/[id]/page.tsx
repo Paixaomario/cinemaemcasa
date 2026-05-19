@@ -59,566 +59,6 @@ export default function SeriesDetailPage(props: Props) {
   )
 }
 
-const CUSTOM_STYLES = `
-  /* =========================================================
-     PAIXAOFLIX - PÁGINA DETALHES DE SÉRIES (MODELO 1 - Cinematic Hero)
-     Paleta: Preto + Vermelho + Dourado
-     ========================================================= */
-
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  .page-container {
-    width: 100%;
-    max-width: 100vw !important;
-    min-height: calc(100vh - 120px);
-    margin-top: clamp(60px, 8vh, 120px);
-    border-radius: 0;
-    overflow-x: hidden !important;
-    background: linear-gradient(180deg, #0B0B0E, #000000) !important;
-  }
-
-  .series-bg-glow {
-    position: fixed;
-    inset: 0;
-    z-index: -2;
-    background:
-      radial-gradient(circle at 20% 25%, rgba(255, 42, 42, 0.16), rgba(0,0,0,0) 60%),
-      radial-gradient(circle at 80% 65%, rgba(255, 211, 122, 0.12), rgba(0,0,0,0) 65%),
-      linear-gradient(180deg, #0B0B0E, #000000);
-    filter: blur(20px);
-    opacity: 0.95;
-    pointer-events: none;
-  }
-
-  .hero {
-    width: 100%;
-    min-height: 520px;
-    display: flex;
-    background: #000000;
-    position: relative;
-    overflow: hidden;
-    margin-bottom: 22px;
-    border-bottom: 1px solid rgba(255, 211, 122, 0.10);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.9);
-  }
-
-  .hero-bg {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    inset: 0;
-    background-size: cover;
-    background-position: center;
-    filter: brightness(0.55) contrast(1.12);
-    transform: scale(1.08);
-  }
-
-  .hero-overlay {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(90deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.82) 55%, rgba(0,0,0,0.20) 100%),
-      radial-gradient(circle at 75% 40%, rgba(255, 211, 122, 0.14), rgba(0,0,0,0) 65%),
-      radial-gradient(circle at 20% 30%, rgba(255, 42, 42, 0.12), rgba(0,0,0,0) 60%);
-  }
-
-  .hero-content {
-    position: relative;
-    z-index: 10;
-    width: min(1400px, 95vw);
-    margin: 0 auto;
-    padding: 60px 0 40px 0;
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 28px;
-    align-items: center;
-  }
-
-  .series-poster {
-    width: 320px;
-    height: 460px;
-    border-radius: 22px;
-    border: 2px solid rgba(255, 42, 42, 0.18);
-    background: rgba(0,0,0,0.50);
-    box-shadow: 0px 18px 60px rgba(0,0,0,0.85);
-    overflow: hidden;
-    position: relative;
-  }
-
-  .series-poster img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    filter: brightness(0.92) contrast(1.1);
-  }
-
-  .series-poster::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.95) 100%);
-  }
-
-  .series-info h1 {
-    font-family: 'Poppins', sans-serif;
-    font-weight: 900;
-    font-size: 46px;
-    letter-spacing: 1px;
-    line-height: 1.05;
-    color: #F5F5F5;
-    text-shadow: 0px 0px 20px rgba(0,0,0,0.75);
-  }
-
-  .series-meta {
-    margin-top: 12px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-  }
-
-  .series-meta span {
-    font-size: 12px;
-    font-weight: 800;
-    color: rgba(245,245,245,0.70);
-  }
-
-  .rating-badge {
-    padding: 7px 12px;
-    border-radius: 14px;
-    font-weight: 900;
-    font-size: 12px;
-    border: 1px solid rgba(255, 211, 122, 0.22);
-    background: rgba(0,0,0,0.45);
-    color: rgba(255, 211, 122, 0.88);
-  }
-
-  .badges-row {
-    margin-top: 14px;
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .badge {
-    padding: 6px 11px;
-    border-radius: 14px;
-    font-size: 11px;
-    font-weight: 900;
-    border: 1px solid rgba(255, 211, 122, 0.22);
-    background: rgba(0,0,0,0.48);
-    color: rgba(255, 211, 122, 0.88);
-  }
-
-  .badge.red {
-    border-color: rgba(255, 42, 42, 0.28);
-    color: rgba(255, 120, 120, 0.92);
-  }
-
-  .series-desc {
-    margin-top: 16px;
-    max-width: 740px;
-    font-size: 14px;
-    line-height: 1.6;
-    color: rgba(245,245,245,0.75);
-  }
-
-  .series-actions {
-    margin-top: 18px;
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .btn-primary {
-    height: 44px;
-    padding: 0 16px;
-    border-radius: 16px;
-    border: 1px solid rgba(255, 42, 42, 0.35);
-    background: linear-gradient(180deg, rgba(180,0,0,0.95), rgba(90,0,0,0.95));
-    color: #FFD37A;
-    font-family: 'Poppins', sans-serif;
-    font-weight: 900;
-    font-size: 13px;
-    cursor: pointer;
-    transition: 160ms;
-    box-shadow: 0px 0px 18px rgba(255, 42, 42, 0.18);
-  }
-
-  .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0px 0px 22px rgba(255, 42, 42, 0.25);
-  }
-
-  .btn-secondary {
-    height: 44px;
-    padding: 0 16px;
-    border-radius: 16px;
-    border: 1px solid rgba(255, 211, 122, 0.22);
-    background: rgba(0,0,0,0.45);
-    color: rgba(255, 211, 122, 0.85);
-    font-family: 'Poppins', sans-serif;
-    font-weight: 900;
-    font-size: 13px;
-    cursor: pointer;
-    transition: 160ms;
-  }
-
-  .btn-secondary:hover {
-    transform: translateY(-2px);
-    border-color: rgba(255, 211, 122, 0.45);
-    color: #FFD37A;
-  }
-
-  .btn-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid rgba(255, 211, 122, 0.18);
-    background: rgba(0,0,0,0.35);
-    cursor: pointer;
-    transition: 160ms;
-    font-size: 16px;
-    color: rgba(255, 211, 122, 0.75);
-  }
-
-  .btn-icon:hover {
-    transform: translateY(-2px);
-    color: #FFD37A;
-    border-color: rgba(255, 211, 122, 0.40);
-  }
-
-  .btn-icon.active {
-    border-color: rgba(255, 42, 42, 0.25);
-    color: rgba(255, 120, 120, 0.95);
-    box-shadow: 0px 0px 16px rgba(255, 42, 42, 0.14);
-  }
-
-  .series-page {
-    width: min(1400px, 95vw);
-    margin: 0 auto;
-    padding: 22px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .panel {
-    border-radius: 22px;
-    border: 1px solid rgba(255, 211, 122, 0.12);
-    background: rgba(0,0,0,0.25);
-    box-shadow: 0px 14px 40px rgba(0,0,0,0.80);
-    padding: 18px;
-  }
-
-  .panel-title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-  }
-
-  .panel-title h2 {
-    font-family: 'Poppins', sans-serif;
-    font-weight: 900;
-    font-size: 16px;
-    color: rgba(255, 211, 122, 0.90);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-  }
-
-  .season-select {
-    height: 44px;
-    padding: 0 14px;
-    border-radius: 14px;
-    border: 1px solid rgba(255, 211, 122, 0.14);
-    background: rgba(0,0,0,0.35);
-    color: rgba(255, 211, 122, 0.85);
-    font-weight: 900;
-    outline: none;
-    cursor: pointer;
-  }
-
-  .episodes-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
-  }
-
-  .episode-card {
-    border-radius: 20px;
-    overflow: hidden;
-    border: 1px solid rgba(255, 42, 42, 0.16);
-    background: rgba(0,0,0,0.45);
-    cursor: pointer;
-    transition: 240ms;
-    box-shadow: 0px 14px 35px rgba(0,0,0,0.75);
-    position: relative;
-  }
-
-  .episode-card:hover {
-    transform: translateY(-6px) scale(1.02);
-    border-color: rgba(255, 211, 122, 0.22);
-    box-shadow: 0px 18px 45px rgba(0,0,0,0.88), 0px 0px 18px rgba(255, 42, 42, 0.14);
-  }
-
-  .episode-thumb {
-    height: 140px;
-    background-size: cover;
-    background-position: center;
-    position: relative;
-    filter: brightness(0.92) contrast(1.1);
-  }
-
-  .episode-thumb::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0.05) 55%, rgba(0,0,0,0.95) 100%);
-  }
-
-  .episode-play {
-    position: absolute;
-    bottom: 12px;
-    right: 12px;
-    z-index: 5;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid rgba(255, 42, 42, 0.35);
-    background: rgba(180,0,0,0.30);
-    color: rgba(255, 120, 120, 0.95);
-    font-size: 14px;
-    box-shadow: 0px 0px 16px rgba(255, 42, 42, 0.14);
-  }
-
-  .episode-info {
-    padding: 12px;
-  }
-
-  .episode-info h3 {
-    font-family: 'Poppins', sans-serif;
-    font-size: 13px;
-    font-weight: 900;
-    margin-bottom: 4px;
-  }
-
-  .episode-info p {
-    font-size: 12px;
-    font-weight: 700;
-    color: rgba(245,245,245,0.65);
-  }
-
-  .progress-bar {
-    margin-top: 10px;
-    height: 6px;
-    border-radius: 12px;
-    background: rgba(255, 211, 122, 0.10);
-    overflow: hidden;
-  }
-
-  .progress-fill {
-    height: 100%;
-    width: 45%;
-    border-radius: 12px;
-    background: linear-gradient(90deg, rgba(180,0,0,0.95), rgba(255, 42, 42, 0.75));
-    box-shadow: 0px 0px 12px rgba(255, 42, 42, 0.18);
-  }
-
-  .cast-row {
-    display: flex;
-    gap: 14px;
-    overflow-x: auto;
-    padding-bottom: 6px;
-  }
-
-  .cast-row::-webkit-scrollbar {
-    height: 6px;
-  }
-
-  .cast-row::-webkit-scrollbar-thumb {
-    background: rgba(255, 211, 122, 0.22);
-    border-radius: 20px;
-  }
-
-  .cast-card {
-    min-width: 110px;
-    text-align: center;
-    cursor: pointer;
-    transition: 160ms;
-  }
-
-  .cast-card:hover {
-    transform: translateY(-4px);
-  }
-
-  .cast-avatar {
-    width: 92px;
-    height: 92px;
-    border-radius: 50%;
-    margin: 0 auto;
-    border: 2px solid rgba(255, 211, 122, 0.18);
-    background: rgba(0,0,0,0.45);
-    box-shadow: 0px 14px 30px rgba(0,0,0,0.70);
-    overflow: hidden;
-  }
-
-  .cast-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    filter: brightness(0.92);
-  }
-
-  .cast-card strong {
-    display: block;
-    margin-top: 10px;
-    font-weight: 900;
-    font-size: 12px;
-  }
-
-  .cast-card span {
-    display: block;
-    margin-top: 4px;
-    font-size: 11px;
-    color: rgba(245,245,245,0.65);
-    font-weight: 700;
-  }
-
-  .recommend-row {
-    display: flex;
-    gap: 14px;
-    overflow-x: auto;
-    padding-bottom: 8px;
-  }
-
-  .recommend-row::-webkit-scrollbar {
-    height: 6px;
-  }
-
-  .recommend-row::-webkit-scrollbar-thumb {
-    background: rgba(255, 211, 122, 0.22);
-    border-radius: 20px;
-  }
-
-  .recommend-card {
-    min-width: 160px;
-    height: 240px;
-    border-radius: 20px;
-    overflow: hidden;
-    border: 1px solid rgba(255, 42, 42, 0.16);
-    background: rgba(0,0,0,0.50);
-    cursor: pointer;
-    transition: 240ms;
-    box-shadow: 0px 14px 35px rgba(0,0,0,0.75);
-  }
-
-  .recommend-card:hover {
-    transform: translateY(-6px) scale(1.03);
-    border-color: rgba(255, 211, 122, 0.22);
-    box-shadow: 0px 18px 45px rgba(0,0,0,0.88), 0px 0px 18px rgba(255, 42, 42, 0.14);
-  }
-
-  .recommend-poster {
-    height: 100%;
-    background-size: cover;
-    background-position: center;
-    filter: brightness(0.9) contrast(1.1);
-    position: relative;
-  }
-
-  .recommend-poster::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0.05) 60%, rgba(0,0,0,0.95) 100%);
-  }
-
-  .toast {
-    position: fixed;
-    bottom: 120px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    padding: 12px 18px;
-    border-radius: 18px;
-    border: 1px solid rgba(255, 211, 122, 0.14);
-    background: rgba(0,0,0,0.70);
-    backdrop-filter: blur(14px);
-    font-weight: 900;
-    font-size: 13px;
-    color: rgba(255, 211, 122, 0.88);
-    opacity: 0;
-    pointer-events: none;
-    transition: 220ms ease;
-    box-shadow: 0px 18px 40px rgba(0,0,0,0.85);
-    z-index: 9999;
-  }
-
-  .toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0px);
-  }
-
-  @media (max-width: 1150px) {
-    .hero-content {
-      grid-template-columns: 1fr;
-      padding: 40px 0 30px 0;
-    }
-    .series-poster {
-      width: 280px;
-      height: 400px;
-    }
-    .series-info h1 {
-      font-size: 38px;
-    }
-    .episodes-grid {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-
-  @media (max-width: 820px) {
-    .episodes-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    .series-info h1 {
-      font-size: 32px;
-    }
-    .series-desc {
-      font-size: 13px;
-    }
-  }
-
-  @media (max-width: 520px) {
-    .series-poster {
-      width: 240px;
-      height: 360px;
-    }
-    .episodes-grid {
-      grid-template-columns: 1fr;
-    }
-    .series-actions {
-      flex-direction: column;
-      align-items: stretch;
-    }
-    .btn-primary,
-    .btn-secondary {
-      width: 100%;
-    }
-  }
-`;
-
 function SeriesDetailContent({ params }: Props) {
   const router = useRouter()
   const { user } = useAuth()
@@ -746,11 +186,12 @@ function SeriesDetailContent({ params }: Props) {
         const { data: localMatches } = await query.neq('tmdb_id', currentTmdbId).limit(8)
 
         if (localMatches && localMatches.length > 0) {
-          const shuffled = [...localMatches].sort(() => Math.random() - 0.5).slice(0, 8)
-          setShuffledRecommendations(shuffled)
+          const shuffled = localMatches.map(m => ({ ...m, id: m.id_n, poster: m.poster, rating: m.rating })).sort(() => Math.random() - 0.5).slice(0, 8)
+          setShuffledRecommendations(shuffled as RecommendationData[])
         } else {
           const { data: randomFallback } = await sb.from('series').select('id_n, titulo, poster, rating, tmdb_id').limit(8)
-          setShuffledRecommendations(randomFallback || [])
+          const mappedFallback = (randomFallback || []).map(m => ({ ...m, id: m.id_n, poster: m.poster, rating: m.rating }))
+          setShuffledRecommendations(mappedFallback as RecommendationData[])
         }
       }
       loadSystemRecs()
@@ -861,12 +302,12 @@ function SeriesDetailContent({ params }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <>
       <Navbar />
       <link rel="stylesheet" href="/series-mobile.css" />
 
       {/* FUNDO VIVO MOBILE */}
-      <div className="mobile-bg-glow"></div>
+      <div className="mobile-bg-glow" />
 
       {/* MOBILE HEADER */}
       <header className="series-mobile-header">
@@ -885,11 +326,11 @@ function SeriesDetailContent({ params }: Props) {
         <div className="series-hero-top">
           <div className="series-mini-poster">
             <Image 
-              src={displayPoster} 
-              alt={displayTitle} 
-              width={92} 
-              height={132} 
-              unoptimized 
+                src={displayPoster} 
+                alt={displayTitle} 
+                width={92} 
+                height={132} 
+                unoptimized 
             />
           </div>
 
@@ -917,7 +358,7 @@ function SeriesDetailContent({ params }: Props) {
           <button className="btn-primary" onClick={handlePlayContent}>▶ Continuar Assistindo</button>
 
           <div className="btn-row">
-            <button className="btn-secondary" onClick={handlePlayTrailer}>🎞 Trailer</button>
+              <button className="btn-secondary" onClick={handlePlayTrailer}>🎞 Trailer</button>
             <button className={`btn-icon ${isFavorite ? 'active' : ''}`} id="btnFavorito" onClick={handleToggleFavorite}>❤</button>
             <button className={`btn-icon ${isWatchLater ? 'active' : ''}`} id="btnAssistirDepois" onClick={handleToggleWatchLater}>🕒</button>
           </div>
@@ -931,7 +372,7 @@ function SeriesDetailContent({ params }: Props) {
           <section className="panel">
             <div className="panel-header">
               <h3>Episódios</h3>
-              <select 
+              <select
                 className="season-select" 
                 id="seasonSelect"
                 value={selectedSeason?.id_n || ''}
@@ -967,7 +408,7 @@ function SeriesDetailContent({ params }: Props) {
                     <span>{episode.duracao || 'Duração não informada'}</span>
 
                     <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: '0%' }}></div>
+                      <div className="progress-fill" style={{ width: '0%' }} />
                     </div>
                   </div>
                 </div>
@@ -978,13 +419,14 @@ function SeriesDetailContent({ params }: Props) {
       </main>
 
       <div className="toast" id="toast"></div>
-      <script src="/series-mobile.js" defer></script>
+      <script src="/series-mobile.js" defer />
 
       <div className="page-container">
-        <div className="series-bg-glow"></div>
+        <link rel="stylesheet" href="/series-desktop.css" /> {/* Link para o CSS desktop */}
+        <div className="series-bg-glow" />
 
         {/* HERO SECTION */}
-        <div className="hero">
+        <div className="hero"> {/* Este div é o hero do desktop */}
           <div className="hero-bg" style={{ backgroundImage: `url(${displayBackdrop})` }}></div>
           <div className="hero-overlay"></div>
           
@@ -1092,7 +534,7 @@ function SeriesDetailContent({ params }: Props) {
             </section>
 
             {/* ELENCO */}
-            <section className="panel">
+            <section className="panel"> {/* Esta seção é para o elenco do desktop */}
               <div className="panel-title">
                 <h2>Elenco Principal</h2>
               </div>
@@ -1100,16 +542,18 @@ function SeriesDetailContent({ params }: Props) {
               <div className="cast-row">
                 {castList.length > 0 ? (
                   castList.slice(0, 8).map((actor: ActorData | string, index: number) => {
+                    const actorName = typeof actor === 'string' ? actor : actor.name;
+                    const actorCharacter = typeof actor === 'string' ? 'Personagem' : (actor.character || 'Personagem');
                     const photoUrl = typeof actor === 'object' && (actor.profile_path || actor.image)
                       ? `https://image.tmdb.org/t/p/w185${actor.profile_path || actor.image}`
                       : 'https://placehold.co/92x92/1a1a1f/F5C76B?text=Ator';
                     return (
                       <div key={index} className="cast-card">
                         <div className="cast-avatar">
-                          <Image src={photoUrl} alt={typeof actor === 'string' ? actor : (actor as ActorData).name || 'Ator'} fill unoptimized />
+                          <Image src={photoUrl} alt={actorName} fill unoptimized />
                         </div>
-                        <strong>{typeof actor === 'string' ? actor : (actor as ActorData).name || 'Ator'}</strong>
-                        <span>{typeof actor === 'object' ? (actor as ActorData).character || 'Personagem' : 'Personagem'}</span>
+                        <strong>{actorName}</strong>
+                        <span>{actorCharacter}</span>
                       </div>
                     );
                   })
@@ -1122,7 +566,7 @@ function SeriesDetailContent({ params }: Props) {
             </section>
 
             {/* RECOMENDAÇÕES */}
-            <section className="panel">
+            <section className="panel"> {/* Esta seção é para as recomendações do desktop */}
               <div className="panel-title">
                 <h2>Recomendações para você</h2>
               </div>
@@ -1130,12 +574,12 @@ function SeriesDetailContent({ params }: Props) {
               <div className="recommend-row">
                 {shuffledRecommendations.length > 0 ? (
                   shuffledRecommendations.map((rec: RecommendationData) => (
-                    <div 
-                      key={rec.id} 
+                    <div
+                      key={rec.id}
                       className="recommend-card"
                       onClick={() => router.push(`/series/${rec.id}`)}
                     >
-                      <div 
+                      <div
                         className="recommend-poster" 
                         style={{ 
                           backgroundImage: rec.poster 
@@ -1148,16 +592,16 @@ function SeriesDetailContent({ params }: Props) {
                 ) : (
                   <>
                     <div className="recommend-card">
-                      <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/160x240)' }}></div>
+                      <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/160x240)' }} />
                     </div>
                     <div className="recommend-card">
-                      <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/160x240)' }}></div>
+                      <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/160x240)' }} />
                     </div>
                     <div className="recommend-card">
-                      <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/160x240)' }}></div>
+                      <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/160x240)' }} />
                     </div>
                     <div className="recommend-card">
-                      <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/160x240)' }}></div>
+                      <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/160x240)' }} />
                     </div>
                   </>
                 )}
@@ -1188,7 +632,7 @@ function SeriesDetailContent({ params }: Props) {
           isGuest={false}
           shouldStartParty={false}
         />
-      )}
-    </div>
+      )} {/* Fim do VideoPlayer */}
+    </>
   );
 }
