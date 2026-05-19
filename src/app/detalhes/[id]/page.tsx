@@ -63,8 +63,8 @@ interface MovieData {
   videos?: { results: VideoResult[] };
 }
 
-const VideoPlayer = NextDynamic(() => import('./VideoPlayer').then(mod => mod.VideoPlayer), {
-  ssr: false
+const VideoPlayer = NextDynamic(() => import('../../VideoPlayer').then(mod => mod.VideoPlayer), {
+  ssr: false,
 })
 
 interface Props { 

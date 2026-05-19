@@ -1,5 +1,6 @@
 'use client'
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useCallback } from 'react'
+import { createClient } from '@/lib/supabase'
 
 interface ClapprPlayer {
   destroy(): void;
@@ -61,15 +62,23 @@ declare const ClapprThumbnailsPlugin: unknown;
 interface Props {
   src: string
   title: string
+  contentId?: string | null
+  userId?: string | null
+  startOffset?: number
   onClose: () => void
+  onNext?: () => void
+  partyRoomId?: string | null
+  isGuest?: boolean
+  shouldStartParty?: boolean
 }
 
-export function VideoPlayer({ src, title, onClose }: Props) {
+export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, onClose, onNext, partyRoomId, isGuest, shouldStartParty }: Props) {
   const videoRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<ClapprPlayer | null>(null)
+  const sb = createClient()
 
   useEffect(() => {
-    if (
+    if (      
       videoRef.current && 
       typeof Clappr !== 'undefined' && 
       typeof HlsjsPlayback !== 'undefined' &&
@@ -121,9 +130,41 @@ export function VideoPlayer({ src, title, onClose }: Props) {
         width: '100%',
         height: '100%',
         autoPlay: true,
+        events: {
+          onPlay: () => {
+            if (startOffset > 0 && playerRef.current) {
+              playerRef.current.seek(startOffset);
+            }
+          },
+          onTimeUpdate: (e: { current: number }) => {
+            // Salva progresso a cada 10 segundos no Supabase
+            if (userId && contentId && Math.floor(e.current) % 10 === 0) {
+              saveProgress(e.current);
+            }
+          },
+          onEnded: () => {
+            if (onNext) onNext();
+          }
+        }
       });
       playerRef.current = player;
     }
+
+    async function saveProgress(seconds: number) {
+      if (!userId || !contentId) return;
+      try {
+        await sb.from('view_progress').upsert({
+          user_id: userId,
+          content_id: contentId,
+          last_position: Math.floor(seconds),
+          updated_at: new Date().toISOString(),
+          is_finished: false
+        }, { onConflict: 'user_id,content_id' });
+      } catch (err) {
+        console.error('Erro ao salvar progresso:', err);
+      }
+    }
+
 
     return () => {
       if (playerRef.current) {
@@ -131,7 +172,7 @@ export function VideoPlayer({ src, title, onClose }: Props) {
       }
     };
   }, [src]);
-
+  
   return (
     <div className="fixed inset-0 z-[10000] bg-black flex items-center justify-center hero-enter">
       {/* Header do Player conforme padrão @netflix */}

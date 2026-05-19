@@ -1,8 +1,9 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 
 // Ordem de categorias permitidas
@@ -254,11 +255,12 @@ function CinemaGridFull({ items }: { items: Cinema[] }) {
 /* ── Card individual ── */
 function CinemaCard({ film }: { film: Cinema }) {
   const [hovered, setHovered] = useState(false)
+  const router = useRouter()
   const img = film.poster || film.banner || film.backdrop
 
   const handleNavigate = () => {
     const isSeries = film.type === 'series'
-    window.location.href = isSeries ? `/series/${film.id}` : `/detalhes/filme-${film.id}`
+    router.push(isSeries ? `/series/${film.id}` : `/detalhes/filme-${film.id}`)
   }
 
   return (

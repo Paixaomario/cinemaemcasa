@@ -51,8 +51,15 @@ export function HomeClient() {
   const [progress, setProgress] = useState(0)
   const [loading, setLoading] = useState(true) // Sempre começa em true para evitar hydration errors
   const [dbError,    setDbError]    = useState('')
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+
     async function load() {
       const sb = createClient()
       const hasLoadedBefore = typeof window !== 'undefined' && sessionStorage.getItem('paixaoflix_loaded')
@@ -246,14 +253,14 @@ export function HomeClient() {
     
     // Removido o atalho do hasLoaded para garantir que as imagens e banners estejam prontos antes de remover o Splash
     load()
-  }, [user])
+  }, [user, mounted])
 
   useEffect(() => {
     console.log('HomeClient: bannerPool length:', bannerPool.length);
     console.log('HomeClient: continueWatching length:', continueWatching.length);
   }, [bannerPool, continueWatching])
 
-  if (loading) {
+  if (!mounted || loading) {
     return (
       <div style={{ 
         position: 'fixed', 
