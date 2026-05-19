@@ -902,7 +902,151 @@ function DetailContent({ params }: Props) {
     <div className="min-h-screen bg-black">
       <Navbar />
       <style dangerouslySetInnerHTML={{ __html: CUSTOM_STYLES }} />
+      <link rel="stylesheet" href="/series-mobile.css" />
 
+      {/* FUNDO VIVO MOBILE */}
+      <div className="mobile-bg-glow"></div>
+
+      {/* MOBILE HEADER */}
+      <header className="series-mobile-header">
+        <div className="brand">
+          <h1>PAIXAOFLIX</h1>
+          <div className="mini-icons">
+            <button className="mini-btn">🔍</button>
+            <button className="mini-btn">🎬</button>
+            <button className="mini-btn">👤</button>
+          </div>
+        </div>
+      </header>
+
+      {/* MOBILE HERO COMPACTO */}
+      <section className="series-hero-mini">
+        <div className="series-hero-top">
+          <div className="series-mini-poster">
+            <Image
+              src={movieData?.poster_path ? IMG.poster(movieData.poster_path, 'w342') : 'https://via.placeholder.com/92x132'}
+              alt={displayTitle}
+              width={92}
+              height={132}
+              priority
+            />
+          </div>
+
+          <div className="series-mini-info">
+            <h2>{displayTitle}</h2>
+
+            <div className="series-mini-meta">
+              <span>{displayYear}</span>
+              <span>{displayGenres}</span>
+              {movieData?.type === 'series' && movieData.seasons && (
+                <span>{movieData.seasons.length} Temporadas</span>
+              )}
+              <span className="meta-rating">★ {movieData?.vote_average?.toFixed(1)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="series-mini-desc">
+          {movieData?.description || movieData?.overview || 'Descrição não disponível.'}
+        </div>
+
+        <div className="series-actions">
+          <button className="btn-primary" onClick={handlePlayContent}>▶ Continuar Assistindo</button>
+
+          <div className="btn-row">
+            <button className="btn-secondary" onClick={handlePlayTrailer}>🎞 Trailer</button>
+            <button className="btn-icon" id="btnFavorito" onClick={handleToggleFavorite} style={{ color: isFavorite ? 'rgba(255, 120, 120, 0.95)' : 'inherit' }}>❤</button>
+            <button className="btn-icon" id="btnAssistirDepois" onClick={handleToggleWatchLater} style={{ color: isWatchLater ? 'rgba(255, 211, 122, 0.88)' : 'inherit' }}>🕒</button>
+          </div>
+        </div>
+      </section>
+
+      {/* MOBILE MAIN CONTENT */}
+      <main className="series-mobile-page">
+        {/* EPISÓDIOS - APENAS PARA SÉRIES */}
+        {movieData?.type === 'series' && movieData.seasons && movieData.seasons.length > 0 && (
+          <section className="panel">
+            <div className="panel-header">
+              <h3>Episódios</h3>
+              <select className="season-select" id="seasonSelect">
+                {movieData.seasons.map((season: SeasonData) => (
+                  <option key={season.id_n} value={season.numero_temporada}>
+                    Temporada {season.numero_temporada}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="episodes-list" id="episodesList"></div>
+          </section>
+        )}
+
+        {/* ELENCO */}
+        <section className="panel">
+          <div className="panel-header">
+            <h3>Elenco Principal</h3>
+          </div>
+          <div className="cast-row">
+            {castList.length > 0 ? (
+              castList.slice(0, 5).map((actor: ActorData | string, index: number) => {
+                const photoUrl = (typeof actor === 'object' && (actor.profile_path || actor.image))
+                  ? IMG.poster(actor.profile_path || actor.image, 'w185')
+                  : 'https://placehold.co/86x86/1a1a1f/F5C76B?text=Ator';
+                return (
+                  <div key={index} className="cast-card">
+                    <div 
+                      className="cast-avatar" 
+                      style={{ backgroundImage: `url(${photoUrl})` }}
+                    ></div>
+                    <strong>{typeof actor === 'string' ? actor : (actor as ActorData).name || 'Ator'}</strong>
+                    <span>{typeof actor === 'object' ? (actor as ActorData).character || 'Personagem' : 'Personagem'}</span>
+                  </div>
+                );
+              })
+            ) : (
+              <div style={{ textAlign: 'center', width: '100%', color: 'rgba(245,245,245,0.65)' }}>
+                Elenco não disponível
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* RECOMENDAÇÕES */}
+        <section className="panel">
+          <div className="panel-header">
+            <h3>Recomendações</h3>
+          </div>
+          <div className="recommend-row">
+            {shuffledRecommendations.length > 0 ? (
+              shuffledRecommendations.slice(0, 6).map((rec: RecommendationData) => (
+                <div 
+                  key={rec.id} 
+                  className="recommend-card" 
+                  onClick={() => router.push(`/detalhes/${rec.id}`)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div 
+                    className="recommend-poster" 
+                    style={{ 
+                      backgroundImage: rec.poster 
+                        ? `url(${rec.poster})` 
+                        : 'url(https://via.placeholder.com/150x220/1a1a1f/F5C76B?text=Sem+Capa)' 
+                    }}
+                  />
+                </div>
+              ))
+            ) : (
+              <div style={{ textAlign: 'center', width: '100%', color: 'rgba(245,245,245,0.65)' }}>
+                Recomendações não disponíveis
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+
+      {/* TOAST NOTIFICAÇÃO */}
+      <div className="toast" id="toast"></div>
+
+      {/* DESKTOP PAGE CONTAINER - NÃO ALTERAR */}
       <div className="page-container">
 
         {/* HERO SECTION */}
@@ -1155,6 +1299,9 @@ function DetailContent({ params }: Props) {
           shouldStartParty={shouldStartParty}
         />
       )}
+
+      {/* SCRIPT MOBILE */}
+      <script src="/series-mobile.js" defer></script>
     </div>
   );
 }

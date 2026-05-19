@@ -40,6 +40,7 @@ interface SeriesData {
   seasons?: SeasonData[];
   trailer?: string;
   videos?: { results: { type: string; key: string }[] };
+  type?: string;
 }
 
 const VideoPlayer = NextDynamic(() => import('../../detalhes/[id]/VideoPlayer').then(mod => mod.VideoPlayer), {
@@ -626,22 +627,21 @@ function SeriesDetailContent({ params }: Props) {
   const [isFavorite, setIsFavorite] = useState(false)
   const [isWatchLater, setIsWatchLater] = useState(false)
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null)
-  const [selectedSeason, setSelectedSeason] = useState<SeasonData | null>(null);
+  const [selectedSeason, setSelectedSeason] = useState<SeasonData | null>(null)
   const [loading, setLoading] = useState(true)
   const [shuffledRecommendations, setShuffledRecommendations] = useState<RecommendationData[]>([])
   const [id, setId] = useState<string | null>(null)
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
 
-  const displayTitle = seriesData?.titulo || 'Nome da Série';
-  const displayYear = seriesData?.year || seriesData?.ano || '';
-  const displayGenres = seriesData?.genero || (seriesData?.genres?.map(g => g.name).join(', ')) || 'Não informado';
-  const displayBackdrop = seriesData?.backdrop || seriesData?.banner || seriesData?.poster_path || seriesData?.poster || seriesData?.capa || 'https://via.placeholder.com/1920x470';
-  const displayPoster = seriesData?.poster || seriesData?.capa || seriesData?.poster_path || 'https://via.placeholder.com/320x470';
-  const displayDescription = seriesData?.description || seriesData?.descricao || seriesData?.overview || 'Descrição não disponível.';
+  const displayTitle = seriesData?.titulo || 'Nome da Série'
+  const displayYear = seriesData?.year || seriesData?.ano || ''
+  const displayGenres = seriesData?.genero || (seriesData?.genres?.map(g => g.name).join(', ')) || 'Não informado'
+  const displayBackdrop = seriesData?.backdrop || seriesData?.banner || seriesData?.poster_path || seriesData?.poster || seriesData?.capa || 'https://via.placeholder.com/1920x470'
+  const displayPoster = seriesData?.poster || seriesData?.capa || seriesData?.poster_path || 'https://via.placeholder.com/320x470'
+  const displayDescription = seriesData?.description || seriesData?.descricao || seriesData?.overview || 'Descrição não disponível.'
 
-  const castList = seriesData?.credits?.cast || 
-    (typeof seriesData?.cast_names === 'string' ? seriesData.cast_names.split(',').map(n => n.trim()) : seriesData?.cast_names) || [];
+  const castList = seriesData?.credits?.cast || (typeof seriesData?.cast_names === 'string' ? seriesData.cast_names.split(',').map(n => n.trim()) : seriesData?.cast_names) || []
 
   useEffect(() => {
     async function loadSeriesData() {
@@ -683,16 +683,27 @@ function SeriesDetailContent({ params }: Props) {
           }
         }
 
-        const foundData: SeriesData = {
+        const foundData: any = {
           ...sData,
-          ...tmdbMetadata, // Mescla metadados do TMDB (elenco, gêneros, overview, etc.)
+          ...tmdbMetadata,
           id: sData.id_n,
-          poster: sData.poster || sData.capa || tmdbMetadata?.poster_path ? IMG.poster(tmdbMetadata.poster_path, 'w500') : null,
-          backdrop: sData.banner || sData.poster || sData.capa || tmdbMetadata?.backdrop_path ? IMG.original(tmdbMetadata.backdrop_path) : null,
-          year: sData.ano || (tmdbMetadata?.first_air_date?.split('-')[0]),
-          description: sData.descricao || tmdbMetadata?.overview,
-          seasons: seasonsWithEpisodes,
-          type: 'series' as const
+          poster: sData.poster || sData.capa,
+          backdrop: sData.banner || sData.poster || sData.capa,
+          year: sData.ano,
+          description: sData.descricao,
+          seasons: seasonsWithEpisodes
+        }
+        if (tmdbMetadata?.poster_path) {
+          foundData.poster = IMG.poster(tmdbMetadata.poster_path, 'w500')
+        }
+        if (tmdbMetadata?.backdrop_path) {
+          foundData.backdrop = IMG.original(tmdbMetadata.backdrop_path)
+        }
+        if (tmdbMetadata?.first_air_date) {
+          foundData.year = tmdbMetadata.first_air_date.split('-')[0]
+        }
+        if (tmdbMetadata?.overview) {
+          foundData.description = tmdbMetadata.overview
         }
 
         if (seasonsWithEpisodes.length > 0) {
@@ -757,7 +768,9 @@ function SeriesDetailContent({ params }: Props) {
       alert('Faça login para adicionar aos favoritos!')
       return
     }
-    if (!id) return
+    if (!id) {
+      return
+    }
 
     const sb = createClient()
     if (isFavorite) {
@@ -780,7 +793,9 @@ function SeriesDetailContent({ params }: Props) {
       alert('Faça login para adicionar à sua lista!')
       return
     }
-    if (!id) return
+    if (!id) {
+      return
+    }
 
     const sb = createClient()
     if (isWatchLater) {
@@ -799,7 +814,7 @@ function SeriesDetailContent({ params }: Props) {
   }
 
   const handlePlayContent = () => {
-    if (seriesData.seasons && seriesData.seasons.length > 0) {
+    if (seriesData && seriesData.seasons && seriesData.seasons.length > 0) {
       const firstEpisode = seriesData.seasons[0].episodes[0]
       if (firstEpisode && firstEpisode.arquivo) {
         setActiveVideoUrl(firstEpisode.arquivo)
@@ -818,9 +833,15 @@ function SeriesDetailContent({ params }: Props) {
   }
 
   const handlePlayTrailer = () => {
-    const trailer = seriesData?.trailer || seriesData?.videos?.results?.find((v: any) => v.type === 'Trailer' || v.type === 'Teaser')?.key
-    if (trailer) setActiveVideoUrl(trailer.includes('http') ? trailer : `https://www.youtube.com/watch?v=${trailer}`)
-    else alert('Trailer não disponível para este título.')
+    if (!seriesData) {
+      return
+    }
+    const trailer = seriesData.trailer
+    if (trailer) {
+      setActiveVideoUrl(trailer)
+    } else {
+      alert('Trailer não disponível para este título.')
+    }
   }
 
   if (loading) {
