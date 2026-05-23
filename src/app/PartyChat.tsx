@@ -31,6 +31,8 @@ export function PartyChat({ roomId, userName, userAvatar, isHost, onReaction }: 
   const REACTIONS = ['❤️', '😂', '😮', '🔥', '👏', '😢']
 
   useEffect(() => {
+    if (!roomId) return;
+
     // Carregar mensagens iniciais
     sb.from('party_messages')
       .select('*')

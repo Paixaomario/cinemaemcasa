@@ -147,7 +147,7 @@ function MovieContent() {
   }, [id, router, user])
 
   const startParty = useCallback(() => {
-    const newRoomId = crypto.randomUUID();
+    const newRoomId = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
     const inviteLink = `${window.location.origin}${window.location.pathname}?room=${newRoomId}`;
     const inviteMsg = `Vamos assistir comigo?\n\n🍿 ${movie.titulo || movie.title}\n🔗 ${inviteLink}`;
     
@@ -182,7 +182,7 @@ function MovieContent() {
   const description = movie.overview || movie.description || movie.descricao
   const formatCurrency = (val: number) => val > 0 ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val) : 'N/A'
 
-  const countryCode = movie.production_countries?.[0]?.iso_3166_1 || 
+  const countryCode = String(movie.production_countries?.[0]?.iso_3166_1 || 
                      (Array.isArray(movie.origin_country) ? movie.origin_country[0] : movie.origin_country) || '';
 
   return (
@@ -215,7 +215,7 @@ function MovieContent() {
         </h1>
 
         <div className="flex items-center gap-4 mb-8 text-sm md:text-base font-bold">
-          {countryCode && (
+          {countryCode && countryCode.length === 2 && (
             <img 
               src={`https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`} 
               alt={countryCode}
