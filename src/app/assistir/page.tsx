@@ -31,7 +31,7 @@ export default function AssistirDespoisPage() {
             let hydratedItem: TMDBMovie | TMDBShow | CinemaItem | null = null
 
             // Try to fetch from 'content' table first
-            const { data: contentData } = await sb.from('content').select('*').eq('id', idStr).single()
+            const { data: contentData } = await sb.from('content').select('*').eq('id', idStr).maybeSingle()
             if (contentData) {
               if (contentData.tmdb_id) {
                 try {
@@ -52,7 +52,7 @@ export default function AssistirDespoisPage() {
               }
             } else {
               // Fallback for old 'cinema' table IDs (numeric or non-UUID string without hyphen)
-              const { data: cinemaData } = await sb.from('cinema').select('*').eq('id', p.content_id).single()
+              const { data: cinemaData } = await sb.from('cinema').select('*').eq('id', p.content_id).maybeSingle()
               if (cinemaData) {
                 if (cinemaData.tmdb_id) {
                   try {

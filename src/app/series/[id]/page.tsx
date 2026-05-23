@@ -33,6 +33,7 @@ function SeriesContent() {
   const [contentUuid, setContentUuid] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeEpisode, setActiveEpisode] = useState<any>(null)
+  const [autoPlayNext, setAutoPlayNext] = useState(false)
 
   // Estados da Sala (Assistir Juntos)
   const [activeRoomId, setActiveRoomId] = useState(searchParams.get('room'))
@@ -167,16 +168,54 @@ function SeriesContent() {
   }, [id, router, user])
 
   const startParty = useCallback(() => {
-    const newRoomId = Math.random().toString(36).substring(2, 11);
+    const newRoomId = crypto.randomUUID();
     const inviteLink = `${window.location.origin}${window.location.pathname}?room=${newRoomId}`;
-    const inviteMsg = `Vamos assistir comigo?\n\n🍿 ${series.titulo || series.name}\n🔗 ${inviteLink}`;
+    const inviteMsg = `Vamos assistir comigo? 🍿 ${series.titulo || series.name} 🔗 ${inviteLink}`;
     
     navigator.clipboard.writeText(inviteMsg);
     alert("🎉 Sala criada! Convite copiado para sua área de transferência.");
-    // Inicia com o primeiro episódio se nenhum estiver ativo
-    if (!activeEpisode && episodes.length > 0) setActiveEpisode(episodes[0])
-    setRoomId(newRoomId);
+    setActiveRoomId(newRoomId);
+    setShowPlayer(true);
+    if (!activeEpisode && episodes.length > 0) setActiveEpisode(episodes[0]); // Ativa o primeiro episódio para o host
   }, [series, activeEpisode, episodes]);
+
+  // Implementação do próximo episódio automático
+  const handleNextEpisode = useCallback(() => {
+    if (!activeEpisode || episodes.length === 0) return
+
+    // Encontra o índice do episódio atual
+    const currentIndex = episodes.findIndex(ep => 
+      String(ep.id_n || ep.id) === String(activeEpisode.id_n || activeEpisode.id)
+    )
+    
+    if (currentIndex !== -1 && currentIndex < episodes.length - 1) {
+      // Próximo na mesma temporada
+      setActiveEpisode(episodes[currentIndex + 1])
+    } else {
+      // Tenta próxima temporada
+      const currentSeasonIndex = seasons.findIndex(s => 
+        String(s.id_n || s.id) === String(selectedSeason?.id_n || selectedSeason?.id)
+      )
+      
+      if (currentSeasonIndex !== -1 && currentSeasonIndex < seasons.length - 1) {
+        const nextSeason = seasons[currentSeasonIndex + 1]
+        setSelectedSeason(nextSeason)
+        setAutoPlayNext(true)
+      } else {
+        // Fim da série
+        setActiveEpisode(null)
+        setShowPlayer(false)
+      }
+    }
+  }, [activeEpisode, episodes, seasons, selectedSeason])
+
+  // Efeito para iniciar o primeiro episódio da nova temporada após o autoPlay
+  useEffect(() => {
+    if (autoPlayNext && episodes.length > 0) {
+      setActiveEpisode(episodes[0])
+      setAutoPlayNext(false)
+    }
+  }, [episodes, autoPlayNext])
 
   async function toggleFavorite() {
     if (!user) return router.push('/login')
@@ -303,7 +342,7 @@ function SeriesContent() {
               href={series.trailer}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-10 py-4 bg-[#FF0000] text-white font-black uppercase tracking-widest rounded-lg hover:bg-[#CC0000] transition-all focus:ring-4 focus:ring-red-600 outline-none border border-[#FF0000]"
+              className="px-10 py-4 bg-[#FF0000] text-white font-montserrat font-black uppercase tracking-widest rounded-[20px] hover:brightness-110 transition-all focus:ring-4 focus:ring-red-600 outline-none border border-transparent"
             >
               🎬 Trailer
             </a>
@@ -312,7 +351,7 @@ function SeriesContent() {
           {/* Botão Favoritos (Apenas ícone) */}
           <button 
             onClick={toggleFavorite}
-            className={`p-4 rounded-lg transition-all border border-white/10 focus:ring-4 outline-none ${isFavorite ? 'bg-red-600/20 border-red-600 text-red-600 focus:ring-red-600' : 'bg-white/5 text-white hover:bg-white/10 focus:ring-white'}`}
+            className={`p-4 rounded-[20px] transition-all border border-white/10 focus:ring-4 outline-none ${isFavorite ? 'bg-red-600/20 border-red-600 text-red-600 focus:ring-red-600' : 'bg-white/5 text-white hover:bg-white/10 focus:ring-white'}`}
             title={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
           >
             <Heart className={`w-7 h-7 ${isFavorite ? 'fill-red-600 text-red-600' : 'fill-none'}`} />
@@ -458,7 +497,7 @@ function SeriesContent() {
                 </div>
               </>
             ) : (
-              <form onSubmit={(e) => { e.preventDefault(); if(guestName.trim()) { setGuestStep(null); if(!activeEpisode && episodes.length > 0) setActiveEpisode(episodes[0]); } }} className="space-y-6">
+              <form onSubmit={(e) => { e.preventDefault(); if(guestName.trim()) { setGuestStep(null); setShowPlayer(true); if(!activeEpisode && episodes.length > 0) setActiveEpisode(episodes[0]); } }} className="space-y-6">
                 <h2 className="text-2xl font-black uppercase text-white">Como podemos te chamar?</h2>
                 <input 
                   type="text" 
@@ -482,17 +521,18 @@ function SeriesContent() {
       )}
 
       {/* Player de Vídeo - Condição corrigida para convidados */}
-      {(showPlayer || activeEpisode || (guestName && activeRoomId)) && (
+      {(showPlayer || activeEpisode || (guestName && activeRoomId)) && (activeEpisode?.arquivo || episodes[0]?.arquivo) && (
         <VideoPlayer
           src={activeEpisode?.arquivo || episodes[0]?.arquivo}
           title={activeEpisode ? `${title} - ${activeEpisode.titulo}` : title}
           contentId={contentUuid || String(series.id_n)} // Usa UUID para salvar progresso corretamente
           userId={user?.id}
-          onClose={() => { setShowPlayer(false); setActiveEpisode(null); setActiveRoomId(null); setGuestName(''); }}
-          partyRoomId={roomFromUrl}
+          onClose={() => { setShowPlayer(false); setActiveEpisode(null); setActiveRoomId(null); setGuestName(''); setAutoPlayNext(false); }}
+          partyRoomId={activeRoomId}
           isGuest={isGuestMode}
           guestName={guestName}
           backdrop={series.backdrop_path || series.banner}
+          onNext={handleNextEpisode}
         />
       )}
     </main>

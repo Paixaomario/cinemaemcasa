@@ -136,7 +136,7 @@ function MovieContent() {
   }, [id, router, user])
 
   function startParty() {
-    const newRoomId = Math.random().toString(36).substring(2, 11);
+    const newRoomId = crypto.randomUUID();
     const inviteLink = `${window.location.origin}${window.location.pathname}?room=${newRoomId}`;
     const inviteMsg = `Vamos assistir comigo? 🍿 ${movie.titulo || movie.title} 🔗 ${inviteLink}`;
     
