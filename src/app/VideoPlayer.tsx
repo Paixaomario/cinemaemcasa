@@ -37,6 +37,7 @@ interface Props {
 export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, onClose, onNext, partyRoomId, isGuest, guestName, backdrop }: Props) {
   const player = useRef<MediaPlayerInstance>(null);
   const [mediaInstance, setMediaInstance] = useState<MediaPlayerInstance | null>(null);
+  const lastSavedTime = useRef<number>(0);
   const [showChat, setShowChat] = useState(!!partyRoomId);
   const { user } = useAuth()
   const sb = useMemo(() => createClient(), [])
@@ -57,15 +58,17 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
   }
 
   // Função chamada quando o tempo do vídeo muda
-  function onTimeUpdate(time: number) {
-    if (Math.floor(time) % 10 === 0 && time > 0) {
-      saveProgress(time);
+  function handleProgressUpdate(time: number) {
+    const roundedTime = Math.floor(time);
+    if (roundedTime > 0 && roundedTime % 10 === 0 && roundedTime !== lastSavedTime.current) {
+      lastSavedTime.current = roundedTime;
+      saveProgress(roundedTime);
     }
   }
   
   function handleStop() {
-    player.current?.pause();
-    player.current!.currentTime = 0;
+    mediaInstance?.pause();
+    if (mediaInstance) mediaInstance.currentTime = 0;
   }
 
   // Lógica de Sincronização Realtime
@@ -141,7 +144,7 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
           title={title}
           src={src}
           currentTime={startOffset}
-          onTimeUpdate={(event) => event?.detail && onTimeUpdate(event.detail.currentTime)}
+          onTimeUpdate={(event) => event?.detail && handleProgressUpdate(event.detail.currentTime)}
           onEnded={onNext}
           seekStep={10}
           key={src}
