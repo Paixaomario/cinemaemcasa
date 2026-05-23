@@ -342,7 +342,7 @@ function MovieContent() {
         <VideoPlayer
           src={movie.url}
           title={title}
-          contentId={contentUuid || localMovieId}
+          contentId={contentUuid || String(movie.id)}
           userId={user?.id}
           onClose={() => setShowPlayer(false)}
         />
