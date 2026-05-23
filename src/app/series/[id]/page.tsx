@@ -535,7 +535,7 @@ function SeriesContent() {
         <VideoPlayer
           src={activeEpisode?.arquivo || episodes[0]?.arquivo}
           title={activeEpisode ? `${title} - ${activeEpisode.titulo}` : title}
-          contentId={contentUuid || String(series.id_n)} // Usa UUID para salvar progresso corretamente
+          contentId={contentUuid || String(series.id_n || series.id)} 
           userId={user?.id}
           onClose={() => { setShowPlayer(false); setActiveEpisode(null); setActiveRoomId(null); setGuestName(''); setAutoPlayNext(false); }}
           partyRoomId={activeRoomId}

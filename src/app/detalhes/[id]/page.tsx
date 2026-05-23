@@ -42,38 +42,48 @@ function MovieContent() {
 
     async function loadMovie() {
       const sb = createClient()
-      const cleanId = String(id).replace('filme-', '')
+      const rawId = String(id)
+      const cleanId = rawId.replace('filme-', '')
       const isNumeric = /^\d+$/.test(cleanId)
+      
+      let localMovieId: string | null = null
       let localData = null
       
-      // 1. Resolver ID (pode ser BIGINT ou UUID da tabela content)
+      // 1. Resolver ID Real (UUID da content ou id da cinema)
       if (!isNumeric) {
         const { data: contentData } = await sb
           .from('content')
           .select('id, title')
-          .eq('id', id)
+          .eq('id', rawId)
           .maybeSingle()
 
         if (contentData) {
           const { data: mData } = await sb
             .from('cinema')
             .select('*')
-            .eq('titulo', contentData.title)
+            .ilike('titulo', contentData.title.trim())
             .maybeSingle()
-          localData = mData
-          if (mData) movieIdNum = mData.id
-          setContentUuid(contentData.id)
+          
+          if (mData) {
+            localData = mData
+            localMovieId = String(mData.id)
+            setContentUuid(contentData.id)
+          }
         }
       } else {
         const { data: mData } = await sb
           .from('cinema')
           .select('*')
-          .eq('id', movieIdNum)
+          .eq('id', cleanId)
           .maybeSingle()
-        localData = mData
+        
+        if (mData) {
+          localData = mData
+          localMovieId = cleanId
+        }
       }
 
-      if (!localData) {
+      if (!localData || !localMovieId) {
         router.push('/')
         return
       }
@@ -332,7 +342,7 @@ function MovieContent() {
         <VideoPlayer
           src={movie.url}
           title={title}
-          contentId={contentUuid || String(movie.id)}
+          contentId={contentUuid || localMovieId}
           userId={user?.id}
           onClose={() => setShowPlayer(false)}
         />
