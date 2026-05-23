@@ -183,7 +183,7 @@ function MovieContent() {
   const formatCurrency = (val: number) => val > 0 ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val) : 'N/A'
 
   const countryCode = String(movie.production_countries?.[0]?.iso_3166_1 || 
-                     (Array.isArray(movie.origin_country) ? movie.origin_country[0] : movie.origin_country) || '';
+                     (Array.isArray(movie.origin_country) ? movie.origin_country[0] : movie.origin_country) || '');
 
   return (
     <main className="min-h-screen bg-black text-white relative">

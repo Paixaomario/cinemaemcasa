@@ -178,7 +178,7 @@ function SeriesContent() {
   }, [id, router, user])
 
   const startParty = useCallback(() => {
-    const newRoomId = crypto.randomUUID();
+    const newRoomId = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
     const inviteLink = `${window.location.origin}${window.location.pathname}?room=${newRoomId}`;
     const inviteMsg = `Vamos assistir comigo?\n\n🍿 ${series.titulo || series.name}\n🔗 ${inviteLink}`;
     
@@ -303,7 +303,7 @@ function SeriesContent() {
         )}
 
         <div className="flex items-center gap-4 mb-8 text-sm md:text-base font-bold">
-          {countryCode && (
+          {countryCode && countryCode.length === 2 && (
             <img 
               src={`https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`} 
               alt={countryCode}

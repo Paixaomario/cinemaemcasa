@@ -97,3 +97,20 @@ body {
   border-radius: 12px !important;
   background-color: rgba(10, 10, 15, 0.95) !important;
 }
+
+/* Efeito de Emojis Voadores (Party Mode) */
+.emoji-reaction {
+  position: absolute;
+  bottom: 0;
+  font-size: 2.5rem;
+  z-index: 10006;
+  pointer-events: none;
+  animation: flyUp 3s forwards ease-out;
+  filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+}
+
+@keyframes flyUp {
+  0% { transform: translateY(0) scale(0.5); opacity: 0; }
+  20% { opacity: 1; transform: translateY(-20vh) scale(1.2) rotate(10deg); }
+  100% { transform: translateY(-100vh) scale(1) rotate(-10deg); opacity: 0; }
+}
