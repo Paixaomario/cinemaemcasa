@@ -1,638 +1,500 @@
 'use client'
-export const dynamic = 'force-dynamic'
 
-import { useRouter, useSearchParams } from 'next/navigation'
-import React, { useEffect, useState, Suspense } from 'react'
-import Image from 'next/image'
+import { useEffect, useState, useCallback, Suspense } from 'react'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import { notFound } from 'next/navigation'
+import { getShowDetails, TMDB_IMG } from '@/lib/tmdb'
 import { Navbar } from '@/components/layout/Navbar'
+import { VideoPlayer } from '@/app/VideoPlayer'
+import Image from 'next/image'
+import { ContentCard } from '@/components/ui/ContentCard'
 import { useAuth } from '@/components/layout/SupabaseProvider'
-import NextDynamic from 'next/dynamic'
-import { getShowDetails, getShowCertification, IMG } from '@/lib/tmdb'
+import { Heart } from 'lucide-react'
 
-interface EpisodeData { id_n: number; arquivo: string; imagem_342?: string; imagem_185?: string; titulo: string; numero_episodio: number; descricao?: string; duracao?: string; }
-interface SeasonData { id_n: number; numero_temporada: number; episodes: EpisodeData[]; }
-interface ActorData { name: string; profile_path?: string; image?: string; character?: string; }
-interface RecommendationData { id: number | string; poster: string | null; rating: number | null; }
-
-interface SeriesData {
-  id?: number | string;
-  tmdb_id?: number | null;
-  titulo?: string;
-  backdrop?: string;
-  banner?: string;
-  poster_path?: string | null;
-  capa?: string;
-  poster?: string;
-  year?: number;
-  ano?: number;
-  rating?: string;
-  vote_average?: number;
-  description?: string;
-  descricao?: string;
-  overview?: string;
-  category?: string;
-  genero?: string;
-  genres?: { id: number; name: string }[];
-  credits?: { cast: ActorData[]; crew: { job: string; name: string }[] };
-  cast_names?: string;
-  seasons?: SeasonData[];
-  trailer?: string;
-  videos?: { results: { type: string; key: string }[] };
-  type?: string;
-}
-
-const VideoPlayer = NextDynamic(() => import('../../detalhes/[id]/VideoPlayer').then(mod => mod.VideoPlayer), {
-  ssr: false
-})
-
-interface Props { 
-  params: Promise<{ id: string }>
-}
-
-export default function SeriesDetailPage(props: Props) {
+export default function SeriesDetailsPage() {
   return (
-    <Suspense fallback={null}>
-      <SeriesDetailContent {...props} />
+    <Suspense fallback={<div className="min-h-screen bg-black animate-pulse" />}>
+      <SeriesContent />
     </Suspense>
   )
 }
 
-function SeriesDetailContent({ params }: Props) {
+function SeriesContent() {
+  const { id } = useParams()
   const router = useRouter()
-  const { user } = useAuth()
   const searchParams = useSearchParams()
-  const [seriesData, setSeriesData] = useState<SeriesData | null>(null)
+  const { user } = useAuth()
+  const [series, setSeries] = useState<any>(null)
+  const [seasons, setSeasons] = useState<any[]>([])
+  const [episodes, setEpisodes] = useState<any[]>([])
+  const [selectedSeason, setSelectedSeason] = useState<any>(null)
+  const [filteredRecommendations, setFilteredRecommendations] = useState<any[]>([])
   const [isFavorite, setIsFavorite] = useState(false)
-  const [isWatchLater, setIsWatchLater] = useState(false)
-  const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null)
-  const [selectedSeason, setSelectedSeason] = useState<SeasonData | null>(null)
+  const [contentUuid, setContentUuid] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [shuffledRecommendations, setShuffledRecommendations] = useState<RecommendationData[]>([])
-  const [id, setId] = useState<string | null>(null)
-  const [showToast, setShowToast] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
+  const [activeEpisode, setActiveEpisode] = useState<any>(null)
 
-  const displayTitle = seriesData?.titulo || 'Nome da Série'
-  const displayYear = seriesData?.year || seriesData?.ano || ''
-  const displayGenres = seriesData?.genero || (seriesData?.genres?.map(g => g.name).join(', ')) || 'Não informado'
-  const displayBackdrop = seriesData?.backdrop || seriesData?.banner || seriesData?.poster_path || seriesData?.poster || seriesData?.capa || 'https://via.placeholder.com/1920x470'
-  const displayPoster = seriesData?.poster || seriesData?.capa || seriesData?.poster_path || 'https://via.placeholder.com/320x470'
-  const displayDescription = seriesData?.description || seriesData?.descricao || seriesData?.overview || 'Descrição não disponível.'
-
-  const castList = seriesData?.credits?.cast || (typeof seriesData?.cast_names === 'string' ? seriesData.cast_names.split(',').map(n => n.trim()) : seriesData?.cast_names) || []
+  // Estados da Sala (Assistir Juntos)
+  const [activeRoomId, setActiveRoomId] = useState(searchParams.get('room'))
+  const [isGuestMode] = useState(!!searchParams.get('room'))
+  const [guestStep, setGuestStep] = useState<'prompt' | 'name' | 'ready' | null>(searchParams.get('room') ? 'prompt' : null)
+  const [guestName, setGuestName] = useState('')
 
   useEffect(() => {
-    async function loadSeriesData() {
-      try {
-        const sb = createClient()
-        const { id: resolvedId } = await params
-        setId(resolvedId)
+    if (!id) return
 
-        const parsedId = resolvedId
+    async function loadSeries() {
+      const sb = createClient()
+      let seriesIdNum = Number(id)
+      let localData = null
 
-        let { data: sData } = await sb
+      // 1. Resolver ID (pode ser id_n numérico ou UUID da tabela content)
+      if (isNaN(seriesIdNum)) {
+        // Se não for número, busca na tabela content pelo UUID para recuperar o título
+        const { data: contentData } = await sb
+          .from('content')
+          .select('id, title')
+          .eq('id', id)
+          .maybeSingle()
+        
+        if (contentData) {
+          const { data: sData } = await sb
+            .from('series')
+            .select('*')
+            .eq('titulo', contentData.title)
+            .maybeSingle()
+          localData = sData
+          if (sData) seriesIdNum = sData.id_n
+          setContentUuid(contentData.id)
+        }
+      } else {
+        // Busca direta por id_n
+        const { data: sData } = await sb
           .from('series')
           .select('*')
-          .or(`id_n.eq.${isNaN(Number(parsedId)) ? -1 : parsedId},tmdb_id.eq.${isNaN(Number(parsedId)) ? -1 : parsedId}`)
+          .eq('id_n', seriesIdNum)
+          .maybeSingle()
+        localData = sData
+      }
+
+      if (!localData || !seriesIdNum) {
+        router.push('/')
+        return
+      }
+
+      // 2. Busca metadados ricos no TMDB
+      let finalData = localData
+      if (localData.tmdb_id) {
+        try {
+          const tmdbData = await getShowDetails(localData.tmdb_id)
+          if (tmdbData) finalData = { ...tmdbData, ...localData }
+        } catch (e) {
+          console.warn("TMDB Series metadata not found, using local only");
+        }
+
+        // Filtra recomendações: apenas as séries que existem no seu banco
+        if (finalData.recommendations?.results?.length > 0) {
+          const recIds = finalData.recommendations.results.map((r: any) => r.id)
+          const { data: existing } = await sb
+            .from('series')
+            .select('id_n, titulo, capa, poster, rating, ano, genero, tmdb_id') // Seleciona tmdb_id para ContentCard
+            .in('tmdb_id', recIds)
+          setFilteredRecommendations(existing || [])
+        }
+      }
+      setSeries(finalData)
+
+      // Sincronização com a tabela content para obter UUID (necessário para favoritos e progresso)
+      let cid = contentUuid
+      if (!cid && localData?.titulo) {
+        const { data: contentData } = await sb
+          .from('content')
+          .select('id')
+          .eq('title', localData.titulo)
+          .eq('type', 'series')
           .maybeSingle()
 
-        if (!sData) return notFound()
-
-        let seasonsWithEpisodes: SeasonData[] = [];
-        const { data: tData } = await sb.from('temporadas').select('*').eq('serie_id', sData.id_n).order('numero_temporada', { ascending: true })
-        if (tData) {
-          seasonsWithEpisodes = await Promise.all(tData.map(async (season) => {
-            const { data: eData } = await sb.from('episodios').select('*').eq('temporada_id', season.id_n).order('numero_episodio', { ascending: true })
-            return { ...season, episodes: eData || [] }
-          }))
-        }
-
-        // Buscar metadados do TMDB para enriquecer com elenco, gêneros, etc.
-        let tmdbMetadata: any = null
-        if (sData.tmdb_id) {
-          try {
-            tmdbMetadata = await getShowDetails(Number(sData.tmdb_id))
-            const certification = await getShowCertification(Number(sData.tmdb_id))
-            if (certification) {
-              tmdbMetadata.certification = certification
-            }
-          } catch (e) {
-            console.warn('Falha ao carregar metadados TMDB:', e)
-          }
-        }
-
-        const foundData: any = {
-          ...sData,
-          ...tmdbMetadata,
-          id: sData.id_n,
-          poster: sData.poster || sData.capa,
-          backdrop: sData.banner || sData.poster || sData.capa,
-          year: sData.ano,
-          description: sData.descricao,
-          seasons: seasonsWithEpisodes
-        }
-        if (tmdbMetadata?.poster_path) {
-          foundData.poster = IMG.poster(tmdbMetadata.poster_path, 'w500')
-        }
-        if (tmdbMetadata?.backdrop_path) {
-          foundData.backdrop = IMG.original(tmdbMetadata.backdrop_path)
-        }
-        if (tmdbMetadata?.first_air_date) {
-          foundData.year = tmdbMetadata.first_air_date.split('-')[0]
-        }
-        if (tmdbMetadata?.overview) {
-          foundData.description = tmdbMetadata.overview
-        }
-
-        if (seasonsWithEpisodes.length > 0) {
-          setSelectedSeason(seasonsWithEpisodes[0])
-        }
-
-        setSeriesData(foundData)
-
-        if (user && resolvedId) {
-          const { data: fav } = await sb.from('favorites').select('id').eq('user_id', user.id).eq('content_id', resolvedId).maybeSingle()
-          if (fav) setIsFavorite(true)
-
-          const { data: wl } = await sb.from('watch_later').select('id').eq('user_id', user.id).eq('content_id', resolvedId).maybeSingle()
-          if (wl) setIsWatchLater(true)
-        }
-
-      } catch (error) {
-        console.error('Error loading series data:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadSeriesData()
-  }, [params, user])
-
-  useEffect(() => {
-    if (seriesData) {
-      async function loadSystemRecs() {
-        const sb = createClient()
-        const category = seriesData.genero || seriesData.category
-        const currentTmdbId = seriesData.tmdb_id || seriesData.id
-
-        let query = sb.from('series').select('id_n, titulo, poster, rating, tmdb_id')
-
-        if (category) {
-          query = query.eq('genero', category)
-        }
-
-        const { data: localMatches } = await query.neq('tmdb_id', currentTmdbId).limit(8)
-
-        if (localMatches && localMatches.length > 0) {
-          const shuffled = localMatches.map(m => ({ id: m.id_n, poster: m.poster, rating: m.rating })).sort(() => Math.random() - 0.5).slice(0, 8)
-          setShuffledRecommendations(shuffled as RecommendationData[])
+        if (contentData) {
+          cid = contentData.id
         } else {
-          const { data: randomFallback } = await sb.from('series').select('id_n, titulo, poster, rating, tmdb_id').limit(8)
-          const mappedFallback = (randomFallback || []).map(m => ({ id: m.id_n, poster: m.poster, rating: m.rating }))
-          setShuffledRecommendations(mappedFallback as RecommendationData[])
+          const { data: newContent } = await sb.from('content')
+            .insert({ 
+              title: localData.titulo, 
+              type: 'series', 
+              poster: localData.capa || localData.poster || localData.poster_path,
+              is_published: true 
+            }).select('id').single()
+          if (newContent) cid = newContent.id
         }
       }
-      loadSystemRecs()
-    }
-  }, [seriesData, id])
+      if (cid) setContentUuid(cid)
 
-  const showToastMsg = (msg: string) => {
-    setToastMessage(msg)
-    setShowToast(true)
-    setTimeout(() => setShowToast(false), 2200)
-  }
+      // Verifica favorito
+      if (cid && user) {
+        const { data: fav } = await sb
+          .from('favorites')
+          .select('id')
+          .match({ user_id: user.id, content_id: cid })
+          .maybeSingle()
+        setIsFavorite(!!fav)
+      }
 
-  async function handleToggleFavorite() {
-    if (!user) {
-      alert('Faça login para adicionar aos favoritos!')
-      return
-    }
-    if (!id) {
-      return
+      // 3. Busca Temporadas
+      const { data: seasonsData } = await sb
+        .from('temporadas')
+        .select('*')
+        .eq('serie_id', seriesIdNum)
+        .order('numero_temporada', { ascending: true })
+
+      setSeasons(seasonsData || [])
+      if (seasonsData && seasonsData.length > 0) {
+        const firstSeason = seasonsData[0]
+        setSelectedSeason(firstSeason)
+        
+        // Busca episódios da primeira temporada IMEDIATAMENTE para evitar tela vazia no carregamento
+        const { data: episodesData } = await sb
+          .from('episodios')
+          .select('*')
+          .eq('temporada_id', firstSeason.id_n)
+          .order('numero_episodio', { ascending: true })
+        setEpisodes(episodesData || [])
+      }
+      
+      setLoading(false)
     }
 
+    loadSeries()
+  }, [id, router, user])
+
+  const startParty = useCallback(() => {
+    const newRoomId = Math.random().toString(36).substring(2, 11);
+    const inviteLink = `${window.location.origin}${window.location.pathname}?room=${newRoomId}`;
+    const inviteMsg = `Vamos assistir comigo?\n\n🍿 ${series.titulo || series.name}\n🔗 ${inviteLink}`;
+    
+    navigator.clipboard.writeText(inviteMsg);
+    alert("🎉 Sala criada! Convite copiado para sua área de transferência.");
+    // Inicia com o primeiro episódio se nenhum estiver ativo
+    if (!activeEpisode && episodes.length > 0) setActiveEpisode(episodes[0])
+    setRoomId(newRoomId);
+  }, [series, activeEpisode, episodes]);
+
+  async function toggleFavorite() {
+    if (!user) return router.push('/login')
     const sb = createClient()
+    const targetId = contentUuid
+
+    if (!targetId) return
+
     if (isFavorite) {
-      const { error } = await sb.from('favorites').delete().eq('user_id', user.id).eq('content_id', id)
-      if (!error) {
-        setIsFavorite(false)
-        showToastMsg('Removido dos Favoritos!')
-      }
+      const { error } = await sb.from('favorites').delete().match({ user_id: user.id, content_id: targetId });
+      if (!error) setIsFavorite(false);
     } else {
-      const { error } = await sb.from('favorites').insert({ user_id: user.id, content_id: id })
-      if (!error) {
-        setIsFavorite(true)
-        showToastMsg('Adicionado aos Favoritos!')
-      }
+      const { error } = await sb.from('favorites').insert({ user_id: user.id, content_id: targetId });
+      if (!error) setIsFavorite(true);
     }
   }
 
-  async function handleToggleWatchLater() {
-    if (!user) {
-      alert('Faça login para adicionar à sua lista!')
-      return
-    }
-    if (!id) {
-      return
+  // Busca episódios quando a temporada muda
+  useEffect(() => {
+    if (!selectedSeason?.id_n || loading) return
+
+    async function loadEpisodes() {
+      const sb = createClient()
+      const { data: episodesData } = await sb
+        .from('episodios')
+        .select('*')
+        .eq('temporada_id', selectedSeason.id_n)
+        .order('numero_episodio', { ascending: true })
+
+      setEpisodes(episodesData || [])
     }
 
-    const sb = createClient()
-    if (isWatchLater) {
-      const { error } = await sb.from('watch_later').delete().eq('user_id', user.id).eq('content_id', id)
-      if (!error) {
-        setIsWatchLater(false)
-        showToastMsg('Removido de Assistir Depois!')
-      }
-    } else {
-      const { error } = await sb.from('watch_later').insert({ user_id: user.id, content_id: id })
-      if (!error) {
-        setIsWatchLater(true)
-        showToastMsg('Adicionado para Assistir Depois!')
-      }
-    }
+    loadEpisodes()
+  }, [selectedSeason, loading])
+
+  if (loading || !series) {
+    return <div className="min-h-screen bg-black animate-pulse" />
   }
 
-  const handlePlayContent = () => {
-    if (seriesData && seriesData.seasons && seriesData.seasons.length > 0) {
-      const firstEpisode = seriesData.seasons[0].episodes[0]
-      if (firstEpisode && firstEpisode.arquivo) {
-        setActiveVideoUrl(firstEpisode.arquivo)
-      } else {
-        alert('Primeiro episódio não disponível para esta série.')
-      }
-    }
-  }
+  const backdrop = TMDB_IMG.backdrop(series.backdrop_path || series.banner)
+  const title = series.titulo || series.name
+  const description = series.overview || series.description || series.descricao
 
-  const handlePlayEpisode = (episodeUrl: string) => {
-    if (episodeUrl) {
-      setActiveVideoUrl(episodeUrl)
-    } else {
-      alert('Este episódio não possui um arquivo de vídeo disponível.')
-    }
-  }
-
-  const handlePlayTrailer = () => {
-    if (!seriesData) {
-      return
-    }
-    const trailer = seriesData.trailer
-    if (trailer) {
-      setActiveVideoUrl(trailer)
-    } else {
-      alert('Trailer não disponível para este título.')
-    }
-  }
-
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#000' }}>
-        <div style={{ color: '#d9a23a', fontSize: '24px' }}>Carregando...</div>
-      </div>
-    )
-  }
-
-  if (!seriesData) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#000' }}>
-        <div style={{ color: '#d9a23a', fontSize: '24px' }}>Série não encontrada</div>
-      </div>
-    )
-  }
+  const countryCode = (Array.isArray(series.origin_country) ? series.origin_country[0] : series.origin_country) || '';
 
   return (
-    <>
+    <main className="min-h-screen bg-black text-white relative">
       <Navbar />
-      <link rel="stylesheet" href="/series-mobile.css" />
 
-      {/* FUNDO VIVO MOBILE */}
-      <div className="mobile-bg-glow" />
+      {/* Banner de Fundo */}
+      <div className="absolute inset-0 h-[90vh] w-full">
+        {backdrop && (
+          <Image
+            src={backdrop}
+            alt={title}
+            fill
+            className="object-cover opacity-40"
+            priority
+            sizes="100vw"
+            unoptimized
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-transparent" />
+      </div>
 
-      {/* MOBILE HEADER */}
-      <header className="series-mobile-header">
-        <div className="brand">
-          <h1>PAIXAOFLIX</h1>
-          <div className="mini-icons">
-            <button className="mini-btn">🔍</button>
-            <button className="mini-btn">🎬</button>
-            <button className="mini-btn">👤</button>
-          </div>
-        </div>
-      </header>
+      {/* Conteúdo - Ajustado padding para visibilidade imediata das temporadas */}
+      <div className="relative pt-[45vh] md:pt-[55vh] px-6 md:px-16 z-10">
+        <div className="max-w-6xl">
+        <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter mb-4 drop-shadow-2xl">
+          {title}
+        </h1>
+        {series.tagline && (
+          <p className="text-brand-cyan font-bold tracking-widest uppercase text-sm mb-4 drop-shadow-md">{series.tagline}</p>
+        )}
 
-      {/* MOBILE HERO COMPACTO */}
-      <section className="series-hero-mini">
-        <div className="series-hero-top">
-          <div className="series-mini-poster">
-            <Image 
-                src={displayPoster} 
-                alt={displayTitle} 
-                width={92} 
-                height={132} 
-                unoptimized 
+        <div className="flex items-center gap-4 mb-8 text-sm md:text-base font-bold">
+          {countryCode && (
+            <img 
+              src={`https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`} 
+              alt={countryCode}
+              className="h-7 w-auto object-contain rounded-sm shadow-sm"
+              title={countryCode}
             />
-          </div>
-
-          <div className="series-mini-info">
-            <h2>{displayTitle}</h2>
-
-            <div className="series-mini-meta">
-              <span>{displayYear}</span>
-              <span>{seriesData.genero || 'Série'}</span>
-              {seriesData.seasons && (
-                <span>{seriesData.seasons.length} Temporadas</span>
-              )}
-              {seriesData.vote_average && (
-                <span className="meta-rating">★ {seriesData.vote_average?.toFixed(1)}</span>
-              )}
-            </div>
-          </div>
+          )}
+          <span className="bg-brand-cyan text-black px-2 py-0.5 rounded text-xs">TMDB {series.vote_average?.toFixed(1) || series.rating}</span>
+          <span className="text-neutral-400">{series.first_air_date?.slice(0, 4) || series.ano}</span>
+          {series.number_of_seasons && (
+            <span className="text-neutral-400 font-bold uppercase tracking-widest">{series.number_of_seasons} Temporadas</span>
+          )}
         </div>
 
-        <div className="series-mini-desc">
-          {displayDescription}
+        <p className="text-lg md:text-xl text-neutral-300 leading-relaxed mb-12 max-w-3xl drop-shadow">
+          {description}
+        </p>
+
+        <div className="flex flex-wrap items-center gap-4 mb-16">
+          {/* Botão Assistir Agora (Cor do Logo) */}
+          <button
+            onClick={() => episodes[0] && setActiveEpisode(episodes[0])}
+            className="px-10 py-4 bg-brand-cyan text-white font-montserrat font-black uppercase tracking-widest rounded-[20px] hover:brightness-110 transition-all transform hover:scale-105 focus:ring-4 focus:ring-brand-cyan outline-none border border-transparent"
+          >
+            ▶ Assistir Agora
+          </button>
+
+          <button
+            onClick={startParty}
+            className="px-10 py-4 bg-white/10 text-white font-montserrat font-black uppercase tracking-widest rounded-[20px] border border-white/20 hover:bg-brand-cyan hover:text-black transition-all transform hover:scale-105 focus:ring-4 focus:ring-brand-cyan outline-none"
+          >
+            🍿 Assistir Juntos
+          </button>
+
+          {/* Botão Voltar */}
+          <button 
+            onClick={() => router.back()}
+            className="px-10 py-4 bg-[#001f3f] text-white font-montserrat font-black uppercase tracking-widest rounded-[20px] hover:brightness-125 transition-all focus:ring-4 focus:ring-blue-500 outline-none border border-transparent"
+          >
+            Voltar
+          </button>
+
+          {/* Botão Trailer */}
+          {series.trailer && (
+            <a
+              href={series.trailer}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-10 py-4 bg-[#FF0000] text-white font-black uppercase tracking-widest rounded-lg hover:bg-[#CC0000] transition-all focus:ring-4 focus:ring-red-600 outline-none border border-[#FF0000]"
+            >
+              🎬 Trailer
+            </a>
+          )}
+
+          {/* Botão Favoritos (Apenas ícone) */}
+          <button 
+            onClick={toggleFavorite}
+            className={`p-4 rounded-lg transition-all border border-white/10 focus:ring-4 outline-none ${isFavorite ? 'bg-red-600/20 border-red-600 text-red-600 focus:ring-red-600' : 'bg-white/5 text-white hover:bg-white/10 focus:ring-white'}`}
+            title={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
+          >
+            <Heart className={`w-7 h-7 ${isFavorite ? 'fill-red-600 text-red-600' : 'fill-none'}`} />
+          </button>
+        </div>
         </div>
 
-        <div className="series-actions">
-          <button className="btn-primary" onClick={handlePlayContent}>▶ Continuar Assistindo</button>
-
-          <div className="btn-row">
-              <button className="btn-secondary" onClick={handlePlayTrailer}>🎞 Trailer</button>
-            <button className={`btn-icon ${isFavorite ? 'active' : ''}`} id="btnFavorito" onClick={handleToggleFavorite}>❤</button>
-            <button className={`btn-icon ${isWatchLater ? 'active' : ''}`} id="btnAssistirDepois" onClick={handleToggleWatchLater}>🕒</button>
-          </div>
-        </div>
-      </section>
-
-      {/* MOBILE MAIN CONTENT */}
-      <main className="series-mobile-page">
-        {/* EPISÓDIOS */}
-        {seriesData.seasons && seriesData.seasons.length > 0 && (
-          <section className="panel">
-            <div className="panel-header">
-              <h3>Episódios</h3>
-              <select
-                className="season-select" 
-                id="seasonSelect"
-                value={selectedSeason?.id_n || ''}
-                onChange={(e) => {
-                  const season = seriesData.seasons?.find((s: SeasonData) => s.id_n === Number(e.target.value))
-                  if (season) setSelectedSeason(season)
-                }}
-              >
-                {seriesData.seasons.map((season: SeasonData) => (
-                  <option key={season.id_n} value={season.id_n}>
-                    Temporada {season.numero_temporada}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="episodes-list" id="episodesList">
-              {selectedSeason?.episodes.map((episode: EpisodeData, index: number) => (
-                <div 
-                  key={episode.id_n} 
-                  className="episode-item"
-                  onClick={() => handlePlayEpisode(episode.arquivo)}
+        {/* Seção de Episódios - Agora logo após o Banner */}
+        <div className="mt-8 bg-neutral-900/40 p-8 rounded-3xl border border-white/5 backdrop-blur-md mb-20">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 border-b border-white/10 pb-6">
+            <h2 className="text-3xl font-black uppercase tracking-tighter text-brand-cyan">Episódios</h2>
+            
+            {seasons.length > 0 && (
+              <div className="flex items-center gap-4">
+                <span className="text-xs font-black uppercase text-neutral-500 tracking-widest">Temporada:</span>
+                <select 
+                  value={selectedSeason?.id_n}
+                  onChange={(e) => setSelectedSeason(seasons.find(s => String(s.id_n) === e.target.value))}
+                  className="bg-black text-white border border-white/20 rounded-xl px-6 py-3 font-bold focus:ring-4 focus:ring-brand-cyan/40 outline-none transition-all cursor-pointer hover:bg-neutral-800"
                 >
-                  <div 
-                    className="ep-thumb" 
-                    style={{ backgroundImage: `url(${episode.imagem_342 || episode.imagem_185 || 'https://via.placeholder.com/342x185'})` }}
-                  >
-                    <div className="ep-play">▶</div>
-                  </div>
+                  {seasons.map(s => (
+                    <option key={s.id_n} value={s.id_n}>
+                      {s.numero_temporada === 0 ? 'Especiais' : `Temporada ${s.numero_temporada}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
 
-                  <div className="ep-info">
-                    <strong>{index + 1}. {episode.titulo}</strong>
-                    <span>{episode.duracao || 'Duração não informada'}</span>
-
-                    <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: '0%' }} />
-                    </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {episodes.map((ep) => (
+              <button
+                key={ep.id_n}
+                onClick={() => setActiveEpisode(ep)}
+                className="group flex flex-col gap-4 text-left p-4 rounded-2xl hover:bg-white/5 transition-all focus:ring-4 focus:ring-brand-cyan outline-none border border-transparent hover:border-white/10"
+              >
+                <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-neutral-800 border border-white/5">
+                  {/* Correção da exibição da imagem com fallback para banner */}
+                  {(ep.imagem_500 || ep.banner) ? (
+                    <Image 
+                      src={TMDB_IMG.backdrop(ep.imagem_500 || ep.banner)} 
+                      alt={ep.titulo} 
+                      fill 
+                      className="object-cover group-hover:scale-110 transition-transform duration-500" 
+                      unoptimized 
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-4xl">📺</div>
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-12 h-12 rounded-full bg-brand-cyan flex items-center justify-center text-black text-xl pl-1 shadow-lg">▶</div>
                   </div>
+                  <div className="absolute top-2 left-2 px-3 py-1 bg-black/80 rounded-lg text-[10px] font-black uppercase tracking-widest text-brand-cyan border border-brand-cyan/20">
+                    Episódio {ep.numero_episodio}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-black text-white group-hover:text-brand-cyan transition-colors line-clamp-1 uppercase text-sm tracking-tight">{ep.titulo}</h3>
+                  <p className="text-xs text-neutral-500 line-clamp-2 mt-2 font-medium leading-relaxed">{ep.descricao || 'Sem descrição disponível para este episódio.'}</p>
+                </div>
+              </button>
+            ))}
+            {episodes.length === 0 && (
+              <div className="col-span-full py-20 text-center opacity-30">
+                <p className="text-xl font-black uppercase tracking-widest">Nenhum episódio cadastrado</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Informações Técnicas Séries */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16 text-neutral-400 text-sm border-t border-white/5 pt-10">
+           <div>
+              <span className="block font-black uppercase text-[10px] mb-1">Nome Original</span>
+              <p className="text-white font-bold">{series.original_name}</p>
+           </div>
+           <div>
+              <span className="block font-black uppercase text-[10px] mb-1">Status</span>
+              <p className="text-white font-bold">{series.status === 'Returning Series' ? 'Em exibição' : 'Finalizada'}</p>
+           </div>
+           <div>
+              <span className="block font-black uppercase text-[10px] mb-1">Tipo</span>
+              <p className="text-white font-bold">{series.type}</p>
+           </div>
+           <div>
+              <span className="block font-black uppercase text-[10px] mb-1">Emissora</span>
+              <p className="text-white font-bold">{series.networks?.[0]?.name || 'N/A'}</p>
+           </div>
+        </div>
+
+        {/* Elenco da Série */}
+        {series.credits?.cast && (
+          <section className="mb-20">
+            <h2 className="text-2xl font-black uppercase tracking-tighter mb-8 border-l-4 border-brand-cyan pl-4">Elenco Principal</h2>
+            <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
+              {series.credits.cast.slice(0, 12).map((actor: any) => (
+                <div key={actor.id} className="min-w-[140px] text-center group">
+                  <div className="relative w-28 h-28 mx-auto rounded-full overflow-hidden border-2 border-white/5 group-hover:border-brand-cyan transition-colors mb-3">
+                    <Image src={TMDB_IMG.profile(actor.profile_path) || 'https://via.placeholder.com/185x185?text=👤'} alt={actor.name} fill className="object-cover" unoptimized />
+                  </div>
+                  <p className="text-xs font-bold text-white line-clamp-1">{actor.name}</p>
+                  <p className="text-[10px] text-neutral-500 line-clamp-1">{actor.character}</p>
                 </div>
               ))}
             </div>
           </section>
         )}
-      </main>
 
-      <div className="toast" id="toast"></div>
-      <script src="/series-mobile.js" defer />
-
-      <div className="page-container">
-        <link rel="stylesheet" href="/series-desktop.css" /> {/* Link para o CSS desktop */}
-        <div className="series-bg-glow" />
-
-        {/* HERO SECTION */}
-        <div className="hero"> {/* Este div é o hero do desktop */}
-          <div className="hero-bg" style={{ backgroundImage: `url(${displayBackdrop})` }}></div>
-          <div className="hero-overlay"></div>
-          
-          <div className="hero-content">
-            <div className="series-poster">
-              <Image src={displayPoster} alt={displayTitle} fill unoptimized />
+        {/* Recomendações de Séries */}
+        {filteredRecommendations.length > 0 && (
+          <section className="mb-32">
+            <h2 className="text-2xl font-black uppercase tracking-tighter mb-8 border-l-4 border-brand-cyan pl-4">Você também pode gostar</h2>
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-6">
+              {filteredRecommendations.slice(0, 6).map((item: any) => (
+                <ContentCard 
+                  key={item.id} 
+                  item={item} 
+                />
+              ))}
             </div>
-
-            <div className="series-info">
-              <h1 className="uppercase tracking-wider text-white">
-                {displayTitle}
-              </h1>
-
-              <div className="series-meta">
-                <span>{displayYear}</span>
-                <span>{displayGenres}</span>
-                {seriesData.seasons && (
-                  <span>{seriesData.seasons.length} Temporada{seriesData.seasons.length > 1 ? 's' : ''}</span>
-                )}
-                {seriesData.vote_average && (
-                  <span className="rating-badge">⭐ {seriesData.vote_average?.toFixed(1)}</span>
-                )}
-              </div>
-
-              <div className="badges-row">
-                <span className="badge">4K</span>
-                <span className="badge">HDR</span>
-                <span className="badge">Dolby Vision</span>
-                <span className="badge">Dolby Atmos</span>
-              </div>
-
-              <p className="series-desc">
-                {displayDescription}
-              </p>
-
-              <div className="series-actions">
-                <button className="btn-primary" onClick={handlePlayContent}>
-                  ▶ Assistir Agora
-                </button>
-                <button className="btn-secondary" onClick={handlePlayTrailer}>
-                  🎞 Trailer
-                </button>
-                <button className={`btn-icon ${isFavorite ? 'active' : ''}`} onClick={handleToggleFavorite}>
-                  {isFavorite ? '❤️' : '🤍'}
-                </button>
-                <button className={`btn-icon ${isWatchLater ? 'active' : ''}`} onClick={handleToggleWatchLater}>
-                  {isWatchLater ? '⏳' : '⏰'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* EPISÓDIOS */}
-        {seriesData.seasons && seriesData.seasons.length > 0 ? (
-          <div className="series-page">
-            <section className="panel">
-              <div className="panel-title">
-                <h2>Episódios</h2>
-                <select 
-                  className="season-select" 
-                  value={selectedSeason?.id_n || ''}
-                  onChange={(e) => {
-                    const season = seriesData.seasons?.find((s: SeasonData) => s.id_n === Number(e.target.value))
-                    if (season) setSelectedSeason(season)
-                  }}
-                >
-                  {seriesData.seasons.map((season: SeasonData) => (
-                    <option key={season.id_n} value={season.id_n}>
-                      Temporada {season.numero_temporada}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {selectedSeason && selectedSeason.episodes.length > 0 ? (
-                <div className="episodes-grid">
-                  {selectedSeason.episodes.map((episode: EpisodeData) => (
-                    <div 
-                      key={episode.id_n} 
-                      className="episode-card"
-                      onClick={() => handlePlayEpisode(episode.arquivo)}
-                    >
-                      <div 
-                        className="episode-thumb" 
-                        style={{ backgroundImage: `url(${episode.imagem_342 || episode.imagem_185 || 'https://via.placeholder.com/342x185'})` }}
-                      >
-                        <div className="episode-play">▶</div>
-                      </div>
-                      <div className="episode-info">
-                        <h3>{episode.numero_episodio}. {episode.titulo}</h3>
-                        <p>{episode.duracao || 'Duração não informada'}</p>
-                        <div className="progress-bar">
-                          <div className="progress-fill" style={{ width: '0%' }}></div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-gray-400 italic py-10 text-center w-full">
-                  Nenhum episódio disponível para esta temporada.
-                </div>
-              )}
-            </section>
-
-            {/* ELENCO */}
-            <section className="panel"> {/* Esta seção é para o elenco do desktop */}
-              <div className="panel-title">
-                <h2>Elenco Principal</h2>
-              </div>
-
-              <div className="cast-row">
-                {castList.length > 0 ? (
-                  castList.slice(0, 8).map((actor: ActorData | string, index: number) => {
-                    const actorName = typeof actor === 'string' ? actor : actor.name;
-                    const actorCharacter = typeof actor === 'string' ? 'Personagem' : (actor.character || 'Personagem');
-                    const photoUrl = typeof actor === 'object' && (actor.profile_path || actor.image)
-                      ? `https://image.tmdb.org/t/p/w185${actor.profile_path || actor.image}`
-                      : 'https://placehold.co/92x92/1a1a1f/F5C76B?text=Ator';
-                    return (
-                      <div key={index} className="cast-card">
-                        <div className="cast-avatar">
-                          <Image src={photoUrl} alt={actorName} fill unoptimized />
-                        </div>
-                        <strong>{actorName}</strong>
-                        <span>{actorCharacter}</span>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="text-gray-400 italic py-10 text-center w-full">
-                    Informações de elenco não disponíveis para esta série.
-                  </div>
-                )}
-              </div>
-            </section>
-
-            {/* RECOMENDAÇÕES */}
-            <section className="panel"> {/* Esta seção é para as recomendações do desktop */}
-              <div className="panel-title">
-                <h2>Recomendações para você</h2>
-              </div>
-
-              <div className="recommend-row">
-                {shuffledRecommendations.length > 0 ? (
-                  shuffledRecommendations.map((rec: RecommendationData) => (
-                    <div
-                      key={rec.id}
-                      className="recommend-card"
-                      onClick={() => router.push(`/series/${rec.id}`)}
-                    >
-                      <div
-                        className="recommend-poster" 
-                        style={{ 
-                          backgroundImage: rec.poster 
-                            ? `url(${rec.poster})` 
-                            : 'url(https://via.placeholder.com/160x240/1a1a1f/F5C76B?text=Sem+Capa)' 
-                        }}
-                      />
-                    </div>
-                  ))
-                ) : (
-                  <>
-                    <div className="recommend-card">
-                      <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/160x240)' }} />
-                    </div>
-                    <div className="recommend-card">
-                      <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/160x240)' }} />
-                    </div>
-                    <div className="recommend-card">
-                      <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/160x240)' }} />
-                    </div>
-                    <div className="recommend-card">
-                      <div className="recommend-poster" style={{ backgroundImage: 'url(https://via.placeholder.com/160x240)' }} />
-                    </div>
-                  </>
-                )}
-              </div>
-            </section>
-          </div>
+          </section>
         )}
       </div>
 
-      {/* TOAST */}
-      {showToast && (
-        <div className={`toast ${showToast ? 'show' : ''}`}>
-          {toastMessage}
+      {/* Modal de Convidado (Assistir Juntos) */}
+      {guestStep && (
+        <div className="fixed inset-0 z-[10002] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6">
+          <div className="max-w-md w-full text-center space-y-8 animate-in fade-in zoom-in duration-500">
+            {guestStep === 'prompt' ? (
+              <>
+                <h2 className="text-4xl font-black uppercase tracking-tighter text-white">Vamos assistir comigo?</h2>
+                <p className="text-brand-cyan text-2xl font-bold uppercase">{series.titulo || series.name}</p>
+                <div className="flex gap-4 justify-center">
+                  <button 
+                    onClick={() => setGuestStep('name')}
+                    className="px-12 py-4 bg-brand-cyan text-black font-black uppercase rounded-[20px] hover:scale-110 transition-transform"
+                  >Sim</button>
+                  <button 
+                    onClick={() => { setGuestStep(null); router.push('/'); }}
+                    className="px-12 py-4 bg-white/10 text-white font-black uppercase rounded-[20px]"
+                  >Não</button>
+                </div>
+              </>
+            ) : (
+              <form onSubmit={(e) => { e.preventDefault(); if(guestName.trim()) { setGuestStep(null); if(!activeEpisode && episodes.length > 0) setActiveEpisode(episodes[0]); } }} className="space-y-6">
+                <h2 className="text-2xl font-black uppercase text-white">Como podemos te chamar?</h2>
+                <input 
+                  type="text" 
+                  value={guestName}
+                  onChange={(e) => setGuestName(e.target.value)}
+                  placeholder="Seu nome ou apelido"
+                  className="w-full bg-white/5 border-2 border-white/20 rounded-[20px] px-6 py-4 text-white text-xl text-center focus:border-brand-cyan outline-none transition-all"
+                  autoFocus
+                />
+                <button 
+                  type="submit"
+                  disabled={!guestName.trim()}
+                  className="w-full py-4 bg-brand-cyan text-black font-black uppercase rounded-[20px] disabled:opacity-30"
+                >
+                  Entrar na Sala
+                </button>
+              </form>
+            )}
+          </div>
         </div>
       )}
 
-      {/* PLAYER INTEGRADO */}
-      {activeVideoUrl && (
-        <VideoPlayer 
-          src={activeVideoUrl} 
-          title={displayTitle}
-          contentId={id}
+      {/* Player de Vídeo - Condição corrigida para convidados */}
+      {(showPlayer || activeEpisode || (guestName && activeRoomId)) && (
+        <VideoPlayer
+          src={activeEpisode?.arquivo || episodes[0]?.arquivo}
+          title={activeEpisode ? `${title} - ${activeEpisode.titulo}` : title}
+          contentId={contentUuid || String(series.id_n)} // Usa UUID para salvar progresso corretamente
           userId={user?.id}
-          startOffset={0}
-          onClose={() => setActiveVideoUrl(null)} 
-          onNext={() => {}}
-          partyRoomId={null}
-          isGuest={false}
-          shouldStartParty={false}
+          onClose={() => { setShowPlayer(false); setActiveEpisode(null); setActiveRoomId(null); setGuestName(''); }}
+          partyRoomId={roomFromUrl}
+          isGuest={isGuestMode}
+          guestName={guestName}
+          backdrop={series.backdrop_path || series.banner}
         />
-      )} {/* Fim do VideoPlayer */}
-    </>
-  );
+      )}
+    </main>
+  )
 }

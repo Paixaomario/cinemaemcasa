@@ -1,183 +1,181 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
-import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
-import { TMDBMovie, TMDBShow, IMG, countryFlag, getTitle, getYear, getOriginCountry, getGenreNames, getMovieDetails, getShowDetails } from '@/lib/tmdb'
-import { CinemaItem } from '@/app/HomeClient'
+import { getMovieDetails, getShowDetails, TMDB_IMG } from '@/lib/tmdb'
+import Image from 'next/image'
+import Link from 'next/link'
 
-interface Props {
-  type?: 'all' | 'movie' | 'tv'
-  initialPool?: Array<TMDBMovie | TMDBShow>
-}
+export function HeroBanner() {
+  const [currentBannerItem, setCurrentBannerItem] = useState<any>(null)
+  const [contentPool, setContentPool] = useState<any[]>([])
+  const currentIndexRef = useRef(0)
+  const [loading, setLoading] = useState(true)
 
-export function HeroBanner({ type = 'all', initialPool }: Props) {
-  const router = useRouter()
-  const [pool, setPool]       = useState<Array<TMDBMovie | TMDBShow>>(initialPool ?? [])
-  const [index, setIndex]     = useState(0)
-  const [visible, setVisible] = useState(true)
-  const [loaded, setLoaded]   = useState(false)
-
-  // Fetch pool client-side if not provided
   useEffect(() => {
-    if (initialPool && initialPool.length > 0) {
-      // Sorteia a ordem inicial para nunca começar com a mesma capa
-      const shuffled = [...initialPool].sort(() => Math.random() - 0.5);
-      setPool(shuffled);
-      return
-    }
+    async function fetchFeatured() {
+      const sb = createClient()
+      
+      // Busca itens recentes como pool inicial (a aleatoriedade real será feita no embaralhamento abaixo)
+      // O uso de RANDOM() no .order() do Supabase JS gera erro 400.
+      const { data: movies, error: mError } = await sb.from('cinema').select('id, titulo, poster, backdrop, tmdb_id, category, type').limit(40)
+      const { data: series, error: sError } = await sb.from('series').select('id_n, titulo, capa, banner, tmdb_id, genero, type').limit(40)
 
-    // Busca pool de banners de forma autônoma se não for fornecido
-    async function loadAutonomousPool() {
-      try {
-        const sb = createClient()
-        const { data: bannerItems } = await sb.rpc('get_random_content_pool', { cnt: 20 })
+      if (mError || sError) console.error("Erro ao buscar dados para o banner:", mError || sError)
+
+      const combinedPool = [
+        ...(movies || []).map(m => ({ ...m, type: 'movie', poster: m.poster || m.backdrop, backdrop: m.backdrop || m.poster, category: m.category })),
+        ...(series || []).map(s => ({ ...s, id: s.id_n, type: 'series', poster: s.capa || s.banner, backdrop: s.banner || s.capa, category: s.genero }))
+      ].filter(item => item.tmdb_id && (item.poster || item.backdrop)); // Filtra itens sem imagem
+
+      // Embaralha o pool combinado
+      for (let i = combinedPool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [combinedPool[i], combinedPool[j]] = [combinedPool[j], combinedPool[i]];
+      }
+
+      setContentPool(combinedPool);
+      setLoading(false);
+    }
+    fetchFeatured();
+  }, []);
+
+  useEffect(() => {
+    if (contentPool.length === 0) return;
+
+    let lastCategory: string | null = null;
+    let lastSeriesId: string | null = null;
+
+    const getNextItem = () => {
+      let nextItem = null;
+      let attempts = 0;
+      const maxAttempts = contentPool.length * 2; // Evita loop infinito em pools pequenos
+
+      while (attempts < maxAttempts && !nextItem) {
+        const potentialItem = contentPool[currentIndexRef.current];
         
-        if (bannerItems && bannerItems.length > 0) {
-          // Filtra pelo tipo solicitado
-          let filtered = bannerItems;
-          if (type === 'movie') {
-            filtered = bannerItems.filter((i: CinemaItem) => i.type === 'filme' || i.type === 'movie')
-          } else if (type === 'tv') {
-            filtered = bannerItems.filter((i: CinemaItem) => i.type === 'serie' || i.type === 'series' || i.type === 'tv')
-          }
+        if (!potentialItem) break;
 
-          const hydrated = await Promise.all(filtered.map(async (item: CinemaItem) => {
-            try {
-              // Filtra coleções e itens sem ID do TMDB
-              if (!item.tmdb_id || isNaN(Number(item.tmdb_id))) return null;
-              if (item.titulo?.toLowerCase().includes('coleção') || item.titulo?.toLowerCase().includes('collection')) return null;
-              
-              const isSerie = item.type === 'serie' || item.type === 'series' || item.type === 'tv'
-              return isSerie ? await getShowDetails(Number(item.tmdb_id)) : await getMovieDetails(Number(item.tmdb_id))
-            } catch { return null }
-          }))
+        const currentCategory = potentialItem.type === 'movie' ? potentialItem.category : potentialItem.genero;
+        const currentSeriesId = potentialItem.type === 'series' ? String(potentialItem.id) : null;
 
-          const validPool = hydrated.filter(Boolean) as Array<TMDBMovie | TMDBShow>
-          if (validPool.length > 0) {
-            setPool(validPool.sort(() => Math.random() - 0.5))
-          }
+        // Regras de filtragem
+        const isSameCategory = currentCategory && lastCategory && currentCategory === lastCategory;
+        const isSameSeries = currentSeriesId && lastSeriesId && currentSeriesId === lastSeriesId;
+
+        if (!isSameCategory && !isSameSeries) {
+          nextItem = potentialItem;
+          lastCategory = currentCategory;
+          lastSeriesId = currentSeriesId;
+        } else {
+          // Tenta o próximo item no pool
+          currentIndexRef.current = (currentIndexRef.current + 1) % contentPool.length;
         }
-      } catch (err) { console.error('Erro no HeroBanner pool:', err) }
-    }
-    loadAutonomousPool()
-  }, [type, initialPool])
+        attempts++;
+      }
 
-  // Auto-rotate every 7s with fade transition
-  const advance = useCallback(() => {
-    setVisible(false)
-    setTimeout(() => {
-      setIndex(prev => (prev + 1) % (pool.length || 1))
-      setLoaded(false)
-      setVisible(true)
-    }, 500)
-  }, [pool.length])
+      // Se não encontrou um item que satisfaça as regras, pega o próximo disponível
+      if (!nextItem) {
+        nextItem = contentPool[currentIndexRef.current];
+      }
 
-  useEffect(() => {
-    if (pool.length === 0) return
-    const timer = setInterval(advance, 7000)
-    return () => clearInterval(timer)
-  }, [pool.length, advance])
+      currentIndexRef.current = (currentIndexRef.current + 1) % contentPool.length;
+      return nextItem;
+    };
 
-  const item = pool[index]
-  if (!item) {
-    return (
-      <div className="skeleton w-full" style={{ height: 'clamp(312px, 66vw, 680px)' }} />
-    )
+    const updateBanner = async () => {
+      const itemToDisplay = getNextItem();
+      if (!itemToDisplay) return;
+
+      // Busca metadados ricos do TMDB se houver um ID
+      let finalData = itemToDisplay;
+      if (itemToDisplay.tmdb_id) {
+        try {
+          const tmdbData = itemToDisplay.type === 'series'
+            ? await getShowDetails(itemToDisplay.tmdb_id)
+            : await getMovieDetails(itemToDisplay.tmdb_id);
+          
+          if (tmdbData) {
+            finalData = { ...tmdbData, ...itemToDisplay };
+          }
+        } catch (e) {
+          console.warn("TMDB metadata not found for banner item, using local only", itemToDisplay.tmdb_id);
+        }
+      }
+      setCurrentBannerItem(finalData);
+    };
+
+    // Inicia o banner imediatamente
+    updateBanner();
+
+    // Configura a rotação a cada 5 segundos
+    const interval = setInterval(updateBanner, 5000);
+
+    return () => clearInterval(interval); // Limpa o intervalo ao desmontar
+  }, [contentPool]);
+
+  if (loading || !currentBannerItem) {
+    return <div className="w-full h-[50vh] md:h-[80vh] bg-neutral-900 animate-pulse" />
   }
 
-  const title   = getTitle(item)
-  const year    = getYear(item)
-  const country = getOriginCountry(item)
-  const genres  = getGenreNames(item)
-  const flag    = countryFlag(country)
-  const cert    = item.certification || ''
-  const desc    = item.overview || ''
-  const backdropUrl = IMG.original(item.backdrop_path) // 4K/original quality
+  const title = currentBannerItem.titulo || currentBannerItem.title || currentBannerItem.name;
+  const backdropUrl = TMDB_IMG.backdrop(currentBannerItem.backdrop || currentBannerItem.banner || currentBannerItem.backdrop_path);
+  const description = currentBannerItem.descricao || currentBannerItem.description || currentBannerItem.overview;
+  const id = currentBannerItem.id_n || currentBannerItem.id;
+  const detailHref = currentBannerItem.type === 'series' ? `/series/${id}` : `/detalhes/${id}`;
+
+  const year = currentBannerItem.release_date?.slice(0, 4) || 
+               currentBannerItem.first_air_date?.slice(0, 4) || 
+               currentBannerItem.year || 
+               currentBannerItem.ano;
+  const rating = currentBannerItem.vote_average || currentBannerItem.rating;
+  const countryCode = currentBannerItem.production_countries?.[0]?.iso_3166_1 || 
+                     (Array.isArray(currentBannerItem.origin_country) ? currentBannerItem.origin_country[0] : currentBannerItem.origin_country) || '';
 
   return (
-    <div
-      className="relative w-full overflow-hidden"
-      style={{ height: 'clamp(450px, 80vw, 800px)', background: '#000' }}
-    >
-      {/* Backdrop image — 4K/original */}
+    <section className="relative w-full min-h-[90vh] md:min-h-screen overflow-hidden bg-black">
+      {/* Imagem de Fundo em Alta Resolução */}
       {backdropUrl && (
-        <div
-          className="absolute inset-0 transition-opacity duration-700"
-          style={{ opacity: visible && loaded ? 1 : 0 }}
-        >
-          <Image
+        <div className="absolute inset-0">
+          <Image 
             src={backdropUrl}
             alt={title}
             fill
             priority
+            className="object-cover object-top opacity-60"
             sizes="100vw"
-            className="object-cover object-center"
-            onLoad={() => setLoaded(true)}
-            unoptimized={false}
+            unoptimized
           />
+          {/* Gradientes Cinematográficos */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/30" />
         </div>
       )}
 
-      {/* Gradient overlays */}
-      <div className="absolute inset-0 overlay-left" />
-      <div className="absolute inset-0 overlay-bottom" />
-
-      {/* Content — metadata only, NO buttons */}
-      <div
-        className="absolute inset-0 flex flex-col justify-end section-px cursor-pointer tv-focus"
-        style={{ paddingBottom: 'clamp(20px, 4vw, 60px)', opacity: visible ? 1 : 0, transition: 'opacity 0.6s ease' }}
-        onClick={() => {
-          const isMovie = item.media_type === 'movie' || 'title' in item
-          const detailUrl = isMovie ? `/detalhes/filme-${item.id}` : `/series/${item.id}`
-          router.push(detailUrl)
-        }}
-        onFocus={(e) => e.currentTarget.scrollIntoView({ behavior: 'smooth' })}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            const isMovie = item.media_type === 'movie' || 'title' in item
-            const detailUrl = isMovie ? `/detalhes/filme-${item.id}` : `/series/${item.id}`
-            router.push(detailUrl)
-          }
-        }}
-        tabIndex={0}
-        role="link"
-      >
-        <div style={{ maxWidth: 'clamp(280px, 55%, 700px)' }}>
-          {/* Country flag + genre tags */}
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className="country-flag">{flag}</span>
-            {genres.map(g => (
-              <span key={g} className="text-metadata rounded-full px-2.5 py-0.5 font-bold"
-                style={{ background: 'rgba(255,255,255,0.12)', color: '#fff' }}>
-                {g}
-              </span>
-            ))}
-            {cert && (
-              <span className="rating-badge" style={{ color: '#ddd' }}>{cert}</span>
-            )}
-          </div>
-
-          {/* Title */}
-          <h1 className="text-hero-title mb-4 text-white font-extrabold uppercase tracking-tighter" style={{ fontFamily: 'Poppins, sans-serif', fontSize: 'clamp(36px, 7vw, 92px)', textShadow: '0 0 40px rgba(0,0,0,1)' }}>{title}</h1>
-
-          {/* Year */}
-          <p className="text-metadata mb-2" style={{ fontSize: '20px' }}>{year}</p>
-
-          {/* Description — exactly 2 lines */}
-          <p
-            className="text-hero-desc"
-            style={{
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              maxWidth: '520px',
-            }}
-          >{desc}</p>
+      {/* Conteúdo do Banner */}
+      <div className="relative min-h-[90vh] md:min-h-screen flex flex-col justify-end px-6 pb-24 pt-[500px] md:px-12 md:pb-32 md:pt-[650px] max-w-4xl">
+        <h1 className="text-4xl md:text-7xl font-black uppercase tracking-tighter text-white mb-4 drop-shadow-2xl">
+          {title}
+        </h1>
+        
+        <div className="flex items-center gap-4 mb-4 text-sm md:text-base font-bold text-white drop-shadow-md">
+          {countryCode && (
+            <img 
+              src={`https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`} 
+              alt={countryCode}
+              className="h-5 w-auto object-contain rounded-sm shadow-sm"
+              title={countryCode}
+            />
+          )}
+          {rating > 0 && <span className="bg-[#00ADEF] text-black px-2 py-0.5 rounded text-xs">TMDB {Number(rating).toFixed(1)}</span>}
+          {year && <span className="text-neutral-300">{year}</span>}
         </div>
+
+        {description && (
+          <p className="text-sm md:text-lg text-neutral-300 line-clamp-2 mb-8 max-w-xl font-medium drop-shadow">
+            {description}
+          </p>
+        )}
       </div>
-    </div>
+    </section>
   )
 }

@@ -176,16 +176,16 @@ function SearchContent() {
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
               placeholder="Digite para buscar..."
-              className="w-full max-w-2xl px-6 py-4 pl-14 pr-14 bg-white/10 border-2 border-white/20 rounded-xl text-white text-xl focus:outline-none focus:border-[#D7A84B] focus:shadow-lg transition-all"
+              className="w-full max-w-2xl px-6 py-4 pl-14 pr-14 bg-white/10 border-2 border-white/20 rounded-[20px] text-white text-xl focus:outline-none focus:border-brand-cyan focus:shadow-[0_0_20px_rgba(0,173,239,0.3)] transition-all font-sans"
               autoFocus
             />
-            <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[#D7A84B] text-xl">🔍</span>
+            <span className="absolute left-5 top-1/2 -translate-y-1/2 text-brand-cyan text-xl">🔍</span>
             {searchInput && (
               <button
                 id="clearSearch"
                 type="button"
                 onClick={clearInput}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-black/30 border border-[#D7A84B]/30 text-[#D7A84B] hover:bg-[#D7A84B]/20 transition-all"
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-[20px] bg-black/30 border border-brand-cyan/30 text-brand-cyan hover:bg-brand-cyan/20 transition-all"
               >
                 ✕
               </button>
@@ -195,7 +195,7 @@ function SearchContent() {
           {/* Filtro de categoria ativo */}
           {categoryFilter && (
             <div className="mb-4 flex items-center gap-2">
-              <span className="text-[#D7A84B] font-bold text-sm">Filtro: <span className="text-white">{categoryFilter}</span></span>
+              <span className="text-brand-cyan font-bold text-sm">Filtro: <span className="text-white">{categoryFilter}</span></span>
               <button
                 onClick={clearCategoryFilter}
                 className="text-[#FF7878] font-bold text-xs hover:text-[#FFB4B4] transition-all"
@@ -222,10 +222,10 @@ function SearchContent() {
                     setFilter(f.value as any)
                   }
                 }}
-                className={`px-4 py-2 rounded-lg border font-bold text-sm transition-all ${
+                className={`px-6 py-2 rounded-[20px] border font-montserrat font-black uppercase text-xs tracking-widest transition-all ${
                   filter === f.value
-                    ? 'bg-[#B40000]/22 border-[#B40000]/35 text-[#FF7878]'
-                    : 'bg-black/38 border-[#D7A84B]/14 text-white/75 hover:border-[#D7A84B]/30'
+                    ? 'bg-brand-cyan text-black border-brand-cyan shadow-[0_0_15px_rgba(0,173,239,0.4)]'
+                    : 'bg-black/38 border-white/10 text-white/75 hover:border-brand-cyan/50'
                 }`}
               >
                 {f.label}
@@ -239,10 +239,10 @@ function SearchContent() {
               <button
                 key={suggestion}
                 onClick={() => handleCategoryFilter(suggestion)}
-                className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${
+                className={`px-4 py-2 rounded-[20px] border font-montserrat font-bold text-[10px] uppercase tracking-wider transition-all ${
                   categoryFilter === suggestion
-                    ? 'bg-[#B40000]/22 border-[#B40000]/35 text-[#FF7878]'
-                    : 'bg-black/30 border-[#D7A84B]/12 text-white/75 hover:border-[#D7A84B]/25'
+                    ? 'bg-brand-cyan text-black border-brand-cyan'
+                    : 'bg-black/30 border-white/10 text-white/75 hover:border-brand-cyan/50'
                 }`}
               >
                 {suggestion}
@@ -254,7 +254,7 @@ function SearchContent() {
           {history.length > 0 && (
             <div className="mb-6">
               <div className="flex justify-between items-center mb-3">
-                <h3 className="text-[#D7A84B] font-bold text-xs uppercase tracking-wider">Recentes</h3>
+                <h3 className="text-brand-cyan font-black text-[10px] uppercase tracking-[0.2em]">Recentes</h3>
                 <button
                   id="clearHistory"
                   onClick={clearHistory}
@@ -268,9 +268,9 @@ function SearchContent() {
                   <button
                     key={idx}
                     onClick={() => setSearchInput(item)}
-                    className="flex justify-between items-center p-3 rounded-lg border border-[#D7A84B]/10 bg-black/35 hover:border-[#B40000]/18 transition-all text-left"
+                    className="flex justify-between items-center p-4 rounded-[20px] border border-white/5 bg-white/5 hover:border-brand-cyan/30 transition-all text-left group"
                   >
-                    <span className="font-bold text-sm">{item}</span>
+                    <span className="font-bold text-sm group-hover:text-brand-cyan transition-colors">{item}</span>
                     <span className="text-xs text-white/60">Pesquisa</span>
                   </button>
                 ))}
@@ -280,12 +280,12 @@ function SearchContent() {
 
           <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter">
             {categoryFilter ? (
-              <><span className="text-[#D7A84B]">{categoryFilter}</span></>
+              <><span className="text-brand-cyan">{categoryFilter}</span></>
             ) : (
-              <>Busca: <span className="text-[#D7A84B]">{query || '...'}</span></>
+              <>Busca: <span className="text-brand-cyan">{query || '...'}</span></>
             )}
           </h1>
-          <p id="resultCount" className="text-gray-400 mt-2 font-bold uppercase tracking-widest text-xs">
+          <p id="resultCount" className="text-neutral-500 mt-2 font-black uppercase tracking-[0.2em] text-[10px]">
             {loading ? 'Buscando no acervo...' : `${results.length} resultados encontrados`}
           </p>
         </header>
@@ -302,7 +302,10 @@ function SearchContent() {
             gap: 'var(--card-gap, 24px)' 
           }}>
             {results.map((item) => (
-              <Link key={item.id} href={item.type === 'series' ? `/series/${item.id}` : `/detalhes/${item.id}`} className="card-poster group tv-focus">
+              <Link 
+                key={item.id} 
+                href={item.type === 'series' ? `/series/${item.id}` : `/detalhes/${item.id}`} 
+                className="group relative aspect-[2/3] w-full rounded-xl overflow-hidden transition-all duration-300 hover:scale-110 focus:scale-110 focus:outline-none focus:ring-4 focus:ring-brand-cyan shadow-2xl">
                 {item.poster || item.backdrop ? (
                   <Image 
                     src={item.poster || item.backdrop} 
@@ -314,14 +317,14 @@ function SearchContent() {
                 ) : (
                   <div className="flex items-center justify-center h-full text-5xl bg-white/5 rounded-2xl">🎬</div>
                 )}
-                <div className="absolute top-3 right-3 px-2 py-1 rounded-md bg-[#B40000]/80 border border-[#B40000]/50 text-white text-[10px] font-black uppercase">
+                <div className="absolute top-3 right-3 px-2 py-1 rounded-md bg-black/60 backdrop-blur-md border border-white/10 text-white text-[10px] font-black uppercase tracking-widest">
                   {item.type === 'movie' ? 'Filme' : 'Série'}
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-5">
                   <p className="text-sm font-black uppercase truncate text-white">{item.titulo}</p>
                   <div className="flex items-center gap-3 mt-1">
-                    {item.rating > 0 && <span className="text-xs text-[#D7A84B] font-black">⭐ {item.rating.toFixed(1)}</span>}
-                    {item.year && <span className="text-xs text-gray-400 font-bold">{item.year}</span>}
+                    {item.rating > 0 && <span className="text-xs text-brand-cyan font-black">⭐ {item.rating.toFixed(1)}</span>}
+                    {item.year && <span className="text-xs text-neutral-400 font-bold">{item.year}</span>}
                   </div>
                 </div>
               </Link>

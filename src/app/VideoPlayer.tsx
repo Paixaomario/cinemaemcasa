@@ -1,63 +1,24 @@
 'use client'
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase'
+import { 
+  MediaPlayer, 
+  MediaProvider, 
+  Poster, 
+  Track,
+  useMediaState,
+  type MediaPlayerInstance 
+} from '@vidstack/react';
+import { 
+  DefaultVideoLayout, 
+  defaultLayoutIcons 
+} from '@vidstack/react/player/layouts/default';
+import { useAuth } from '@/components/layout/SupabaseProvider';
+import { PartyChat } from './PartyChat';
 
-interface ClapprPlayer {
-  destroy(): void;
-  play(): void;
-  pause(): void;
-  seek(time: number): void;
-  getCurrentTime(): number;
-  isPlaying(): boolean;
-}
-interface ClapprLevel {
-  level: {
-    height: number;
-    name: string;
-  };
-}
-
-interface ClapprConfig {
-  source: string;
-  parentId: string;
-  plugins?: unknown[];
-  width?: string | number;
-  height?: string | number;
-  autoPlay?: boolean;
-  levelSelectorConfig?: {
-    title?: string;
-    labelCallback?: (playbackLevel: ClapprLevel) => string;
-  };
-  playbackSpeedConfig?: {
-    defaultValue?: string;
-    options?: { value: string; label: string }[];
-  };
-  markers?: {
-    markers?: unknown[];
-  };
-  chromecast?: {
-    appId?: string;
-    contentType?: string;
-  };
-  scrubThumbnails?: {
-    backdropHeight?: number;
-    spotlightHeight?: number;
-    thumbs?: unknown[];
-  };
-  [key: string]: unknown;
-}
-
-declare const Clappr: {
-  Player: new (config: ClapprConfig) => ClapprPlayer;
-};
-declare const HlsjsPlayback: unknown;
-declare const DashShakaPlayback: unknown;
-declare const LevelSelector: unknown;
-declare const PlaybackSpeed: unknown;
-declare const ClapprMarkersPlugin: unknown;
-declare const ClapprSubtitlePlugin: unknown;
-declare const ChromecastPlugin: unknown;
-declare const ClapprThumbnailsPlugin: unknown;
+// Importar estilos necessários
+import '@vidstack/react/player/styles/default/theme.css';
+import '@vidstack/react/player/styles/default/layouts/video.css';
 
 interface Props {
   src: string
@@ -69,126 +30,146 @@ interface Props {
   onNext?: () => void
   partyRoomId?: string | null
   isGuest?: boolean
-  shouldStartParty?: boolean
+  guestName?: string
+  backdrop?: string | null
 }
 
-export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, onClose, onNext }: Props) {
-  const videoRef = useRef<HTMLDivElement>(null)
-  const playerRef = useRef<ClapprPlayer | null>(null)
-  const sb = createClient()
+export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, onClose, onNext, partyRoomId, isGuest, guestName, backdrop }: Props) {
+  const player = useRef<MediaPlayerInstance>(null);
+  const [mediaInstance, setMediaInstance] = useState<MediaPlayerInstance | null>(null);
+  const [showChat, setShowChat] = useState(!!partyRoomId);
+  const { user } = useAuth()
+  const sb = useMemo(() => createClient(), [])
 
+  async function saveProgress(seconds: number) {
+    if (!userId || !contentId || isNaN(seconds)) return;
+    try {
+      await sb.from('view_progress').upsert({
+        user_id: userId,
+        content_id: contentId,
+        last_position: Math.floor(seconds),
+        updated_at: new Date().toISOString(),
+        is_finished: false
+      }, { onConflict: 'user_id,content_id' });
+    } catch (err) {
+      console.error('Erro ao salvar progresso:', err);
+    }
+  }
+
+  // Função chamada quando o tempo do vídeo muda
+  function onTimeUpdate(time: number) {
+    if (Math.floor(time) % 10 === 0 && time > 0) {
+      saveProgress(time);
+    }
+  }
+  
+  function handleStop() {
+    player.current?.pause();
+    player.current!.currentTime = 0;
+  }
+
+  // Lógica de Sincronização Realtime
   useEffect(() => {
-    if (      
-      videoRef.current && 
-      typeof Clappr !== 'undefined' && 
-      typeof HlsjsPlayback !== 'undefined' &&
-      typeof DashShakaPlayback !== 'undefined' &&
-      typeof LevelSelector !== 'undefined' &&
-      typeof PlaybackSpeed !== 'undefined' &&
-      typeof ClapprMarkersPlugin !== 'undefined' &&
-      typeof ClapprSubtitlePlugin !== 'undefined' &&
-      typeof ChromecastPlugin !== 'undefined' &&
-      typeof ClapprThumbnailsPlugin !== 'undefined'
-    ) {
-      const player = new Clappr.Player({
-        source: src,
-        parentId: `#clappr-generic`,
-        plugins: [HlsjsPlayback, DashShakaPlayback, LevelSelector, PlaybackSpeed, ClapprMarkersPlugin, ClapprSubtitlePlugin, ChromecastPlugin, ClapprThumbnailsPlugin],
-        levelSelectorConfig: {
-          title: 'Qualidade',
-          labelCallback: function(playbackLevel: ClapprLevel) {
-            return playbackLevel.level.height ? playbackLevel.level.height + 'p' : playbackLevel.level.name;
-          }
-        },
-        playbackSpeedConfig: {
-          defaultValue: '1.0',
-          options: [
-            {value: '0.5', label: '0.5x'},
-            {value: '1.0', label: 'Normal'},
-            {value: '1.25', label: '1.25x'},
-            {value: '1.5', label: '1.5x'},
-            {value: '2.0', label: '2.0x'},
-          ]
-        },
-        scrubThumbnails: {
-          backdropHeight: 64,
-          spotlightHeight: 84,
-          thumbs: []
-        },
-        markers: {
-          markers: []
-        },
-        chromecast: {
-          appId: '9DFB77C0',
-          contentType: 'video/mp4',
-        },
-        subtitleConfig: {
-          title: 'Legendas',
-          backgroundColor: 'rgba(0, 0, 0, 0.6)',
-          fontWeight: 'bold',
-        },
-        width: '100%',
-        height: '100%',
-        autoPlay: true,
-        events: {
-          onPlay: () => {
-            if (startOffset > 0 && playerRef.current) {
-              playerRef.current.seek(startOffset);
-            }
-          },
-          onTimeUpdate: (e: { current: number }) => {
-            // Salva progresso a cada 10 segundos no Supabase
-            if (userId && contentId && Math.floor(e.current) % 10 === 0) {
-              saveProgress(e.current);
-            }
-          },
-          onEnded: () => {
-            if (onNext) onNext();
-          }
+    if (!partyRoomId || !mediaInstance) return;
+
+    const channel = sb.channel(`party-${partyRoomId}`);
+
+    if (!isGuest) {
+      // Anfitrião envia comandos
+      const unsubPlay = mediaInstance.subscribe(({ paused, currentTime }) => {
+        if (!paused) {
+          channel.send({ type: 'broadcast', event: 'sync-play', payload: { time: currentTime } });
+        } else {
+          channel.send({ type: 'broadcast', event: 'sync-pause', payload: { time: currentTime } });
         }
       });
-      playerRef.current = player;
+
+      const unsubSeek = mediaInstance.subscribe(({ seeking, currentTime }) => {
+        if (seeking) {
+          channel.send({ type: 'broadcast', event: 'sync-seek', payload: { time: currentTime } });
+        }
+      });
+
+      channel.subscribe();
+      return () => { unsubPlay(); unsubSeek(); sb.removeChannel(channel); };
+    } else {
+      // Convidado recebe comandos
+      channel
+        .on('broadcast', { event: 'sync-play' }, ({ payload }) => {
+          const drift = Math.abs(mediaInstance.currentTime - payload.time);
+          if (drift > 1.5) mediaInstance.currentTime = payload.time;
+          mediaInstance.play();
+        })
+        .on('broadcast', { event: 'sync-pause' }, () => {
+          mediaInstance.pause();
+        })
+        .on('broadcast', { event: 'sync-seek' }, ({ payload }) => {
+          mediaInstance.currentTime = payload.time;
+        })
+        .subscribe();
+
+      return () => { sb.removeChannel(channel); };
     }
+  }, [partyRoomId, isGuest, sb, mediaInstance]);
 
-    async function saveProgress(seconds: number) {
-      if (!userId || !contentId) return;
-      try {
-        await sb.from('view_progress').upsert({
-          user_id: userId,
-          content_id: contentId,
-          last_position: Math.floor(seconds),
-          updated_at: new Date().toISOString(),
-          is_finished: false
-        }, { onConflict: 'user_id,content_id' });
-      } catch (err) {
-        console.error('Erro ao salvar progresso:', err);
-      }
-    }
-
-
-    return () => {
-      if (playerRef.current) {
-        playerRef.current.destroy();
-      }
-    };
-  }, [src, contentId, onNext, sb, startOffset, userId]);
-  
   return (
-    <div className="fixed inset-0 z-[10000] bg-black flex items-center justify-center hero-enter">
-      {/* Header do Player conforme padrão @netflix */}
-      <div className="absolute top-0 left-0 right-0 p-8 z-[10001] flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent">
+    <div className={`fixed inset-0 z-[10000] bg-black flex hero-enter ${showChat ? 'flex-row' : 'flex-col'}`}>
+      {/* Header do Player */}
+      <div className="absolute top-0 left-0 right-0 p-8 z-[10005] flex items-center justify-between bg-gradient-to-b from-black/90 via-black/40 to-transparent pointer-events-none">
         <button 
           onClick={onClose}
-          className="flex items-center gap-4 text-white text-2xl font-bold hover:text-[var(--gold-primary)] transition-colors"
+          className="flex items-center gap-4 text-white text-2xl font-bold hover:text-[#00ADEF] transition-colors rounded-[20px] pointer-events-auto outline-none"
         >
           <span className="text-4xl">←</span>
-          <span className="uppercase tracking-widest">{title}</span>
+          <span className="uppercase tracking-widest font-montserrat">{title}</span>
         </button>
+
+        {partyRoomId && (
+          <button 
+            onClick={() => setShowChat(!showChat)}
+            className="px-6 py-2 bg-white/10 hover:bg-[#00ADEF] text-white rounded-[20px] pointer-events-auto transition-all font-montserrat font-bold text-xs uppercase tracking-widest"
+          >
+            {showChat ? '❌ Fechar Chat' : '💬 Abrir Chat'}
+          </button>
+        )}
       </div>
       
-      <div className="w-full h-full">
-        <div ref={videoRef} id="clappr-generic" className="w-full h-full" />
+      <div className="flex-1 relative h-full bg-black">
+        <MediaPlayer
+          ref={player}
+          onInstance={setMediaInstance}
+          title={title}
+          src={src}
+          currentTime={startOffset}
+          onTimeUpdate={(event) => onTimeUpdate(event.detail.currentTime)}
+          onEnded={onNext}
+          seekStep={10}
+          key={src}
+          autoPlay={!isGuest}
+          className="w-full h-full vds-cinema-player"
+        >
+          <MediaProvider>
+            {(isGuest || !mediaInstance) && backdrop && <Poster src={backdrop} className="vds-poster" />}
+          </MediaProvider>
+          <DefaultVideoLayout 
+            icons={defaultLayoutIcons} 
+            slots={{
+              beforePlayButton: (
+                <button onClick={handleStop} className="vds-button" title="Parar">
+                  <svg viewBox="0 0 32 32" className="w-8 h-8 fill-current"><rect x="6" y="6" width="20" height="20" /></svg>
+                </button>
+              )
+            }}
+            noScrubGesture 
+          />
+        </MediaPlayer>
       </div>
+
+      {partyRoomId && showChat && (
+        <div className="w-80 h-full">
+          <PartyChat roomId={partyRoomId} userName={isGuest ? (guestName || 'Convidado') : (user?.email?.split('@')[0] || 'Anfitrião')} />
+        </div>
+      )}
     </div>
   )
 }

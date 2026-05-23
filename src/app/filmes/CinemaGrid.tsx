@@ -3,11 +3,9 @@ export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
-import Image from 'next/image'
+import { ContentRow } from '@/components/sections/ContentRow'
 
-// Ordem de categorias permitidas
-const CATEGORY_ORDER = [
+const APP_CATEGORIES = [
   'Lançamento 2026',
   'Lançamento 2025',
   'Animação',
@@ -36,275 +34,77 @@ const CATEGORY_ORDER = [
   'Adulto',
 ]
 
-interface Cinema {
-  id: number
-  titulo: string | null
-  tmdb_id: number | null
-  url: string | null
-  trailer: string | null
-  year: number | null
-  rating: number | null
-  description: string | null
-  poster: string | null
-  category: string | null
-  type: string | null
-  created_at: string | null
-  banner: string | null
-  backdrop: string | null
-  duration: string | null
-}
-
 export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' }) {
-  const [films,      setFilms]      = useState<Cinema[]>([])
-  const [loading,    setLoading]    = useState(true)
-  const [error,      setError]      = useState('')
-  const [category]                  = useState('all')
+  const [groupedData, setGroupedData] = useState<Record<string, any[]>>({})
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const sb = createClient()
-    const isSeries = contentType === 'series'
-    
-    if (isSeries) {
-      // Busca na tabela 'series' conforme migração 007 enviada
-      sb.from('series')
-        .select('id_n,titulo,tmdb_id,ano,rating,descricao,capa,poster,banner,trailer,genero')
-        .order('id_n', { ascending: false }) // Ordena pelo ID já que created_at não existe
-        .limit(1000) // Remove limite para mostrar todas as séries
-        .then(({ data, error: err }) => {
-          if (err) {
-            console.error('Supabase error (series):', err)
-            setError(`Erro ao carregar séries: ${err.message}`)
-            setLoading(false)
-            return
+    async function fetchData() {
+      const sb = createClient()
+      const table = contentType === 'movie' ? 'cinema' : 'series'
+      // Fallback para id_n caso a tabela de séries não tenha created_at ainda
+      const orderField = contentType === 'movie' ? 'created_at' : 'id_n'
+      
+      const { data: items, error } = await sb
+        .from(table)
+        .select('*')
+        .order(orderField, { ascending: false })
+
+      if (!error && items) {
+        const grouped: Record<string, any[]> = {}
+        
+        APP_CATEGORIES.forEach(cat => {
+          const matches = items.filter(item => {
+            // Tabela cinema usa 'category', tabela series usa 'genero'
+            const itemCategory = (contentType === 'movie' ? item.category : item.genero) || ''
+            // Divide a string de categorias por vírgula e remove espaços extras para comparar
+            const categoriesArray = itemCategory.split(',').map((c: string) => c.trim())
+            return categoriesArray.includes(cat)
+          })
+          if (matches.length > 0) {
+            grouped[cat] = matches
           }
-          // Mapeia colunas da tabela series para a interface Cinema para compatibilidade visual
-          const rows = (data || []).map((s: { id_n: number; titulo: string | null; tmdb_id: number | null; ano: number | null; rating: number | null; descricao: string | null; capa: string | null; poster: string | null; banner: string | null; trailer: string | null; genero: string | null }) => ({
-            id: s.id_n,
-            titulo: s.titulo,
-            tmdb_id: s.tmdb_id,
-            year: s.ano,
-            rating: s.rating,
-            description: s.descricao,
-            poster: s.poster || s.capa,
-            category: s.genero,
-            type: 'series',
-            banner: s.banner,
-            backdrop: s.banner || s.poster || s.capa || null, 
-            trailer: s.trailer,
-            created_at: null,
-            url: null,
-            duration: null
-          })) as Cinema[]
-          setFilms(rows)
-          setLoading(false)
         })
-    } else {
-      // Busca na tabela 'cinema' (padrão para filmes)
-      sb.from('cinema')
-        .select('id,titulo,tmdb_id,url,trailer,year,rating,description,poster,category,type,created_at,banner,backdrop,duration')
-        .eq('type', contentType)
-        .order('created_at', { ascending: false })
-        .then(({ data, error: err }) => {
-          if (err) {
-            console.error('Supabase error:', err)
-            setError(`Erro ao carregar: ${err.message}`)
-            setLoading(false)
-            return
-          }
-          const rows = (data || []) as Cinema[]
-          setFilms(rows)
-          setLoading(false)
-        })
+        
+        setGroupedData(grouped)
+      }
+      setLoading(false)
     }
+
+    fetchData()
   }, [contentType])
 
-  // Função para extrair categorias válidas de um filme
-  const getFilmCategories = (filmCategory: string | null): string[] => {
-    if (!filmCategory) return []
-    
-    // Se contém vírgula, é múltiplas categorias
-    const cats = filmCategory.split(',').map(c => c.trim())
-    
-    // Filtrar apenas as categorias permitidas
-    return cats.filter(c => CATEGORY_ORDER.includes(c))
-  }
-
-  const filtered = category === 'all'
-    ? films
-    : films.filter(f => getFilmCategories(f.category).includes(category))
-
-  // Para séries, mostra tudo em grade sem agrupamento por categoria
-  const isSeriesContentType = contentType === 'series'
-  const grouped: Record<string, Cinema[]> = {}
-  if (!isSeriesContentType && category === 'all') {
-    CATEGORY_ORDER.forEach(cat => {
-      const items = films.filter(f => getFilmCategories(f.category).includes(cat))
-      if (items.length) grouped[cat] = items
-    })
-    // Uncategorized
-    const uncatItems = films.filter(f => getFilmCategories(f.category).length === 0)
-    if (uncatItems.length) grouped['Sem categoria'] = uncatItems
-  }
-
-  return (
-    <div style={{ paddingBottom: 60 }}>
-      {/* States */}
-      {loading && (
-        <div style={{ padding:'0 clamp(16px,4vw,60px)' }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(var(--grid-cols, 5), 1fr)',
-            gap: 'var(--card-gap, 16px)',
-          }}>
-            {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="skeleton" style={{ aspectRatio:'2/3', borderRadius:10 }} />
-            ))}
+  if (loading) {
+    return (
+      <div className="space-y-12 px-6 md:px-16">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="space-y-6">
+            <div className="h-10 w-64 bg-white/5 animate-pulse rounded-lg" />
+            <div className="flex gap-8 overflow-hidden">
+              {[1, 2, 3, 4].map(j => (
+                <div key={j} className="aspect-[2/3] w-[300px] flex-shrink-0 bg-white/5 animate-pulse rounded-lg" />
+              ))}
+            </div>
           </div>
-        </div>
-      )}
-
-      {error && (
-        <div style={{ textAlign:'center', padding:'60px 20px' }}>
-          <p style={{ color:'#ff6b6b', fontFamily:"'Open Sans',sans-serif", fontSize:14 }}>{error}</p>
-          <p style={{ color:'#888', fontFamily:"'Open Sans',sans-serif", fontSize:12, marginTop:8 }}>
-            Verifique se a tabela <code style={{color:'#d9a23a'}}>{contentType === 'series' ? 'series' : 'cinema'}</code> existe no Supabase e as RLS estão configuradas.
-          </p>
-        </div>
-      )}
-
-      {!loading && !error && films.length === 0 && (
-        <div style={{ textAlign:'center', padding:'80px 20px' }}>
-          <span style={{ fontSize:56 }}>🎬</span>
-          <p style={{ color:'#d9a23a', fontFamily:"'Inter',sans-serif", fontWeight:700, fontSize:18, marginTop:16 }}>
-            Nenhum conteúdo localizado
-          </p>
-          <p style={{ color:'#666', fontFamily:"'Open Sans',sans-serif", fontSize:13, marginTop:8 }}>
-            Adicione registros na tabela <strong style={{color:'#d9a23a'}}>{contentType === 'series' ? 'series' : 'cinema'}</strong> no Supabase
-          </p>
-        </div>
-      )}
-
-      {!loading && !error && films.length > 0 && (
-        isSeriesContentType ? (
-          // Séries - grade única sem categorias
-          <section style={{ padding:'0 clamp(16px,4vw,60px)' }}>
-            <CinemaGridFull items={films} />
-          </section>
-        ) : category === 'all' ? (
-          // Filmes - agrupado por categoria
-          Object.entries(grouped).map(([cat, items]) => (
-            <section key={cat} style={{ padding:'0 clamp(16px,4vw,60px) clamp(20px,2.5vw,36px)' }}>
-              <h2 style={{
-                fontFamily:    "'Inter', sans-serif",
-                fontWeight:    800,
-                fontSize:      'clamp(13px,1.6vw,20px)',
-                color:         '#d9a23a',
-                marginBottom:  'clamp(10px,1.2vw,16px)',
-                borderLeft:    'none',
-                paddingLeft:   0,
-                letterSpacing: '0.05em',
-                textTransform: 'uppercase',
-              }}>{cat}</h2>
-              <CinemaRow items={items} />
-            </section>
-          ))
-        ) : (
-          // Single category — grid
-          <section style={{ padding:'0 clamp(16px,4vw,60px)' }}>
-            <CinemaGridFull items={filtered} />
-          </section>
-        )
-      )}
-    </div>
-  )
-}
-
-/* ── Carrossel horizontal ── */
-function CinemaRow({ items }: { items: Cinema[] }) {
-  return (
-    <div style={{
-      display:          'flex',
-      gap:              'var(--card-gap)',
-      overflowX:        'auto',
-      paddingBottom:    6,
-      scrollbarWidth:   'none',
-      WebkitOverflowScrolling: 'touch',
-    } as React.CSSProperties}>
-      {items.map(f => (
-        <div key={f.id} style={{ width: 'var(--card-poster-w)', flexShrink: 0 }}>
-          <CinemaCard film={f} />
-        </div>
-      ))}
-    </div>
-  )
-}
-
-/* ── Grade responsiva ── */
-function CinemaGridFull({ items }: { items: Cinema[] }) {
-  return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(var(--grid-cols, 5), 1fr)',
-      gap: 'var(--card-gap, 16px)',
-    }}>
-      {items.map(f => <CinemaCard key={f.id} film={f} />)}
-    </div>
-  )
-}
-
-/* ── Card individual ── */
-function CinemaCard({ film }: { film: Cinema }) {
-  const [hovered, setHovered] = useState(false)
-  const router = useRouter()
-  const img = film.poster || film.banner || film.backdrop
-
-  const handleNavigate = () => {
-    const isSeries = film.type === 'series'
-    router.push(isSeries ? `/series/${film.id}` : `/detalhes/filme-${film.id}`)
+        ))}
+      </div>
+    )
   }
 
   return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onTouchStart={() => setHovered(true)}
-      onTouchEnd={() => setHovered(false)}
-      onClick={handleNavigate}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          handleNavigate() // Garante que o foco funcione como clique
-        }
-      }}
-      tabIndex={0}
-      role="link"
-      style={{
-        width:       '100%',
-        aspectRatio: '2/3',
-        borderRadius: 'var(--r-card)',
-        overflow:    'hidden',
-        position:    'relative',
-        cursor:      'pointer',
-        background:  'var(--bg-card)',
-        boxShadow:   'var(--shadow-premium)',
-        transform:   hovered ? 'scale(1.03) translateY(-5px)' : 'scale(1)',
-        transition:  'all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1)',
-        outline:     'none', // O outline é tratado por :focus-visible no globals.css
-      }}
-    >
-      {img ? (
-        <Image
-          src={img}
-          alt={film.titulo || ''}
-          fill
-          sizes="(max-width:640px) 40vw, (max-width:1280px) 15vw, 180px"
-          style={{ objectFit:'cover' }}
-          loading="lazy"
-          unoptimized
-        />
-      ) : (
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', fontSize:40 }}>🎬</div>
-      )}
+    <div className="flex flex-col gap-4 pb-20">
+      {APP_CATEGORIES.map(cat => {
+        const items = groupedData[cat]
+        if (!items) return null
+        
+        return (
+          <ContentRow 
+            key={cat} 
+            title={cat} 
+            items={items} 
+          />
+        )
+      })}
     </div>
   )
 }

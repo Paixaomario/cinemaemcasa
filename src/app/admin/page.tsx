@@ -7,7 +7,8 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen page-enter" style={{ background: '#000' }}>
       <Navbar />
-      <div className="section-px py-8">
+      {/* Adicionado pt-28 para garantir que o título não fique sob a Navbar */}
+      <div className="section-px pt-28 pb-8">
         <h1 className="mb-2 text-2xl font-bold text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
           Painel Admin
         </h1>

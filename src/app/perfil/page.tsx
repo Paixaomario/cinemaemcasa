@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { Navbar } from '@/components/layout/Navbar'
 import { useAuth } from '@/components/layout/SupabaseProvider'
-import { getMovieDetails, getShowDetails } from '@/lib/tmdb'
+import { getMovieDetails, getShowDetails, TMDBMovie, TMDBShow } from '@/lib/tmdb'
 
 interface ProfileItem {
   id: string | number;
@@ -35,22 +35,28 @@ export default function PerfilPage() {
         const hydratedFavs = await Promise.all(
           favs.map(async (f) => {
             const idStr = String(f.content_id)
-            // Verifica se é um ID numérico puro (Cinema local)
-            if (!isNaN(Number(idStr)) && !idStr.includes('-')) {
-              const { data } = await sb.from('cinema').select('*').eq('id', f.content_id).single()
-              return { ...data, type: 'filme' }
-            }
-            const [type, rawId] = idStr.split('-')
-            try {
-              const data = type === 'filme' ? await getMovieDetails(Number(rawId)) : await getShowDetails(Number(rawId))
-              const item = data as TMDBMovie & TMDBShow;
+
+            // 1. Busca na tabela unificada 'content' (UUID) para garantir a capa e título
+            const { data: contentData } = await sb
+              .from('content')
+              .select('*')
+              .eq('id', idStr)
+              .maybeSingle()
+
+            if (contentData) {
+              const table = contentData.type === 'movie' ? 'cinema' : 'series'
+              const idCol = contentData.type === 'movie' ? 'id' : 'id_n'
+              // Busca insensível a maiúsculas para evitar falhas de vínculo
+              const { data: orig } = await sb.from(table).select(`*`).ilike('titulo', contentData.title.trim()).maybeSingle()
+              
               return {
-                id: idStr,
-                type: type,
-                titulo: item.title || item.name,
-                poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
+                id: orig ? orig[idCol] : idStr,
+                titulo: contentData.title,
+                poster: contentData.poster || (orig ? (orig.poster || orig.capa || orig.poster_path || orig.banner) : null),
+                type: contentData.type
               }
-            } catch { return null }
+            }
+            return null;
           })
         )
         setFavorites(hydratedFavs.filter(Boolean))
@@ -67,21 +73,27 @@ export default function PerfilPage() {
         const hydratedHistory = await Promise.all(
           prog.map(async (p) => {
             const idStr = String(p.content_id)
-            if (!idStr.includes('-')) {
-              const { data } = await sb.from('cinema').select('*').eq('id', p.content_id).single()
-              return { ...data, id: idStr, type: 'filme' }
-            }
-            const [type, rawId] = idStr.split('-')
-            try {
-              const data = type === 'filme' ? await getMovieDetails(Number(rawId)) : await getShowDetails(Number(rawId))
-              const item = data as TMDBMovie & TMDBShow;
+
+            // 1. Busca na tabela unificada 'content' (UUID)
+            const { data: contentData } = await sb
+              .from('content')
+              .select('*')
+              .eq('id', idStr)
+              .maybeSingle()
+
+            if (contentData) {
+              const table = contentData.type === 'movie' ? 'cinema' : 'series'
+              const idCol = contentData.type === 'movie' ? 'id' : 'id_n'
+              const { data: orig } = await sb.from(table).select(`*`).ilike('titulo', contentData.title.trim()).maybeSingle()
+              
               return {
-                id: idStr,
-                type: type,
-                titulo: item.title || item.name,
-                poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
+                id: idStr, // Sempre usa o UUID da tabela 'content' para evitar truncamento de BIGINT na URL
+                titulo: contentData.title,
+                poster: contentData.poster || (orig ? (orig.poster || orig.capa || orig.poster_path || orig.banner) : null),
+                type: contentData.type
               }
-            } catch { return null }
+            }
+            return null;
           })
         )
         setHistory(hydratedHistory.filter(Boolean))
@@ -103,7 +115,7 @@ export default function PerfilPage() {
         <Navbar />
         <h1 className="text-3xl font-bold mb-4">Acesso Restrito</h1>
         <p className="text-gray-400 mb-8">Faça login para gerenciar seus favoritos e histórico.</p>
-        <Link href="/login" className="px-10 py-4 bg-[var(--red-primary)] rounded-xl font-black uppercase transition-transform hover:scale-105">Entrar no PAIXÃOFLIX</Link>
+        <Link href="/login" className="px-10 py-4 bg-[#00ADEF] text-white font-montserrat font-black uppercase rounded-[20px] transition-transform hover:scale-105">Entrar no PAIXÃOFLIX</Link>
       </main>
     )
   }
@@ -159,26 +171,28 @@ function Section({ title, items, color, emptyMsg }: { title: string, items: Prof
           {emptyMsg}
         </div>
       ) : (
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(var(--grid-cols, 5), 1fr)', 
-          gap: 'var(--card-gap, 16px)' 
-        }}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
           {items.map(item => {
             const isSeries = (item.type === 'serie' || item.type === 'series')
-            const finalId = String(item.id).includes('-') ? item.id : `${isSeries ? 'serie' : 'filme'}-${item.id}`
+            const posterPath = item.poster || item.backdrop
+            if (!posterPath && !item.titulo) return null; // Pula itens fantasmas
+            const imageUrl = posterPath 
+              ? (posterPath.startsWith('http') ? posterPath : `https://image.tmdb.org/t/p/w500${posterPath}`)
+              : null
+
             return (
             <Link
               key={item.id}
-              href={isSeries ? `/series/${item.id}` : `/detalhes/${finalId}`}
-              className="card-poster group"
+              href={isSeries ? `/series/${item.id}` : `/detalhes/${item.id}`}
+              className="relative aspect-[2/3] w-full group rounded-xl overflow-hidden bg-neutral-900 border border-white/5 hover:border-brand-cyan transition-all shadow-xl"
             >
-              {item.poster || item.backdrop ? (
+              {imageUrl ? (
                 <Image 
-                  src={item.poster || item.backdrop} 
+                  src={imageUrl} 
                   alt={item.titulo} 
                   fill 
                   className="object-cover transition-transform group-hover:scale-110"
+                  unoptimized
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-5xl">🎬</div>

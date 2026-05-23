@@ -61,7 +61,7 @@ function NavContent() {
           align-items: center;
 
           padding: 12px 6px;
-          border-radius: 40px;
+          border-radius: 20px; /* Arredondado para 20px */
 
           /* efeito glass / fosco */
           background: rgba(20, 10, 10, 0.55);
@@ -135,12 +135,12 @@ function NavContent() {
           justify-content: center;
           text-decoration: none;
           cursor: pointer;
-          border-radius: 18px;
+          border-radius: 20px; /* Arredondado para 20px */
           transition: 0.2s ease;
         }
 
         .nav-item .icon {
-          font-size: 62px !important;
+          font-size: 28px !important;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -151,7 +151,7 @@ function NavContent() {
         /* Sobrescrever estilo inline em mobile */
         @media (max-width: 768px) {
           .nav-item .icon {
-            font-size: 90px !important;
+            font-size: 32px !important;
           }
         }
 
@@ -185,7 +185,7 @@ function NavContent() {
             margin: 0 !important; /* Remove margens que possam empurrar */
 
             height: 75px !important;
-            border-radius: 30px;
+            border-radius: 20px; /* Arredondado para 20px */
             padding: 0 4px;
             bottom: 15px;
           }

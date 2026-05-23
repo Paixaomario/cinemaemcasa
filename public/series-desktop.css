@@ -538,11 +538,7 @@
   }
 }
 
-@media (max-width: 768px) { /* Esconde o layout desktop em telas pequenas */
-  .page-container {
-    display: none !important;
-  }
-}
+/* Regra de ocultação removida para evitar conflitos com layout mobile unificado */
 
 @media (min-width: 769px) { /* Esconde o layout mobile em telas grandes */
   .series-mobile-header, .series-hero-mini, .series-mobile-page, .mobile-bg-glow, .toast#toast, script[src*="series-mobile.js"] {

@@ -4,21 +4,15 @@ import { useAuth } from '@/components/layout/SupabaseProvider'
 import { Navbar } from '@/components/layout/Navbar'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
-import { createClient } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase' // Keep createClient
 import { getMovieDetails, getShowDetails, TMDBMovie, TMDBShow } from '@/lib/tmdb'
-import Image from 'next/image'
 import { CinemaItem } from '../HomeClient'
-
-interface WatchLaterItem extends Partial<CinemaItem> {
-  id_route: string;
-  display_title: string;
-  display_poster: string | null;
-}
+import Image from 'next/image'
 
 export default function AssistirDespoisPage() {
   const { user } = useAuth()
   const router = useRouter()
-  const [items, setItems] = useState<WatchLaterItem[]>([])
+  const [items, setItems] = useState<CinemaItem[]>([]) // Use CinemaItem directly
   const [loading, setLoading] = useState(true)
 
   const loadWatchLater = useCallback(async () => {
@@ -33,30 +27,68 @@ export default function AssistirDespoisPage() {
       if (wlData && wlData.length > 0) {
         const hydrated = await Promise.all(
           wlData.map(async (p) => {
-            const idStr = String(p.content_id)
-            // Busca o item diretamente do banco local
-            const { data: localData } = await sb.from('cinema').select('*').eq('id', idStr).single()
-            let item: CinemaItem | TMDBMovie | TMDBShow | null = localData as CinemaItem
+            const idStr = String(p.content_id) // This should be a UUID from public.content
+            let hydratedItem: TMDBMovie | TMDBShow | CinemaItem | null = null
 
-            // Se o item local tiver tmdb_id, enriquece com metadados do TMDB
-            if (item && item.tmdb_id) {
-              const type = item.type === 'movie' ? 'filme' : 'serie'
-              const rawId = item.tmdb_id
+            // Try to fetch from 'content' table first
+            const { data: contentData } = await sb.from('content').select('*').eq('id', idStr).single()
+            if (contentData) {
+              if (contentData.tmdb_id) {
+                try {
+                  hydratedItem = contentData.type === 'movie' ? await getMovieDetails(contentData.tmdb_id) : await getShowDetails(contentData.tmdb_id)
+                } catch (e) {
+                  console.warn(`Failed to fetch TMDB details for content_id: ${idStr}, tmdb_id: ${contentData.tmdb_id}`, e)
+                }
+              }
+              if (!hydratedItem) {
+                hydratedItem = { ...contentData, id: idStr, type: contentData.type === 'series' ? 'serie' : contentData.type } as CinemaItem
+              }
+            } else if (idStr.includes('-')) { // Fallback for 'type-id' format (legacy/direct TMDB)
+              const [type, rawId] = idStr.split('-')
               try {
-                item = type === 'filme' ? await getMovieDetails(Number(rawId)) : await getShowDetails(Number(rawId))
-              } catch { return null }
-            }
-
-            if (item) {
-              const itemData = item as any; // Cast para evitar erros de união de tipos no JSX
-              return {
-                ...item,
-                id_route: idStr,
-                display_title: itemData.titulo || itemData.title || itemData.name || 'Sem título',
-                display_poster: itemData.poster || (itemData.poster_path ? `https://image.tmdb.org/t/p/w500${itemData.poster_path}` : null)
+                hydratedItem = type === 'filme' ? await getMovieDetails(Number(rawId)) : await getShowDetails(Number(rawId))
+              } catch (e) {
+                console.warn(`Failed to fetch TMDB details for idStr: ${idStr}`, e)
+              }
+            } else {
+              // Fallback for old 'cinema' table IDs (numeric or non-UUID string without hyphen)
+              const { data: cinemaData } = await sb.from('cinema').select('*').eq('id', p.content_id).single()
+              if (cinemaData) {
+                if (cinemaData.tmdb_id) {
+                  try {
+                    hydratedItem = cinemaData.type === 'movie' ? await getMovieDetails(cinemaData.tmdb_id) : await getShowDetails(cinemaData.tmdb_id)
+                  } catch (e) {
+                    console.warn(`Failed to fetch TMDB details for cinema_id: ${idStr}, tmdb_id: ${cinemaData.tmdb_id}`, e)
+                  }
+                }
+                if (!hydratedItem) {
+                  hydratedItem = { ...cinemaData, id: idStr, type: cinemaData.type === 'series' ? 'serie' : cinemaData.type } as CinemaItem
+                }
               }
             }
-            return null
+
+            if (!hydratedItem) return null
+
+            // Map to CinemaItem structure for consistent display
+            const finalItem = {
+              ...hydratedItem,
+              id: idStr, // Use the original content_id for routing/keys
+              titulo: (hydratedItem as CinemaItem).titulo || (hydratedItem as TMDBMovie).title || (hydratedItem as TMDBShow).name || 'Sem título',
+              poster: (hydratedItem as CinemaItem).poster || ((hydratedItem as TMDBMovie).poster_path ? `https://image.tmdb.org/t/p/w500${(hydratedItem as TMDBMovie).poster_path}` : null),
+              backdrop: (hydratedItem as CinemaItem).backdrop || ((hydratedItem as TMDBMovie).backdrop_path ? `https://image.tmdb.org/t/p/w780${(hydratedItem as TMDBMovie).backdrop_path}` : null),
+              type: (hydratedItem as CinemaItem).type || ((hydratedItem as TMDBMovie).media_type === 'movie' ? 'movie' : ((hydratedItem as TMDBShow).media_type === 'tv' ? 'serie' : null)),
+              // Add other relevant fields from TMDB or local DB
+            } as CinemaItem;
+
+            // Ensure poster_path and backdrop_path are present for Image component if TMDB item
+            if ((hydratedItem as TMDBMovie).poster_path && !finalItem.poster) {
+              finalItem.poster = `https://image.tmdb.org/t/p/w500${(hydratedItem as TMDBMovie).poster_path}`;
+            }
+            if ((hydratedItem as TMDBMovie).backdrop_path && !finalItem.backdrop) {
+              finalItem.backdrop = `https://image.tmdb.org/t/p/w780${(hydratedItem as TMDBMovie).backdrop_path}`;
+            }
+
+            return finalItem;
           })
         )
         setItems(hydrated.filter(Boolean))
@@ -71,10 +103,8 @@ export default function AssistirDespoisPage() {
   useEffect(() => {
     if (user) {
       loadWatchLater()
-    } else {
-      // Se após 2s não houver user, redireciona (evita flash no loading)
-      const timer = setTimeout(() => { if(!user) router.push('/login') }, 2000)
-      return () => clearTimeout(timer)
+    } else if (!loading) { // Only redirect if not loading and user is null
+      router.push('/login')
     }
   }, [user, router, loadWatchLater])
 
@@ -90,7 +120,7 @@ export default function AssistirDespoisPage() {
         .eq('content_id', contentId)
 
       if (!error) {
-        setItems(prev => prev.filter(item => item.id_route !== contentId))
+        setItems(prev => prev.filter(item => item.id !== contentId)) // Use item.id
       }
     } catch (err) {
       console.error('Erro ao remover item:', err)
@@ -141,21 +171,17 @@ export default function AssistirDespoisPage() {
             </button>
           </div>
         ) : (
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(var(--grid-cols, 5), 1fr)', 
-            gap: 'var(--card-gap, 16px)' 
-          }}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-8">
             {items.map((item) => (
               <div
-                key={item.id_route}
-                onClick={() => router.push(item.type === 'series' || item.type === 'serie' ? `/series/${item.id_route}` : `/detalhes/${item.id_route}`)}
-                className="group relative aspect-[2/3] rounded-xl overflow-hidden cursor-pointer transition-all duration-500 hover:scale-105 hover:z-10 bg-[#1A1A1F] ring-1 ring-white/10 hover:ring-[var(--gold-primary)]/50"
+                key={item.id}
+                onClick={() => router.push(item.type === 'serie' || item.type === 'tv' ? `/series/${item.id}` : `/detalhes/${item.id}`)}
+                className="group relative aspect-[2/3] rounded-xl overflow-hidden cursor-pointer transition-all duration-500 hover:scale-105 hover:z-10 bg-[#1A1A1F] ring-1 ring-white/10 hover:ring-[var(--gold-primary)]/50 shadow-2xl shadow-black/80"
               >
-                {item.display_poster ? (
+                {item.poster ? (
                   <Image 
-                    src={item.display_poster} 
-                    alt={item.display_title} 
+                    src={item.poster} 
+                    alt={item.titulo || ''} 
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                   />
@@ -170,7 +196,7 @@ export default function AssistirDespoisPage() {
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleRemove(item.id_route);
+                      handleRemove(item.id);
                     }}
                     className="absolute top-3 right-3 w-8 h-8 rounded-full bg-red-600/20 hover:bg-red-600 border border-red-500/50 flex items-center justify-center text-white transition-all transform hover:scale-110 active:scale-95 z-20"
                     title="Remover da lista"
@@ -178,11 +204,11 @@ export default function AssistirDespoisPage() {
                     <span style={{ fontSize: '14px', fontWeight: 'bold' }}>✕</span>
                   </button>
 
-                  <p className="text-white font-bold text-sm leading-tight mb-2 line-clamp-2">
-                    {item.display_title}
+                  <p className="text-white font-bold text-sm leading-tight mb-2 line-clamp-2"> {/* Use item.titulo */}
+                    {item.titulo}
                   </p>
                   <div className="flex items-center gap-2">
-                     <span className="text-[var(--gold-primary)] text-xs font-black">▶ ASSISTIR</span>
+                     <span className="text-brand-cyan text-xs font-black">▶ ASSISTIR</span>
                   </div>
                 </div>
 

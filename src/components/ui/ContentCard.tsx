@@ -1,53 +1,48 @@
 'use client'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
-import { TMDBMovie, TMDBShow, IMG, getTitle } from '@/lib/tmdb'
 
-interface Props {
-  item: TMDBMovie | TMDBShow
-  variant?: 'poster' | 'wide'
-}
-
-export function ContentCard({ item, variant = 'poster' }: Props) {
-  const [hovered, setHovered] = useState(false)
-  const title    = getTitle(item)
-  const isMovie  = 'title' in item || (item as { media_type?: string }).media_type === 'movie'
-  const imgUrl   = variant === 'poster'
-    ? IMG.poster(item.poster_path, 'w500')
-    : IMG.backdrop(item.backdrop_path, 'w780')
-  const detailUrl = isMovie ? `/detalhes/${item.id}` : `/series/${item.id}` // Séries usam rota própria
+export function ContentCard({ item }: { item: any }) {
+  // Mapeamento para lidar com as diferentes tabelas (cinema vs series)
+  const title = item.titulo || item.title || 'Sem título'
+  const poster = item.poster || item.capa || item.poster_path
+  const rating = item.rating || item.vote_average
+  const year = item.ano || item.year || (item.release_date ? item.release_date.slice(0, 4) : '')
+  
+  // Detecta se é uma série (tabela 'series' usa id_n conforme sua migration)
+  const isSeries = !!item.id_n
+  const id = isSeries ? item.id_n : item.id
+  const detailHref = isSeries ? `/series/${id}` : `/detalhes/${id}`
 
   return (
-    <Link href={detailUrl} className={`${variant === 'poster' ? 'card-poster' : 'card-wide'} tv-focus`} title={title}
-      onFocus={(e) => e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })}
+    <Link 
+      href={detailHref}
+      className="group relative block aspect-[2/3] w-full transition-all duration-300 hover:scale-110 focus:scale-110 z-0 hover:z-50 focus:z-50 focus:outline-none focus:ring-4 focus:ring-brand-cyan rounded-xl shadow-2xl shadow-black/90"
     >
-      <div 
-        className="relative h-full w-full bg-gray-900"
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        onTouchStart={() => setHovered(true)}
-        onTouchEnd={() => setHovered(false)}
-        style={{
-          transform: hovered ? 'scale(1.08)' : 'scale(1)',
-          transition: 'transform 0.2s ease-out',
-        }}
-      >
-        {imgUrl ? (
+      <div className="absolute inset-0 overflow-hidden rounded-xl bg-neutral-900">
+        {poster ? (
           <Image
-            src={imgUrl}
+            src={poster.startsWith('http') ? poster : `https://image.tmdb.org/t/p/w500${poster}`}
             alt={title}
             fill
-            sizes={variant === 'poster' ? '(max-width:640px) 60vw, (max-width:1024px) 300px, (max-width:1536px) 240px, 220px' : '(max-width:640px) 70vw, 320px'}
-            className="object-cover"
-            loading="lazy"
+            sizes="(max-width: 768px) 50vw, 20vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
+            unoptimized
           />
         ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-2"
-            style={{ background: '#1a1a1a' }}>
-            <span style={{ fontSize: '32px' }}>{isMovie ? '🎬' : '📺'}</span>
-          </div>
+          <div className="flex h-full items-center justify-center text-4xl bg-neutral-800">🎬</div>
         )}
+      </div>
+
+      {/* Overlay com informações (visível no hover ou foco) */}
+      <div className="absolute inset-0 overflow-hidden rounded-xl flex flex-col justify-end bg-gradient-to-t from-black via-black/20 to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus:opacity-100">
+        <p className="text-sm font-black uppercase leading-tight text-white line-clamp-2">
+          {title}
+        </p>
+        <div className="mt-2 flex items-center gap-2">
+          {rating > 0 && <span className="text-[10px] font-bold text-gold-primary">⭐ {Number(rating).toFixed(1)}</span>}
+          {year && <span className="text-[10px] font-bold text-neutral-400">{year}</span>}
+        </div>
       </div>
     </Link>
   )
