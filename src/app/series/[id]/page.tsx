@@ -46,39 +46,49 @@ function SeriesContent() {
 
     async function loadSeries() {
       const sb = createClient()
-      let seriesIdNum = Number(id)
+      setLoading(true)
+      const rawId = String(id)
+      const cleanId = rawId.replace('serie-', '')
+      const isNumeric = /^\d+$/.test(cleanId)
+      
+      let localSeriesId: string | null = null
       let localData = null
 
-      // 1. Resolver ID (pode ser id_n numérico ou UUID da tabela content)
-      if (isNaN(seriesIdNum)) {
-        // Se não for número, busca na tabela content pelo UUID para recuperar o título
+      // 1. Resolver ID Real (UUID da content ou id_n da series)
+      if (!isNumeric) {
         const { data: contentData } = await sb
           .from('content')
           .select('id, title')
-          .eq('id', id)
+          .eq('id', rawId)
           .maybeSingle()
         
         if (contentData) {
           const { data: sData } = await sb
             .from('series')
             .select('*')
-            .eq('titulo', contentData.title)
+            .ilike('titulo', contentData.title.trim())
             .maybeSingle()
-          localData = sData
-          if (sData) seriesIdNum = sData.id_n
-          setContentUuid(contentData.id)
+          
+          if (sData) {
+            localData = sData
+            localSeriesId = String(sData.id_n)
+            setContentUuid(contentData.id)
+          }
         }
       } else {
-        // Busca direta por id_n
         const { data: sData } = await sb
           .from('series')
           .select('*')
-          .eq('id_n', seriesIdNum)
+          .eq('id_n', cleanId)
           .maybeSingle()
-        localData = sData
+        
+        if (sData) {
+          localData = sData
+          localSeriesId = cleanId
+        }
       }
 
-      if (!localData || !seriesIdNum) {
+      if (!localData || !localSeriesId) {
         router.push('/')
         return
       }
@@ -144,7 +154,7 @@ function SeriesContent() {
       const { data: seasonsData } = await sb
         .from('temporadas')
         .select('*')
-        .eq('serie_id', seriesIdNum)
+        .eq('serie_id', localSeriesId)
         .order('numero_temporada', { ascending: true })
 
       setSeasons(seasonsData || [])

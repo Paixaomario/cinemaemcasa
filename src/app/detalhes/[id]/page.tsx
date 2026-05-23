@@ -42,11 +42,12 @@ function MovieContent() {
 
     async function loadMovie() {
       const sb = createClient()
-      let movieIdNum = Number(id)
+      const cleanId = String(id).replace('filme-', '')
+      const isNumeric = /^\d+$/.test(cleanId)
       let localData = null
       
       // 1. Resolver ID (pode ser BIGINT ou UUID da tabela content)
-      if (isNaN(movieIdNum)) {
+      if (!isNumeric) {
         const { data: contentData } = await sb
           .from('content')
           .select('id, title')
