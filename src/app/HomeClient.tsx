@@ -23,6 +23,16 @@ interface HomeSection {
   data_fim: string | null
 }
 
+export interface CinemaItem {
+  id: string;
+  id_n?: number | string;
+  titulo: string;
+  poster: string | null;
+  backdrop: string | null;
+  type: 'movie' | 'serie' | 'series' | 'tv' | null;
+  year?: number | string | null;
+}
+
 export function HomeClient() {
   const { user } = useAuth()
   const [sections, setSections] = useState<HomeSection[]>([])

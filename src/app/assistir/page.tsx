@@ -9,7 +9,7 @@ import { getMovieDetails, getShowDetails, TMDBMovie, TMDBShow } from '@/lib/tmdb
 import { CinemaItem } from '../HomeClient'
 import Image from 'next/image'
 
-export default function AssistirDespoisPage() {
+export default function AssistirDepoisPage() {
   const { user } = useAuth()
   const router = useRouter()
   const [items, setItems] = useState<CinemaItem[]>([]) // Use CinemaItem directly
