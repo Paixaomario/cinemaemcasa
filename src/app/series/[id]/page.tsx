@@ -180,7 +180,7 @@ function SeriesContent() {
   const startParty = useCallback(() => {
     const newRoomId = crypto.randomUUID();
     const inviteLink = `${window.location.origin}${window.location.pathname}?room=${newRoomId}`;
-    const inviteMsg = `Vamos assistir comigo? 🍿 ${series.titulo || series.name} 🔗 ${inviteLink}`;
+    const inviteMsg = `Vamos assistir comigo?\n\n🍿 ${series.titulo || series.name}\n🔗 ${inviteLink}`;
     
     navigator.clipboard.writeText(inviteMsg);
     alert("🎉 Sala criada! Convite copiado para sua área de transferência.");

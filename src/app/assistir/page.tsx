@@ -91,7 +91,7 @@ export default function AssistirDepoisPage() {
             return finalItem;
           })
         )
-        setItems(hydrated.filter(Boolean))
+        setItems(hydrated.filter(Boolean) as CinemaItem[])
       }
     } catch (err) {
       console.error(err)

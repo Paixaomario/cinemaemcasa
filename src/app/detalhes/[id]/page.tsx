@@ -146,16 +146,16 @@ function MovieContent() {
     loadMovie()
   }, [id, router, user])
 
-  function startParty() {
+  const startParty = useCallback(() => {
     const newRoomId = crypto.randomUUID();
     const inviteLink = `${window.location.origin}${window.location.pathname}?room=${newRoomId}`;
-    const inviteMsg = `Vamos assistir comigo? 🍿 ${movie.titulo || movie.title} 🔗 ${inviteLink}`;
+    const inviteMsg = `Vamos assistir comigo?\n\n🍿 ${movie.titulo || movie.title}\n🔗 ${inviteLink}`;
     
     navigator.clipboard.writeText(inviteMsg);
     alert("🎉 Sala criada! Convite copiado para sua área de transferência.");
     setActiveRoomId(newRoomId);
     setShowPlayer(true);
-  }
+  }, [movie]);
 
   async function toggleFavorite() {
     if (!user) return router.push('/login')
@@ -249,6 +249,14 @@ function MovieContent() {
             🍿 Assistir Juntos
           </button>
 
+          {/* Botão Voltar */}
+          <button 
+            onClick={() => router.back()}
+            className="px-10 py-4 bg-[#001f3f] text-white font-montserrat font-black uppercase tracking-widest rounded-[20px] hover:brightness-125 transition-all focus:ring-4 focus:ring-blue-500 outline-none border border-transparent"
+          >
+            Voltar
+          </button>
+
           {movie.trailer && (
             <a
               href={movie.trailer}
@@ -337,14 +345,18 @@ function MovieContent() {
 
       <div className="pb-32" />
 
-      {/* Player de Vídeo em Fullscreen */}
-      {showPlayer && (
+      {/* Player de Vídeo */}
+      {(showPlayer || (guestName && activeRoomId)) && movie.url && (
         <VideoPlayer
           src={movie.url}
           title={title}
           contentId={contentUuid || String(movie.id)}
           userId={user?.id}
-          onClose={() => setShowPlayer(false)}
+          onClose={() => { setShowPlayer(false); setActiveRoomId(null); setGuestName(''); setGuestStep(null); }}
+          partyRoomId={activeRoomId}
+          isGuest={isGuestMode}
+          guestName={guestName}
+          backdrop={movie.backdrop_path || movie.poster_path}
         />
       )}
     </main>

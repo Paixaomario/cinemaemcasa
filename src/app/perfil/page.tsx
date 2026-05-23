@@ -59,7 +59,7 @@ export default function PerfilPage() {
             return null;
           })
         )
-        setFavorites(hydratedFavs.filter(Boolean))
+        setFavorites(hydratedFavs.filter(Boolean) as ProfileItem[])
       }
 
       // 2. Buscar Histórico (view_progress)
@@ -96,7 +96,7 @@ export default function PerfilPage() {
             return null;
           })
         )
-        setHistory(hydratedHistory.filter(Boolean))
+        setHistory(hydratedHistory.filter(Boolean) as ProfileItem[])
       }
 
       setLoading(false)
