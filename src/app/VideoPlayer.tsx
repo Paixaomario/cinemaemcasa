@@ -137,11 +137,11 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
       <div className="flex-1 relative h-full bg-black">
         <MediaPlayer
           ref={player}
-          onInstance={setMediaInstance}
+          onCanPlay={() => setMediaInstance(player.current)}
           title={title}
           src={src}
           currentTime={startOffset}
-          onTimeUpdate={(detail) => onTimeUpdate(detail.currentTime)}
+          onTimeUpdate={(event) => onTimeUpdate(event.detail.currentTime)}
           onEnded={onNext}
           seekStep={10}
           key={src}
