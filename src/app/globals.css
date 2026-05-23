@@ -84,9 +84,10 @@ body {
 
 .vds-slider-thumb::before {
   content: '🍿';
-  font-size: 32px;
-  filter: drop-shadow(0 0 8px #00ADEF) 
-          drop-shadow(0 0 4px #FF0000);
+  font-size: 36px;
+  filter: drop-shadow(0 0 12px #00ADEF) 
+          drop-shadow(0 0 8px #FF0000)
+          drop-shadow(0 0 4px #FFD700);
   transform: translateY(-4px);
 }
 
