@@ -72,6 +72,19 @@ export default function PartyRoomPage() {
       }
 
       setLoading(false)
+
+      // Subscribe para mudanças na sala (quando o anfitrião começar)
+      const channel = sb
+        .channel(`room:${roomId}`)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'party_rooms', filter: `id=eq.${roomId}` }, (payload) => {
+          console.log('Sala atualizada:', payload)
+          if (payload.new.started_at && !showPlayer) {
+            setShowPlayer(true)
+          }
+        })
+        .subscribe()
+
+      return () => { sb.removeChannel(channel) }
     }
 
     loadRoom()
