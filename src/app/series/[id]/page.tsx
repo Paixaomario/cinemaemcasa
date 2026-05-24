@@ -55,124 +55,141 @@ function SeriesContent() {
       let localSeriesId: string | null = null
       let localData = null
 
-      // 1. Resolver ID Real (UUID da content ou id_n da series)
-      if (!isNumeric) {
-        const { data: contentData } = await sb
-          .from('content')
-          .select('id, title')
-          .eq('id', rawId)
-          .maybeSingle()
-        
-        if (contentData) {
+      try {
+        // 1. Resolver ID Real (UUID da content ou id_n da series)
+        if (!isNumeric) {
+          const { data: contentData } = await sb
+            .from('content')
+            .select('id, title')
+            .eq('id', rawId)
+            .maybeSingle()
+          
+          if (contentData) {
+            const { data: sData } = await sb
+              .from('series')
+              .select('*')
+              .ilike('titulo', contentData.title.trim())
+              .maybeSingle()
+            
+            if (sData) {
+              localData = sData
+              localSeriesId = String(sData.id_n || sData.id)
+              setContentUuid(contentData.id)
+            }
+          }
+        } else {
           const { data: sData } = await sb
             .from('series')
             .select('*')
-            .ilike('titulo', contentData.title.trim())
+            .eq('id_n', cleanId)
             .maybeSingle()
           
           if (sData) {
             localData = sData
-            localSeriesId = String(sData.id_n)
-            setContentUuid(contentData.id)
+            localSeriesId = cleanId
           }
         }
-      } else {
-        const { data: sData } = await sb
-          .from('series')
+
+        if (!localData || !localSeriesId) {
+          router.push('/')
+          return
+        }
+
+        // 2. Busca metadados ricos no TMDB
+        let finalData = localData
+        if (localData.tmdb_id) {
+          try {
+            const tmdbData = await getShowDetails(localData.tmdb_id)
+            if (tmdbData) finalData = { ...tmdbData, ...localData }
+          } catch (e) {
+            console.warn("TMDB Series metadata not found, using local only");
+          }
+
+          if (finalData.recommendations?.results?.length > 0) {
+            const recIds = finalData.recommendations.results.map((r: any) => r.id)
+            const { data: existing } = await sb
+              .from('series')
+              .select('id_n, titulo, capa, poster, rating, ano, genero, tmdb_id')
+              .in('tmdb_id', recIds)
+            setFilteredRecommendations(existing || [])
+          }
+        }
+        setSeries(finalData)
+
+        // Sincronização UUID
+        let cid = contentUuid
+        if (!cid && localData?.titulo) {
+          const { data: contentData } = await sb.from('content').select('id').eq('title', localData.titulo).eq('type', 'series').maybeSingle()
+          if (contentData) cid = contentData.id
+        }
+        if (cid) setContentUuid(cid)
+
+        // 3. Busca Temporadas e Episódios (Tentativa Híbrida)
+        // Primeiro tenta na tabela 'temporadas' (Legado)
+        let { data: seasonsData } = await sb
+          .from('temporadas')
           .select('*')
-          .eq('id_n', cleanId)
-          .maybeSingle()
-        
-        if (sData) {
-          localData = sData
-          localSeriesId = cleanId
-        }
-      }
+          .or(`serie_id.eq.${localSeriesId},id_serie.eq.${localSeriesId}`)
+          .order('numero_temporada', { ascending: true })
 
-      if (!localData || !localSeriesId) {
-        router.push('/')
-        return
-      }
+        // Se não houver temporadas, tenta extrair do 'content' (Unificado)
+        if (!seasonsData || seasonsData.length === 0) {
+          const { data: contentEpisodes } = await sb
+            .from('content')
+            .select('season_number')
+            .eq('parent_id', contentUuid)
+            .eq('type', 'episode')
 
-      // 2. Busca metadados ricos no TMDB
-      let finalData = localData
-      if (localData.tmdb_id) {
-        try {
-          const tmdbData = await getShowDetails(localData.tmdb_id)
-          if (tmdbData) finalData = { ...tmdbData, ...localData }
-        } catch (e) {
-          console.warn("TMDB Series metadata not found, using local only");
+          if (contentEpisodes && contentEpisodes.length > 0) {
+            const uniqueSeasons = Array.from(new Set(contentEpisodes.map((e: any) => e.season_number))).sort();
+            seasonsData = uniqueSeasons.map(num => ({
+              id_n: `s-${num}`,
+              numero_temporada: num,
+              titulo: `Temporada ${num}`
+            }));
+          }
         }
 
-        // Filtra recomendações: apenas as séries que existem no seu banco
-        if (finalData.recommendations?.results?.length > 0) {
-          const recIds = finalData.recommendations.results.map((r: any) => r.id)
-          const { data: existing } = await sb
-            .from('series')
-            .select('id_n, titulo, capa, poster, rating, ano, genero, tmdb_id') // Seleciona tmdb_id para ContentCard
-            .in('tmdb_id', recIds)
-          setFilteredRecommendations(existing || [])
+        setSeasons(seasonsData || [])
+        if (seasonsData && seasonsData.length > 0) {
+          const firstSeason = seasonsData[0]
+          setSelectedSeason(firstSeason)
+          
+          // Busca episódios da primeira temporada
+          const seasonId = firstSeason.id_n || firstSeason.id;
+          let { data: episodesData } = await sb
+            .from('episodios')
+            .select('*')
+            .or(`temporada_id.eq.${seasonId},id_temporada.eq.${seasonId}`)
+            .order('numero_episodio', { ascending: true })
+          
+          // Fallback para content
+          if ((!episodesData || episodesData.length === 0) && contentUuid) {
+             const { data: cEps } = await sb
+               .from('content')
+               .select('*')
+               .eq('parent_id', contentUuid)
+               .eq('season_number', firstSeason.numero_temporada)
+               .eq('type', 'episode')
+               .order('episode_number', { ascending: true })
+             
+             if (cEps) {
+               episodesData = cEps.map(e => ({
+                 ...e,
+                 id_n: e.id,
+                 numero_episodio: e.episode_number,
+                 titulo: e.title,
+                 arquivo: e.video_url
+               }))
+             }
+          }
+          setEpisodes(episodesData || [])
         }
+      } catch (err) {
+        console.error("Erro ao carregar série:", err)
+      } finally {
+        setLoading(false)
       }
-      setSeries(finalData)
-
-      // Sincronização com a tabela content para obter UUID (necessário para favoritos e progresso)
-      let cid = contentUuid
-      if (!cid && localData?.titulo) {
-        const { data: contentData } = await sb
-          .from('content')
-          .select('id')
-          .eq('title', localData.titulo)
-          .eq('type', 'series')
-          .maybeSingle()
-
-        if (contentData) {
-          cid = contentData.id
-        } else {
-          const { data: newContent } = await sb.from('content')
-            .insert({ 
-              title: localData.titulo, 
-              type: 'series', 
-              poster: localData.capa || localData.poster || localData.poster_path,
-              is_published: true 
-            }).select('id').single()
-          if (newContent) cid = newContent.id
-        }
-      }
-      if (cid) setContentUuid(cid)
-
-      // Verifica favorito
-      if (cid && user) {
-        const { data: fav } = await sb
-          .from('favorites')
-          .select('id')
-          .match({ user_id: user.id, content_id: cid })
-          .maybeSingle()
-        setIsFavorite(!!fav)
-      }
-
-      // 3. Busca Temporadas
-      const { data: seasonsData } = await sb
-        .from('temporadas')
-        .select('*')
-        .eq('serie_id', localSeriesId)
-        .order('numero_temporada', { ascending: true })
-
-      setSeasons(seasonsData || [])
-      if (seasonsData && seasonsData.length > 0) {
-        const firstSeason = seasonsData[0]
-        setSelectedSeason(firstSeason)
-        
-        // Busca episódios da primeira temporada IMEDIATAMENTE para evitar tela vazia no carregamento
-        const { data: episodesData } = await sb
-          .from('episodios')
-          .select('*')
-          .eq('temporada_id', firstSeason.id_n)
-          .order('numero_episodio', { ascending: true })
-        setEpisodes(episodesData || [])
-      }
-      
-      setLoading(false)
     }
 
     loadSeries()
@@ -246,17 +263,38 @@ function SeriesContent() {
 
   // Busca episódios quando a temporada muda
   useEffect(() => {
-    if (!selectedSeason?.id_n || loading) return
+    const seasonId = selectedSeason?.id_n || selectedSeason?.id;
+    if (!seasonId || loading) return
 
     async function loadEpisodes() {
       const sb = createClient()
-      const { data: episodesData } = await sb
+      let { data: episodesData } = await sb
         .from('episodios')
         .select('*')
-        .eq('temporada_id', selectedSeason.id_n)
+        .or(`temporada_id.eq.${seasonId},id_temporada.eq.${seasonId}`)
         .order('numero_episodio', { ascending: true })
 
-      setEpisodes(episodesData || [])
+      // Fallback para content
+      if ((!episodesData || episodesData.length === 0) && contentUuid) {
+        const { data: cEps } = await sb
+          .from('content')
+          .select('*')
+          .eq('parent_id', contentUuid)
+          .eq('season_number', selectedSeason.numero_temporada)
+          .eq('type', 'episode')
+          .order('episode_number', { ascending: true })
+        
+        if (cEps) {
+          episodesData = cEps.map(e => ({
+            ...e,
+            id_n: e.id,
+            numero_episodio: e.episode_number,
+            titulo: e.title,
+            arquivo: e.video_url
+          }))
+        }
+     }
+     setEpisodes(episodesData || [])
     }
 
     loadEpisodes()
@@ -379,12 +417,12 @@ function SeriesContent() {
               <div className="flex items-center gap-4">
                 <span className="text-xs font-black uppercase text-neutral-500 tracking-widest">Temporada:</span>
                 <select 
-                  value={selectedSeason?.id_n}
-                  onChange={(e) => setSelectedSeason(seasons.find(s => String(s.id_n) === e.target.value))}
+                  value={selectedSeason?.id_n || selectedSeason?.id}
+                  onChange={(e) => setSelectedSeason(seasons.find(s => String(s.id_n || s.id) === e.target.value))}
                   className="bg-black text-white border border-white/20 rounded-xl px-6 py-3 font-bold focus:ring-4 focus:ring-brand-cyan/40 outline-none transition-all cursor-pointer hover:bg-neutral-800"
                 >
                   {seasons.map(s => (
-                    <option key={s.id_n} value={s.id_n}>
+                    <option key={s.id_n || s.id} value={s.id_n || s.id}>
                       {s.numero_temporada === 0 ? 'Especiais' : `Temporada ${s.numero_temporada}`}
                     </option>
                   ))}
@@ -398,7 +436,7 @@ function SeriesContent() {
               const imageUrl = TMDB_IMG.backdrop(ep.imagem_500 || ep.banner);
               return (
               <button
-                key={ep.id_n}
+                key={ep.id_n || ep.id}
                 onClick={() => setActiveEpisode(ep)}
                 className="group flex flex-col gap-4 text-left p-4 rounded-2xl hover:bg-white/5 transition-all focus:ring-4 focus:ring-brand-cyan outline-none border border-transparent hover:border-white/10"
               >

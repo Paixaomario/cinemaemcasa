@@ -17,8 +17,8 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
       
       // Busca itens recentes como pool inicial (a aleatoriedade real será feita no embaralhamento abaixo)
       // O uso de RANDOM() no .order() do Supabase JS gera erro 400.
-      const { data: movies, error: mError } = await sb.from('cinema').select('id, titulo, poster, backdrop, tmdb_id, category, type').limit(40)
-      const { data: series, error: sError } = await sb.from('series').select('id_n, titulo, capa, banner, tmdb_id, genero, type').limit(40)
+      const { data: movies, error: mError } = await sb.from('cinema').select('id, titulo, poster, backdrop, tmdb_id, category').limit(40)
+      const { data: series, error: sError } = await sb.from('series').select('id_n, titulo, capa, banner, tmdb_id, genero').limit(40)
 
       if (mError || sError) console.error("Erro ao buscar dados para o banner:", mError || sError)
 
