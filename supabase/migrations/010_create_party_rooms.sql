@@ -16,6 +16,11 @@ CREATE INDEX IF NOT EXISTS idx_party_rooms_active ON public.party_rooms(is_activ
 -- RLS
 ALTER TABLE public.party_rooms ENABLE ROW LEVEL SECURITY;
 
+-- Remover policies existentes se houver
+DROP POLICY IF EXISTS "party_rooms_select" ON public.party_rooms;
+DROP POLICY IF EXISTS "party_rooms_insert" ON public.party_rooms;
+DROP POLICY IF EXISTS "party_rooms_update" ON public.party_rooms;
+
 CREATE POLICY "party_rooms_select" ON public.party_rooms FOR SELECT TO authenticated USING (true);
 CREATE POLICY "party_rooms_insert" ON public.party_rooms FOR INSERT TO authenticated WITH CHECK (auth.uid() = host_id);
 CREATE POLICY "party_rooms_update" ON public.party_rooms FOR UPDATE TO authenticated USING (auth.uid() = host_id);

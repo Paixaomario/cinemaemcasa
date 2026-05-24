@@ -14,5 +14,9 @@ CREATE INDEX IF NOT EXISTS idx_party_messages_created ON public.party_messages(c
 -- RLS
 ALTER TABLE public.party_messages ENABLE ROW LEVEL SECURITY;
 
+-- Remover policies existentes se houver
+DROP POLICY IF EXISTS "party_messages_select" ON public.party_messages;
+DROP POLICY IF EXISTS "party_messages_insert" ON public.party_messages;
+
 CREATE POLICY "party_messages_select" ON public.party_messages FOR SELECT TO authenticated USING (true);
 CREATE POLICY "party_messages_insert" ON public.party_messages FOR INSERT TO authenticated WITH CHECK (true);
