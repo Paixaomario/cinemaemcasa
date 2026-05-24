@@ -15,30 +15,33 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
     async function fetchFeatured() {
       const sb = createClient()
       
-      // Busca itens recentes como pool inicial (a aleatoriedade real será feita no embaralhamento abaixo)
-      // O uso de RANDOM() no .order() do Supabase JS gera erro 400.
-      const { data: movies, error: mError } = await sb.from('cinema').select('id, titulo, poster, backdrop, tmdb_id, category').limit(40)
-      const { data: series, error: sError } = await sb.from('series').select('id_n, titulo, capa, banner, tmdb_id, genero').limit(40)
+      try {
+        const { data: movies, error: mError } = await sb.from('cinema').select('id, titulo, poster, backdrop, tmdb_id, category').limit(40)
+        const { data: series, error: sError } = await sb.from('series').select('id_n, titulo, capa, banner, tmdb_id, genero').limit(40)
 
-      if (mError || sError) console.error("Erro ao buscar dados para o banner:", mError || sError)
+        if (mError || sError) console.error("Erro ao buscar dados para o banner:", mError || sError)
 
-      let combinedPool = [
-        ...(movies || []).map(m => ({ ...m, type: 'movie', poster: m.poster || m.backdrop, backdrop: m.backdrop || m.poster, category: m.category })),
-        ...(series || []).map(s => ({ ...s, id: s.id_n, type: 'series', poster: s.capa || s.banner, backdrop: s.banner || s.capa, category: s.genero }))
-      ].filter(item => item.tmdb_id && (item.poster || item.backdrop)); // Filtra itens sem imagem
+        let combinedPool = [
+          ...(movies || []).map(m => ({ ...m, type: 'movie', poster: m.poster || m.backdrop, backdrop: m.backdrop || m.poster, category: m.category })),
+          ...(series || []).map(s => ({ ...s, id: s.id_n, type: 'series', poster: s.capa || s.banner, backdrop: s.banner || s.capa, category: s.genero }))
+        ].filter(item => item.tmdb_id && (item.poster || item.backdrop));
 
-      if (type) {
-        combinedPool = combinedPool.filter(item => item.type === type);
+        if (type) {
+          combinedPool = combinedPool.filter(item => item.type === type);
+        }
+
+        // Embaralha o pool combinado
+        for (let i = combinedPool.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [combinedPool[i], combinedPool[j]] = [combinedPool[j], combinedPool[i]];
+        }
+
+        setContentPool(combinedPool);
+      } catch (err) {
+        console.error("Critical error in HeroBanner fetch:", err);
+      } finally {
+        setLoading(false);
       }
-
-      // Embaralha o pool combinado
-      for (let i = combinedPool.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [combinedPool[i], combinedPool[j]] = [combinedPool[j], combinedPool[i]];
-      }
-
-      setContentPool(combinedPool);
-      setLoading(false);
     }
     fetchFeatured();
   }, [type]);

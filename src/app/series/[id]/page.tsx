@@ -130,8 +130,13 @@ function SeriesContent() {
         let { data: seasonsData } = await sb
           .from('temporadas')
           .select('*')
-          .or(`serie_id.eq.${localSeriesId},id_serie.eq.${localSeriesId}`)
+          .eq('serie_id', localSeriesId)
           .order('numero_temporada', { ascending: true })
+
+        if (!seasonsData || seasonsData.length === 0) {
+           const { data: sAlt } = await sb.from('temporadas').select('*').eq('id_serie', localSeriesId).order('numero_temporada', { ascending: true })
+           if (sAlt) seasonsData = sAlt
+        }
 
         // Se não houver temporadas, tenta extrair do 'content' (Unificado)
         if (!seasonsData || seasonsData.length === 0) {
@@ -157,12 +162,17 @@ function SeriesContent() {
           setSelectedSeason(firstSeason)
           
           // Busca episódios da primeira temporada
-          const seasonId = firstSeason.id_n || firstSeason.id;
+          const seasonId = String(firstSeason.id_n || firstSeason.id);
           let { data: episodesData } = await sb
             .from('episodios')
             .select('*')
-            .or(`temporada_id.eq.${seasonId},id_temporada.eq.${seasonId}`)
+            .eq('temporada_id', seasonId)
             .order('numero_episodio', { ascending: true })
+
+          if (!episodesData || episodesData.length === 0) {
+            const { data: eAlt } = await sb.from('episodios').select('*').eq('id_temporada', seasonId).order('numero_episodio', { ascending: true })
+            if (eAlt) episodesData = eAlt
+          }
           
           // Fallback para content
           if ((!episodesData || episodesData.length === 0) && contentUuid) {
@@ -197,7 +207,7 @@ function SeriesContent() {
   }, [id, router, user])
 
   const startParty = useCallback(() => {
-    const newRoomId = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
+    const newRoomId = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
     const inviteLink = `${window.location.origin}${window.location.pathname}?room=${newRoomId}`;
     const inviteMsg = `Vamos assistir comigo?\n\n🍿 ${series.titulo || series.name}\n🔗 ${inviteLink}`;
     
@@ -264,7 +274,7 @@ function SeriesContent() {
 
   // Busca episódios quando a temporada muda
   useEffect(() => {
-    const seasonId = selectedSeason?.id_n || selectedSeason?.id;
+    const seasonId = String(selectedSeason?.id_n || selectedSeason?.id || '');
     if (!seasonId || loading) return
 
     async function loadEpisodes() {
@@ -272,8 +282,13 @@ function SeriesContent() {
       let { data: episodesData } = await sb
         .from('episodios')
         .select('*')
-        .or(`temporada_id.eq.${seasonId},id_temporada.eq.${seasonId}`)
+        .eq('temporada_id', seasonId)
         .order('numero_episodio', { ascending: true })
+
+      if (!episodesData || episodesData.length === 0) {
+        const { data: eAlt } = await sb.from('episodios').select('*').eq('id_temporada', seasonId).order('numero_episodio', { ascending: true })
+        if (eAlt) episodesData = eAlt
+      }
 
       // Fallback para content
       if ((!episodesData || episodesData.length === 0) && contentUuid) {
@@ -445,7 +460,7 @@ function SeriesContent() {
                   {imageUrl ? (
                     <Image 
                       src={imageUrl} 
-                      alt={ep.titulo} 
+                      alt={ep.titulo || ''} 
                       fill 
                       className="object-cover group-hover:scale-110 transition-transform duration-500" 
                       unoptimized 
