@@ -43,6 +43,7 @@ export function HomeClient() {
   useEffect(() => {
     async function loadHome() {
       const sb = createClient()
+      console.log('Supabase URL na Home:', process.env.NEXT_PUBLIC_SUPABASE_URL)
 
       // 0. Carregar Continuar Assistindo se houver usuário
       if (user) {
@@ -59,11 +60,11 @@ export function HomeClient() {
             prog.map(async (p) => {
               const idStr = String(p.content_id)
               const { data: contentData } = await sb.from('content').select('*').eq('id', idStr).maybeSingle()
-              
+
               if (contentData) {
                 const table = contentData.type === 'movie' ? 'cinema' : 'series'
                 const { data: orig } = await sb.from(table).select('*').ilike('titulo', contentData.title.trim()).maybeSingle()
-                
+
                 return {
                   id: idStr, // UUID da tabela content
                   id_n: contentData.type === 'series' ? idStr : undefined, // Garante que ContentCard trate como série
@@ -81,13 +82,15 @@ export function HomeClient() {
       } else {
         setContinueWatching([])
       }
-      
+
       // 1. Busca seções ativas ordenadas por posição
       const { data: secs, error } = await sb
         .from('home_sections')
         .select('*')
         .eq('ativo', true)
         .order('posicao', { ascending: true })
+
+      console.log('Seções da home:', secs?.length, 'Erro:', error)
 
       if (error || !secs) {
         setLoading(false)
@@ -119,10 +122,15 @@ export function HomeClient() {
 
       // 3. Carrega os itens para cada seção visível
       const dataMap: Record<string, any[]> = {}
+
+      // Verificar total de itens na tabela cinema
+      const { count: cinemaCount } = await sb.from('cinema').select('*', { count: 'exact', head: true })
+      console.log('TOTAL de itens na tabela cinema:', cinemaCount)
+
       await Promise.all(visibleSections.map(async (sec) => {
         if (sec.fonte === 'cinema') {
           let query = sb.from('cinema').select('*')
-          
+
           if (sec.categorias && sec.categorias.length > 0) {
             // Busca conteúdos que contenham qualquer uma das categorias solicitadas
             const catFilters = sec.categorias.map(c => `category.ilike.%${c}%`).join(',')
@@ -135,6 +143,7 @@ export function HomeClient() {
           else query = query.order('created_at', { ascending: false })
 
           const { data: items } = await query.limit(sec.limite)
+          console.log('Seção', sec.titulo, ':', items?.length, 'itens')
           dataMap[sec.id] = items || []
         }
       }))

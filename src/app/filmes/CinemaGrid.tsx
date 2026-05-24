@@ -41,18 +41,21 @@ export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' })
   useEffect(() => {
     async function fetchData() {
       const sb = createClient()
+      console.log('Supabase URL no CinemaGrid:', process.env.NEXT_PUBLIC_SUPABASE_URL)
       const table = contentType === 'movie' ? 'cinema' : 'series'
       // Fallback para id_n caso a tabela de séries não tenha created_at ainda
       const orderField = contentType === 'movie' ? 'created_at' : 'id_n'
-      
+
       const { data: items, error } = await sb
         .from(table)
         .select('*')
         .order(orderField, { ascending: false })
 
+      console.log('TOTAL de itens na tabela', table, ':', items?.length, 'Erro:', error)
+
       if (!error && items) {
         const grouped: Record<string, any[]> = {}
-        
+
         APP_CATEGORIES.forEach(cat => {
           const matches = items.filter(item => {
             // Tabela cinema usa 'category', tabela series usa 'genero'
@@ -65,7 +68,8 @@ export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' })
             grouped[cat] = matches
           }
         })
-        
+
+        console.log('Categorias encontradas:', Object.keys(grouped))
         setGroupedData(grouped)
       }
       setLoading(false)
