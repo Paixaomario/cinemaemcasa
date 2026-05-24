@@ -146,7 +146,6 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
           currentTime={startOffset}
           onTimeUpdate={({ currentTime }) => handleProgressUpdate(currentTime)}
           onEnded={onNext}
-          seekStep={10}
           key={src}
           autoPlay={!isGuest}
           className="w-full h-full vds-cinema-player"
@@ -156,6 +155,7 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
           </MediaProvider>
           <DefaultVideoLayout 
             icons={defaultLayoutIcons} 
+            seekStep={10}
             slots={{
               beforePlayButton: (
                 <button onClick={handleStop} className="vds-button" title="Parar">
