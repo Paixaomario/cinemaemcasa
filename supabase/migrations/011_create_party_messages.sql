@@ -18,5 +18,8 @@ ALTER TABLE public.party_messages ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "party_messages_select" ON public.party_messages;
 DROP POLICY IF EXISTS "party_messages_insert" ON public.party_messages;
 
-CREATE POLICY "party_messages_select" ON public.party_messages FOR SELECT TO authenticated USING (true);
+-- Policy de SELECT: permite qualquer usuário autenticado ou não ler mensagens
+CREATE POLICY "party_messages_select" ON public.party_messages FOR SELECT TO public USING (true);
+
+-- Policy de INSERT: qualquer usuário autenticado pode enviar mensagens
 CREATE POLICY "party_messages_insert" ON public.party_messages FOR INSERT TO authenticated WITH CHECK (true);

@@ -21,6 +21,11 @@ DROP POLICY IF EXISTS "party_rooms_select" ON public.party_rooms;
 DROP POLICY IF EXISTS "party_rooms_insert" ON public.party_rooms;
 DROP POLICY IF EXISTS "party_rooms_update" ON public.party_rooms;
 
-CREATE POLICY "party_rooms_select" ON public.party_rooms FOR SELECT TO authenticated USING (true);
+-- Policy de SELECT: permite qualquer usuário autenticado ou não ler salas
+CREATE POLICY "party_rooms_select" ON public.party_rooms FOR SELECT TO public USING (true);
+
+-- Policy de INSERT: apenas usuários autenticados podem criar salas
 CREATE POLICY "party_rooms_insert" ON public.party_rooms FOR INSERT TO authenticated WITH CHECK (auth.uid() = host_id);
+
+-- Policy de UPDATE: apenas o anfitrião pode atualizar a sala
 CREATE POLICY "party_rooms_update" ON public.party_rooms FOR UPDATE TO authenticated USING (auth.uid() = host_id);
