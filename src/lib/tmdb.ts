@@ -81,11 +81,19 @@ export async function getShowDetails(id: number | string) {
  * Helper para gerar URLs de imagens do TMDB
  */
 export const TMDB_IMG = {
-  poster: (path: string | null) => path ? `https://image.tmdb.org/t/p/w500${path}` : null,
+  poster: (path: string | null) => {
+    if (!path) return null
+    if (path.startsWith('http')) return path
+    return `https://image.tmdb.org/t/p/w500${path}`
+  },
   backdrop: (path: string | null) => {
     if (!path) return null
     if (path.startsWith('http')) return path
     return `https://image.tmdb.org/t/p/original${path}`
   },
-  profile: (path: string | null) => path ? `https://image.tmdb.org/t/p/w185${path}` : null,
+  profile: (path: string | null) => {
+    if (!path) return null
+    if (path.startsWith('http')) return path
+    return `https://image.tmdb.org/t/p/w185${path}`
+  },
 }

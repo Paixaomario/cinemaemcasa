@@ -217,7 +217,10 @@ export default function PartyRoomPage() {
                   ▶ Começar Exibição
                 </button>
                 <button
-                  onClick={handleShare}
+                  onClick={(e) => {
+                    console.log('Botão compartilhar clicado!', e)
+                    handleShare()
+                  }}
                   className="px-8 py-3 bg-white/10 text-white font-montserrat font-bold uppercase tracking-widest rounded-[20px] border border-white/20 hover:bg-white/20 transition-all cursor-pointer"
                 >
                   📤 Compartilhar Link
