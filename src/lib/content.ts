@@ -4,8 +4,9 @@ import { CinemaItem } from '@/app/HomeClient';
 /**
  * Função centralizada para hidratar um item de conteúdo a partir de IDs diversos.
  * Suporta: UUIDs (tabela content), IDs legados (tabela cinema/series) e formato 'tipo-id'.
+ * @param contentType - Opcional: 'movie' ou 'serie' para forçar busca na tabela correta
  */
-export async function hydrateCinemaItem(sb: any, contentId: string): Promise<CinemaItem | null> {
+export async function hydrateCinemaItem(sb: any, contentId: string, contentType?: 'movie' | 'serie'): Promise<CinemaItem | null> {
   const idStr = String(contentId);
   let hydratedItem: any = null;
   let itemType: 'movie' | 'serie' = 'movie';
@@ -40,14 +41,17 @@ export async function hydrateCinemaItem(sb: any, contentId: string): Promise<Cin
   } 
   // 3. Fallback para tabelas legadas (cinema/series) via BigInt/ID numérico
   else {
-    const { data: cinemaData } = await sb.from('cinema').select('*').eq('id', idStr).maybeSingle();
-    if (cinemaData) {
-      itemType = 'movie';
-      if (cinemaData.tmdb_id) {
-        try { hydratedItem = await getMovieDetails(cinemaData.tmdb_id); } catch (e) {}
+    // Se contentType foi fornecido, busca diretamente na tabela correta
+    if (contentType === 'movie') {
+      const { data: cinemaData } = await sb.from('cinema').select('*').eq('id', idStr).maybeSingle();
+      if (cinemaData) {
+        itemType = 'movie';
+        if (cinemaData.tmdb_id) {
+          try { hydratedItem = await getMovieDetails(cinemaData.tmdb_id); } catch (e) {}
+        }
+        if (!hydratedItem) hydratedItem = { ...cinemaData, id: idStr, type: 'movie' };
       }
-      if (!hydratedItem) hydratedItem = { ...cinemaData, id: idStr, type: 'movie' };
-    } else {
+    } else if (contentType === 'serie') {
       const { data: seriesData } = await sb.from('series').select('*').eq('id_n', idStr).maybeSingle();
       if (seriesData) {
         itemType = 'serie';
@@ -55,6 +59,25 @@ export async function hydrateCinemaItem(sb: any, contentId: string): Promise<Cin
           try { hydratedItem = await getShowDetails(seriesData.tmdb_id); } catch (e) {}
         }
         if (!hydratedItem) hydratedItem = { ...seriesData, id: idStr, type: 'serie' };
+      }
+    } else {
+      // Fallback original: tenta cinema primeiro, depois series
+      const { data: cinemaData } = await sb.from('cinema').select('*').eq('id', idStr).maybeSingle();
+      if (cinemaData) {
+        itemType = 'movie';
+        if (cinemaData.tmdb_id) {
+          try { hydratedItem = await getMovieDetails(cinemaData.tmdb_id); } catch (e) {}
+        }
+        if (!hydratedItem) hydratedItem = { ...cinemaData, id: idStr, type: 'movie' };
+      } else {
+        const { data: seriesData } = await sb.from('series').select('*').eq('id_n', idStr).maybeSingle();
+        if (seriesData) {
+          itemType = 'serie';
+          if (seriesData.tmdb_id) {
+            try { hydratedItem = await getShowDetails(seriesData.tmdb_id); } catch (e) {}
+          }
+          if (!hydratedItem) hydratedItem = { ...seriesData, id: idStr, type: 'serie' };
+        }
       }
     }
   }

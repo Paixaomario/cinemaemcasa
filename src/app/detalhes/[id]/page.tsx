@@ -176,6 +176,7 @@ function MovieContent() {
       console.log('Adicionando favorito - user_id:', user.id, 'content_id:', targetId, 'legacy_id:', targetLegacyId)
       const { error } = await sb.from('favorites').insert({
         user_id: user.id,
+        content_type: 'movie',
         ...(targetId ? { content_id: targetId } : {}),
         ...(targetLegacyId ? { legacy_id: targetLegacyId } : {})
       });

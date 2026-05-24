@@ -29,7 +29,9 @@ export default function FavoritosPage() {
           favData.map(p => {
             // Usa legacy_id se content_id for null, senão usa content_id
             const contentId = p.legacy_id ? String(p.legacy_id) : p.content_id
-            return hydrateCinemaItem(sb, contentId)
+            // Usa content_type se disponível, senão undefined
+            const contentType = p.content_type as 'movie' | 'serie' | undefined
+            return hydrateCinemaItem(sb, contentId, contentType)
           })
         )
         setItems(hydrated.filter(Boolean) as CinemaItem[])
