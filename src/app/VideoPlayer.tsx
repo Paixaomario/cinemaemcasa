@@ -144,7 +144,7 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
           title={title}
           src={src}
           currentTime={startOffset}
-          onTimeUpdate={(event) => handleProgressUpdate(event.detail.currentTime)}
+          onTimeUpdate={(detail) => handleProgressUpdate(detail.currentTime)}
           onEnded={onNext}
           seekStep={10}
           key={src}
