@@ -26,7 +26,11 @@ export default function FavoritosPage() {
 
       if (favData && favData.length > 0) {
         const hydrated = await Promise.all(
-          favData.map(p => hydrateCinemaItem(sb, p.content_id))
+          favData.map(p => {
+            // Usa legacy_id se content_id for null, senão usa content_id
+            const contentId = p.legacy_id ? String(p.legacy_id) : p.content_id
+            return hydrateCinemaItem(sb, contentId)
+          })
         )
         setItems(hydrated.filter(Boolean) as CinemaItem[])
       } else {
@@ -51,11 +55,18 @@ export default function FavoritosPage() {
     if (!user) return
     try {
       const sb = createClient()
-      const { error } = await sb
-        .from('favorites')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('content_id', contentId)
+      // Verifica se é um UUID ou ID numérico
+      const isNumeric = /^\d+$/.test(contentId)
+      
+      let query = sb.from('favorites').delete().eq('user_id', user.id)
+      
+      if (isNumeric) {
+        query = query.eq('legacy_id', Number(contentId))
+      } else {
+        query = query.eq('content_id', contentId)
+      }
+
+      const { error } = await query
 
       if (!error) {
         setItems(prev => prev.filter(item => item.id !== contentId))
