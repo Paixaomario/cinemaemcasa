@@ -37,7 +37,6 @@ interface Props {
 export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, onClose, onNext, partyRoomId, isGuest, guestName, backdrop }: Props) {
   const player = useRef<MediaPlayerInstance>(null);
   const [mediaInstance, setMediaInstance] = useState<MediaPlayerInstance | null>(null);
-  const [reactions, setReactions] = useState<{id: number, emoji: string, left: number}[]>([]);
   const lastSavedTime = useRef<number>(0);
   const [showChat, setShowChat] = useState(!!partyRoomId);
   const { user } = useAuth()
@@ -110,38 +109,14 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
         .on('broadcast', { event: 'sync-seek' }, ({ payload }) => {
           mediaInstance.currentTime = payload.time;
         })
-        .on('broadcast', { event: 'reaction' }, ({ payload }) => {
-          const id = Date.now();
-          setReactions(prev => [...prev, { id, emoji: payload.emoji, left: Math.random() * 80 + 10 }]);
-          setTimeout(() => setReactions(prev => prev.filter(r => r.id !== id)), 3000);
-        })
         .subscribe();
 
       return () => { sb.removeChannel(channel); };
     }
   }, [partyRoomId, isGuest, sb, mediaInstance]);
 
-  const sendReaction = (emoji: string) => {
-    if (partyRoomId) {
-      sb.channel(`party-${partyRoomId}`).send({
-        type: 'broadcast',
-        event: 'reaction',
-        payload: { emoji }
-      });
-      // Feedback local imediato
-      const id = Date.now();
-      setReactions(prev => [...prev, { id, emoji, left: Math.random() * 80 + 10 }]);
-      setTimeout(() => setReactions(prev => prev.filter(r => r.id !== id)), 3000);
-    }
-  };
-
   return (
     <div className={`fixed inset-0 z-[10000] bg-black flex hero-enter ${showChat ? 'flex-row' : 'flex-col'}`}>
-      {/* Camada de Emojis Voadores */}
-      {reactions.map(r => (
-        <span key={r.id} className="emoji-reaction" style={{ left: `${r.left}%` }}>{r.emoji}</span>
-      ))}
-
       {/* Header do Player */}
       <div className="absolute top-0 left-0 right-0 p-8 z-[10005] flex items-center justify-between bg-gradient-to-b from-black/90 via-black/40 to-transparent pointer-events-none">
         <button 
@@ -169,8 +144,9 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
           title={title}
           src={src}
           currentTime={startOffset}
-          onTimeUpdate={(event) => handleProgressUpdate(event.currentTime)}
+          onTimeUpdate={(event) => handleProgressUpdate(event.detail.currentTime)}
           onEnded={onNext}
+          seekStep={10}
           key={src}
           autoPlay={!isGuest}
           className="w-full h-full vds-cinema-player"
@@ -180,7 +156,6 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
           </MediaProvider>
           <DefaultVideoLayout 
             icons={defaultLayoutIcons} 
-            seekStep={10}
             slots={{
               beforePlayButton: (
                 <button onClick={handleStop} className="vds-button" title="Parar">
@@ -195,7 +170,7 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
 
       {partyRoomId && showChat && (
         <div className="w-80 h-full">
-          <PartyChat roomId={partyRoomId} userName={isGuest ? (guestName || 'Convidado') : (user?.email ? user.email.split('@')[0] : 'Anfitrião')} onReaction={sendReaction} />
+          <PartyChat roomId={partyRoomId} userName={isGuest ? (guestName || 'Convidado') : (user?.email?.split('@')[0] || 'Anfitrião')} />
         </div>
       )}
     </div>
