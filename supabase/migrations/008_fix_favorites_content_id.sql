@@ -8,7 +8,9 @@ ALTER TABLE public.favorites ADD COLUMN IF NOT EXISTS legacy_id BIGINT;
 ALTER TABLE public.favorites ALTER COLUMN content_id DROP NOT NULL;
 
 -- 3. Adicionar constraint para garantir que pelo menos um dos dois esteja presente
-ALTER TABLE public.favorites ADD CONSTRAINT check_content_or_legacy 
+-- Primeiro removemos a constraint se ela já existir
+ALTER TABLE public.favorites DROP CONSTRAINT IF EXISTS check_content_or_legacy;
+ALTER TABLE public.favorites ADD CONSTRAINT check_content_or_legacy
   CHECK (content_id IS NOT NULL OR legacy_id IS NOT NULL);
 
 -- 4. Atualizar a política RLS para permitir operações com legacy_id
