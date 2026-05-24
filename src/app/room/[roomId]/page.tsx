@@ -176,10 +176,10 @@ export default function PartyRoomPage() {
 
         {/* Conteúdo Central */}
         <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-6">
-          <div className="max-w-4xl w-full text-center">
+          <div className="max-w-4xl w-full text-center relative z-30">
             {/* Poster */}
             {poster && (
-              <div className="mx-auto mb-8 w-48 md:w-64 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl">
+              <div className="mx-auto mb-8 w-48 md:w-64 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl pointer-events-none">
                 <Image
                   src={poster}
                   alt={title}
@@ -209,9 +209,12 @@ export default function PartyRoomPage() {
 
             {/* Botão de Começar (apenas anfitrião) */}
             {isHost ? (
-              <div className="flex flex-col items-center gap-4 z-20">
+              <div className="flex flex-col items-center gap-4">
                 <button
-                  onClick={handleStart}
+                  onClick={(e) => {
+                    console.log('Botão Começar Exibição clicado!', e)
+                    handleStart()
+                  }}
                   className="px-12 py-5 bg-brand-cyan text-white font-montserrat font-black uppercase tracking-widest rounded-[30px] hover:brightness-110 transition-all transform hover:scale-105 text-xl shadow-2xl cursor-pointer"
                 >
                   ▶ Começar Exibição
