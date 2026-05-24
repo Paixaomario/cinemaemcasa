@@ -29,3 +29,6 @@ CREATE POLICY "party_rooms_insert" ON public.party_rooms FOR INSERT TO authentic
 
 -- Policy de UPDATE: apenas o anfitrião pode atualizar a sala
 CREATE POLICY "party_rooms_update" ON public.party_rooms FOR UPDATE TO authenticated USING (auth.uid() = host_id);
+
+-- Habilitar Realtime para a tabela party_rooms
+ALTER PUBLICATION supabase_realtime ADD TABLE public.party_rooms;

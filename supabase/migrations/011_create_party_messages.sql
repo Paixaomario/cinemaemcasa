@@ -23,3 +23,6 @@ CREATE POLICY "party_messages_select" ON public.party_messages FOR SELECT TO pub
 
 -- Policy de INSERT: qualquer usuário autenticado pode enviar mensagens
 CREATE POLICY "party_messages_insert" ON public.party_messages FOR INSERT TO authenticated WITH CHECK (true);
+
+-- Habilitar Realtime para a tabela party_messages
+ALTER PUBLICATION supabase_realtime ADD TABLE public.party_messages;
