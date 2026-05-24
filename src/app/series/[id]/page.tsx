@@ -178,11 +178,7 @@ function SeriesContent() {
   }, [id, router, user])
 
   const startParty = useCallback(() => {
-    // Gerador de UUID robusto (fallback para TVs sem crypto.randomUUID)
-    const newRoomId = typeof crypto.randomUUID === 'function' 
-      ? crypto.randomUUID() 
-      : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => { const r = Math.random() * 16 | 0; return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16); });
-
+    const newRoomId = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
     const inviteLink = `${window.location.origin}${window.location.pathname}?room=${newRoomId}`;
     const inviteMsg = `Vamos assistir comigo?\n\n🍿 ${series.titulo || series.name}\n🔗 ${inviteLink}`;
     
@@ -327,14 +323,6 @@ function SeriesContent() {
         </p>
 
         <div className="flex flex-wrap items-center gap-4 mb-16">
-          {/* Botão Voltar - Agora em primeiro como solicitado */}
-          <button 
-            onClick={() => router.back()}
-            className="px-10 py-4 bg-[#001f3f] text-white font-montserrat font-black uppercase tracking-widest rounded-[20px] hover:brightness-125 transition-all focus:ring-4 focus:ring-blue-500 outline-none border border-transparent"
-          >
-            Voltar
-          </button>
-
           {/* Botão Assistir Agora (Cor do Logo) */}
           <button
             onClick={() => episodes[0] && setActiveEpisode(episodes[0])}
@@ -348,6 +336,14 @@ function SeriesContent() {
             className="px-10 py-4 bg-white/10 text-white font-montserrat font-black uppercase tracking-widest rounded-[20px] border border-white/20 hover:bg-brand-cyan hover:text-black transition-all transform hover:scale-105 focus:ring-4 focus:ring-brand-cyan outline-none"
           >
             🍿 Assistir Juntos
+          </button>
+
+          {/* Botão Voltar */}
+          <button 
+            onClick={() => router.back()}
+            className="px-10 py-4 bg-[#001f3f] text-white font-montserrat font-black uppercase tracking-widest rounded-[20px] hover:brightness-125 transition-all focus:ring-4 focus:ring-blue-500 outline-none border border-transparent"
+          >
+            Voltar
           </button>
 
           {/* Botão Trailer */}

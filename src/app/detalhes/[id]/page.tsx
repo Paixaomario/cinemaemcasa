@@ -42,48 +42,37 @@ function MovieContent() {
 
     async function loadMovie() {
       const sb = createClient()
-      const rawId = String(id)
-      const cleanId = rawId.replace('filme-', '')
-      const isNumeric = /^\d+$/.test(cleanId)
-      
-      let localMovieId: string | null = null
+      let movieIdNum = Number(id)
       let localData = null
       
-      // 1. Resolver ID Real (UUID da content ou id da cinema)
-      if (!isNumeric) {
+      // 1. Resolver ID (pode ser BIGINT ou UUID da tabela content)
+      if (isNaN(movieIdNum)) {
         const { data: contentData } = await sb
           .from('content')
           .select('id, title')
-          .eq('id', rawId)
+          .eq('id', id)
           .maybeSingle()
 
         if (contentData) {
           const { data: mData } = await sb
             .from('cinema')
             .select('*')
-            .ilike('titulo', contentData.title.trim())
+            .eq('titulo', contentData.title)
             .maybeSingle()
-          
-          if (mData) {
-            localData = mData
-            localMovieId = String(mData.id)
-            setContentUuid(contentData.id)
-          }
+          localData = mData
+          if (mData) movieIdNum = mData.id
+          setContentUuid(contentData.id)
         }
       } else {
         const { data: mData } = await sb
           .from('cinema')
           .select('*')
-          .eq('id', cleanId)
+          .eq('id', movieIdNum)
           .maybeSingle()
-        
-        if (mData) {
-          localData = mData
-          localMovieId = cleanId
-        }
+        localData = mData
       }
 
-      if (!localData || !localMovieId) {
+      if (!localData) {
         router.push('/')
         return
       }
@@ -147,10 +136,7 @@ function MovieContent() {
   }, [id, router, user])
 
   const startParty = useCallback(() => {
-    const newRoomId = typeof crypto.randomUUID === 'function' 
-      ? crypto.randomUUID() 
-      : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => { const r = Math.random() * 16 | 0; return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16); });
-
+    const newRoomId = Math.random().toString(36).substring(2, 11);
     const inviteLink = `${window.location.origin}${window.location.pathname}?room=${newRoomId}`;
     const inviteMsg = `Vamos assistir comigo?\n\n🍿 ${movie.titulo || movie.title}\n🔗 ${inviteLink}`;
     
@@ -185,8 +171,8 @@ function MovieContent() {
   const description = movie.overview || movie.description || movie.descricao
   const formatCurrency = (val: number) => val > 0 ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val) : 'N/A'
 
-  const countryCode = String(movie.production_countries?.[0]?.iso_3166_1 || 
-                     (Array.isArray(movie.origin_country) ? movie.origin_country[0] : movie.origin_country) || '');
+  const countryCode = movie.production_countries?.[0]?.iso_3166_1 || 
+                     (Array.isArray(movie.origin_country) ? movie.origin_country[0] : movie.origin_country) || '';
 
   return (
     <main className="min-h-screen bg-black text-white relative">
@@ -218,7 +204,7 @@ function MovieContent() {
         </h1>
 
         <div className="flex items-center gap-4 mb-8 text-sm md:text-base font-bold">
-          {countryCode && countryCode.length === 2 && (
+          {countryCode && (
             <img 
               src={`https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`} 
               alt={countryCode}
@@ -348,18 +334,14 @@ function MovieContent() {
 
       <div className="pb-32" />
 
-      {/* Player de Vídeo */}
-      {(showPlayer || (guestName && activeRoomId)) && movie.url && (
+      {/* Player de Vídeo em Fullscreen */}
+      {showPlayer && (
         <VideoPlayer
           src={movie.url}
           title={title}
           contentId={contentUuid || String(movie.id)}
           userId={user?.id}
-          onClose={() => { setShowPlayer(false); setActiveRoomId(null); setGuestName(''); setGuestStep(null); }}
-          partyRoomId={activeRoomId}
-          isGuest={isGuestMode}
-          guestName={guestName}
-          backdrop={movie.backdrop_path || movie.poster_path}
+          onClose={() => setShowPlayer(false)}
         />
       )}
     </main>
