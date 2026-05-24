@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { useAuth } from '@/components/layout/SupabaseProvider'
@@ -21,6 +21,7 @@ export default function PartyRoomPage() {
   const [contentData, setContentData] = useState<any>(null)
   const [showPlayer, setShowPlayer] = useState(false)
   const [isHost, setIsHost] = useState(false)
+  const channelRef = useRef<any>(null)
 
   useEffect(() => {
     async function loadRoom(retryCount = 0) {
@@ -74,17 +75,28 @@ export default function PartyRoomPage() {
       setLoading(false)
 
       // Subscribe para mudanças na sala (quando o anfitrião começar)
-      const channel = sb
-        .channel(`room:${roomId}`)
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'party_rooms', filter: `id=eq.${roomId}` }, (payload) => {
-          console.log('Sala atualizada:', payload)
-          if (payload.new.started_at && !showPlayer) {
-            setShowPlayer(true)
-          }
-        })
-        .subscribe()
+      if (!channelRef.current) {
+        channelRef.current = sb
+          .channel(`room:${roomId}`)
+          .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'party_rooms', filter: `id=eq.${roomId}` }, (payload) => {
+            console.log('Sala atualizada:', payload)
+            if (payload.new.started_at && !showPlayer) {
+              setShowPlayer(true)
+            }
+          })
+          .subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+              console.log('Subscribed to room:', roomId)
+            }
+          })
+      }
 
-      return () => { sb.removeChannel(channel) }
+      return () => {
+        if (channelRef.current) {
+          sb.removeChannel(channelRef.current)
+          channelRef.current = null
+        }
+      }
     }
 
     loadRoom()
