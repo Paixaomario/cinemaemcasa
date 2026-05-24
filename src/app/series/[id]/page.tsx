@@ -168,6 +168,23 @@ function SeriesContent() {
             console.error('Exceção ao buscar temporadas (sem filtro):', e)
           }
 
+          // Buscar uma amostra de temporadas sem filtro
+          try {
+            const { data: sampleTemporadas, error: sampleError } = await sb
+              .from('temporadas')
+              .select('*')
+              .limit(5)
+            console.log('Amostra de temporadas (sem filtro):', sampleTemporadas?.length, 'itens')
+            if (sampleTemporadas && sampleTemporadas.length > 0) {
+              console.log('Primeira temporada:', sampleTemporadas[0])
+            }
+            if (sampleError) {
+              console.error('Erro ao buscar amostra de temporadas:', sampleError)
+            }
+          } catch (e) {
+            console.error('Exceção ao buscar amostra de temporadas:', e)
+          }
+
           // Agora buscar com filtro
           try {
             const { count, error: countError } = await sb
@@ -232,6 +249,23 @@ function SeriesContent() {
             }
           } catch (e) {
             console.error('Exceção ao buscar total de episódios:', e)
+          }
+
+          // Buscar uma amostra de episódios sem filtro
+          try {
+            const { data: sampleEpisodes, error: sampleEpError } = await sb
+              .from('episodios')
+              .select('*')
+              .limit(5)
+            console.log('Amostra de episódios (sem filtro):', sampleEpisodes?.length, 'itens')
+            if (sampleEpisodes && sampleEpisodes.length > 0) {
+              console.log('Primeiro episódio:', sampleEpisodes[0])
+            }
+            if (sampleEpError) {
+              console.error('Erro ao buscar amostra de episódios:', sampleEpError)
+            }
+          } catch (e) {
+            console.error('Exceção ao buscar amostra de episódios:', e)
           }
         }
 

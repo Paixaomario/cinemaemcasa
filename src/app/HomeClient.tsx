@@ -124,8 +124,15 @@ export function HomeClient() {
       const dataMap: Record<string, any[]> = {}
 
       // Verificar total de itens na tabela cinema
-      const { count: cinemaCount } = await sb.from('cinema').select('*', { count: 'exact', head: true })
-      console.log('TOTAL de itens na tabela cinema:', cinemaCount)
+      const { count: cinemaCount, error: countError } = await sb.from('cinema').select('*', { count: 'exact', head: true })
+      console.log('TOTAL de itens na tabela cinema:', cinemaCount, 'Erro:', countError)
+
+      // Tentar buscar uma amostra sem filtros
+      const { data: sampleCinema, error: sampleError } = await sb.from('cinema').select('*').limit(5)
+      console.log('Amostra da tabela cinema:', sampleCinema?.length, 'itens', 'Erro:', sampleError)
+      if (sampleCinema && sampleCinema.length > 0) {
+        console.log('Primeiro item:', sampleCinema[0])
+      }
 
       await Promise.all(visibleSections.map(async (sec) => {
         if (sec.fonte === 'cinema') {
@@ -142,8 +149,11 @@ export function HomeClient() {
           else if (sec.ordenacao === 'year_desc') query = query.order('year', { ascending: false })
           else query = query.order('created_at', { ascending: false })
 
-          const { data: items } = await query.limit(sec.limite)
-          console.log('Seção', sec.titulo, ':', items?.length, 'itens')
+          const { data: items, error: itemsError } = await query.limit(sec.limite)
+          console.log('Seção', sec.titulo, ':', items?.length, 'itens', 'Erro:', itemsError)
+          if (itemsError) {
+            console.error('Erro detalhado da seção:', itemsError)
+          }
           dataMap[sec.id] = items || []
         }
       }))
