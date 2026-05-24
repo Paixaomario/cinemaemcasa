@@ -117,12 +117,18 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
     return () => clearInterval(interval); // Limpa o intervalo ao desmontar
   }, [contentPool]);
 
-  if (loading || !currentBannerItem) {
+  if (loading) {
     return <div className="w-full h-[50vh] md:h-[80vh] bg-neutral-900 animate-pulse" />
   }
 
+  // Se não houver itens no banco, não exibe o banner mas permite que o resto da página carregue
+  if (!currentBannerItem) {
+    return null;
+  }
+
   const title = currentBannerItem.titulo || currentBannerItem.title || currentBannerItem.name;
-  const backdropUrl = TMDB_IMG.backdrop(currentBannerItem.backdrop || currentBannerItem.banner || currentBannerItem.backdrop_path);
+  const rawPath = currentBannerItem.backdrop || currentBannerItem.banner || currentBannerItem.backdrop_path;
+  const backdropUrl = rawPath ? TMDB_IMG.backdrop(rawPath) : null;
   const description = currentBannerItem.descricao || currentBannerItem.description || currentBannerItem.overview;
   const id = currentBannerItem.id_n || currentBannerItem.id;
   const detailHref = currentBannerItem.type === 'series' ? `/series/${id}` : `/detalhes/${id}`;
