@@ -160,7 +160,7 @@ export default function PartyRoomPage() {
       <div className="min-h-screen bg-black text-white relative">
         {/* Banner de Fundo */}
         {backdrop && (
-          <div className="absolute inset-0">
+          <div className="absolute inset-0 pointer-events-none">
             <Image
               src={backdrop}
               alt={title}
@@ -209,16 +209,16 @@ export default function PartyRoomPage() {
 
             {/* Botão de Começar (apenas anfitrião) */}
             {isHost ? (
-              <div className="flex flex-col items-center gap-4">
+              <div className="flex flex-col items-center gap-4 z-20">
                 <button
                   onClick={handleStart}
-                  className="px-12 py-5 bg-brand-cyan text-white font-montserrat font-black uppercase tracking-widest rounded-[30px] hover:brightness-110 transition-all transform hover:scale-105 text-xl shadow-2xl"
+                  className="px-12 py-5 bg-brand-cyan text-white font-montserrat font-black uppercase tracking-widest rounded-[30px] hover:brightness-110 transition-all transform hover:scale-105 text-xl shadow-2xl cursor-pointer"
                 >
                   ▶ Começar Exibição
                 </button>
                 <button
                   onClick={handleShare}
-                  className="px-8 py-3 bg-white/10 text-white font-montserrat font-bold uppercase tracking-widest rounded-[20px] border border-white/20 hover:bg-white/20 transition-all"
+                  className="px-8 py-3 bg-white/10 text-white font-montserrat font-bold uppercase tracking-widest rounded-[20px] border border-white/20 hover:bg-white/20 transition-all cursor-pointer"
                 >
                   📤 Compartilhar Link
                 </button>

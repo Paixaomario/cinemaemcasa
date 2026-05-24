@@ -12,6 +12,10 @@ const montserrat = Montserrat({
 
 export const metadata: Metadata = {
   title: 'Cinema em Casa',
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
 }
 
 export const viewport: Viewport = {
