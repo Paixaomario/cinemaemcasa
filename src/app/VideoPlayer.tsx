@@ -144,7 +144,7 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
           title={title}
           src={src}
           currentTime={startOffset}
-          onTimeUpdate={(detail) => handleProgressUpdate(detail.currentTime)}
+          onTimeUpdate={({ currentTime }) => handleProgressUpdate(currentTime)}
           onEnded={onNext}
           seekStep={10}
           key={src}
@@ -170,7 +170,7 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
 
       {partyRoomId && showChat && (
         <div className="w-80 h-full">
-          <PartyChat roomId={partyRoomId} userName={isGuest ? (guestName || 'Convidado') : (user?.email?.split('@')[0] || 'Anfitrião')} />
+          <PartyChat roomId={partyRoomId} userName={isGuest ? (guestName || 'Convidado') : (user?.email ? user.email.split('@')[0] : 'Anfitrião')} />
         </div>
       )}
     </div>
