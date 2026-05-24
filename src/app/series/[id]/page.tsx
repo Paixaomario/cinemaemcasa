@@ -430,6 +430,9 @@ function SeriesContent() {
 
     console.log('Sala criada com sucesso:', data)
 
+    // Aguarda um momento para garantir que a sala foi criada no banco
+    await new Promise(resolve => setTimeout(resolve, 500))
+
     // Redirecionar para a página da sala
     router.push(`/room/${newRoomId}`)
   }, [id, user, router]);

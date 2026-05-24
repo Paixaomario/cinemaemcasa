@@ -23,10 +23,10 @@ export default function PartyRoomPage() {
   const [isHost, setIsHost] = useState(false)
 
   useEffect(() => {
-    async function loadRoom() {
+    async function loadRoom(retryCount = 0) {
       const sb = createClient()
 
-      console.log('Buscando sala:', roomId)
+      console.log('Buscando sala:', roomId, 'tentativa:', retryCount + 1)
 
       // Buscar dados da sala
       const { data: room, error: roomError } = await sb
@@ -39,6 +39,14 @@ export default function PartyRoomPage() {
 
       if (roomError || !room) {
         console.error('Sala não encontrada ou erro:', roomError)
+        
+        // Tentar novamente até 3 vezes com delay de 1 segundo
+        if (retryCount < 3) {
+          console.log('Tentando novamente em 1 segundo...')
+          setTimeout(() => loadRoom(retryCount + 1), 1000)
+          return
+        }
+        
         alert('Sala não encontrada')
         router.push('/')
         return
