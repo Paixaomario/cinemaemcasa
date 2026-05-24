@@ -43,7 +43,6 @@ export function HomeClient() {
   useEffect(() => {
     async function loadHome() {
       const sb = createClient()
-      console.log('Supabase URL na Home:', process.env.NEXT_PUBLIC_SUPABASE_URL)
 
       // 0. Carregar Continuar Assistindo se houver usuário
       if (user) {
@@ -90,7 +89,6 @@ export function HomeClient() {
         .eq('ativo', true)
         .order('posicao', { ascending: true })
 
-      console.log('Seções da home:', secs?.length, 'Erro:', error)
 
       if (error || !secs) {
         setLoading(false)
@@ -125,14 +123,9 @@ export function HomeClient() {
 
       // Verificar total de itens na tabela cinema
       const { count: cinemaCount, error: countError } = await sb.from('cinema').select('*', { count: 'exact', head: true })
-      console.log('TOTAL de itens na tabela cinema:', cinemaCount, 'Erro:', countError)
 
       // Tentar buscar uma amostra sem filtros
       const { data: sampleCinema, error: sampleError } = await sb.from('cinema').select('*').limit(5)
-      console.log('Amostra da tabela cinema:', sampleCinema?.length, 'itens', 'Erro:', sampleError)
-      if (sampleCinema && sampleCinema.length > 0) {
-        console.log('Primeiro item:', sampleCinema[0])
-      }
 
       await Promise.all(visibleSections.map(async (sec) => {
         if (sec.fonte === 'cinema') {
@@ -150,10 +143,6 @@ export function HomeClient() {
           else query = query.order('created_at', { ascending: false })
 
           const { data: items, error: itemsError } = await query.limit(sec.limite)
-          console.log('Seção', sec.titulo, ':', items?.length, 'itens', 'Erro:', itemsError)
-          if (itemsError) {
-            console.error('Erro detalhado da seção:', itemsError)
-          }
           dataMap[sec.id] = items || []
         }
       }))
