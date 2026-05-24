@@ -94,6 +94,7 @@ function SeriesContent() {
             .maybeSingle()
           
           console.log('Série encontrada por id_n:', sData?.titulo, 'id_n:', sData?.id_n)
+          console.log('Todos os campos da série:', sData)
           if (sData) {
             localData = sData
             localSeriesId = cleanId
@@ -165,12 +166,33 @@ function SeriesContent() {
             .eq('id_serie', localSeriesId)
           console.log('Total de temporadas na tabela legada com id_serie:', localSeriesId, '=', countAlt)
 
+          // Tentar buscar temporadas com id_n
+          const { count: countIdn } = await sb
+            .from('temporadas')
+            .select('*', { count: 'exact', head: true })
+            .eq('id_n', localSeriesId)
+          console.log('Total de temporadas na tabela legada com id_n:', localSeriesId, '=', countIdn)
+
           // Verificar se há episódios diretos na tabela episodios
           const { count: epDirectCount } = await sb
             .from('episodios')
             .select('*', { count: 'exact', head: true })
             .eq('serie_id', localSeriesId)
           console.log('Total de episódios na tabela episodios com serie_id:', localSeriesId, '=', epDirectCount)
+
+          // Tentar buscar episódios com id_n da série
+          const { count: epIdnCount } = await sb
+            .from('episodios')
+            .select('*', { count: 'exact', head: true })
+            .eq('id_n', localSeriesId)
+          console.log('Total de episódios na tabela episodios com id_n:', localSeriesId, '=', epIdnCount)
+
+          // Tentar buscar episódios por título da série
+          const { count: epTitleCount } = await sb
+            .from('episodios')
+            .select('*', { count: 'exact', head: true })
+            .ilike('titulo', localData.titulo)
+          console.log('Total de episódios na tabela episodios com título:', localData.titulo, '=', epTitleCount)
         }
 
         // Verificação direta: contar episódios na tabela content
@@ -256,21 +278,43 @@ function SeriesContent() {
             .select('*')
             .eq('serie_id', localSeriesId)
             .order('numero_episodio', { ascending: true })
-          
+
           if (directEpisodes && directEpisodes.length > 0) {
-            console.log('Encontrados', directEpisodes.length, 'episódios diretos, criando temporada única')
+            console.log('Encontrados', directEpisodes.length, 'episódios diretos com serie_id, criando temporada única')
             seasonsData = [{
               id_n: 's-1',
               numero_temporada: 1,
               titulo: 'Temporada 1'
             }]
-            // Carregar episódios diretamente
             const episodesData = directEpisodes.map(ep => ({
               ...ep,
               id_n: ep.id
             }))
             setEpisodes(episodesData)
             console.log('Episódios diretos carregados:', episodesData.length)
+          } else {
+            // Tentar por título
+            console.log('Tentando buscar episódios por título:', localData.titulo)
+            const { data: titleEpisodes } = await sb
+              .from('episodios')
+              .select('*')
+              .ilike('titulo', localData.titulo)
+              .order('numero_episodio', { ascending: true })
+
+            if (titleEpisodes && titleEpisodes.length > 0) {
+              console.log('Encontrados', titleEpisodes.length, 'episódios por título, criando temporada única')
+              seasonsData = [{
+                id_n: 's-1',
+                numero_temporada: 1,
+                titulo: 'Temporada 1'
+              }]
+              const episodesData = titleEpisodes.map(ep => ({
+                ...ep,
+                id_n: ep.id
+              }))
+              setEpisodes(episodesData)
+              console.log('Episódios por título carregados:', episodesData.length)
+            }
           }
         }
 
