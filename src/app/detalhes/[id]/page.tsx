@@ -82,17 +82,26 @@ function MovieContent() {
 
       // 2. Busca metadados ricos no TMDB
       if (localData.tmdb_id) {
-        const tmdbData = await getMovieDetails(localData.tmdb_id)
-        setMovie({ ...tmdbData, ...localData })
+        try {
+          const tmdbData = await getMovieDetails(localData.tmdb_id)
+          if (tmdbData) {
+            setMovie({ ...tmdbData, ...localData })
 
-        // Filtra recomendações: apenas o que existe no seu banco
-        if (tmdbData.recommendations?.results?.length > 0) {
-          const recIds = tmdbData.recommendations.results.map((r: any) => r.id)
-          const { data: existing } = await sb
-            .from('cinema')
-            .select('*')
-            .in('tmdb_id', recIds)
-          setFilteredRecommendations(existing || [])
+            // Filtra recomendações: apenas o que existe no seu banco
+            if (tmdbData.recommendations?.results?.length > 0) {
+              const recIds = tmdbData.recommendations.results.map((r: any) => r.id)
+              const { data: existing } = await sb
+                .from('cinema')
+                .select('*')
+                .in('tmdb_id', recIds)
+              setFilteredRecommendations(existing || [])
+            }
+          } else {
+            setMovie(localData)
+          }
+        } catch (e) {
+          console.warn('Erro ao buscar dados do TMDB, usando dados locais:', e)
+          setMovie(localData)
         }
       } else {
         setMovie(localData)

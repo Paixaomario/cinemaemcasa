@@ -123,7 +123,8 @@ function SeriesContent() {
             console.warn("TMDB Series metadata not found, using local only");
           }
 
-          if (finalData.recommendations?.results?.length > 0) {
+          // Só busca recomendações se o TMDB retornou dados com recomendações
+          if (finalData !== localData && finalData.recommendations?.results?.length > 0) {
             const recIds = finalData.recommendations.results.map((r: any) => r.id)
             const { data: existing } = await sb
               .from('series')
