@@ -79,8 +79,10 @@ export default function PartyRoomPage() {
         channelRef.current = sb
           .channel(`room:${roomId}`)
           .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'party_rooms', filter: `id=eq.${roomId}` }, (payload) => {
-            console.log('Sala atualizada:', payload)
+            console.log('Sala atualizada - Callback chamado:', payload)
+            console.log('started_at:', payload.new.started_at, 'showPlayer:', showPlayer)
             if (payload.new.started_at && !showPlayer) {
+              console.log('Abrindo player para convidado')
               setShowPlayer(true)
             }
           })
@@ -113,8 +115,16 @@ export default function PartyRoomPage() {
   async function handleStart() {
     if (!isHost) return
 
+    console.log('Anfitrião clicou em Começar Exibição')
     const sb = createClient()
-    await sb.from('party_rooms').update({ started_at: new Date().toISOString() }).eq('id', roomId)
+    const { error } = await sb.from('party_rooms').update({ started_at: new Date().toISOString() }).eq('id', roomId)
+    
+    if (error) {
+      console.error('Erro ao atualizar sala:', error)
+    } else {
+      console.log('Sala atualizada com started_at')
+    }
+    
     setShowPlayer(true)
   }
 
