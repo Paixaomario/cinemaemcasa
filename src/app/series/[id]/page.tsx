@@ -118,31 +118,35 @@ function SeriesContent() {
         setSeries(finalData)
 
         // Sincronização UUID
-        let cid: string | null = contentUuid
+        let cid: string | null = null
         if (!cid && localData?.titulo) {
           const { data: contentData } = await sb.from('content').select('id').eq('title', localData.titulo).eq('type', 'series').maybeSingle()
           if (contentData) cid = contentData.id
         }
-        
-        if (cid) {
-          setContentUuid(cid)
-        }
+        if (cid) setContentUuid(cid)
 
         // 3. Busca Temporadas e Episódios (Tentativa Híbrida)
-        // Primeiro tenta na tabela 'temporadas' (Legado)
-        let { data: seasonsData } = await sb
-          .from('temporadas')
-          .select('*')
-          .eq('serie_id', localSeriesId)
-          .order('numero_temporada', { ascending: true })
+        let seasonsData: any[] = []
 
-        if (!seasonsData || seasonsData.length === 0) {
-           const { data: sAlt } = await sb.from('temporadas').select('*').eq('id_serie', localSeriesId).order('numero_temporada', { ascending: true })
-           if (sAlt) seasonsData = sAlt
+        // Primeiro tenta na tabela 'temporadas' (Legado)
+        if (localSeriesId && /^\d+$/.test(localSeriesId)) {
+          const { data: sLegacy } = await sb
+            .from('temporadas')
+            .select('*')
+            .eq('serie_id', localSeriesId)
+            .order('numero_temporada', { ascending: true })
+          
+          seasonsData = sLegacy || []
+
+          if (seasonsData.length === 0) {
+             const { data: sAlt } = await sb.from('temporadas').select('*').eq('id_serie', localSeriesId).order('numero_temporada', { ascending: true })
+             if (sAlt) seasonsData = sAlt
+          }
         }
 
         // Se não houver temporadas, tenta extrair do 'content' (Unificado)
-        if ((!seasonsData || seasonsData.length === 0) && cid) {
+        const effectiveCid = cid || contentUuid
+        if (seasonsData.length === 0 && effectiveCid) {
           const { data: contentEpisodes } = await sb
             .from('content')
             .select('season_number')
@@ -165,24 +169,30 @@ function SeriesContent() {
           setSelectedSeason(firstSeason)
           
           // Busca episódios da primeira temporada
-          const seasonId = String(firstSeason.id_n || firstSeason.id);
-          let { data: episodesData } = await sb
-            .from('episodios')
-            .select('*')
-            .eq('temporada_id', seasonId)
-            .order('numero_episodio', { ascending: true })
+          const seasonId = String(firstSeason.id_n || firstSeason.id || '');
+          let episodesData: any[] = []
 
-          if (!episodesData || episodesData.length === 0) {
-            const { data: eAlt } = await sb.from('episodios').select('*').eq('id_temporada', seasonId).order('numero_episodio', { ascending: true })
-            if (eAlt) episodesData = eAlt
+          // Só tenta tabela legada se o ID for numérico
+          if (/^\d+$/.test(seasonId)) {
+            const { data: eLegacy } = await sb
+              .from('episodios')
+              .select('*')
+              .eq('temporada_id', seasonId)
+              .order('numero_episodio', { ascending: true })
+            episodesData = eLegacy || []
+
+            if (episodesData.length === 0) {
+              const { data: eAlt } = await sb.from('episodios').select('*').eq('id_temporada', seasonId).order('numero_episodio', { ascending: true })
+              if (eAlt) episodesData = eAlt
+            }
           }
           
           // Fallback para content
-          if ((!episodesData || episodesData.length === 0) && cid) {
+          if (episodesData.length === 0 && effectiveCid) {
              const { data: cEps } = await sb
                .from('content')
                .select('*')
-               .eq('parent_id', cid)
+               .eq('parent_id', effectiveCid)
                .eq('season_number', firstSeason.numero_temporada)
                .eq('type', 'episode')
                .order('episode_number', { ascending: true })
@@ -282,15 +292,21 @@ function SeriesContent() {
 
     async function loadEpisodes() {
       const sb = createClient()
-      let { data: episodesData } = await sb
-        .from('episodios')
-        .select('*')
-        .eq('temporada_id', seasonId)
-        .order('numero_episodio', { ascending: true })
+      let episodesData: any[] = []
 
-      if (!episodesData || episodesData.length === 0) {
-        const { data: eAlt } = await sb.from('episodios').select('*').eq('id_temporada', seasonId).order('numero_episodio', { ascending: true })
-        if (eAlt) episodesData = eAlt
+      // Só tenta tabela legada se for numérico
+      if (/^\d+$/.test(seasonId)) {
+        const { data: eLegacy } = await sb
+          .from('episodios')
+          .select('*')
+          .eq('temporada_id', seasonId)
+          .order('numero_episodio', { ascending: true })
+        episodesData = eLegacy || []
+
+        if (episodesData.length === 0) {
+          const { data: eAlt } = await sb.from('episodios').select('*').eq('id_temporada', seasonId).order('numero_episodio', { ascending: true })
+          if (eAlt) episodesData = eAlt
+        }
       }
 
       // Fallback para content
