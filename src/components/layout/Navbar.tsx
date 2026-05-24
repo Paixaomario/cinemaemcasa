@@ -50,7 +50,11 @@ export function Navbar() {
       {/* Lado Direito: Ações */}
       <div className="flex-shrink-0 flex items-center gap-6">
         {/* Ícone de Busca - Essencial para TV */}
-        <Link href="/search" className="p-2 hover:bg-white/10 rounded-[20px] focus:bg-white/20 focus:ring-4 focus:ring-brand-cyan/40 outline-none transition-all text-white hover:text-brand-cyan focus:text-brand-cyan">
+        <Link
+          href="/search"
+          className="p-2 hover:bg-white/10 rounded-[20px] focus:bg-white/20 focus:ring-4 focus:ring-brand-cyan/40 outline-none transition-all text-white hover:text-brand-cyan focus:text-brand-cyan"
+          onClick={() => console.log('Clique no ícone de pesquisa')}
+        >
           <span className="text-4xl block">🔍</span>
         </Link>
       </div>
