@@ -147,7 +147,7 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
           onTimeUpdate={(detail) => handleProgressUpdate(detail.currentTime)}
           onEnded={onNext}
           key={src}
-          autoPlay={!isGuest}
+          autoPlay={!partyRoomId}
           className="w-full h-full vds-cinema-player"
         >
           <MediaProvider>

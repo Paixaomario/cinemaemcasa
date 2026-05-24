@@ -403,39 +403,32 @@ function SeriesContent() {
     loadSeries()
   }, [id, router, user])
 
-  const startParty = useCallback(() => {
-    const newRoomId = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
-    const inviteLink = `${window.location.origin}${window.location.pathname}?room=${newRoomId}`;
-    const inviteMsg = `Vamos assistir comigo?\n\n🍿 ${series.titulo || series.name}\n🔗 ${inviteLink}`;
-
-    // Tenta usar Web Share API (compartilhamento nativo) se disponível
-    if (navigator.share) {
-      navigator.share({
-        title: `Assistir juntos: ${series.titulo || series.name}`,
-        text: `Vamos assistir comigo? 🍿 ${series.titulo || series.name}`,
-        url: inviteLink
-      }).then(() => {
-        setActiveRoomId(newRoomId);
-        setShowPlayer(true);
-        if (!activeEpisode && episodes.length > 0) setActiveEpisode(episodes[0]);
-      }).catch((err) => {
-        console.log('Erro ao compartilhar:', err);
-        // Fallback para clipboard
-        navigator.clipboard.writeText(inviteLink);
-        alert("🎉 Sala criada! Link copiado para sua área de transferência.");
-        setActiveRoomId(newRoomId);
-        setShowPlayer(true);
-        if (!activeEpisode && episodes.length > 0) setActiveEpisode(episodes[0]);
-      });
-    } else {
-      // Fallback para navegadores sem Web Share API
-      navigator.clipboard.writeText(inviteLink);
-      alert("🎉 Sala criada! Link copiado para sua área de transferência.");
-      setActiveRoomId(newRoomId);
-      setShowPlayer(true);
-      if (!activeEpisode && episodes.length > 0) setActiveEpisode(episodes[0]);
+  const startParty = useCallback(async () => {
+    if (!user) {
+      router.push('/login')
+      return
     }
-  }, [series, activeEpisode, episodes]);
+
+    const newRoomId = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
+    const sb = createClient()
+
+    // Criar sala na tabela party_rooms
+    const { error } = await sb.from('party_rooms').insert({
+      id: newRoomId,
+      content_id: id,
+      content_type: 'serie',
+      host_id: user.id
+    })
+
+    if (error) {
+      console.error('Erro ao criar sala:', error)
+      alert('Erro ao criar sala. Tente novamente.')
+      return
+    }
+
+    // Redirecionar para a página da sala
+    router.push(`/room/${newRoomId}`)
+  }, [id, user, router]);
 
   // Implementação do próximo episódio automático
   const handleNextEpisode = useCallback(() => {

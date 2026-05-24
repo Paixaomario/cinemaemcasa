@@ -147,36 +147,32 @@ function MovieContent() {
     loadMovie()
   }, [id, router, user])
 
-  const startParty = useCallback(() => {
-    const newRoomId = Math.random().toString(36).substring(2, 11);
-    const inviteLink = `${window.location.origin}${window.location.pathname}?room=${newRoomId}`;
-    const inviteMsg = `Vamos assistir comigo?\n\n🍿 ${movie.titulo || movie.title}\n🔗 ${inviteLink}`;
-
-    // Tenta usar Web Share API (compartilhamento nativo) se disponível
-    if (navigator.share) {
-      navigator.share({
-        title: `Assistir juntos: ${movie.titulo || movie.title}`,
-        text: `Vamos assistir comigo? 🍿 ${movie.titulo || movie.title}`,
-        url: inviteLink
-      }).then(() => {
-        setActiveRoomId(newRoomId);
-        setShowPlayer(true);
-      }).catch((err) => {
-        console.log('Erro ao compartilhar:', err);
-        // Fallback para clipboard
-        navigator.clipboard.writeText(inviteLink);
-        alert("🎉 Sala criada! Link copiado para sua área de transferência.");
-        setActiveRoomId(newRoomId);
-        setShowPlayer(true);
-      });
-    } else {
-      // Fallback para navegadores sem Web Share API
-      navigator.clipboard.writeText(inviteLink);
-      alert("🎉 Sala criada! Link copiado para sua área de transferência.");
-      setActiveRoomId(newRoomId);
-      setShowPlayer(true);
+  const startParty = useCallback(async () => {
+    if (!user) {
+      router.push('/login')
+      return
     }
-  }, [movie]);
+
+    const newRoomId = Math.random().toString(36).substring(2, 11);
+    const sb = createClient()
+
+    // Criar sala na tabela party_rooms
+    const { error } = await sb.from('party_rooms').insert({
+      id: newRoomId,
+      content_id: id,
+      content_type: 'movie',
+      host_id: user.id
+    })
+
+    if (error) {
+      console.error('Erro ao criar sala:', error)
+      alert('Erro ao criar sala. Tente novamente.')
+      return
+    }
+
+    // Redirecionar para a página da sala
+    router.push(`/room/${newRoomId}`)
+  }, [id, user, router]);
 
   async function toggleFavorite() {
     if (!user) return router.push('/login')
