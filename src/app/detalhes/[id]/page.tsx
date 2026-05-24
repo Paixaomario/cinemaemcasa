@@ -162,6 +162,32 @@ function MovieContent() {
     }
   }
 
+  // Verifica se o conteúdo já está nos favoritos
+  useEffect(() => {
+    async function checkFavorite() {
+      if (!user || !contentUuid) {
+        setIsFavorite(false)
+        return
+      }
+
+      const sb = createClient()
+      const { data, error } = await sb
+        .from('favorites')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('content_id', contentUuid)
+        .maybeSingle()
+
+      if (!error && data) {
+        setIsFavorite(true)
+      } else {
+        setIsFavorite(false)
+      }
+    }
+
+    checkFavorite()
+  }, [user, contentUuid])
+
   if (loading || !movie) {
     return <div className="min-h-screen bg-black animate-pulse" />
   }
