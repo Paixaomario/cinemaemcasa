@@ -51,6 +51,7 @@ function SeriesContent() {
       const rawId = String(id)
       const cleanId = rawId.replace('serie-', '')
       const isNumeric = /^\d+$/.test(cleanId)
+      console.log('Carregando série - ID raw:', rawId, 'clean:', cleanId, 'isNumeric:', isNumeric)
       
       // Garante que o ID seja tratado de forma resiliente para Smart TVs
       let localSeriesId: string | null = null
@@ -92,9 +93,12 @@ function SeriesContent() {
         }
 
         if (!localData || !localSeriesId) {
+          console.log('Série não encontrada no banco de dados')
           router.push('/')
           return
         }
+
+        console.log('Série encontrada:', localData.titulo, 'localSeriesId:', localSeriesId)
 
         // 2. Busca metadados ricos no TMDB
         let finalData = localData
@@ -123,10 +127,17 @@ function SeriesContent() {
           const { data: contentData } = await sb.from('content').select('id').eq('title', localData.titulo).eq('type', 'series').maybeSingle()
           if (contentData) cid = contentData.id
         }
-        if (cid) setContentUuid(cid)
+        if (cid) {
+          setContentUuid(cid)
+          console.log('UUID sincronizado:', cid)
+        } else {
+          console.log('UUID não encontrado na tabela content, usando contentUuid:', contentUuid)
+        }
 
         // 3. Busca Temporadas e Episódios (Tentativa Híbrida)
         let seasonsData: any[] = []
+
+        console.log('Buscando temporadas - localSeriesId:', localSeriesId, 'effectiveCid:', cid || contentUuid)
 
         // Primeiro tenta na tabela 'temporadas' (Legado)
         if (localSeriesId && /^\d+$/.test(localSeriesId)) {
@@ -137,20 +148,25 @@ function SeriesContent() {
             .order('numero_temporada', { ascending: true })
           
           seasonsData = sLegacy || []
+          console.log('Tabela legada (temporadas) - serie_id:', seasonsData.length, 'temporadas')
 
           if (seasonsData.length === 0) {
              const { data: sAlt } = await sb.from('temporadas').select('*').eq('id_serie', localSeriesId).order('numero_temporada', { ascending: true })
-             if (sAlt) seasonsData = sAlt
+             if (sAlt) {
+               seasonsData = sAlt
+               console.log('Tabela legada alternativa (id_serie):', seasonsData.length, 'temporadas')
+             }
           }
         }
 
         // Se não houver temporadas, tenta extrair do 'content' (Unificado)
         const effectiveCid = cid || contentUuid
         if (seasonsData.length === 0 && effectiveCid) {
+          console.log('Tentando buscar temporadas da tabela content com parent_id:', effectiveCid)
           const { data: contentEpisodes } = await sb
             .from('content')
             .select('season_number')
-            .eq('parent_id', cid)
+            .eq('parent_id', effectiveCid)
             .eq('type', 'episode')
 
           if (contentEpisodes && contentEpisodes.length > 0) {
@@ -160,9 +176,15 @@ function SeriesContent() {
               numero_temporada: num,
               titulo: `Temporada ${num}`
             }));
+            console.log('Temporadas extraídas da tabela content:', seasonsData.length, 'temporadas de', contentEpisodes.length, 'episódios')
+          } else {
+            console.log('Nenhum episódio encontrado na tabela content com parent_id:', effectiveCid)
           }
+        } else {
+          console.log('effectiveCid não disponível, não é possível buscar na tabela content')
         }
 
+        console.log('Temporadas encontradas:', seasonsData.length, seasonsData)
         setSeasons(seasonsData || [])
         if (seasonsData && seasonsData.length > 0) {
           const firstSeason = seasonsData[0]
@@ -170,25 +192,34 @@ function SeriesContent() {
           
           // Busca episódios da primeira temporada
           const seasonId = String(firstSeason.id_n || firstSeason.id || '');
+          console.log('Buscando episódios da primeira temporada - seasonId:', seasonId, 'numero_temporada:', firstSeason.numero_temporada)
           let episodesData: any[] = []
 
           // Só tenta tabela legada se o ID for numérico
           if (/^\d+$/.test(seasonId)) {
+            console.log('Tentando tabela legada (episodios) com temporada_id:', seasonId)
             const { data: eLegacy } = await sb
               .from('episodios')
               .select('*')
               .eq('temporada_id', seasonId)
               .order('numero_episodio', { ascending: true })
             episodesData = eLegacy || []
+            console.log('Tabela legada (episodios) - temporada_id:', episodesData.length, 'episódios')
 
             if (episodesData.length === 0) {
               const { data: eAlt } = await sb.from('episodios').select('*').eq('id_temporada', seasonId).order('numero_episodio', { ascending: true })
-              if (eAlt) episodesData = eAlt
+              if (eAlt) {
+                episodesData = eAlt
+                console.log('Tabela legada alternativa (id_temporada):', episodesData.length, 'episódios')
+              }
             }
+          } else {
+            console.log('seasonId não é numérico, pulando tabela legada')
           }
           
           // Fallback para content
           if (episodesData.length === 0 && effectiveCid) {
+            console.log('Tentando tabela content com parent_id:', effectiveCid, 'e season_number:', firstSeason.numero_temporada)
              const { data: cEps } = await sb
                .from('content')
                .select('*')
@@ -205,9 +236,17 @@ function SeriesContent() {
                  titulo: e.title,
                  arquivo: e.video_url
                }))
+               console.log('Episódios encontrados na tabela content:', episodesData.length)
+             } else {
+               console.log('Nenhum episódio encontrado na tabela content')
              }
+          } else {
+            console.log('effectiveCid não disponível ou episódios já encontrados na legada')
           }
+          console.log('Episódios encontrados para temporada', firstSeason.numero_temporada, ':', episodesData.length)
           setEpisodes(episodesData || [])
+        } else {
+          console.log('Nenhuma temporada encontrada para a série')
         }
       } catch (err) {
         console.error("Erro ao carregar série:", err)
@@ -288,29 +327,39 @@ function SeriesContent() {
   // Busca episódios quando a temporada muda
   useEffect(() => {
     const seasonId = String(selectedSeason?.id_n || selectedSeason?.id || '');
+    console.log('Mudando para temporada:', selectedSeason?.numero_temporada, 'ID:', seasonId)
     if (!seasonId || loading) return
 
     async function loadEpisodes() {
       const sb = createClient()
+      console.log('loadEpisodes - seasonId:', seasonId, 'contentUuid:', contentUuid, 'selectedSeason.numero_temporada:', selectedSeason?.numero_temporada)
       let episodesData: any[] = []
 
       // Só tenta tabela legada se for numérico
       if (/^\d+$/.test(seasonId)) {
+        console.log('Tentando tabela legada (episodios) com temporada_id:', seasonId)
         const { data: eLegacy } = await sb
           .from('episodios')
           .select('*')
           .eq('temporada_id', seasonId)
           .order('numero_episodio', { ascending: true })
         episodesData = eLegacy || []
+        console.log('Tabela legada (episodios) - temporada_id:', episodesData.length, 'episódios')
 
         if (episodesData.length === 0) {
           const { data: eAlt } = await sb.from('episodios').select('*').eq('id_temporada', seasonId).order('numero_episodio', { ascending: true })
-          if (eAlt) episodesData = eAlt
+          if (eAlt) {
+            episodesData = eAlt
+            console.log('Tabela legada alternativa (id_temporada):', episodesData.length, 'episódios')
+          }
         }
+      } else {
+        console.log('seasonId não é numérico, pulando tabela legada')
       }
 
       // Fallback para content
       if ((!episodesData || episodesData.length === 0) && contentUuid) {
+        console.log('Tentando tabela content com parent_id:', contentUuid, 'e season_number:', selectedSeason?.numero_temporada)
         const { data: cEps } = await sb
           .from('content')
           .select('*')
@@ -327,8 +376,14 @@ function SeriesContent() {
             titulo: e.title,
             arquivo: e.video_url
           }))
+          console.log('Episódios encontrados na tabela content:', episodesData.length)
+        } else {
+          console.log('Nenhum episódio encontrado na tabela content')
         }
-     }
+      } else {
+        console.log('contentUuid não disponível ou episódios já encontrados na legada')
+      }
+     console.log('Episódios carregados para temporada', selectedSeason?.numero_temporada, ':', episodesData.length)
      setEpisodes(episodesData || [])
     }
 
