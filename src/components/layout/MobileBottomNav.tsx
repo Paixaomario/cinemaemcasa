@@ -47,12 +47,12 @@ function NavContent() {
         .mobile-bottom-nav {
           position: fixed;
           bottom: 18px;
-          left: 50% !important;
-          right: auto !important;
-          transform: translateX(-50%) !important;
+          left: 4vw !important;
+          right: 4vw !important;
+          margin: 0 auto !important;
           z-index: 5000;
 
-          width: 92vw !important;
+          width: auto !important;
           max-width: 500px !important;
           height: 80px !important;
 
@@ -179,10 +179,10 @@ function NavContent() {
 
         @media (max-width: 768px) {
           .mobile-bottom-nav {
-            left: 50% !important; /* Força a centralização */
-            right: auto !important; /* Garante que 'right' não interfira */
-            transform: translateX(-50%) !important; /* Ajusta a centralização */
-            margin: 0 !important; /* Remove margens que possam empurrar */
+            left: 4vw !important;
+            right: 4vw !important;
+            transform: none !important;
+            margin: 0 auto !important;
 
             height: 75px !important;
             border-radius: 20px; /* Arredondado para 20px */

@@ -118,12 +118,15 @@ function SeriesContent() {
         setSeries(finalData)
 
         // Sincronização UUID
-        let cid = contentUuid
+        let cid: string | null = contentUuid
         if (!cid && localData?.titulo) {
           const { data: contentData } = await sb.from('content').select('id').eq('title', localData.titulo).eq('type', 'series').maybeSingle()
           if (contentData) cid = contentData.id
         }
-        if (cid) setContentUuid(cid)
+        
+        if (cid) {
+          setContentUuid(cid)
+        }
 
         // 3. Busca Temporadas e Episódios (Tentativa Híbrida)
         // Primeiro tenta na tabela 'temporadas' (Legado)
@@ -139,11 +142,11 @@ function SeriesContent() {
         }
 
         // Se não houver temporadas, tenta extrair do 'content' (Unificado)
-        if (!seasonsData || seasonsData.length === 0) {
+        if ((!seasonsData || seasonsData.length === 0) && cid) {
           const { data: contentEpisodes } = await sb
             .from('content')
             .select('season_number')
-            .eq('parent_id', contentUuid)
+            .eq('parent_id', cid)
             .eq('type', 'episode')
 
           if (contentEpisodes && contentEpisodes.length > 0) {
@@ -175,11 +178,11 @@ function SeriesContent() {
           }
           
           // Fallback para content
-          if ((!episodesData || episodesData.length === 0) && contentUuid) {
+          if ((!episodesData || episodesData.length === 0) && cid) {
              const { data: cEps } = await sb
                .from('content')
                .select('*')
-               .eq('parent_id', contentUuid)
+               .eq('parent_id', cid)
                .eq('season_number', firstSeason.numero_temporada)
                .eq('type', 'episode')
                .order('episode_number', { ascending: true })
@@ -314,7 +317,7 @@ function SeriesContent() {
     }
 
     loadEpisodes()
-  }, [selectedSeason, loading])
+  }, [selectedSeason, loading, contentUuid])
 
   if (loading || !series) {
     return <div className="min-h-screen bg-black animate-pulse" />
