@@ -42,6 +42,11 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   // Lógica de Navegação Espacial para Smart TVs e Teclado
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Desabilita lógica de setas se estiver em campos de texto (Celular/Tablet)
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+        return;
+      }
+
       const { key } = e
       const selectors = 'a, button, input, select, textarea, [tabindex="0"]'
       const focusable = Array.from(document.querySelectorAll(selectors)).filter(el => {
@@ -100,7 +105,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       if (nearest) {
         const targetElement = nearest as HTMLElement
         targetElement.focus()
-        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
+        // Algumas TVs antigas não suportam smooth behavior, adicionamos fallback
+        try { targetElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }); } catch(e) { targetElement.scrollIntoView(false); }
       }
     }
 

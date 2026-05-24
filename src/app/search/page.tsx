@@ -78,10 +78,6 @@ function SearchContent() {
         const { data: cinemaItems } = await cinemaQuery
         const { data: seriesItems } = await seriesQuery
 
-        console.log('Busca:', searchInput, 'Categoria:', categoryFilter)
-        console.log('Cinema itens:', cinemaItems?.length)
-        console.log('Series itens:', seriesItems?.length)
-
         // Converter resultados para formato unificado
         const cinemaResults: SearchResult[] = (cinemaItems || []).map((item: any) => ({
           id: item.id,

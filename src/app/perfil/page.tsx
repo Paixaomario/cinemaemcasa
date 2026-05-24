@@ -131,9 +131,7 @@ function Section({ title, items, color, emptyMsg }: { title: string, items: Prof
             const isSeries = (item.type === 'serie' || item.type === 'series')
             const posterPath = item.poster || item.backdrop
             if (!posterPath && !item.titulo) return null; // Pula itens fantasmas
-            const imageUrl = posterPath 
-              ? (posterPath.startsWith('http') ? posterPath : `https://image.tmdb.org/t/p/w500${posterPath}`)
-              : null
+            const imageUrl = posterPath; // hydrateCinemaItem já garante a URL completa
 
             return (
             <Link

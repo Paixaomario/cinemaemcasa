@@ -52,6 +52,7 @@ function SeriesContent() {
       const cleanId = rawId.replace('serie-', '')
       const isNumeric = /^\d+$/.test(cleanId)
       
+      // Garante que o ID seja tratado de forma resiliente para Smart TVs
       let localSeriesId: string | null = null
       let localData = null
 
@@ -433,7 +434,7 @@ function SeriesContent() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {episodes.map((ep) => {
-              const imageUrl = TMDB_IMG.backdrop(ep.imagem_500 || ep.banner);
+              const imageUrl = ep.imagem_500 || ep.banner ? TMDB_IMG.backdrop(ep.imagem_500 || ep.banner) : null;
               return (
               <button
                 key={ep.id_n || ep.id}

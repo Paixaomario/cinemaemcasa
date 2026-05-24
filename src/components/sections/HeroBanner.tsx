@@ -117,12 +117,10 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
     return () => clearInterval(interval); // Limpa o intervalo ao desmontar
   }, [contentPool]);
 
-  if (loading) {
-    return <div className="w-full h-[50vh] md:h-[80vh] bg-neutral-900 animate-pulse" />
-  }
-
   // Se não houver itens no banco, não exibe o banner mas permite que o resto da página carregue
-  if (!currentBannerItem) {
+  if (!currentBannerItem || loading) {
+    // Retorna um placeholder fixo para não travar a renderização em TVs
+    if (loading) return <div className="w-full h-[60vh] md:h-[80vh] bg-black animate-pulse" />;
     return null;
   }
 
@@ -152,7 +150,7 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
             fill
             priority
             className="object-cover object-top opacity-60"
-            sizes="100vw"
+            sizes="(max-width: 768px) 100vw, 100vw"
             unoptimized
           />
           {/* Gradientes Cinematográficos */}
