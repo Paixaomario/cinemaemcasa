@@ -8,11 +8,13 @@ export function ContentCard({ item }: { item: any }) {
   const poster = item.poster || item.capa || item.poster_path
   const rating = item.rating || item.vote_average
   const year = item.ano || item.year || (item.release_date ? item.release_date.slice(0, 4) : '')
-  
+
   // Detecta se é uma série (tabela 'series' usa id_n conforme sua migration)
   const isSeries = !!item.id_n
   const id = isSeries ? item.id_n : item.id
   const detailHref = isSeries ? `/series/${id}` : `/detalhes/${id}`
+
+  console.log('ContentCard - item:', item, 'isSeries:', isSeries, 'id:', id, 'detailHref:', detailHref)
 
   return (
     <Link 
