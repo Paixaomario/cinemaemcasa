@@ -73,8 +73,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         const aC = { x: a.left + a.width / 2, y: a.top + a.height / 2 }
         const bC = { x: b.left + b.width / 2, y: b.top + b.height / 2 }
 
-        // Penalidade para desalinhamento (prioriza elementos retos na direção)
-        const mult = 2 
+        // Penalidade alta para desalinhamento (prioriza elementos na mesma linha/coluna)
+        const mult = 10
         if (dir === 'ArrowRight') return (b.left - activeRect.right) + Math.abs(bC.y - aC.y) * mult
         if (dir === 'ArrowLeft') return (activeRect.left - b.right) + Math.abs(bC.y - aC.y) * mult
         if (dir === 'ArrowDown') return (b.top - activeRect.bottom) + Math.abs(bC.x - aC.x) * mult
@@ -85,6 +85,9 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       let nearest: HTMLElement | null = null
       let minDist = Infinity
 
+      // Tolerância para considerar elementos na mesma linha/coluna (em pixels)
+      const alignmentTolerance = 30
+
       focusable.forEach(el => {
         if (el === active) return
         const r = el.getBoundingClientRect()
@@ -94,6 +97,24 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         if (key === 'ArrowLeft' && r.right > activeRect.left + 1) return
         if (key === 'ArrowDown' && r.top < activeRect.bottom - 1) return
         if (key === 'ArrowUp' && r.bottom > activeRect.top + 1) return
+
+        // Para navegação horizontal, prioriza elementos na mesma linha
+        if (key === 'ArrowRight' || key === 'ArrowLeft') {
+          const activeCenterY = activeRect.top + activeRect.height / 2
+          const elCenterY = r.top + r.height / 2
+          const verticalDiff = Math.abs(activeCenterY - elCenterY)
+          // Se estiver muito fora da linha, ignora completamente
+          if (verticalDiff > alignmentTolerance) return
+        }
+
+        // Para navegação vertical, prioriza elementos na mesma coluna
+        if (key === 'ArrowDown' || key === 'ArrowUp') {
+          const activeCenterX = activeRect.left + activeRect.width / 2
+          const elCenterX = r.left + r.width / 2
+          const horizontalDiff = Math.abs(activeCenterX - elCenterX)
+          // Se estiver muito fora da coluna, ignora completamente
+          if (horizontalDiff > alignmentTolerance) return
+        }
 
         const d = getDistance(activeRect, r, key)
         if (d < minDist) {
