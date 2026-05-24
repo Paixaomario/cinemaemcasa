@@ -162,8 +162,8 @@ function SearchContent() {
   return (
     <main className="min-h-screen bg-[#0B0B0F] text-white">
       <Navbar />
-      
-      <div className="pt-32 md:pt-40 px-[var(--container-px)] pb-20 max-w-[2400px] mx-auto">
+
+      <div className="pt-32 md:pt-40 px-4 md:px-8 lg:px-16 pb-20 max-w-[2400px] mx-auto">
         <header className="mb-8">
           <form onSubmit={handleSearch} className="mb-6 relative">
             <input
