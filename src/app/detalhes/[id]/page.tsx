@@ -311,8 +311,11 @@ function MovieContent() {
           </button>
 
           <button
-            onClick={startParty}
-            className="px-10 py-4 bg-white/10 text-white font-montserrat font-black uppercase tracking-widest rounded-[20px] border border-white/20 hover:bg-brand-cyan hover:text-black transition-all transform hover:scale-105 focus:ring-4 focus:ring-brand-cyan outline-none"
+            onClick={(e) => {
+              console.log('Botão Assistir Juntos clicado!', e)
+              startParty()
+            }}
+            className="px-10 py-4 bg-white/10 text-white font-montserrat font-black uppercase tracking-widest rounded-[20px] border border-white/20 hover:bg-brand-cyan hover:text-black transition-all transform hover:scale-105 focus:ring-4 focus:ring-brand-cyan outline-none cursor-pointer"
           >
             🍿 Assistir Juntos
           </button>
