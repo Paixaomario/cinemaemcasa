@@ -1,6 +1,6 @@
 {
-  "name": "PAIXAOFLIX",
-  "short_name": "PAIXAOFLIX",
+  "name": "Cinema em Casa",
+  "short_name": "Cinema em Casa",
   "description": "Sua plataforma de streaming pessoal",
   "start_url": "/",
   "display": "standalone",
