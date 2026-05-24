@@ -84,15 +84,37 @@ export default function PartyRoomPage() {
     const shareLink = `${window.location.origin}/room/${roomId}`
     const shareMsg = `Vamos assistir juntos? 🍿 ${title}\n🔗 ${shareLink}`
 
+    console.log('Tentando compartilhar:', shareLink)
+
     if (navigator.share) {
-      navigator.share({
-        title: `Assistir juntos: ${title}`,
-        text: `Vamos assistir juntos? 🍿 ${title}`,
-        url: shareLink
-      })
+      try {
+        await navigator.share({
+          title: `Assistir juntos: ${title}`,
+          text: `Vamos assistir juntos? 🍿 ${title}`,
+          url: shareLink
+        })
+        console.log('Compartilhado com sucesso')
+      } catch (err) {
+        console.log('Erro ao compartilhar com Web Share API:', err)
+        // Fallback para clipboard
+        try {
+          await navigator.clipboard.writeText(shareLink)
+          alert('Link copiado para a área de transferência!')
+          console.log('Link copiado para clipboard')
+        } catch (clipErr) {
+          console.error('Erro ao copiar para clipboard:', clipErr)
+          alert('Erro ao copiar link. Por favor, copie manualmente: ' + shareLink)
+        }
+      }
     } else {
-      navigator.clipboard.writeText(shareLink)
-      alert('Link copiado para a área de transferência!')
+      try {
+        await navigator.clipboard.writeText(shareLink)
+        alert('Link copiado para a área de transferência!')
+        console.log('Link copiado para clipboard')
+      } catch (err) {
+        console.error('Erro ao copiar para clipboard:', err)
+        alert('Erro ao copiar link. Por favor, copie manualmente: ' + shareLink)
+      }
     }
   }
 

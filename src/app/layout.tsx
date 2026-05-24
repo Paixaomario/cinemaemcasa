@@ -11,7 +11,7 @@ const montserrat = Montserrat({
 })
 
 export const metadata: Metadata = {
-  title: 'Meu Projeto Clean',
+  title: 'Cinema em Casa',
 }
 
 export const viewport: Viewport = {
