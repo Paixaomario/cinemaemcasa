@@ -26,6 +26,8 @@ export default function PartyRoomPage() {
     async function loadRoom() {
       const sb = createClient()
 
+      console.log('Buscando sala:', roomId)
+
       // Buscar dados da sala
       const { data: room, error: roomError } = await sb
         .from('party_rooms')
@@ -33,7 +35,10 @@ export default function PartyRoomPage() {
         .eq('id', roomId)
         .maybeSingle()
 
+      console.log('Resultado da busca:', { room, roomError })
+
       if (roomError || !room) {
+        console.error('Sala não encontrada ou erro:', roomError)
         alert('Sala não encontrada')
         router.push('/')
         return

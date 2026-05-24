@@ -412,19 +412,23 @@ function SeriesContent() {
     const newRoomId = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
     const sb = createClient()
 
+    console.log('Criando sala:', newRoomId, 'para conteúdo:', id, 'tipo: serie')
+
     // Criar sala na tabela party_rooms
-    const { error } = await sb.from('party_rooms').insert({
+    const { error, data } = await sb.from('party_rooms').insert({
       id: newRoomId,
       content_id: id,
       content_type: 'serie',
       host_id: user.id
-    })
+    }).select()
 
     if (error) {
       console.error('Erro ao criar sala:', error)
       alert('Erro ao criar sala. Tente novamente.')
       return
     }
+
+    console.log('Sala criada com sucesso:', data)
 
     // Redirecionar para a página da sala
     router.push(`/room/${newRoomId}`)
