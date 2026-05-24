@@ -454,7 +454,6 @@ function SeriesContent() {
   }, [episodes, autoPlayNext])
 
   async function toggleFavorite() {
-    console.log('toggleFavorite - user:', !!user, 'contentUuid:', contentUuid, 'legacyId:', legacyId, 'isFavorite:', isFavorite)
     if (!user) return router.push('/login')
     const sb = createClient()
 
@@ -463,28 +462,23 @@ function SeriesContent() {
     const targetLegacyId = legacyId
 
     if (!targetId && !targetLegacyId) {
-      console.log('toggleFavorite - targetId e targetLegacyId não definidos')
       return
     }
 
     if (isFavorite) {
-      console.log('Removendo favorito - user_id:', user.id, 'content_id:', targetId, 'legacy_id:', targetLegacyId)
       const { error } = await sb.from('favorites').delete().match({
         user_id: user.id,
         ...(targetId ? { content_id: targetId } : {}),
         ...(targetLegacyId ? { legacy_id: targetLegacyId } : {})
       });
-      console.log('Erro ao remover favorito:', error)
       if (!error) setIsFavorite(false);
     } else {
-      console.log('Adicionando favorito - user_id:', user.id, 'content_id:', targetId, 'legacy_id:', targetLegacyId)
       const { error } = await sb.from('favorites').insert({
         user_id: user.id,
         content_type: 'serie',
         ...(targetId ? { content_id: targetId } : {}),
         ...(targetLegacyId ? { legacy_id: targetLegacyId } : {})
       });
-      console.log('Erro ao adicionar favorito:', error)
       if (!error) setIsFavorite(true);
     }
   }
@@ -492,9 +486,7 @@ function SeriesContent() {
   // Verifica se o conteúdo já está nos favoritos
   useEffect(() => {
     async function checkFavorite() {
-      console.log('checkFavorite - user:', !!user, 'contentUuid:', contentUuid, 'legacyId:', legacyId)
       if (!user || (!contentUuid && !legacyId)) {
-        console.log('checkFavorite - user ou contentUuid/legacyId não definido')
         setIsFavorite(false)
         return
       }
@@ -511,12 +503,9 @@ function SeriesContent() {
 
       const { data, error } = await query.maybeSingle()
 
-      console.log('checkFavorite - data:', data, 'error:', error)
       if (!error && data) {
-        console.log('checkFavorite - conteúdo já está nos favoritos')
         setIsFavorite(true)
       } else {
-        console.log('checkFavorite - conteúdo não está nos favoritos')
         setIsFavorite(false)
       }
     }
