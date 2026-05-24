@@ -14,8 +14,6 @@ export function ContentCard({ item }: { item: any }) {
   const id = isSeries ? item.id_n : item.id
   const detailHref = isSeries ? `/series/${id}` : `/detalhes/${id}`
 
-  console.log('ContentCard - item:', item, 'isSeries:', isSeries, 'id:', id, 'detailHref:', detailHref)
-
   return (
     <Link 
       href={detailHref}

@@ -29,6 +29,7 @@ function MovieContent() {
   const [filteredRecommendations, setFilteredRecommendations] = useState<any[]>([])
   const [isFavorite, setIsFavorite] = useState(false)
   const [contentUuid, setContentUuid] = useState<string | null>(null)
+  const [legacyId, setLegacyId] = useState<number | null>(null)
   const [showPlayer, setShowPlayer] = useState(false)
 
   // Estados da Sala (Assistir Juntos)
@@ -76,6 +77,8 @@ function MovieContent() {
         router.push('/')
         return
       }
+
+      setLegacyId(movieIdNum)
 
       // 2. Busca metadados ricos no TMDB
       if (localData.tmdb_id) {
@@ -147,24 +150,35 @@ function MovieContent() {
   }, [movie]);
 
   async function toggleFavorite() {
-    console.log('toggleFavorite - user:', !!user, 'contentUuid:', contentUuid, 'isFavorite:', isFavorite)
+    console.log('toggleFavorite - user:', !!user, 'contentUuid:', contentUuid, 'legacyId:', legacyId, 'isFavorite:', isFavorite)
     if (!user) return router.push('/login')
     const sb = createClient()
-    const targetId = contentUuid
 
-    if (!targetId) {
-      console.log('toggleFavorite - targetId não definido')
+    // Usa contentUuid se disponível, senão usa legacyId
+    const targetId = contentUuid
+    const targetLegacyId = legacyId
+
+    if (!targetId && !targetLegacyId) {
+      console.log('toggleFavorite - targetId e targetLegacyId não definidos')
       return
     }
 
     if (isFavorite) {
-      console.log('Removendo favorito - user_id:', user.id, 'content_id:', targetId)
-      const { error } = await sb.from('favorites').delete().match({ user_id: user.id, content_id: targetId });
+      console.log('Removendo favorito - user_id:', user.id, 'content_id:', targetId, 'legacy_id:', targetLegacyId)
+      const { error } = await sb.from('favorites').delete().match({
+        user_id: user.id,
+        ...(targetId ? { content_id: targetId } : {}),
+        ...(targetLegacyId ? { legacy_id: targetLegacyId } : {})
+      });
       console.log('Erro ao remover favorito:', error)
       if (!error) setIsFavorite(false);
     } else {
-      console.log('Adicionando favorito - user_id:', user.id, 'content_id:', targetId)
-      const { error } = await sb.from('favorites').insert({ user_id: user.id, content_id: targetId });
+      console.log('Adicionando favorito - user_id:', user.id, 'content_id:', targetId, 'legacy_id:', targetLegacyId)
+      const { error } = await sb.from('favorites').insert({
+        user_id: user.id,
+        ...(targetId ? { content_id: targetId } : {}),
+        ...(targetLegacyId ? { legacy_id: targetLegacyId } : {})
+      });
       console.log('Erro ao adicionar favorito:', error)
       if (!error) setIsFavorite(true);
     }
@@ -173,20 +187,24 @@ function MovieContent() {
   // Verifica se o conteúdo já está nos favoritos
   useEffect(() => {
     async function checkFavorite() {
-      console.log('checkFavorite - user:', !!user, 'contentUuid:', contentUuid)
-      if (!user || !contentUuid) {
-        console.log('checkFavorite - user ou contentUuid não definido')
+      console.log('checkFavorite - user:', !!user, 'contentUuid:', contentUuid, 'legacyId:', legacyId)
+      if (!user || (!contentUuid && !legacyId)) {
+        console.log('checkFavorite - user ou contentUuid/legacyId não definido')
         setIsFavorite(false)
         return
       }
 
       const sb = createClient()
-      const { data, error } = await sb
-        .from('favorites')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('content_id', contentUuid)
-        .maybeSingle()
+      let query = sb.from('favorites').select('*').eq('user_id', user.id)
+
+      // Verifica por content_id ou legacy_id
+      if (contentUuid) {
+        query = query.eq('content_id', contentUuid)
+      } else if (legacyId) {
+        query = query.eq('legacy_id', legacyId)
+      }
+
+      const { data, error } = await query.maybeSingle()
 
       console.log('checkFavorite - data:', data, 'error:', error)
       if (!error && data) {
@@ -199,7 +217,7 @@ function MovieContent() {
     }
 
     checkFavorite()
-  }, [user, contentUuid])
+  }, [user, contentUuid, legacyId])
 
   if (loading || !movie) {
     return <div className="min-h-screen bg-black animate-pulse" />
