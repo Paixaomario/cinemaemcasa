@@ -154,11 +154,25 @@ function SeriesContent() {
 
         // Verificação direta: contar temporadas na tabela legada
         if (localSeriesId && /^\d+$/.test(localSeriesId)) {
+          // Primeiro, buscar TODAS as temporadas sem filtro para ver se há dados
+          const { data: allTemporadas, count: allTempCount } = await sb
+            .from('temporadas')
+            .select('*', { count: 'exact' })
+          console.log('TOTAL de temporadas na tabela temporadas (sem filtro):', allTempCount)
+
+          // Agora buscar com filtro
           const { count } = await sb
             .from('temporadas')
             .select('*', { count: 'exact', head: true })
             .eq('serie_id', localSeriesId)
           console.log('Total de temporadas na tabela legada com serie_id:', localSeriesId, '=', count)
+
+          // Buscar algumas temporadas para ver a estrutura
+          const { data: sampleTemporadas } = await sb
+            .from('temporadas')
+            .select('*')
+            .limit(5)
+          console.log('Amostra de temporadas:', sampleTemporadas)
 
           // Verificar se há episódios na tabela episodios (precisa buscar via temporada_id)
           // Primeiro precisamos buscar as temporadas para saber os IDs
@@ -166,7 +180,7 @@ function SeriesContent() {
             .from('temporadas')
             .select('id_n')
             .eq('serie_id', localSeriesId)
-          
+
           if (tempForEpisodes && tempForEpisodes.length > 0) {
             const tempIds = tempForEpisodes.map(t => t.id_n)
             const { count: epCount } = await sb
@@ -177,6 +191,12 @@ function SeriesContent() {
           } else {
             console.log('Nenhuma temporada encontrada para buscar episódios')
           }
+
+          // Buscar TOTAL de episódios sem filtro
+          const { count: allEpCount } = await sb
+            .from('episodios')
+            .select('*', { count: 'exact' })
+          console.log('TOTAL de episódios na tabela episodios (sem filtro):', allEpCount)
         }
 
         // Verificação direta: contar episódios na tabela content
