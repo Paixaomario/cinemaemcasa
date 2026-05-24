@@ -155,48 +155,83 @@ function SeriesContent() {
         // Verificação direta: contar temporadas na tabela legada
         if (localSeriesId && /^\d+$/.test(localSeriesId)) {
           // Primeiro, buscar TODAS as temporadas sem filtro para ver se há dados
-          const { data: allTemporadas, count: allTempCount } = await sb
-            .from('temporadas')
-            .select('*', { count: 'exact' })
-          console.log('TOTAL de temporadas na tabela temporadas (sem filtro):', allTempCount)
+          try {
+            const { data: allTemporadas, count: allTempCount, error: tempError } = await sb
+              .from('temporadas')
+              .select('*', { count: 'exact' })
+            console.log('TOTAL de temporadas na tabela temporadas (sem filtro):', allTempCount)
+            if (tempError) {
+              console.error('Erro ao buscar temporadas (sem filtro):', tempError)
+            }
+          } catch (e) {
+            console.error('Exceção ao buscar temporadas (sem filtro):', e)
+          }
 
           // Agora buscar com filtro
-          const { count } = await sb
-            .from('temporadas')
-            .select('*', { count: 'exact', head: true })
-            .eq('serie_id', localSeriesId)
-          console.log('Total de temporadas na tabela legada com serie_id:', localSeriesId, '=', count)
+          try {
+            const { count, error: countError } = await sb
+              .from('temporadas')
+              .select('*', { count: 'exact', head: true })
+              .eq('serie_id', localSeriesId)
+            console.log('Total de temporadas na tabela legada com serie_id:', localSeriesId, '=', count)
+            if (countError) {
+              console.error('Erro ao contar temporadas com serie_id:', countError)
+            }
+          } catch (e) {
+            console.error('Exceção ao contar temporadas com serie_id:', e)
+          }
 
           // Buscar algumas temporadas para ver a estrutura
-          const { data: sampleTemporadas } = await sb
-            .from('temporadas')
-            .select('*')
-            .limit(5)
-          console.log('Amostra de temporadas:', sampleTemporadas)
+          try {
+            const { data: sampleTemporadas, error: sampleError } = await sb
+              .from('temporadas')
+              .select('*')
+              .limit(5)
+            console.log('Amostra de temporadas:', sampleTemporadas)
+            if (sampleError) {
+              console.error('Erro ao buscar amostra de temporadas:', sampleError)
+            }
+          } catch (e) {
+            console.error('Exceção ao buscar amostra de temporadas:', e)
+          }
 
           // Verificar se há episódios na tabela episodios (precisa buscar via temporada_id)
           // Primeiro precisamos buscar as temporadas para saber os IDs
-          const { data: tempForEpisodes } = await sb
+          const { data: tempForEpisodes, error: tempForEpError } = await sb
             .from('temporadas')
             .select('id_n')
             .eq('serie_id', localSeriesId)
 
+          if (tempForEpError) {
+            console.error('Erro ao buscar temporadas para episódios:', tempForEpError)
+          }
+
           if (tempForEpisodes && tempForEpisodes.length > 0) {
             const tempIds = tempForEpisodes.map(t => t.id_n)
-            const { count: epCount } = await sb
+            const { count: epCount, error: epCountError } = await sb
               .from('episodios')
               .select('*', { count: 'exact', head: true })
               .in('temporada_id', tempIds)
             console.log('Total de episódios na tabela episodios para estas temporadas:', epCount)
+            if (epCountError) {
+              console.error('Erro ao contar episódios:', epCountError)
+            }
           } else {
             console.log('Nenhuma temporada encontrada para buscar episódios')
           }
 
           // Buscar TOTAL de episódios sem filtro
-          const { count: allEpCount } = await sb
-            .from('episodios')
-            .select('*', { count: 'exact' })
-          console.log('TOTAL de episódios na tabela episodios (sem filtro):', allEpCount)
+          try {
+            const { count: allEpCount, error: allEpError } = await sb
+              .from('episodios')
+              .select('*', { count: 'exact' })
+            console.log('TOTAL de episódios na tabela episodios (sem filtro):', allEpCount)
+            if (allEpError) {
+              console.error('Erro ao buscar total de episódios:', allEpError)
+            }
+          } catch (e) {
+            console.error('Exceção ao buscar total de episódios:', e)
+          }
         }
 
         // Verificação direta: contar episódios na tabela content
