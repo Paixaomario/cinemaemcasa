@@ -407,12 +407,34 @@ function SeriesContent() {
     const newRoomId = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
     const inviteLink = `${window.location.origin}${window.location.pathname}?room=${newRoomId}`;
     const inviteMsg = `Vamos assistir comigo?\n\n🍿 ${series.titulo || series.name}\n🔗 ${inviteLink}`;
-    
-    navigator.clipboard.writeText(inviteMsg);
-    alert("🎉 Sala criada! Convite copiado para sua área de transferência.");
-    setActiveRoomId(newRoomId);
-    setShowPlayer(true);
-    if (!activeEpisode && episodes.length > 0) setActiveEpisode(episodes[0]); // Ativa o primeiro episódio para o host
+
+    // Tenta usar Web Share API (compartilhamento nativo) se disponível
+    if (navigator.share) {
+      navigator.share({
+        title: `Assistir juntos: ${series.titulo || series.name}`,
+        text: `Vamos assistir comigo? 🍿 ${series.titulo || series.name}`,
+        url: inviteLink
+      }).then(() => {
+        setActiveRoomId(newRoomId);
+        setShowPlayer(true);
+        if (!activeEpisode && episodes.length > 0) setActiveEpisode(episodes[0]);
+      }).catch((err) => {
+        console.log('Erro ao compartilhar:', err);
+        // Fallback para clipboard
+        navigator.clipboard.writeText(inviteLink);
+        alert("🎉 Sala criada! Link copiado para sua área de transferência.");
+        setActiveRoomId(newRoomId);
+        setShowPlayer(true);
+        if (!activeEpisode && episodes.length > 0) setActiveEpisode(episodes[0]);
+      });
+    } else {
+      // Fallback para navegadores sem Web Share API
+      navigator.clipboard.writeText(inviteLink);
+      alert("🎉 Sala criada! Link copiado para sua área de transferência.");
+      setActiveRoomId(newRoomId);
+      setShowPlayer(true);
+      if (!activeEpisode && episodes.length > 0) setActiveEpisode(episodes[0]);
+    }
   }, [series, activeEpisode, episodes]);
 
   // Implementação do próximo episódio automático

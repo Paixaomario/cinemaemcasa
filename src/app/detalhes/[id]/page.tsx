@@ -151,11 +151,31 @@ function MovieContent() {
     const newRoomId = Math.random().toString(36).substring(2, 11);
     const inviteLink = `${window.location.origin}${window.location.pathname}?room=${newRoomId}`;
     const inviteMsg = `Vamos assistir comigo?\n\n🍿 ${movie.titulo || movie.title}\n🔗 ${inviteLink}`;
-    
-    navigator.clipboard.writeText(inviteMsg);
-    alert("🎉 Sala criada! Convite copiado para sua área de transferência.");
-    setActiveRoomId(newRoomId);
-    setShowPlayer(true);
+
+    // Tenta usar Web Share API (compartilhamento nativo) se disponível
+    if (navigator.share) {
+      navigator.share({
+        title: `Assistir juntos: ${movie.titulo || movie.title}`,
+        text: `Vamos assistir comigo? 🍿 ${movie.titulo || movie.title}`,
+        url: inviteLink
+      }).then(() => {
+        setActiveRoomId(newRoomId);
+        setShowPlayer(true);
+      }).catch((err) => {
+        console.log('Erro ao compartilhar:', err);
+        // Fallback para clipboard
+        navigator.clipboard.writeText(inviteLink);
+        alert("🎉 Sala criada! Link copiado para sua área de transferência.");
+        setActiveRoomId(newRoomId);
+        setShowPlayer(true);
+      });
+    } else {
+      // Fallback para navegadores sem Web Share API
+      navigator.clipboard.writeText(inviteLink);
+      alert("🎉 Sala criada! Link copiado para sua área de transferência.");
+      setActiveRoomId(newRoomId);
+      setShowPlayer(true);
+    }
   }, [movie]);
 
   async function toggleFavorite() {
