@@ -151,6 +151,7 @@ function SeriesContent() {
         let seasonsData: any[] = []
 
         console.log('Buscando temporadas - localSeriesId:', localSeriesId, 'effectiveCid:', cid || contentUuid)
+        console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
 
         // Verificação direta: contar temporadas na tabela legada
         if (localSeriesId && /^\d+$/.test(localSeriesId)) {
