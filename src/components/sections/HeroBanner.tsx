@@ -5,7 +5,7 @@ import { getMovieDetails, getShowDetails, TMDB_IMG } from '@/lib/tmdb'
 import Image from 'next/image'
 import Link from 'next/link'
 
-export function HeroBanner() {
+export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
   const [currentBannerItem, setCurrentBannerItem] = useState<any>(null)
   const [contentPool, setContentPool] = useState<any[]>([])
   const currentIndexRef = useRef(0)
@@ -22,10 +22,14 @@ export function HeroBanner() {
 
       if (mError || sError) console.error("Erro ao buscar dados para o banner:", mError || sError)
 
-      const combinedPool = [
+      let combinedPool = [
         ...(movies || []).map(m => ({ ...m, type: 'movie', poster: m.poster || m.backdrop, backdrop: m.backdrop || m.poster, category: m.category })),
         ...(series || []).map(s => ({ ...s, id: s.id_n, type: 'series', poster: s.capa || s.banner, backdrop: s.banner || s.capa, category: s.genero }))
       ].filter(item => item.tmdb_id && (item.poster || item.backdrop)); // Filtra itens sem imagem
+
+      if (type) {
+        combinedPool = combinedPool.filter(item => item.type === type);
+      }
 
       // Embaralha o pool combinado
       for (let i = combinedPool.length - 1; i > 0; i--) {
@@ -37,7 +41,7 @@ export function HeroBanner() {
       setLoading(false);
     }
     fetchFeatured();
-  }, []);
+  }, [type]);
 
   useEffect(() => {
     if (contentPool.length === 0) return;

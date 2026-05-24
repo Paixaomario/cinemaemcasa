@@ -1,14 +1,23 @@
 'use client'
 export const dynamic = 'force-dynamic'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import Image from 'next/image'
 import { useAuth } from '@/components/layout/SupabaseProvider'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="relative flex min-h-screen items-center justify-center bg-black" />}>
+      <LoginContent />
+    </Suspense>
+  )
+}
+
+function LoginContent() {
   const { user } = useAuth()
   const router   = useRouter()
+  const searchParams = useSearchParams()
   const sb       = createClient()
 
   const [email, setEmail]       = useState('')
@@ -18,7 +27,13 @@ export default function LoginPage() {
   const [error, setError]       = useState('')
   const [success, setSuccess]   = useState('')
 
-  useEffect(() => { if (user) router.push('/') }, [user])
+  useEffect(() => { 
+    if (user) router.push('/')
+    const urlError = searchParams.get('error')
+    if (urlError === 'auth-callback-failed') {
+      setError('O link de login expirou ou é inválido. Tente novamente.')
+    }
+  }, [user, router, searchParams])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

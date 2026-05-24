@@ -98,8 +98,9 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (nearest) {
-        (nearest as HTMLElement).focus()
-        nearest.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
+        const targetElement = nearest as HTMLElement
+        targetElement.focus()
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
       }
     }
 

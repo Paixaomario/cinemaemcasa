@@ -33,6 +33,7 @@ function SeriesContent() {
   const [contentUuid, setContentUuid] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeEpisode, setActiveEpisode] = useState<any>(null)
+  const [showPlayer, setShowPlayer] = useState(false)
   const [autoPlayNext, setAutoPlayNext] = useState(false)
 
   // Estados da Sala (Assistir Juntos)
@@ -393,17 +394,18 @@ function SeriesContent() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {episodes.map((ep) => (
+            {episodes.map((ep) => {
+              const imageUrl = TMDB_IMG.backdrop(ep.imagem_500 || ep.banner);
+              return (
               <button
                 key={ep.id_n}
                 onClick={() => setActiveEpisode(ep)}
                 className="group flex flex-col gap-4 text-left p-4 rounded-2xl hover:bg-white/5 transition-all focus:ring-4 focus:ring-brand-cyan outline-none border border-transparent hover:border-white/10"
               >
                 <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-neutral-800 border border-white/5">
-                  {/* Correção da exibição da imagem com fallback para banner */}
-                  {(ep.imagem_500 || ep.banner) ? (
+                  {imageUrl ? (
                     <Image 
-                      src={TMDB_IMG.backdrop(ep.imagem_500 || ep.banner)} 
+                      src={imageUrl} 
                       alt={ep.titulo} 
                       fill 
                       className="object-cover group-hover:scale-110 transition-transform duration-500" 
@@ -424,7 +426,7 @@ function SeriesContent() {
                   <p className="text-xs text-neutral-500 line-clamp-2 mt-2 font-medium leading-relaxed">{ep.descricao || 'Sem descrição disponível para este episódio.'}</p>
                 </div>
               </button>
-            ))}
+            )})}
             {episodes.length === 0 && (
               <div className="col-span-full py-20 text-center opacity-30">
                 <p className="text-xl font-black uppercase tracking-widest">Nenhum episódio cadastrado</p>

@@ -18,6 +18,7 @@ export function ContentRow({ title, items, variant = 'poster' }: Props) {
       </h2>
       <div className="scroll-row no-scrollbar">
         {items.filter(Boolean).map((item, index) => (
+          // @ts-expect-error - A propriedade 'variant' precisa ser adicionada à interface do ContentCard
           <ContentCard key={`${(item as any).id_n || (item as any).id || (item as any).tmdb_id || index}-${index}`} item={item} variant={variant} />
         ))}
       </div>

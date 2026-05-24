@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { Navbar } from '@/components/layout/Navbar'
 import { useAuth } from '@/components/layout/SupabaseProvider'
-import { getMovieDetails, getShowDetails, TMDBMovie, TMDBShow } from '@/lib/tmdb'
+import { CinemaItem } from '@/app/HomeClient'
+import { hydrateCinemaItem } from '@/lib/content'
 
 interface ProfileItem {
   id: string | number;
@@ -23,41 +24,18 @@ export default function PerfilPage() {
 
   useEffect(() => {
     if (!user) return
+    const userId = user.id
     async function loadData() {
       const sb = createClient()
       // 1. Buscar Favoritos
       const { data: favs } = await sb
         .from('favorites')
         .select('content_id')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
 
       if (favs) {
         const hydratedFavs = await Promise.all(
-          favs.map(async (f) => {
-            const idStr = String(f.content_id)
-
-            // 1. Busca na tabela unificada 'content' (UUID) para garantir a capa e título
-            const { data: contentData } = await sb
-              .from('content')
-              .select('*')
-              .eq('id', idStr)
-              .maybeSingle()
-
-            if (contentData) {
-              const table = contentData.type === 'movie' ? 'cinema' : 'series'
-              const idCol = contentData.type === 'movie' ? 'id' : 'id_n'
-              // Busca insensível a maiúsculas para evitar falhas de vínculo
-              const { data: orig } = await sb.from(table).select(`*`).ilike('titulo', contentData.title.trim()).maybeSingle()
-              
-              return {
-                id: orig ? orig[idCol] : idStr,
-                titulo: contentData.title,
-                poster: contentData.poster || (orig ? (orig.poster || orig.capa || orig.poster_path || orig.banner) : null),
-                type: contentData.type
-              }
-            }
-            return null;
-          })
+          favs.map(f => hydrateCinemaItem(sb, f.content_id))
         )
         setFavorites(hydratedFavs.filter(Boolean) as ProfileItem[])
       }
@@ -66,35 +44,12 @@ export default function PerfilPage() {
       const { data: prog } = await sb
         .from('view_progress')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('updated_at', { ascending: false })
 
       if (prog) {
         const hydratedHistory = await Promise.all(
-          prog.map(async (p) => {
-            const idStr = String(p.content_id)
-
-            // 1. Busca na tabela unificada 'content' (UUID)
-            const { data: contentData } = await sb
-              .from('content')
-              .select('*')
-              .eq('id', idStr)
-              .maybeSingle()
-
-            if (contentData) {
-              const table = contentData.type === 'movie' ? 'cinema' : 'series'
-              const idCol = contentData.type === 'movie' ? 'id' : 'id_n'
-              const { data: orig } = await sb.from(table).select(`*`).ilike('titulo', contentData.title.trim()).maybeSingle()
-              
-              return {
-                id: idStr, // Sempre usa o UUID da tabela 'content' para evitar truncamento de BIGINT na URL
-                titulo: contentData.title,
-                poster: contentData.poster || (orig ? (orig.poster || orig.capa || orig.poster_path || orig.banner) : null),
-                type: contentData.type
-              }
-            }
-            return null;
-          })
+          prog.map(p => hydrateCinemaItem(sb, p.content_id))
         )
         setHistory(hydratedHistory.filter(Boolean) as ProfileItem[])
       }
@@ -189,7 +144,7 @@ function Section({ title, items, color, emptyMsg }: { title: string, items: Prof
               {imageUrl ? (
                 <Image 
                   src={imageUrl} 
-                  alt={item.titulo} 
+                  alt={item.titulo || ''} 
                   fill 
                   className="object-cover transition-transform group-hover:scale-110"
                   unoptimized

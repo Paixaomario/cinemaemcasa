@@ -5,8 +5,8 @@ import { Navbar } from '@/components/layout/Navbar'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
-import { getMovieDetails, getShowDetails, TMDBMovie, TMDBShow } from '@/lib/tmdb'
 import { CinemaItem } from '../HomeClient'
+import { hydrateCinemaItem } from '@/lib/content'
 import Image from 'next/image'
 
 export default function FavoritosPage() {
@@ -26,70 +26,7 @@ export default function FavoritosPage() {
 
       if (favData && favData.length > 0) {
         const hydrated = await Promise.all(
-          favData.map(async (p) => {
-            const idStr = String(p.content_id)
-            let hydratedItem: TMDBMovie | TMDBShow | CinemaItem | null = null
-            let itemType: 'movie' | 'serie' = 'movie'
-
-            // 1. Tenta buscar na tabela unificada content (UUID)
-            const { data: contentData } = await sb.from('content').select('*').eq('id', idStr).single()
-            
-            if (contentData) {
-              itemType = contentData.type === 'movie' ? 'movie' : 'serie'
-              if (contentData.tmdb_id) {
-                try {
-                  hydratedItem = itemType === 'movie' 
-                    ? await getMovieDetails(contentData.tmdb_id) 
-                    : await getShowDetails(contentData.tmdb_id)
-                } catch (e) {
-                  console.warn(`Erro TMDB (content): ${idStr}`, e)
-                }
-              }
-              if (!hydratedItem) {
-                hydratedItem = { ...contentData, id: idStr, type: itemType } as CinemaItem
-              }
-            } 
-            // 2. Fallback para busca direta em cinema/series se for BigInt
-            else {
-              const { data: cinemaData } = await sb.from('cinema').select('*').eq('id', p.content_id).single()
-              if (cinemaData) {
-                itemType = 'movie'
-                if (cinemaData.tmdb_id) {
-                  try {
-                    hydratedItem = cinemaData.type === 'movie' ? await getMovieDetails(cinemaData.tmdb_id) : await getShowDetails(cinemaData.tmdb_id)
-                  } catch (e) {
-                    console.warn(`Erro TMDB (cinema fallback): ${p.content_id}`, e)
-                  }
-                }
-                if (!hydratedItem) hydratedItem = { ...cinemaData, id: String(cinemaData.id), type: 'movie' } as CinemaItem
-              } else {
-                const { data: seriesData } = await sb.from('series').select('*').eq('id_n', p.content_id).single()
-                if (seriesData) {
-                  itemType = 'serie'
-                  if (seriesData.tmdb_id) {
-                    try {
-                      hydratedItem = await getShowDetails(seriesData.tmdb_id)
-                    } catch (e) {
-                      console.warn(`Erro TMDB (series fallback): ${p.content_id}`, e)
-                    }
-                  }
-                  if (!hydratedItem) hydratedItem = { ...seriesData, id: String(seriesData.id_n), type: 'serie' } as any
-                }
-              }
-            }
-
-            if (!hydratedItem) return null
-
-            const finalItem = {
-              ...hydratedItem,
-              id: (hydratedItem as any).id_n ? String((hydratedItem as any).id_n) : String((hydratedItem as any).id),
-              titulo: (hydratedItem as CinemaItem).titulo || (hydratedItem as TMDBMovie).title || (hydratedItem as TMDBShow).name || 'Sem título',
-              poster: (hydratedItem as CinemaItem).poster || ((hydratedItem as TMDBMovie).poster_path ? `https://image.tmdb.org/t/p/w500${(hydratedItem as TMDBMovie).poster_path}` : null),
-              type: itemType,
-            } as CinemaItem;
-
-            return finalItem;
-          })
+          favData.map(p => hydrateCinemaItem(sb, p.content_id))
         )
         setItems(hydrated.filter(Boolean) as CinemaItem[])
       } else {

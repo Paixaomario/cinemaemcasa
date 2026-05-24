@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
 import { createClient } from '@/lib/supabase'
-import { TMDBMovie, TMDBShow } from '@/lib/tmdb'
+import { TMDBMovie, TMDBShow, TMDB_IMG } from '@/lib/tmdb'
 import { Navbar } from '@/components/layout/Navbar'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -301,14 +301,19 @@ function SearchContent() {
             gridTemplateColumns: 'repeat(var(--grid-cols, 5), 1fr)', 
             gap: 'var(--card-gap, 24px)' 
           }}>
-            {results.map((item) => (
+            {results.map((item) => {
+              const rawPath = item.poster || item.backdrop;
+              // Resolvemos a URL da imagem e garantimos que o TypeScript entenda que não é nula
+              const imageUrl = rawPath ? TMDB_IMG.backdrop(rawPath) : null;
+              
+              return (
               <Link 
                 key={item.id} 
                 href={item.type === 'series' ? `/series/${item.id}` : `/detalhes/${item.id}`} 
                 className="group relative aspect-[2/3] w-full rounded-xl overflow-hidden transition-all duration-300 hover:scale-110 focus:scale-110 focus:outline-none focus:ring-4 focus:ring-brand-cyan shadow-2xl">
-                {item.poster || item.backdrop ? (
+                {imageUrl ? (
                   <Image 
-                    src={item.poster || item.backdrop} 
+                    src={imageUrl} 
                     alt={item.titulo || ''} 
                     fill 
                     className="object-cover transition-all duration-500 group-hover:scale-110" 
@@ -328,7 +333,7 @@ function SearchContent() {
                   </div>
                 </div>
               </Link>
-            ))}
+            )})}
             {loading && [1,2,3,4,5].map(i => <div key={i} className="skeleton aspect-[2/3] w-full" />)}
           </div>
         )}
