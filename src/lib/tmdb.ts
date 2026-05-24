@@ -64,6 +64,13 @@ export async function getMovieDetails(id: number | string) {
 }
 
 /**
+ * Busca multi-conteúdo (filmes e séries)
+ */
+export async function searchMulti(query: string) {
+  return fetchTMDB('search/multi', { query })
+}
+
+/**
  * Busca detalhes de uma série pelo ID do TMDB
  */
 export async function getShowDetails(id: number | string) {

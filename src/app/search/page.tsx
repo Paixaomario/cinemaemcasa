@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
 import { createClient } from '@/lib/supabase'
-import { IMG, TMDBItem, TMDBMovie, TMDBShow, getTitle } from '@/lib/tmdb'
+import { TMDBMovie, TMDBShow } from '@/lib/tmdb'
 import { Navbar } from '@/components/layout/Navbar'
 import Link from 'next/link'
 import Image from 'next/image'

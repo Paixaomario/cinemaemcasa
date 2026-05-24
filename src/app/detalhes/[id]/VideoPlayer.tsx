@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
-import { IMG } from '@/lib/tmdb'
+import { TMDB_IMG } from '@/lib/tmdb'
 import { PartyChat } from '@/app/PartyChat'
 
 interface Reaction {
@@ -100,7 +100,7 @@ export function VideoPlayer({
       videoElement.style.objectFit = 'contain'
 
       if (backdrop) {
-        videoElement.poster = backdrop.startsWith('http') ? backdrop : IMG.original(backdrop)
+        videoElement.poster = backdrop.startsWith('http') ? backdrop : (TMDB_IMG.backdrop(backdrop) || '')
       }
 
       if (startOffset && startOffset > 0) {
