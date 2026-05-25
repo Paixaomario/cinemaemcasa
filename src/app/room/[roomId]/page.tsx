@@ -80,10 +80,22 @@ export default function PartyRoomPage() {
           .channel(`room:${roomId}`)
           .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'party_rooms', filter: `id=eq.${roomId}` }, (payload) => {
             console.log('Sala atualizada - Callback chamado:', payload)
-            console.log('started_at:', payload.new.started_at, 'showPlayer:', showPlayer)
+            console.log('started_at:', payload.new.started_at, 'showPlayer atual:', showPlayer, 'hasJoined:', hasJoined)
             if (payload.new.started_at && !showPlayer) {
-              console.log('Abrindo player para convidado')
-              setShowPlayer(true)
+              if (hasJoined) {
+                console.log('Abrindo player para convidado')
+                setShowPlayer(true)
+              } else if (!guestName.trim()) {
+                console.log('Anfitrião começou, mas convidado não tem nome. Gerando nome aleatório.')
+                const randomName = `Convidado${Math.floor(Math.random() * 1000)}`
+                setGuestName(randomName)
+                setHasJoined(true)
+                setShowPlayer(true)
+              } else {
+                console.log('Anfitrião começou, entrando automaticamente com nome:', guestName)
+                setHasJoined(true)
+                setShowPlayer(true)
+              }
             }
           })
           .subscribe((status) => {
