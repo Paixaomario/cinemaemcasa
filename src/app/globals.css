@@ -118,15 +118,11 @@ body {
 .emoji-reaction {
   position: fixed;
   bottom: 20%;
+  left: 50%;
   font-size: 4rem;
   z-index: 10006;
   pointer-events: none;
-  animation: flyUp 3s forwards ease-out;
+  color: white;
+  opacity: 1;
   filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
-}
-
-@keyframes flyUp {
-  0% { transform: translateY(0) scale(0.5); opacity: 0; }
-  10% { opacity: 1; transform: translateY(-10vh) scale(1.2) rotate(10deg); }
-  100% { transform: translateY(-80vh) scale(1) rotate(-10deg); opacity: 0; }
 }
