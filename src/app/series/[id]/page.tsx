@@ -199,7 +199,6 @@ function SeriesContent() {
             .insert({
               title: localData.titulo,
               type: 'series',
-              poster: localData.poster || localData.capa || localData.poster_path || localData.banner,
               is_published: true
             })
             .select('id')

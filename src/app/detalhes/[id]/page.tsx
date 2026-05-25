@@ -142,7 +142,6 @@ function MovieContent() {
               .insert({
                 title: localData.titulo,
                 type: 'movie',
-                poster: localData.poster || localData.capa || localData.poster_path || localData.banner,
                 is_published: true
               })
               .select('id')
