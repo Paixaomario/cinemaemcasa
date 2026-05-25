@@ -143,7 +143,7 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
                      (Array.isArray(currentBannerItem.origin_country) ? currentBannerItem.origin_country[0] : currentBannerItem.origin_country) || '';
 
   return (
-    <section className="relative w-full min-h-[90vh] md:min-h-screen overflow-hidden bg-black">
+    <section className="relative w-full min-h-[70vh] sm:min-h-[80vh] md:min-h-[90vh] lg:min-h-screen overflow-hidden bg-black">
       {/* Imagem de Fundo em Alta Resolução */}
       {backdropUrl && (
         <div className="absolute inset-0">
@@ -153,7 +153,7 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
             fill
             priority
             className="object-cover object-top opacity-60"
-            sizes="(max-width: 768px) 100vw, 100vw"
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, 100vw"
             unoptimized
           />
           {/* Gradientes Cinematográficos */}
@@ -163,26 +163,26 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
       )}
 
       {/* Conteúdo do Banner */}
-      <div className="relative min-h-[90vh] md:min-h-screen flex flex-col justify-end px-6 pb-24 pt-[500px] md:px-12 md:pb-32 md:pt-[650px] max-w-4xl">
-        <h1 className="text-4xl md:text-7xl font-black uppercase tracking-tighter text-white mb-4 drop-shadow-2xl">
+      <div className="relative min-h-[70vh] sm:min-h-[80vh] md:min-h-[90vh] lg:min-h-screen flex flex-col justify-end px-4 sm:px-6 md:px-12 pb-16 sm:pb-20 md:pb-24 lg:pb-32 pt-[300px] sm:pt-[400px] md:pt-[500px] lg:pt-[650px] max-w-4xl">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-7xl font-black uppercase tracking-tighter text-white mb-3 sm:mb-4 drop-shadow-2xl px-2">
           {title}
         </h1>
         
-        <div className="flex items-center gap-4 mb-4 text-sm md:text-base font-bold text-white drop-shadow-md">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-3 sm:mb-4 text-xs sm:text-sm md:text-base font-bold text-white drop-shadow-md">
           {countryCode && (
             <img 
               src={`https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`} 
               alt={countryCode}
-              className="h-5 w-auto object-contain rounded-sm shadow-sm"
+              className="h-4 sm:h-5 w-auto object-contain rounded-sm shadow-sm"
               title={countryCode}
             />
           )}
-          {rating > 0 && <span className="bg-[#00ADEF] text-black px-2 py-0.5 rounded text-xs">TMDB {Number(rating).toFixed(1)}</span>}
-          {year && <span className="text-neutral-300">{year}</span>}
+          {rating > 0 && <span className="bg-[#00ADEF] text-black px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs">TMDB {Number(rating).toFixed(1)}</span>}
+          {year && <span className="text-neutral-300 text-xs sm:text-sm">{year}</span>}
         </div>
 
         {description && (
-          <p className="text-sm md:text-lg text-neutral-300 line-clamp-2 mb-8 max-w-xl font-medium drop-shadow">
+          <p className="text-xs sm:text-sm md:text-lg text-neutral-300 line-clamp-2 sm:line-clamp-3 md:line-clamp-2 mb-6 sm:mb-8 max-w-xl font-medium drop-shadow px-2">
             {description}
           </p>
         )}

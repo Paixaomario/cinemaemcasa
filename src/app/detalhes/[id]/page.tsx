@@ -298,14 +298,14 @@ function MovieContent() {
           )}
         </div>
 
-        <p className="text-lg md:text-xl text-neutral-300 leading-relaxed mb-10 max-w-3xl drop-shadow">
+        <p className="text-base sm:text-lg md:text-xl text-neutral-300 leading-relaxed mb-8 sm:mb-10 max-w-3xl drop-shadow px-2">
           {description}
         </p>
 
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
           <button
             onClick={() => setShowPlayer(true)}
-            className="px-10 py-4 bg-brand-cyan text-white font-montserrat font-black uppercase tracking-widest rounded-[20px] hover:brightness-110 transition-all transform hover:scale-105 focus:ring-4 focus:ring-brand-cyan outline-none border border-transparent"
+            className="px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-brand-cyan text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[16px] sm:rounded-[20px] hover:brightness-110 transition-all transform hover:scale-105 focus:ring-4 focus:ring-brand-cyan outline-none border border-transparent text-sm sm:text-base"
           >
             ▶ Assistir Agora
           </button>
@@ -315,7 +315,7 @@ function MovieContent() {
               console.log('Botão Assistir Juntos clicado!', e)
               startParty()
             }}
-            className="px-10 py-4 bg-white/10 text-white font-montserrat font-black uppercase tracking-widest rounded-[20px] border border-white/20 hover:bg-brand-cyan hover:text-black transition-all transform hover:scale-105 focus:ring-4 focus:ring-brand-cyan outline-none cursor-pointer"
+            className="px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-white/10 text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[16px] sm:rounded-[20px] border border-white/20 hover:bg-brand-cyan hover:text-black transition-all transform hover:scale-105 focus:ring-4 focus:ring-brand-cyan outline-none cursor-pointer text-sm sm:text-base"
           >
             🍿 Assistir Juntos
           </button>
@@ -323,7 +323,7 @@ function MovieContent() {
           {/* Botão Voltar */}
           <button 
             onClick={() => router.back()}
-            className="px-10 py-4 bg-[#001f3f] text-white font-montserrat font-black uppercase tracking-widest rounded-[20px] hover:brightness-125 transition-all focus:ring-4 focus:ring-blue-500 outline-none border border-transparent"
+            className="px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-[#001f3f] text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[16px] sm:rounded-[20px] hover:brightness-125 transition-all focus:ring-4 focus:ring-blue-500 outline-none border border-transparent text-sm sm:text-base"
           >
             Voltar
           </button>
@@ -333,7 +333,7 @@ function MovieContent() {
               href={movie.trailer}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-10 py-4 bg-[#FF0000] text-white font-montserrat font-black uppercase tracking-widest rounded-[20px] hover:brightness-110 transition-all focus:ring-4 focus:ring-red-600 outline-none border border-transparent"
+              className="px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-[#FF0000] text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[16px] sm:rounded-[20px] hover:brightness-110 transition-all focus:ring-4 focus:ring-red-600 outline-none border border-transparent text-sm sm:text-base"
             >
               🎬 Trailer
             </a>
@@ -341,10 +341,10 @@ function MovieContent() {
           
           <button 
             onClick={toggleFavorite}
-            className={`p-4 rounded-[20px] transition-all border border-white/10 focus:ring-4 outline-none ${isFavorite ? 'bg-red-600/20 border-red-600 text-red-600 focus:ring-red-600' : 'bg-white/5 text-white hover:bg-white/10 focus:ring-white'}`}
+            className={`p-3 sm:p-4 rounded-[16px] sm:rounded-[20px] transition-all border border-white/10 focus:ring-4 outline-none ${isFavorite ? 'bg-red-600/20 border-red-600 text-red-600 focus:ring-red-600' : 'bg-white/5 text-white hover:bg-white/10 focus:ring-white'}`}
             title={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
           >
-            <Heart className={`w-7 h-7 ${isFavorite ? 'fill-red-600 text-red-600' : 'fill-none'}`} />
+            <Heart className={`w-6 h-6 sm:w-7 sm:h-7 ${isFavorite ? 'fill-red-600 text-red-600' : 'fill-none'}`} />
           </button>
         </div>
         </div>

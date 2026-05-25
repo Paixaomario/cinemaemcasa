@@ -118,21 +118,21 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
   return (
     <div className={`fixed inset-0 z-[10000] bg-black flex hero-enter ${showChat ? 'flex-row' : 'flex-col'}`}>
       {/* Header do Player */}
-      <div className="absolute top-0 left-0 right-0 p-8 z-[10005] flex items-center justify-between bg-gradient-to-b from-black/90 via-black/40 to-transparent pointer-events-none">
+      <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 md:p-8 z-[10005] flex items-center justify-between bg-gradient-to-b from-black/90 via-black/40 to-transparent pointer-events-none">
         <button 
           onClick={onClose}
-          className="flex items-center gap-4 text-white text-2xl font-bold hover:text-[#00ADEF] transition-colors rounded-[20px] pointer-events-auto outline-none"
+          className="flex items-center gap-2 sm:gap-4 text-white text-lg sm:text-2xl font-bold hover:text-[#00ADEF] transition-colors rounded-[12px] sm:rounded-[20px] pointer-events-auto outline-none"
         >
-          <span className="text-4xl">←</span>
-          <span className="uppercase tracking-widest font-montserrat">{title}</span>
+          <span className="text-2xl sm:text-4xl">←</span>
+          <span className="uppercase tracking-wider sm:tracking-widest font-montserrat text-sm sm:text-base hidden sm:block">{title}</span>
         </button>
 
         {partyRoomId && (
           <button 
             onClick={() => setShowChat(!showChat)}
-            className="px-6 py-2 bg-white/10 hover:bg-[#00ADEF] text-white rounded-[20px] pointer-events-auto transition-all font-montserrat font-bold text-xs uppercase tracking-widest"
+            className="px-3 sm:px-6 py-1.5 sm:py-2 bg-white/10 hover:bg-[#00ADEF] text-white rounded-[12px] sm:rounded-[20px] pointer-events-auto transition-all font-montserrat font-bold text-[10px] sm:text-xs uppercase tracking-wider sm:tracking-widest"
           >
-            {showChat ? '❌ Fechar Chat' : '💬 Abrir Chat'}
+            {showChat ? '❌' : '💬'}
           </button>
         )}
       </div>
@@ -169,7 +169,7 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
       </div>
 
       {partyRoomId && showChat && (
-        <div className="w-80 h-full">
+        <div className="w-full sm:w-80 h-full">
           <PartyChat roomId={partyRoomId} userName={isGuest ? (guestName || 'Convidado') : (user?.email ? user.email.split('@')[0] : 'Anfitrião')} />
         </div>
       )}

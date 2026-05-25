@@ -177,7 +177,7 @@ export default function PartyRoomPage() {
           <h1 className="text-3xl font-black uppercase tracking-tighter mb-6 text-center">
             🍿 Entrar na Sala
           </h1>
-          <p className="text-neutral-400 text-center mb-8">
+          <p className="text-neutral-400 text-center mb-6 sm:mb-8 text-sm sm:text-base">
             Digite seu nome para entrar na sala de assistir juntos
           </p>
           <input
@@ -185,12 +185,12 @@ export default function PartyRoomPage() {
             value={guestName}
             onChange={(e) => setGuestName(e.target.value)}
             placeholder="Seu nome"
-            className="w-full bg-black/50 border border-white/20 rounded-2xl px-6 py-4 text-white text-center text-xl focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan outline-none transition-all font-montserrat"
+            className="w-full bg-black/50 border border-white/20 rounded-2xl px-4 sm:px-6 py-3 sm:py-4 text-white text-center text-lg sm:text-xl focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan outline-none transition-all font-montserrat"
             maxLength={20}
           />
           <button
             onClick={handleJoin}
-            className="w-full mt-6 bg-brand-cyan text-white font-montserrat font-black uppercase tracking-widest rounded-2xl py-4 hover:brightness-110 transition-all transform hover:scale-105"
+            className="w-full mt-4 sm:mt-6 bg-brand-cyan text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-2xl py-3 sm:py-4 hover:brightness-110 transition-all transform hover:scale-105 text-sm sm:text-base"
           >
             Entrar
           </button>
@@ -223,33 +223,33 @@ export default function PartyRoomPage() {
         )}
 
         {/* Conteúdo Central */}
-        <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-6">
+        <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
           <div className="max-w-4xl w-full text-center relative z-30">
             {/* Poster */}
             {poster && (
-              <div className="mx-auto mb-8 w-48 md:w-64 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl pointer-events-none">
+              <div className="mx-auto mb-6 sm:mb-8 w-36 sm:w-48 md:w-64 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl pointer-events-none">
                 <Image
                   src={poster}
                   alt={title}
                   fill
                   className="object-cover"
-                  sizes="(max-width: 768px) 192px, 256px"
+                  sizes="(max-width: 640px) 144px, (max-width: 768px) 192px, 256px"
                 />
               </div>
             )}
 
             {/* Título */}
-            <h1 className="text-4xl md:text-7xl font-black uppercase tracking-tighter mb-4 drop-shadow-2xl">
+            <h1 className="text-2xl sm:text-4xl md:text-7xl font-black uppercase tracking-tighter mb-3 sm:mb-4 drop-shadow-2xl px-2">
               {title}
             </h1>
 
             {/* Informações da Sala */}
-            <div className="flex items-center justify-center gap-4 mb-8 text-sm md:text-base">
-              <span className="bg-brand-cyan text-black px-4 py-2 rounded-full font-bold uppercase tracking-widest">
+            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mb-6 sm:mb-8 text-xs sm:text-sm md:text-base">
+              <span className="bg-brand-cyan text-black px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-bold uppercase tracking-wider sm:tracking-widest text-xs sm:text-sm">
                 Sala: {roomId}
               </span>
               {isHost && (
-                <span className="bg-white/10 text-white px-4 py-2 rounded-full font-bold uppercase tracking-widest">
+                <span className="bg-white/10 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-bold uppercase tracking-wider sm:tracking-widest text-xs sm:text-sm">
                   🎬 Anfitrião
                 </span>
               )}
@@ -257,13 +257,13 @@ export default function PartyRoomPage() {
 
             {/* Botão de Começar (apenas anfitrião) */}
             {isHost ? (
-              <div className="flex flex-col items-center gap-4">
+              <div className="flex flex-col items-center gap-3 sm:gap-4 w-full px-4">
                 <button
                   onClick={(e) => {
                     console.log('Botão Começar Exibição clicado!', e)
                     handleStart()
                   }}
-                  className="px-12 py-5 bg-brand-cyan text-white font-montserrat font-black uppercase tracking-widest rounded-[30px] hover:brightness-110 transition-all transform hover:scale-105 text-xl shadow-2xl cursor-pointer"
+                  className="w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 bg-brand-cyan text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[20px] sm:rounded-[30px] hover:brightness-110 transition-all transform hover:scale-105 text-base sm:text-xl shadow-2xl cursor-pointer"
                 >
                   ▶ Começar Exibição
                 </button>
@@ -272,7 +272,7 @@ export default function PartyRoomPage() {
                     console.log('Botão compartilhar clicado!', e)
                     handleShare()
                   }}
-                  className="px-8 py-3 bg-white/10 text-white font-montserrat font-bold uppercase tracking-widest rounded-[20px] border border-white/20 hover:bg-white/20 transition-all cursor-pointer"
+                  className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-white/10 text-white font-montserrat font-bold uppercase tracking-wider sm:tracking-widest rounded-[20px] border border-white/20 hover:bg-white/20 transition-all cursor-pointer text-sm sm:text-base"
                 >
                   📤 Compartilhar Link
                 </button>

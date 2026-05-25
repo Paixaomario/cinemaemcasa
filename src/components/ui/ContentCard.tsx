@@ -25,23 +25,23 @@ export function ContentCard({ item }: { item: any }) {
             src={poster.startsWith('http') ? poster : `https://image.tmdb.org/t/p/w500${poster}`}
             alt={title}
             fill
-            sizes="(max-width: 768px) 50vw, 20vw"
+            sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, 20vw"
             className="object-cover transition-transform duration-500 group-hover:scale-110"
             unoptimized
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-4xl bg-neutral-800">🎬</div>
+          <div className="flex h-full items-center justify-center text-3xl sm:text-4xl bg-neutral-800">🎬</div>
         )}
       </div>
 
       {/* Overlay com informações (visível no hover ou foco) */}
-      <div className="absolute inset-0 overflow-hidden rounded-xl flex flex-col justify-end bg-gradient-to-t from-black via-black/20 to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus:opacity-100">
-        <p className="text-sm font-black uppercase leading-tight text-white line-clamp-2">
+      <div className="absolute inset-0 overflow-hidden rounded-xl flex flex-col justify-end bg-gradient-to-t from-black via-black/20 to-transparent p-3 sm:p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus:opacity-100">
+        <p className="text-xs sm:text-sm font-black uppercase leading-tight text-white line-clamp-2">
           {title}
         </p>
-        <div className="mt-2 flex items-center gap-2">
-          {rating > 0 && <span className="text-[10px] font-bold text-gold-primary">⭐ {Number(rating).toFixed(1)}</span>}
-          {year && <span className="text-[10px] font-bold text-neutral-400">{year}</span>}
+        <div className="mt-1.5 sm:mt-2 flex items-center gap-1.5 sm:gap-2">
+          {rating > 0 && <span className="text-[9px] sm:text-[10px] font-bold text-gold-primary">⭐ {Number(rating).toFixed(1)}</span>}
+          {year && <span className="text-[9px] sm:text-[10px] font-bold text-neutral-400">{year}</span>}
         </div>
       </div>
     </Link>

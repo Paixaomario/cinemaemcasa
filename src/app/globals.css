@@ -38,24 +38,33 @@ body {
 
 /* Utilitários de Layout para Streaming */
 .section-px {
-  padding-left: clamp(1rem, 4vw, 3rem);
-  padding-right: clamp(1rem, 4vw, 3rem);
+  padding-left: clamp(0.75rem, 3vw, 2rem);
+  padding-right: clamp(0.75rem, 3vw, 2rem);
 }
 
 .scroll-row {
   display: flex;
-  gap: 1.5rem; /* Espaço entre as capas */
+  gap: 1rem;
   overflow-x: auto;
-  overflow-y: visible; /* Garante que a escala não seja cortada */
+  overflow-y: visible;
   width: 100%;
-  /* Cria um túnel invisível para a escala crescer sem cortar */
-  padding: 60px 0;
-  margin: -60px 0;
+  padding: 40px 0;
+  margin: -40px 0;
 }
 
 .scroll-row > * {
   flex-shrink: 0;
-  width: clamp(218px, 22vw, 390px); /* Tamanho reduzido em 22% para melhor equilíbrio visual */
+  width: clamp(140px, 25vw, 218px);
+}
+
+@media (min-width: 640px) {
+  .scroll-row {
+    gap: 1.5rem;
+  }
+  
+  .scroll-row > * {
+    width: clamp(160px, 22vw, 390px);
+  }
 }
 
 /* =========================================================
