@@ -72,7 +72,7 @@ export function ContentCard({ item, progress, showProgress = false }: Props) {
       </Link>
 
       {/* Informações de progresso abaixo da capa - sempre visíveis quando showProgress */}
-      {showProgress && progress && progressPercent > 0 && (
+      {showProgress && progress && (
         <div className="mt-2 px-1">
           <div className="h-1 bg-white/20 rounded-full overflow-hidden">
             <div
