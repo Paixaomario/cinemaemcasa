@@ -121,6 +121,37 @@ function MovieContent() {
 
       setLegacyId(movieIdNum)
 
+      // Se contentUuid ainda não foi definido (ID numérico), cria ou busca UUID
+      if (!contentUuid) {
+        const { data: existingContent } = await sb
+          .from('content')
+          .select('id')
+          .eq('type', 'movie')
+          .ilike('title', localData.titulo.trim())
+          .maybeSingle()
+
+        if (existingContent) {
+          setContentUuid(existingContent.id)
+          console.log('UUID encontrado:', existingContent.id)
+        } else {
+          // Cria novo registro na tabela content
+          const { data: newContent } = await sb
+            .from('content')
+            .insert({
+              title: localData.titulo,
+              type: 'movie',
+              poster: localData.poster || localData.capa || localData.poster_path || localData.banner,
+              is_published: true
+            })
+            .select('id')
+            .maybeSingle()
+          if (newContent) {
+            setContentUuid(newContent.id)
+            console.log('UUID criado:', newContent.id)
+          }
+        }
+      }
+
       // 2. Busca metadados ricos no TMDB
       if (localData.tmdb_id) {
         try {
@@ -466,6 +497,7 @@ function MovieContent() {
           onClose={() => setShowPlayer(false)}
         />
       )}
+      {showPlayer && console.log('Player aberto com:', { contentUuid, movieId: movie.id, contentId: contentUuid || String(movie.id), savedProgress })}
 
       {/* Modal de Trailer */}
       {movie.trailer && (

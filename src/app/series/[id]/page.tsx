@@ -192,7 +192,22 @@ function SeriesContent() {
           setContentUuid(cid)
           console.log('UUID sincronizado:', cid)
         } else {
-          console.log('UUID não encontrado na tabela content, usando contentUuid:', contentUuid)
+          // Cria novo registro na tabela content se não existir
+          console.log('UUID não encontrado, criando novo registro na tabela content')
+          const { data: newContent } = await sb
+            .from('content')
+            .insert({
+              title: localData.titulo,
+              type: 'series',
+              poster: localData.poster || localData.capa || localData.poster_path || localData.banner,
+              is_published: true
+            })
+            .select('id')
+            .maybeSingle()
+          if (newContent) {
+            setContentUuid(newContent.id)
+            console.log('UUID criado para série:', newContent.id)
+          }
         }
 
         // 3. Busca Temporadas e Episódios (Tentativa Híbrida)
