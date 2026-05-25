@@ -5,6 +5,13 @@
 body {
   @apply bg-black text-white;
   background-color: #000000;
+  padding-bottom: 80px;
+}
+
+@media (min-width: 640px) {
+  body {
+    padding-bottom: 0;
+  }
 }
 
 /* Estilo de Foco Global para Navegação por Controle/Teclado */

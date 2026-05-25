@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { SupabaseProvider } from '@/components/layout/SupabaseProvider'
+import { MobileNavBar } from '@/components/layout/MobileNavBar'
 import { Inter, Montserrat } from 'next/font/google'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans">
         <SupabaseProvider>
           {children}
+          <MobileNavBar />
         </SupabaseProvider>
       </body>
     </html>
