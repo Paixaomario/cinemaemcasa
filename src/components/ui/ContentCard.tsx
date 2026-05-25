@@ -11,6 +11,8 @@ interface Props {
 }
 
 export function ContentCard({ item, progress }: Props) {
+  console.log('ContentCard renderizado:', { item: item.titulo, progress });
+
   // Mapeamento para lidar com as diferentes tabelas (cinema vs series)
   const title = item.titulo || item.title || 'Sem título'
   const poster = item.poster || item.capa || item.poster_path
