@@ -8,6 +8,7 @@ import { Navbar } from '@/components/layout/Navbar'
 import { VideoPlayer } from '@/app/VideoPlayer'
 import Image from 'next/image'
 import { ContentCard } from '@/components/ui/ContentCard'
+import { TrailerModal } from '@/components/ui/TrailerModal'
 import { useAuth } from '@/components/layout/SupabaseProvider'
 import { Heart } from 'lucide-react'
 
@@ -31,6 +32,7 @@ function MovieContent() {
   const [contentUuid, setContentUuid] = useState<string | null>(null)
   const [legacyId, setLegacyId] = useState<number | null>(null)
   const [showPlayer, setShowPlayer] = useState(false)
+  const [showTrailerModal, setShowTrailerModal] = useState(false)
 
   // Estados da Sala (Assistir Juntos)
   const [activeRoomId, setActiveRoomId] = useState(searchParams.get('room'))
@@ -329,14 +331,12 @@ function MovieContent() {
           </button>
 
           {movie.trailer && (
-            <a
-              href={movie.trailer}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 min-w-[80px] sm:flex-none px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 bg-[#FF0000] text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[12px] sm:rounded-[16px] md:rounded-[20px] hover:brightness-110 transition-all focus:ring-4 focus:ring-red-600 outline-none border border-transparent text-xs sm:text-sm md:text-base"
+            <button
+              onClick={() => setShowTrailerModal(true)}
+              className="flex-1 min-w-[80px] sm:flex-none px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 bg-[#FF0000] text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[12px] sm:rounded-[16px] md:rounded-[20px] hover:brightness-110 transition-all transform hover:scale-105 focus:ring-4 focus:ring-red-600 outline-none border border-transparent text-xs sm:text-sm md:text-base"
             >
               🎬 Trailer
-            </a>
+            </button>
           )}
           
           <button 
@@ -424,6 +424,15 @@ function MovieContent() {
           contentId={contentUuid || String(movie.id)}
           userId={user?.id}
           onClose={() => setShowPlayer(false)}
+        />
+      )}
+
+      {/* Modal de Trailer */}
+      {movie.trailer && (
+        <TrailerModal
+          isOpen={showTrailerModal}
+          onClose={() => setShowTrailerModal(false)}
+          trailerUrl={movie.trailer}
         />
       )}
     </main>
