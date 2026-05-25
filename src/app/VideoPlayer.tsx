@@ -41,6 +41,7 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
   const [showChat, setShowChat] = useState(!!partyRoomId);
   const { user } = useAuth()
   const sb = useMemo(() => createClient(), [])
+  const [emojis, setEmojis] = useState<{ emoji: string; sender: string; id: number }[]>([])
 
   // Função para enviar reações de emoji
   function handleReaction(emoji: string) {
@@ -131,6 +132,25 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
     }
   }, [partyRoomId, isGuest, sb, mediaInstance]);
 
+  // Escutar reações de emoji
+  useEffect(() => {
+    if (!partyRoomId) return;
+
+    const emojiChannel = sb.channel(`party-${partyRoomId}`)
+      .on('broadcast', { event: 'emoji-reaction' }, ({ payload }: { payload: { emoji: string; sender: string } }) => {
+        console.log('Emoji recebido no VideoPlayer:', payload);
+        const newEmoji = { emoji: payload.emoji, sender: payload.sender, id: Date.now() }
+        setEmojis(prev => [...prev, newEmoji])
+        // Remover emoji após 3 segundos
+        setTimeout(() => {
+          setEmojis(prev => prev.filter(e => e.id !== newEmoji.id))
+        }, 3000)
+      })
+      .subscribe()
+
+    return () => { sb.removeChannel(emojiChannel) }
+  }, [partyRoomId, sb])
+
   return (
     <div className={`fixed inset-0 z-[10000] bg-black flex hero-enter ${showChat ? 'flex-row' : 'flex-col'}`}>
       {/* Header do Player */}
@@ -152,7 +172,14 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
           </button>
         )}
       </div>
-      
+
+      {/* Emojis flutuantes */}
+      {emojis.map(e => (
+        <div key={e.id} className="emoji-reaction" style={{ left: `${Math.random() * 80 + 10}%` }}>
+          {e.emoji}
+        </div>
+      ))}
+
       <div className="flex-1 relative h-full bg-black">
         <MediaPlayer
           ref={player}

@@ -27,7 +27,6 @@ export function PartyChat({ roomId, userName, userAvatar, isHost, onReaction }: 
   const [input, setInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
   const sb = useMemo(() => createClient(), [])
-  const [emojis, setEmojis] = useState<{ emoji: string; sender: string; id: number }[]>([])
 
   const REACTIONS = ['❤️', '😂', '😮', '🔥', '👏', '😢']
 
@@ -89,23 +88,9 @@ export function PartyChat({ roomId, userName, userAvatar, isHost, onReaction }: 
         }
       })
 
-    // Escutar reações de emoji - usa o mesmo canal do VideoPlayer
-    const emojiChannel = sb.channel(`party-${roomId}`)
-      .on('broadcast', { event: 'emoji-reaction' }, ({ payload }: { payload: { emoji: string; sender: string } }) => {
-        console.log('Emoji recebido:', payload);
-        const newEmoji = { emoji: payload.emoji, sender: payload.sender, id: Date.now() }
-        setEmojis(prev => [...prev, newEmoji])
-        // Remover emoji após 3 segundos
-        setTimeout(() => {
-          setEmojis(prev => prev.filter(e => e.id !== newEmoji.id))
-        }, 3000)
-      })
-      .subscribe()
-
     return () => {
       sb.removeChannel(channel)
       sb.removeChannel(presenceChannel)
-      sb.removeChannel(emojiChannel)
     }
   }, [roomId, sb, userName, userAvatar])
 
@@ -134,12 +119,6 @@ export function PartyChat({ roomId, userName, userAvatar, isHost, onReaction }: 
 
   return (
     <div className="flex flex-col h-full w-full sm:w-80 bg-black/90 sm:bg-black/60 border-l border-white/10 backdrop-blur-lg z-[10005] relative">
-      {/* Emojis flutuantes */}
-      {emojis.map(e => (
-        <div key={e.id} className="emoji-reaction" style={{ left: `${Math.random() * 80 + 10}%` }}>
-          {e.emoji}
-        </div>
-      ))}
       <div className="p-3 sm:p-4 border-b border-white/5 bg-gradient-to-r from-[#1A1A1F] to-black">
         <h3 className="text-brand-cyan font-black uppercase tracking-wider sm:tracking-widest text-xs sm:text-sm flex items-center gap-2">
           <span className="live-ping w-2 h-2 bg-red-600 rounded-full"></span>
