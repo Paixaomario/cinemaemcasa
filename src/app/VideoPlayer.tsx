@@ -1,6 +1,7 @@
 'use client'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase'
+import Image from 'next/image'
 import { 
   MediaPlayer, 
   MediaProvider, 
