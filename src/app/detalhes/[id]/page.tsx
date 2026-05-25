@@ -417,11 +417,11 @@ function MovieContent() {
       <div className="pb-32" />
 
       {/* Player de Vídeo em Fullscreen */}
-      {showPlayer && contentUuid && (
+      {showPlayer && (
         <VideoPlayer
           src={movie.url}
           title={title}
-          contentId={contentUuid}
+          contentId={contentUuid || String(movie.id)}
           userId={user?.id}
           onClose={() => setShowPlayer(false)}
         />

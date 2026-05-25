@@ -46,7 +46,6 @@ export function HomeClient() {
 
       // 0. Carregar Continuar Assistindo se houver usuário
       if (user) {
-        console.log('Carregando continuar assistindo para usuário:', user.id);
         const { data: prog, error: progError } = await sb
           .from('view_progress')
           .select('*')
@@ -55,13 +54,10 @@ export function HomeClient() {
           .order('updated_at', { ascending: false })
           .limit(12)
 
-        console.log('Dados de progresso:', prog, 'Erro:', progError);
-
         if (prog) {
           const hydrated = await Promise.all(
             prog.map(async (p) => {
               const idStr = String(p.content_id)
-              console.log('Buscando content para id:', idStr);
 
               // Tenta buscar por UUID primeiro, depois por título se for numérico
               let contentData = null
@@ -113,7 +109,6 @@ export function HomeClient() {
               return null
             })
           )
-          console.log('Dados hidratados:', hydrated);
           setContinueWatching(hydrated.filter(Boolean))
         }
       } else {
