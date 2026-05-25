@@ -38,7 +38,9 @@ function MovieContent() {
 
   // Função para carregar progresso salvo antes de abrir player
   const handleWatchClick = useCallback(async () => {
+    console.log('handleWatchClick chamado:', { user: user?.id, contentUuid })
     if (!user || !contentUuid) {
+      console.log('Sem usuário ou contentUuid, abrindo player sem progresso')
       setShowPlayer(true)
       return
     }
@@ -52,6 +54,7 @@ function MovieContent() {
       .maybeSingle()
 
     const savedTime = progress?.last_position || 0
+    console.log('Progresso carregado:', { contentUuid, savedTime })
     setSavedProgress(savedTime)
 
     // Se houver progresso salvo (mais de 10 segundos), mostra modal
@@ -133,8 +136,10 @@ function MovieContent() {
 
           if (existingContent) {
             setContentUuid(existingContent.id)
+            console.log('UUID encontrado na tabela content:', existingContent.id)
           } else {
             // Cria novo registro na tabela content
+            console.log('Criando novo UUID para:', localData.titulo)
             const { data: newContent, error: insertError } = await sb
               .from('content')
               .insert({
@@ -145,8 +150,15 @@ function MovieContent() {
               .select('id')
               .maybeSingle()
 
+            if (insertError) {
+              console.error('Erro ao criar UUID:', insertError)
+            }
+
             if (!insertError && newContent) {
               setContentUuid(newContent.id)
+              console.log('UUID criado:', newContent.id)
+            } else {
+              console.log('Não foi possível criar UUID, usando ID numérico')
             }
           }
         } catch (err) {
