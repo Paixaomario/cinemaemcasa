@@ -21,8 +21,8 @@ DROP POLICY IF EXISTS "party_messages_insert" ON public.party_messages;
 -- Policy de SELECT: permite qualquer usuário autenticado ou não ler mensagens
 CREATE POLICY "party_messages_select" ON public.party_messages FOR SELECT TO public USING (true);
 
--- Policy de INSERT: qualquer usuário autenticado pode enviar mensagens
-CREATE POLICY "party_messages_insert" ON public.party_messages FOR INSERT TO authenticated WITH CHECK (true);
+-- Policy de INSERT: qualquer usuário (autenticado ou não) pode enviar mensagens
+CREATE POLICY "party_messages_insert" ON public.party_messages FOR INSERT TO public WITH CHECK (true);
 
 -- Habilitar Realtime para a tabela party_messages (ignora erro se já estiver habilitado)
 DO $$

@@ -27,6 +27,7 @@ export function PartyChat({ roomId, userName, userAvatar, isHost, onReaction }: 
   const [input, setInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
   const sb = useMemo(() => createClient(), [])
+  const [emojis, setEmojis] = useState<{ emoji: string; sender: string; id: number }[]>([])
 
   const REACTIONS = ['❤️', '😂', '😮', '🔥', '👏', '😢']
 
@@ -34,17 +35,26 @@ export function PartyChat({ roomId, userName, userAvatar, isHost, onReaction }: 
     if (!roomId) return;
 
     // Carregar mensagens iniciais
-    sb.from('party_messages')
-      .select('*')
-      .eq('room_id', roomId)
-      .order('created_at', { ascending: true })
-      .limit(50)
-      .then(({ data }) => data && setMessages(data))
+    async function loadMessages() {
+      try {
+        const { data } = await sb.from('party_messages')
+          .select('*')
+          .eq('room_id', roomId)
+          .order('created_at', { ascending: true })
+          .limit(50)
+        console.log('Mensagens carregadas:', data);
+        data && setMessages(data)
+      } catch (err: any) {
+        console.error('Erro ao carregar mensagens:', err);
+      }
+    }
+    loadMessages();
 
     // Escutar novas mensagens em tempo real
     const channel = sb.channel(`room-${roomId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'party_messages', filter: `room_id=eq.${roomId}` }, 
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'party_messages', filter: `room_id=eq.${roomId}` },
       (payload) => {
+        console.log('Nova mensagem recebida:', payload.new);
         setMessages(prev => [...prev, payload.new as Message])
       })
       .subscribe()
@@ -59,6 +69,7 @@ export function PartyChat({ roomId, userName, userAvatar, isHost, onReaction }: 
           name: (p as UserPresence).name,
           avatarUrl: (p as UserPresence).avatarUrl
         }))
+        console.log('Usuários presentes:', presentUsers);
         setUsers(presentUsers)
 
         // Validação de limite de 21 pessoas
@@ -69,6 +80,7 @@ export function PartyChat({ roomId, userName, userAvatar, isHost, onReaction }: 
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
+          console.log('Rastreando presença para:', userName);
           await presenceChannel.track({ 
             online_at: new Date().toISOString(), 
             name: userName, 
@@ -77,9 +89,23 @@ export function PartyChat({ roomId, userName, userAvatar, isHost, onReaction }: 
         }
       })
 
-    return () => { 
+    // Escutar reações de emoji
+    const emojiChannel = sb.channel(`emoji-${roomId}`)
+      .on('broadcast', { event: 'emoji-reaction' }, ({ payload }: { payload: { emoji: string; sender: string } }) => {
+        console.log('Emoji recebido:', payload);
+        const newEmoji = { emoji: payload.emoji, sender: payload.sender, id: Date.now() }
+        setEmojis(prev => [...prev, newEmoji])
+        // Remover emoji após 3 segundos
+        setTimeout(() => {
+          setEmojis(prev => prev.filter(e => e.id !== newEmoji.id))
+        }, 3000)
+      })
+      .subscribe()
+
+    return () => {
       sb.removeChannel(channel)
       sb.removeChannel(presenceChannel)
+      sb.removeChannel(emojiChannel)
     }
   }, [roomId, sb, userName, userAvatar])
 
@@ -92,15 +118,28 @@ export function PartyChat({ roomId, userName, userAvatar, isHost, onReaction }: 
     if (!input.trim()) return
     const msg = input
     setInput('')
-    await sb.from('party_messages').insert({
+    console.log('Enviando mensagem:', msg, 'de:', userName);
+    const { error } = await sb.from('party_messages').insert({
       room_id: roomId,
       sender_name: userName,
       message: msg
     })
+    if (error) {
+      console.error('Erro ao enviar mensagem:', error);
+      alert('Erro ao enviar mensagem. Tente novamente.');
+    } else {
+      console.log('Mensagem enviada com sucesso');
+    }
   }
 
   return (
     <div className="flex flex-col h-full w-full sm:w-80 bg-black/90 sm:bg-black/60 border-l border-white/10 backdrop-blur-lg z-[10005] relative">
+      {/* Emojis flutuantes */}
+      {emojis.map(e => (
+        <div key={e.id} className="emoji-reaction" style={{ left: `${Math.random() * 80 + 10}%` }}>
+          {e.emoji}
+        </div>
+      ))}
       <div className="p-3 sm:p-4 border-b border-white/5 bg-gradient-to-r from-[#1A1A1F] to-black">
         <h3 className="text-brand-cyan font-black uppercase tracking-wider sm:tracking-widest text-xs sm:text-sm flex items-center gap-2">
           <span className="live-ping w-2 h-2 bg-red-600 rounded-full"></span>

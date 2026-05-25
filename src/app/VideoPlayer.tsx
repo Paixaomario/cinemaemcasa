@@ -42,6 +42,14 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
   const { user } = useAuth()
   const sb = useMemo(() => createClient(), [])
 
+  // Função para enviar reações de emoji
+  function handleReaction(emoji: string) {
+    if (!partyRoomId) return;
+    const channel = sb.channel(`party-${partyRoomId}`);
+    channel.send({ type: 'broadcast', event: 'emoji-reaction', payload: { emoji, sender: isGuest ? guestName : (user?.email ? user.email.split('@')[0] : 'Anfitrião') } });
+    console.log('Emoji enviado:', emoji);
+  }
+
   async function saveProgress(seconds: number) {
     if (!userId || !contentId || isNaN(seconds)) return;
     try {
@@ -99,14 +107,22 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
       // Convidado recebe comandos
       channel
         .on('broadcast', { event: 'sync-play' }, ({ payload }) => {
+          console.log('Convidado recebeu sync-play:', payload);
           const drift = Math.abs(mediaInstance.currentTime - payload.time);
           if (drift > 1.5) mediaInstance.currentTime = payload.time;
-          mediaInstance.play();
+          // Tenta dar play com promise para capturar erros de autoplay
+          mediaInstance.play().catch(err => {
+            console.log('Autoplay bloqueado pelo navegador, tentando novamente:', err);
+            // Tenta novamente após um pequeno delay
+            setTimeout(() => mediaInstance.play().catch(e => console.log('Segunda tentativa falhou:', e)), 100);
+          });
         })
         .on('broadcast', { event: 'sync-pause' }, () => {
+          console.log('Convidado recebeu sync-pause');
           mediaInstance.pause();
         })
         .on('broadcast', { event: 'sync-seek' }, ({ payload }) => {
+          console.log('Convidado recebeu sync-seek:', payload);
           mediaInstance.currentTime = payload.time;
         })
         .subscribe();
@@ -170,7 +186,7 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
 
       {partyRoomId && showChat && (
         <div className="w-full sm:w-80 h-full">
-          <PartyChat roomId={partyRoomId} userName={isGuest ? (guestName || 'Convidado') : (user?.email ? user.email.split('@')[0] : 'Anfitrião')} />
+          <PartyChat roomId={partyRoomId} userName={isGuest ? (guestName || 'Convidado') : (user?.email ? user.email.split('@')[0] : 'Anfitrião')} onReaction={handleReaction} />
         </div>
       )}
     </div>
