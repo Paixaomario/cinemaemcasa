@@ -70,7 +70,8 @@ export function HomeClient() {
                   titulo: contentData.title,
                   poster: contentData.poster || (orig ? (orig.poster || orig.capa || orig.poster_path || orig.banner) : null),
                   type: contentData.type,
-                  last_position: p.last_position
+                  last_position: p.last_position,
+                  duration: orig?.duration || orig?.runtime || contentData.duration || null
                 }
               }
               return null
@@ -163,7 +164,7 @@ export function HomeClient() {
 
       {/* Continuar Assistindo */}
       {continueWatching.length > 0 && (
-        <ContentRow title="Continuar Assistindo" items={continueWatching} />
+        <ContentRow title="Continuar Assistindo" items={continueWatching} showProgress={true} />
       )}
 
       {sections.map(sec => {

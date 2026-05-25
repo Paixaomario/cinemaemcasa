@@ -2,7 +2,15 @@
 import Image from 'next/image'
 import Link from 'next/link'
 
-export function ContentCard({ item }: { item: any }) {
+interface Props {
+  item: any
+  progress?: {
+    lastPosition: number
+    duration?: number
+  }
+}
+
+export function ContentCard({ item, progress }: Props) {
   // Mapeamento para lidar com as diferentes tabelas (cinema vs series)
   const title = item.titulo || item.title || 'Sem título'
   const poster = item.poster || item.capa || item.poster_path
@@ -13,6 +21,21 @@ export function ContentCard({ item }: { item: any }) {
   const isSeries = !!item.id_n
   const id = isSeries ? item.id_n : item.id
   const detailHref = isSeries ? `/series/${id}` : `/detalhes/${id}`
+
+  // Cálculo de progresso
+  const progressPercent = progress && progress.duration && progress.duration > 0
+    ? Math.round((progress.lastPosition / progress.duration) * 100)
+    : 0
+
+  const remainingTime = progress && progress.duration && progress.duration > 0
+    ? progress.duration - progress.lastPosition
+    : 0
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
 
   return (
     <Link 
@@ -36,6 +59,22 @@ export function ContentCard({ item }: { item: any }) {
 
       {/* Overlay com informações (visível no hover ou foco) */}
       <div className="absolute inset-0 overflow-hidden rounded-xl flex flex-col justify-end bg-gradient-to-t from-black via-black/20 to-transparent p-3 sm:p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus:opacity-100">
+        {/* Barra de progresso (se houver progresso) */}
+        {progress && progressPercent > 0 && (
+          <div className="mb-2">
+            <div className="h-1 bg-white/20 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#00ADEF] transition-all duration-300"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between mt-1">
+              <span className="text-[9px] sm:text-[10px] font-bold text-[#00ADEF]">{progressPercent}%</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-neutral-300">{formatTime(remainingTime)} restantes</span>
+            </div>
+          </div>
+        )}
+
         <p className="text-xs sm:text-sm font-black uppercase leading-tight text-white line-clamp-2">
           {title}
         </p>
