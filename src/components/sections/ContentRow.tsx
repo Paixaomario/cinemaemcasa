@@ -22,6 +22,7 @@ export function ContentRow({ title, items, variant = 'poster', showProgress = fa
           <ContentCard
             key={`${(item as any).id_n || (item as any).id || (item as any).tmdb_id || index}-${index}`}
             item={item}
+            showProgress={showProgress}
             progress={showProgress && (item as any).last_position ? {
               lastPosition: (item as any).last_position,
               duration: (item as any).duration

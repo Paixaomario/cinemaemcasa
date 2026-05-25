@@ -33,6 +33,26 @@ function MovieContent() {
   const [legacyId, setLegacyId] = useState<number | null>(null)
   const [showPlayer, setShowPlayer] = useState(false)
   const [showTrailerModal, setShowTrailerModal] = useState(false)
+  const [savedProgress, setSavedProgress] = useState<number>(0)
+
+  // Função para carregar progresso salvo antes de abrir player
+  const handleWatchClick = useCallback(async () => {
+    if (!user || !contentUuid) {
+      setShowPlayer(true)
+      return
+    }
+
+    const sb = createClient()
+    const { data: progress } = await sb
+      .from('view_progress')
+      .select('last_position')
+      .eq('user_id', user.id)
+      .eq('content_id', contentUuid)
+      .maybeSingle()
+
+    setSavedProgress(progress?.last_position || 0)
+    setShowPlayer(true)
+  }, [user, contentUuid])
 
   // Estados da Sala (Assistir Juntos)
   const [activeRoomId, setActiveRoomId] = useState(searchParams.get('room'))
@@ -306,7 +326,7 @@ function MovieContent() {
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 max-w-2xl">
           <button
-            onClick={() => setShowPlayer(true)}
+            onClick={handleWatchClick}
             className="flex-1 min-w-[120px] sm:flex-none px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 bg-brand-cyan text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[12px] sm:rounded-[16px] md:rounded-[20px] hover:brightness-110 transition-all transform hover:scale-105 focus:ring-4 focus:ring-brand-cyan outline-none border border-transparent text-xs sm:text-sm md:text-base"
           >
             ▶ Assistir
@@ -423,6 +443,7 @@ function MovieContent() {
           title={title}
           contentId={contentUuid || String(movie.id)}
           userId={user?.id}
+          startOffset={savedProgress}
           onClose={() => setShowPlayer(false)}
         />
       )}

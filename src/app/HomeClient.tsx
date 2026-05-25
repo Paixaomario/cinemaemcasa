@@ -46,22 +46,18 @@ export function HomeClient() {
 
       // 0. Carregar Continuar Assistindo se houver usuário
       if (user) {
-        console.log('Carregando continuar assistindo para usuário:', user.id);
         const { data: prog, error: progError } = await sb
           .from('view_progress')
           .select('*')
           .eq('user_id', user.id)
           .eq('is_finished', false)
           .order('updated_at', { ascending: false })
-          .limit(12)
-
-        console.log('Dados de progresso:', prog, 'Erro:', progError);
+          .limit(4)
 
         if (prog) {
           const hydrated = await Promise.all(
             prog.map(async (p) => {
               const idStr = String(p.content_id)
-              console.log('Buscando content para id:', idStr, 'last_position:', p.last_position);
 
               // Tenta buscar por UUID primeiro, depois por título se for numérico
               let contentData = null
@@ -100,7 +96,7 @@ export function HomeClient() {
                 const table = contentData.type === 'movie' ? 'cinema' : 'series'
                 const { data: orig } = await sb.from(table).select('*').ilike('titulo', contentData.title.trim()).maybeSingle()
 
-                const result = {
+                return {
                   id: idStr,
                   id_n: contentData.type === 'series' ? idStr : undefined,
                   titulo: contentData.title,
@@ -109,14 +105,10 @@ export function HomeClient() {
                   last_position: p.last_position,
                   duration: orig?.duration || orig?.runtime || contentData.duration || null
                 }
-                console.log('Item hidratado:', result);
-                return result
               }
-              console.log('contentData null para id:', idStr);
               return null
             })
           )
-          console.log('Dados hidratados finais:', hydrated);
           setContinueWatching(hydrated.filter(Boolean))
         }
       } else {

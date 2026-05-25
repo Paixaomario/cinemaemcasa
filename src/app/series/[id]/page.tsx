@@ -38,6 +38,30 @@ function SeriesContent() {
   const [showPlayer, setShowPlayer] = useState(false)
   const [autoPlayNext, setAutoPlayNext] = useState(false)
   const [showTrailerModal, setShowTrailerModal] = useState(false)
+  const [savedProgress, setSavedProgress] = useState<number>(0)
+
+  // Função para carregar progresso salvo do episódio
+  const handleEpisodeClick = useCallback(async (episode: any) => {
+    if (!user || !contentUuid) {
+      setSavedProgress(0)
+      setActiveEpisode(episode)
+      return
+    }
+
+    const sb = createClient()
+    // Para séries, usa o content_id da série + episode_id único
+    const episodeContentId = `${contentUuid}-ep-${episode.id_n || episode.id}`
+
+    const { data: progress } = await sb
+      .from('view_progress')
+      .select('last_position')
+      .eq('user_id', user.id)
+      .eq('content_id', episodeContentId)
+      .maybeSingle()
+
+    setSavedProgress(progress?.last_position || 0)
+    setActiveEpisode(episode)
+  }, [user, contentUuid])
 
   // Estados da Sala (Assistir Juntos)
   const [activeRoomId, setActiveRoomId] = useState(searchParams.get('room'))
@@ -450,7 +474,7 @@ function SeriesContent() {
 
     if (currentIndex !== -1 && currentIndex < episodes.length - 1) {
       // Próximo na mesma temporada
-      setActiveEpisode(episodes[currentIndex + 1])
+      handleEpisodeClick(episodes[currentIndex + 1])
     } else {
       // Tenta próxima temporada
       const currentSeasonIndex = seasons.findIndex(s =>
@@ -467,7 +491,7 @@ function SeriesContent() {
         setShowPlayer(false)
       }
     }
-  }, [activeEpisode, episodes, seasons, selectedSeason])
+  }, [activeEpisode, episodes, seasons, selectedSeason, handleEpisodeClick])
 
   // Função para obter informações do próximo episódio
   const getNextEpisodeInfo = useCallback(() => {
@@ -505,10 +529,10 @@ function SeriesContent() {
   // Efeito para iniciar o primeiro episódio da nova temporada após o autoPlay
   useEffect(() => {
     if (autoPlayNext && episodes.length > 0) {
-      setActiveEpisode(episodes[0])
+      handleEpisodeClick(episodes[0])
       setAutoPlayNext(false)
     }
-  }, [episodes, autoPlayNext])
+  }, [episodes, autoPlayNext, handleEpisodeClick])
 
   async function toggleFavorite() {
     if (!user) return router.push('/login')
@@ -692,7 +716,7 @@ function SeriesContent() {
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 max-w-2xl mb-8 sm:mb-12">
           {/* Botão Assistir Agora (Cor do Logo) */}
           <button
-            onClick={() => episodes[0] && setActiveEpisode(episodes[0])}
+            onClick={() => episodes[0] && handleEpisodeClick(episodes[0])}
             className="flex-1 min-w-[120px] sm:flex-none px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 bg-brand-cyan text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[12px] sm:rounded-[16px] md:rounded-[20px] hover:brightness-110 transition-all transform hover:scale-105 focus:ring-4 focus:ring-brand-cyan outline-none border border-transparent text-xs sm:text-sm md:text-base"
           >
             ▶ Assistir
@@ -766,7 +790,7 @@ function SeriesContent() {
               return (
               <button
                 key={ep.id_n || ep.id}
-                onClick={() => setActiveEpisode(ep)}
+                onClick={() => handleEpisodeClick(ep)}
                 className="group flex flex-col gap-4 text-left p-4 rounded-2xl hover:bg-white/5 transition-all focus:ring-4 focus:ring-brand-cyan outline-none border border-transparent hover:border-white/10"
               >
                 <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-neutral-800 border border-white/5">
@@ -904,9 +928,10 @@ function SeriesContent() {
         <VideoPlayer
           src={activeEpisode?.arquivo || episodes[0]?.arquivo}
           title={activeEpisode ? `${title} - ${activeEpisode.titulo}` : title}
-          contentId={contentUuid || String(series.id_n || series.id)}
+          contentId={contentUuid ? `${contentUuid}-ep-${activeEpisode?.id_n || activeEpisode?.id || episodes[0]?.id_n || episodes[0]?.id}` : String(series.id_n || series.id)}
           userId={user?.id}
-          onClose={() => { setShowPlayer(false); setActiveEpisode(null); setActiveRoomId(null); setGuestName(''); setAutoPlayNext(false); }}
+          startOffset={savedProgress}
+          onClose={() => { setShowPlayer(false); setActiveEpisode(null); setActiveRoomId(null); setGuestName(''); setAutoPlayNext(false); setSavedProgress(0); }}
           partyRoomId={activeRoomId}
           isGuest={isGuestMode}
           guestName={guestName}
