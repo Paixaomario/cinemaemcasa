@@ -900,11 +900,11 @@ function SeriesContent() {
       )}
 
       {/* Player de Vídeo - Condição corrigida para convidados */}
-      {(showPlayer || activeEpisode || (guestName && activeRoomId)) && (activeEpisode?.arquivo || episodes[0]?.arquivo) && (
+      {(showPlayer || activeEpisode || (guestName && activeRoomId)) && (activeEpisode?.arquivo || episodes[0]?.arquivo) && contentUuid && (
         <VideoPlayer
           src={activeEpisode?.arquivo || episodes[0]?.arquivo}
           title={activeEpisode ? `${title} - ${activeEpisode.titulo}` : title}
-          contentId={contentUuid || String(series.id_n || series.id)}
+          contentId={contentUuid}
           userId={user?.id}
           onClose={() => { setShowPlayer(false); setActiveEpisode(null); setActiveRoomId(null); setGuestName(''); setAutoPlayNext(false); }}
           partyRoomId={activeRoomId}

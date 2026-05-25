@@ -47,7 +47,9 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
   const { user } = useAuth()
   const sb = useMemo(() => createClient(), [])
   const [emojis, setEmojis] = useState<{ emoji: string; sender: string; id: number }[]>([])
-  
+
+  console.log('VideoPlayer montado com contentId:', contentId, 'userId:', userId);
+
   // Estados para aviso de próximo episódio
   const [showNextEpisodeWarning, setShowNextEpisodeWarning] = useState(false)
   const [countdown, setCountdown] = useState(10)

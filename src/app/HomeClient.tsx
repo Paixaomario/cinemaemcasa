@@ -62,15 +62,47 @@ export function HomeClient() {
             prog.map(async (p) => {
               const idStr = String(p.content_id)
               console.log('Buscando content para id:', idStr);
-              const { data: contentData } = await sb.from('content').select('*').eq('id', idStr).maybeSingle()
+
+              // Tenta buscar por UUID primeiro, depois por título se for numérico
+              let contentData = null
+              const isNumeric = /^\d+$/.test(idStr)
+
+              if (!isNumeric) {
+                // É UUID, busca direto
+                const { data: dataByUuid } = await sb.from('content').select('*').eq('id', idStr).maybeSingle()
+                contentData = dataByUuid
+              } else {
+                // É numérico, busca por título nas tabelas cinema/series
+                // Primeiro tenta encontrar na tabela cinema
+                const { data: movieData } = await sb.from('cinema').select('*').eq('id', parseInt(idStr)).maybeSingle()
+                if (movieData) {
+                  contentData = {
+                    id: idStr, // Usa o ID numérico como fallback
+                    title: movieData.titulo,
+                    type: 'movie',
+                    poster: movieData.poster || movieData.capa || movieData.poster_path || movieData.banner
+                  }
+                } else {
+                  // Tenta na tabela series
+                  const { data: seriesData } = await sb.from('series').select('*').eq('id', parseInt(idStr)).maybeSingle()
+                  if (seriesData) {
+                    contentData = {
+                      id: idStr,
+                      title: seriesData.titulo,
+                      type: 'series',
+                      poster: seriesData.poster || seriesData.capa || seriesData.poster_path || seriesData.banner
+                    }
+                  }
+                }
+              }
 
               if (contentData) {
                 const table = contentData.type === 'movie' ? 'cinema' : 'series'
                 const { data: orig } = await sb.from(table).select('*').ilike('titulo', contentData.title.trim()).maybeSingle()
 
                 return {
-                  id: idStr, // UUID da tabela content
-                  id_n: contentData.type === 'series' ? idStr : undefined, // Garante que ContentCard trate como série
+                  id: idStr,
+                  id_n: contentData.type === 'series' ? idStr : undefined,
                   titulo: contentData.title,
                   poster: contentData.poster || (orig ? (orig.poster || orig.capa || orig.poster_path || orig.banner) : null),
                   type: contentData.type,
