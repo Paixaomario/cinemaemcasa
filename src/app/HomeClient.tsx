@@ -96,6 +96,24 @@ export function HomeClient() {
                 const table = contentData.type === 'movie' ? 'cinema' : 'series'
                 const { data: orig } = await sb.from(table).select('*').ilike('titulo', contentData.title.trim()).maybeSingle()
 
+                // Tenta obter duration de várias fontes
+                let duration = orig?.duration || orig?.runtime || contentData.duration || null
+
+                // Se ainda não tiver duration, tenta buscar na tabela content
+                if (!duration && !isNumeric) {
+                  const { data: contentWithDuration } = await sb.from('content').select('duration').eq('id', idStr).maybeSingle()
+                  duration = contentWithDuration?.duration || null
+                }
+
+                console.log('Item hidratado:', {
+                  titulo: contentData.title,
+                  last_position: p.last_position,
+                  duration: duration,
+                  orig_duration: orig?.duration,
+                  orig_runtime: orig?.runtime,
+                  content_duration: contentData.duration
+                });
+
                 return {
                   id: idStr,
                   id_n: contentData.type === 'series' ? idStr : undefined,
@@ -103,7 +121,7 @@ export function HomeClient() {
                   poster: contentData.poster || (orig ? (orig.poster || orig.capa || orig.poster_path || orig.banner) : null),
                   type: contentData.type,
                   last_position: p.last_position,
-                  duration: orig?.duration || orig?.runtime || contentData.duration || null
+                  duration: duration
                 }
               }
               return null

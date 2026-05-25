@@ -74,6 +74,17 @@ body {
   }
 }
 
+/* Cards de Continuar Assistindo (16:9 horizontal - estilo Netflix) */
+.scroll-row.continue-watching > * {
+  width: clamp(200px, 35vw, 320px);
+}
+
+@media (min-width: 640px) {
+  .scroll-row.continue-watching > * {
+    width: clamp(280px, 40vw, 480px);
+  }
+}
+
 /* =========================================================
    CONFIGURAÇÃO CINEMATOGRÁFICA VIDSTACK (PAIXAOFLIX)
    ========================================================= */

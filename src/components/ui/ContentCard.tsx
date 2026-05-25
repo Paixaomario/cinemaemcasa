@@ -40,9 +40,9 @@ export function ContentCard({ item, progress, showProgress = false }: Props) {
 
   return (
     <div className="group relative">
-      <Link 
+      <Link
         href={detailHref}
-        className="block aspect-[2/3] w-full transition-all duration-300 hover:scale-110 focus:scale-110 z-0 hover:z-50 focus:z-50 focus:outline-none focus:ring-4 focus:ring-brand-cyan rounded-xl shadow-2xl shadow-black/90"
+        className={`block w-full z-0 focus:z-50 focus:outline-none focus:ring-4 focus:ring-brand-cyan rounded-xl shadow-2xl shadow-black/90 ${showProgress ? 'aspect-video' : 'aspect-[2/3]'} ${showProgress ? '' : 'transition-all duration-300 hover:scale-110 focus:scale-110'}`}
       >
         <div className="absolute inset-0 overflow-hidden rounded-xl bg-neutral-900">
           {poster ? (
@@ -51,7 +51,7 @@ export function ContentCard({ item, progress, showProgress = false }: Props) {
               alt={title}
               fill
               sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, 20vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-110"
+              className={`object-cover ${showProgress ? '' : 'transition-transform duration-500 group-hover:scale-110'}`}
               unoptimized
             />
           ) : (
@@ -59,8 +59,8 @@ export function ContentCard({ item, progress, showProgress = false }: Props) {
           )}
         </div>
 
-        {/* Overlay com informações (visível no hover ou foco) */}
-        <div className="absolute inset-0 overflow-hidden rounded-xl flex flex-col justify-end bg-gradient-to-t from-black via-black/20 to-transparent p-3 sm:p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus:opacity-100">
+        {/* Overlay com informações (visível no hover ou foco, ou sempre se showProgress) */}
+        <div className={`absolute inset-0 overflow-hidden rounded-xl flex flex-col justify-end bg-gradient-to-t from-black via-black/20 to-transparent p-3 sm:p-4 ${showProgress ? 'opacity-100' : 'opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus:opacity-100'}`}>
           <p className="text-xs sm:text-sm font-black uppercase leading-tight text-white line-clamp-2">
             {title}
           </p>
@@ -71,7 +71,7 @@ export function ContentCard({ item, progress, showProgress = false }: Props) {
         </div>
       </Link>
 
-      {/* Informações de progresso abaixo da capa */}
+      {/* Informações de progresso abaixo da capa - sempre visíveis quando showProgress */}
       {showProgress && progress && progressPercent > 0 && (
         <div className="mt-2 px-1">
           <div className="h-1 bg-white/20 rounded-full overflow-hidden">
