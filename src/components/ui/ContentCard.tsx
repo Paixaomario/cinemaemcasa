@@ -51,7 +51,7 @@ export function ContentCard({ item, progress, showProgress = false }: Props) {
               alt={title}
               fill
               sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, 20vw"
-              className={`object-cover ${showProgress ? '' : 'transition-transform duration-500 group-hover:scale-110'}`}
+              className={`object-cover ${showProgress ? 'object-center' : 'transition-transform duration-500 group-hover:scale-110'}`}
               unoptimized
             />
           ) : (
@@ -81,7 +81,6 @@ export function ContentCard({ item, progress, showProgress = false }: Props) {
             />
           </div>
           <div className="flex items-center justify-between mt-1">
-            <span className="text-[10px] sm:text-[11px] font-bold text-[#00ADEF]">{progressPercent}%</span>
             <span className="text-[10px] sm:text-[11px] font-bold text-neutral-300">{formatTime(remainingTime)} restantes</span>
           </div>
         </div>

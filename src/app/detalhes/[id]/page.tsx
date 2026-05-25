@@ -34,6 +34,7 @@ function MovieContent() {
   const [showPlayer, setShowPlayer] = useState(false)
   const [showTrailerModal, setShowTrailerModal] = useState(false)
   const [savedProgress, setSavedProgress] = useState<number>(0)
+  const [showResumeModal, setShowResumeModal] = useState(false)
 
   // Função para carregar progresso salvo antes de abrir player
   const handleWatchClick = useCallback(async () => {
@@ -50,9 +51,27 @@ function MovieContent() {
       .eq('content_id', contentUuid)
       .maybeSingle()
 
-    setSavedProgress(progress?.last_position || 0)
-    setShowPlayer(true)
+    const savedTime = progress?.last_position || 0
+    setSavedProgress(savedTime)
+
+    // Se houver progresso salvo (mais de 10 segundos), mostra modal
+    if (savedTime > 10) {
+      setShowResumeModal(true)
+    } else {
+      setShowPlayer(true)
+    }
   }, [user, contentUuid])
+
+  const handleResume = () => {
+    setShowResumeModal(false)
+    setShowPlayer(true)
+  }
+
+  const handleRestart = () => {
+    setSavedProgress(0)
+    setShowResumeModal(false)
+    setShowPlayer(true)
+  }
 
   // Estados da Sala (Assistir Juntos)
   const [activeRoomId, setActiveRoomId] = useState(searchParams.get('room'))
@@ -455,6 +474,38 @@ function MovieContent() {
           onClose={() => setShowTrailerModal(false)}
           trailerUrl={movie.trailer}
         />
+      )}
+
+      {/* Modal de Continuar/Reiniciar */}
+      {showResumeModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-neutral-900 rounded-2xl p-6 sm:p-8 max-w-md w-full border border-white/10 shadow-2xl">
+            <h3 className="text-xl sm:text-2xl font-black uppercase text-white mb-4">Continuar Assistindo?</h3>
+            <p className="text-neutral-300 mb-6">
+              Você parou em {Math.floor(savedProgress / 60)}:{(savedProgress % 60).toString().padStart(2, '0')} do conteúdo.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleRestart}
+                className="flex-1 px-4 py-3 bg-white/10 hover:bg-white/20 text-white font-bold uppercase rounded-xl transition-all border border-white/20"
+              >
+                Reiniciar
+              </button>
+              <button
+                onClick={handleResume}
+                className="flex-1 px-4 py-3 bg-brand-cyan hover:brightness-110 text-white font-bold uppercase rounded-xl transition-all"
+              >
+                Continuar
+              </button>
+            </div>
+            <button
+              onClick={() => setShowResumeModal(false)}
+              className="mt-4 w-full text-neutral-400 hover:text-white text-sm font-bold uppercase transition-all"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
       )}
     </main>
   )

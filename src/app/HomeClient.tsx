@@ -105,14 +105,23 @@ export function HomeClient() {
                   duration = contentWithDuration?.duration || null
                 }
 
-                console.log('Item hidratado:', {
-                  titulo: contentData.title,
-                  last_position: p.last_position,
-                  duration: duration,
-                  orig_duration: orig?.duration,
-                  orig_runtime: orig?.runtime,
-                  content_duration: contentData.duration
-                });
+                // Converte duration de string para segundos
+                let durationInSeconds = null
+                if (duration) {
+                  if (typeof duration === 'number') {
+                    durationInSeconds = duration
+                  } else if (typeof duration === 'string') {
+                    // Formato "2h 21min" ou "107" (minutos)
+                    if (duration.includes('h') && duration.includes('min')) {
+                      const hours = parseInt(duration) || 0
+                      const mins = parseInt(duration.split('h')[1]) || 0
+                      durationInSeconds = hours * 3600 + mins * 60
+                    } else if (!isNaN(parseInt(duration))) {
+                      // Assume que são minutos
+                      durationInSeconds = parseInt(duration) * 60
+                    }
+                  }
+                }
 
                 return {
                   id: idStr,
@@ -121,7 +130,7 @@ export function HomeClient() {
                   poster: contentData.poster || (orig ? (orig.poster || orig.capa || orig.poster_path || orig.banner) : null),
                   type: contentData.type,
                   last_position: p.last_position,
-                  duration: duration
+                  duration: durationInSeconds
                 }
               }
               return null
