@@ -32,9 +32,13 @@ interface Props {
   isGuest?: boolean
   guestName?: string
   backdrop?: string | null
+  nextEpisode?: {
+    title: string
+    thumbnail: string | null
+  } | null
 }
 
-export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, onClose, onNext, partyRoomId, isGuest, guestName, backdrop }: Props) {
+export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, onClose, onNext, partyRoomId, isGuest, guestName, backdrop, nextEpisode }: Props) {
   const player = useRef<MediaPlayerInstance>(null);
   const [mediaInstance, setMediaInstance] = useState<MediaPlayerInstance | null>(null);
   const lastSavedTime = useRef<number>(0);
@@ -222,29 +226,52 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
         </div>
       ))}
 
-      {/* Aviso de Próximo Episódio */}
+      {/* Aviso de Próximo Episódio - Posicionado próximo à barra de progresso */}
       {showNextEpisodeWarning && (
-        <div className="absolute inset-0 z-[10007] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-gradient-to-br from-[#1A1A1F] to-black p-6 sm:p-8 md:p-10 rounded-2xl sm:rounded-3xl border border-white/10 shadow-2xl max-w-md w-full mx-4 text-center">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tighter text-white mb-4">
-              Próximo Episódio
-            </h3>
-            <p className="text-sm sm:text-base md:text-lg text-neutral-300 mb-6">
-              O próximo episódio começará em <span className="text-[#00ADEF] font-bold">{countdown}s</span>
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-              <button
-                onClick={playNextNow}
-                className="px-6 sm:px-8 py-3 sm:py-4 bg-[#00ADEF] text-white font-montserrat font-black uppercase tracking-wider rounded-[12px] sm:rounded-[16px] hover:brightness-110 transition-all transform hover:scale-105 text-sm sm:text-base"
-              >
-                ▶ Assistir Agora
-              </button>
-              <button
-                onClick={cancelAutoPlay}
-                className="px-6 sm:px-8 py-3 sm:py-4 bg-white/10 text-white font-montserrat font-black uppercase tracking-wider rounded-[12px] sm:rounded-[16px] border border-white/20 hover:bg-white/20 transition-all text-sm sm:text-base"
-              >
-                Cancelar
-              </button>
+        <div className="absolute bottom-0 left-0 right-0 z-[10007] bg-gradient-to-t from-black via-black/95 to-transparent pt-20 pb-6 px-4 sm:px-6 md:px-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-gradient-to-r from-[#1A1A1F] to-black/80 p-4 sm:p-5 md:p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md">
+              <div className="flex items-center gap-4 sm:gap-6">
+                {/* Capa do próximo episódio */}
+                {nextEpisode?.thumbnail && (
+                  <div className="relative w-20 h-12 sm:w-28 sm:h-16 md:w-32 md:h-20 flex-shrink-0 rounded-lg overflow-hidden border border-white/10">
+                    <Image
+                      src={nextEpisode.thumbnail}
+                      alt={nextEpisode.title}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
+                )}
+
+                {/* Informações e controles */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-4 mb-2">
+                    <h3 className="text-sm sm:text-base md:text-lg font-bold text-white uppercase tracking-tight truncate">
+                      Próximo: {nextEpisode?.title || 'Episódio'}
+                    </h3>
+                    <span className="text-[#00ADEF] font-black text-lg sm:text-xl md:text-2xl tabular-nums flex-shrink-0">
+                      {countdown}s
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <button
+                      onClick={playNextNow}
+                      className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-[#00ADEF] text-white font-montserrat font-bold uppercase tracking-wider rounded-lg sm:rounded-xl hover:brightness-110 transition-all text-xs sm:text-sm"
+                    >
+                      ▶ Assistir Agora
+                    </button>
+                    <button
+                      onClick={cancelAutoPlay}
+                      className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-white/10 text-white font-montserrat font-bold uppercase tracking-wider rounded-lg sm:rounded-xl border border-white/20 hover:bg-white/20 transition-all text-xs sm:text-sm"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

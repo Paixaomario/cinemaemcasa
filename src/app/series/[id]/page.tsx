@@ -444,19 +444,19 @@ function SeriesContent() {
     if (!activeEpisode || episodes.length === 0) return
 
     // Encontra o índice do episódio atual
-    const currentIndex = episodes.findIndex(ep => 
+    const currentIndex = episodes.findIndex(ep =>
       String(ep.id_n || ep.id) === String(activeEpisode.id_n || activeEpisode.id)
     )
-    
+
     if (currentIndex !== -1 && currentIndex < episodes.length - 1) {
       // Próximo na mesma temporada
       setActiveEpisode(episodes[currentIndex + 1])
     } else {
       // Tenta próxima temporada
-      const currentSeasonIndex = seasons.findIndex(s => 
+      const currentSeasonIndex = seasons.findIndex(s =>
         String(s.id_n || s.id) === String(selectedSeason?.id_n || selectedSeason?.id)
       )
-      
+
       if (currentSeasonIndex !== -1 && currentSeasonIndex < seasons.length - 1) {
         const nextSeason = seasons[currentSeasonIndex + 1]
         setSelectedSeason(nextSeason)
@@ -468,6 +468,39 @@ function SeriesContent() {
       }
     }
   }, [activeEpisode, episodes, seasons, selectedSeason])
+
+  // Função para obter informações do próximo episódio
+  const getNextEpisodeInfo = useCallback(() => {
+    if (!activeEpisode || episodes.length === 0) return null
+
+    const currentIndex = episodes.findIndex(ep =>
+      String(ep.id_n || ep.id) === String(activeEpisode.id_n || activeEpisode.id)
+    )
+
+    if (currentIndex !== -1 && currentIndex < episodes.length - 1) {
+      const nextEp = episodes[currentIndex + 1]
+      const thumbnail = nextEp.imagem_500 || nextEp.banner ? TMDB_IMG.backdrop(nextEp.imagem_500 || nextEp.banner) : null
+      return {
+        title: nextEp.titulo || `Episódio ${nextEp.numero_episodio}`,
+        thumbnail
+      }
+    }
+
+    // Verifica próxima temporada
+    const currentSeasonIndex = seasons.findIndex(s =>
+      String(s.id_n || s.id) === String(selectedSeason?.id_n || selectedSeason?.id)
+    )
+
+    if (currentSeasonIndex !== -1 && currentSeasonIndex < seasons.length - 1) {
+      const nextSeason = seasons[currentSeasonIndex + 1]
+      return {
+        title: `Temporada ${nextSeason.numero_temporada} - Episódio 1`,
+        thumbnail: series.backdrop_path ? TMDB_IMG.backdrop(series.backdrop_path) : null
+      }
+    }
+
+    return null
+  }, [activeEpisode, episodes, seasons, selectedSeason, series])
 
   // Efeito para iniciar o primeiro episódio da nova temporada após o autoPlay
   useEffect(() => {
@@ -871,7 +904,7 @@ function SeriesContent() {
         <VideoPlayer
           src={activeEpisode?.arquivo || episodes[0]?.arquivo}
           title={activeEpisode ? `${title} - ${activeEpisode.titulo}` : title}
-          contentId={contentUuid || String(series.id_n || series.id)} 
+          contentId={contentUuid || String(series.id_n || series.id)}
           userId={user?.id}
           onClose={() => { setShowPlayer(false); setActiveEpisode(null); setActiveRoomId(null); setGuestName(''); setAutoPlayNext(false); }}
           partyRoomId={activeRoomId}
@@ -879,6 +912,7 @@ function SeriesContent() {
           guestName={guestName}
           backdrop={series.backdrop_path || series.banner}
           onNext={handleNextEpisode}
+          nextEpisode={getNextEpisodeInfo()}
         />
       )}
 
