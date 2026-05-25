@@ -163,7 +163,7 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
       )}
 
       {/* Conteúdo do Banner */}
-      <div className="relative min-h-[70vh] sm:min-h-[80vh] md:min-h-[90vh] lg:min-h-screen flex flex-col justify-end px-4 sm:px-6 md:px-12 pb-16 sm:pb-20 md:pb-24 lg:pb-32 pt-[300px] sm:pt-[400px] md:pt-[500px] lg:pt-[650px] max-w-4xl">
+      <div className="relative min-h-[70vh] sm:min-h-[80vh] md:min-h-[90vh] lg:min-h-screen flex flex-col justify-end px-4 sm:px-6 md:px-12 pb-16 sm:pb-20 md:pb-24 lg:pb-32 pt-[100px] sm:pt-[300px] md:pt-[500px] lg:pt-[650px] max-w-4xl">
         <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-7xl font-black uppercase tracking-tighter text-white mb-3 sm:mb-4 drop-shadow-2xl px-2">
           {title}
         </h1>

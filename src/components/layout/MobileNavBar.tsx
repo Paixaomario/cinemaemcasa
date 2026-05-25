@@ -62,7 +62,7 @@ export function MobileNavBar() {
                   {/* Texto */}
                   <span
                     className={`
-                      text-[10px] font-medium tracking-wide transition-all duration-300
+                      text-[9px] sm:text-[10px] font-medium tracking-wide transition-all duration-300 whitespace-nowrap
                       ${isActive ? 'text-cyan-400 font-semibold' : 'text-neutral-500 group-hover:text-neutral-300'}
                     `}
                   >
