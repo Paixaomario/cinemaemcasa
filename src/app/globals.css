@@ -116,8 +116,8 @@ body {
 
 /* Efeito de Emojis Voadores (Party Mode) */
 .emoji-reaction {
-  position: absolute;
-  bottom: 0;
+  position: fixed;
+  bottom: 10%;
   font-size: 2.5rem;
   z-index: 10006;
   pointer-events: none;
