@@ -56,6 +56,14 @@ export function Navbar() {
         >
           <span className="text-4xl block">🔍</span>
         </Link>
+
+        {/* Ícone de Perfil */}
+        <Link
+          href="/perfil"
+          className="hidden sm:block p-2 hover:bg-white/10 rounded-[20px] focus:bg-white/20 focus:ring-4 focus:ring-brand-cyan/40 outline-none transition-all text-white hover:text-brand-cyan focus:text-brand-cyan"
+        >
+          <span className="text-4xl block">👤</span>
+        </Link>
       </div>
     </nav>
   )
