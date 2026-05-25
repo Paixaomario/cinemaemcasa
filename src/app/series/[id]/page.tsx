@@ -193,8 +193,8 @@ function SeriesContent() {
           console.log('UUID sincronizado:', cid)
         } else {
           // Cria novo registro na tabela content se não existir
-          console.log('UUID não encontrado, criando novo registro na tabela content')
-          const { data: newContent } = await sb
+          console.log('UUID não encontrado, criando novo registro na tabela content para:', localData.titulo)
+          const { data: newContent, error: insertError } = await sb
             .from('content')
             .insert({
               title: localData.titulo,
@@ -204,9 +204,16 @@ function SeriesContent() {
             })
             .select('id')
             .maybeSingle()
+
+          if (insertError) {
+            console.error('Erro ao criar registro na tabela content:', insertError)
+          }
+
           if (newContent) {
             setContentUuid(newContent.id)
             console.log('UUID criado para série:', newContent.id)
+          } else {
+            console.log('Não foi possível criar UUID na tabela content, usando ID numérico')
           }
         }
 

@@ -123,32 +123,44 @@ function MovieContent() {
 
       // Se contentUuid ainda não foi definido (ID numérico), cria ou busca UUID
       if (!contentUuid) {
-        const { data: existingContent } = await sb
-          .from('content')
-          .select('id')
-          .eq('type', 'movie')
-          .ilike('title', localData.titulo.trim())
-          .maybeSingle()
-
-        if (existingContent) {
-          setContentUuid(existingContent.id)
-          console.log('UUID encontrado:', existingContent.id)
-        } else {
-          // Cria novo registro na tabela content
-          const { data: newContent } = await sb
+        try {
+          const { data: existingContent } = await sb
             .from('content')
-            .insert({
-              title: localData.titulo,
-              type: 'movie',
-              poster: localData.poster || localData.capa || localData.poster_path || localData.banner,
-              is_published: true
-            })
             .select('id')
+            .eq('type', 'movie')
+            .ilike('title', localData.titulo.trim())
             .maybeSingle()
-          if (newContent) {
-            setContentUuid(newContent.id)
-            console.log('UUID criado:', newContent.id)
+
+          if (existingContent) {
+            setContentUuid(existingContent.id)
+            console.log('UUID encontrado:', existingContent.id)
+          } else {
+            // Cria novo registro na tabela content
+            console.log('Tentando criar novo registro na tabela content para:', localData.titulo)
+            const { data: newContent, error: insertError } = await sb
+              .from('content')
+              .insert({
+                title: localData.titulo,
+                type: 'movie',
+                poster: localData.poster || localData.capa || localData.poster_path || localData.banner,
+                is_published: true
+              })
+              .select('id')
+              .maybeSingle()
+
+            if (insertError) {
+              console.error('Erro ao criar registro na tabela content:', insertError)
+            }
+
+            if (newContent) {
+              setContentUuid(newContent.id)
+              console.log('UUID criado:', newContent.id)
+            } else {
+              console.log('Não foi possível criar UUID na tabela content, usando ID numérico')
+            }
           }
+        } catch (err) {
+          console.error('Erro ao buscar/criar UUID:', err)
         }
       }
 
