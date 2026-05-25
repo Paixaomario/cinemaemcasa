@@ -117,8 +117,8 @@ body {
 /* Efeito de Emojis Voadores (Party Mode) */
 .emoji-reaction {
   position: fixed;
-  bottom: 10%;
-  font-size: 2.5rem;
+  bottom: 20%;
+  font-size: 4rem;
   z-index: 10006;
   pointer-events: none;
   animation: flyUp 3s forwards ease-out;
@@ -127,6 +127,6 @@ body {
 
 @keyframes flyUp {
   0% { transform: translateY(0) scale(0.5); opacity: 0; }
-  20% { opacity: 1; transform: translateY(-20vh) scale(1.2) rotate(10deg); }
-  100% { transform: translateY(-100vh) scale(1) rotate(-10deg); opacity: 0; }
+  10% { opacity: 1; transform: translateY(-10vh) scale(1.2) rotate(10deg); }
+  100% { transform: translateY(-80vh) scale(1) rotate(-10deg); opacity: 0; }
 }

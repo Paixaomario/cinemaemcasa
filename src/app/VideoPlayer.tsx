@@ -46,9 +46,10 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
   // Função para enviar reações de emoji
   function handleReaction(emoji: string) {
     if (!partyRoomId) return;
+    const sender = isGuest ? (guestName || 'Convidado') : (user?.email ? user.email.split('@')[0] : 'Anfitrião');
     const channel = sb.channel(`party-${partyRoomId}`);
-    channel.send({ type: 'broadcast', event: 'emoji-reaction', payload: { emoji, sender: isGuest ? guestName : (user?.email ? user.email.split('@')[0] : 'Anfitrião') } });
-    console.log('Emoji enviado:', emoji);
+    channel.send({ type: 'broadcast', event: 'emoji-reaction', payload: { emoji, sender } });
+    console.log('Emoji enviado:', emoji, 'por:', sender);
   }
 
   async function saveProgress(seconds: number) {
@@ -140,10 +141,16 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
       .on('broadcast', { event: 'emoji-reaction' }, ({ payload }: { payload: { emoji: string; sender: string } }) => {
         console.log('Emoji recebido no VideoPlayer:', payload);
         const newEmoji = { emoji: payload.emoji, sender: payload.sender, id: Date.now() }
-        setEmojis(prev => [...prev, newEmoji])
+        setEmojis(prev => {
+          console.log('Adicionando emoji ao estado. Total:', prev.length + 1);
+          return [...prev, newEmoji];
+        })
         // Remover emoji após 3 segundos
         setTimeout(() => {
-          setEmojis(prev => prev.filter(e => e.id !== newEmoji.id))
+          setEmojis(prev => {
+            console.log('Removendo emoji. Total:', prev.length - 1);
+            return prev.filter(e => e.id !== newEmoji.id);
+          })
         }, 3000)
       })
       .subscribe()
@@ -153,9 +160,19 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
 
   return (
     <div className={`fixed inset-0 z-[10000] bg-black flex hero-enter ${showChat ? 'flex-row' : 'flex-col'}`}>
+      {/* Emojis flutuantes - renderizados fora do container flex */}
+      {emojis.map(e => {
+        console.log('Renderizando emoji:', e.emoji, 'com id:', e.id);
+        return (
+          <div key={e.id} className="emoji-reaction" style={{ left: `${Math.random() * 80 + 10}%` }}>
+            {e.emoji}
+          </div>
+        );
+      })}
+
       {/* Header do Player */}
       <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 md:p-8 z-[10005] flex items-center justify-between bg-gradient-to-b from-black/90 via-black/40 to-transparent pointer-events-none">
-        <button 
+        <button
           onClick={onClose}
           className="flex items-center gap-2 sm:gap-4 text-white text-lg sm:text-2xl font-bold hover:text-[#00ADEF] transition-colors rounded-[12px] sm:rounded-[20px] pointer-events-auto outline-none"
         >
@@ -164,7 +181,7 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
         </button>
 
         {partyRoomId && (
-          <button 
+          <button
             onClick={() => setShowChat(!showChat)}
             className="px-3 sm:px-6 py-1.5 sm:py-2 bg-white/10 hover:bg-[#00ADEF] text-white rounded-[12px] sm:rounded-[20px] pointer-events-auto transition-all font-montserrat font-bold text-[10px] sm:text-xs uppercase tracking-wider sm:tracking-widest"
           >
@@ -172,13 +189,6 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
           </button>
         )}
       </div>
-
-      {/* Emojis flutuantes */}
-      {emojis.map(e => (
-        <div key={e.id} className="emoji-reaction" style={{ left: `${Math.random() * 80 + 10}%` }}>
-          {e.emoji}
-        </div>
-      ))}
 
       <div className="flex-1 relative h-full bg-black">
         <MediaPlayer
