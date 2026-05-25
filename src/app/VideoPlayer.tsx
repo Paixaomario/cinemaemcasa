@@ -42,6 +42,12 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
   const { user } = useAuth()
   const sb = useMemo(() => createClient(), [])
   const [emojis, setEmojis] = useState<{ emoji: string; sender: string; id: number }[]>([])
+  
+  // Estados para aviso de próximo episódio
+  const [showNextEpisodeWarning, setShowNextEpisodeWarning] = useState(false)
+  const [countdown, setCountdown] = useState(10)
+  const [autoPlayCancelled, setAutoPlayCancelled] = useState(false)
+  const countdownTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Função para enviar reações de emoji
   function handleReaction(emoji: string) {
@@ -73,11 +79,68 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
       lastSavedTime.current = roundedTime;
       saveProgress(roundedTime);
     }
+    
+    // Detectar quando o vídeo está quase terminando (10 segundos antes)
+    if (mediaInstance && onNext && !autoPlayCancelled && !showNextEpisodeWarning) {
+      const duration = mediaInstance.duration;
+      if (duration && duration > 0 && time >= duration - 10) {
+        setShowNextEpisodeWarning(true);
+        setCountdown(10);
+      }
+    }
   }
   
   function handleStop() {
     mediaInstance?.pause();
     if (mediaInstance) mediaInstance.currentTime = 0;
+  }
+
+  // Countdown para próximo episódio
+  useEffect(() => {
+    if (showNextEpisodeWarning && countdown > 0) {
+      countdownTimerRef.current = setTimeout(() => {
+        setCountdown(countdown - 1);
+      }, 1000);
+    } else if (showNextEpisodeWarning && countdown === 0) {
+      // Countdown terminou, avançar para o próximo episódio
+      if (onNext && !autoPlayCancelled) {
+        onNext();
+      }
+      setShowNextEpisodeWarning(false);
+    }
+
+    return () => {
+      if (countdownTimerRef.current) {
+        clearTimeout(countdownTimerRef.current);
+      }
+    };
+  }, [showNextEpisodeWarning, countdown, onNext, autoPlayCancelled]);
+
+  // Funções para controlar o autoplay
+  function cancelAutoPlay() {
+    setAutoPlayCancelled(true);
+    setShowNextEpisodeWarning(false);
+    if (countdownTimerRef.current) {
+      clearTimeout(countdownTimerRef.current);
+    }
+  }
+
+  function playNextNow() {
+    if (countdownTimerRef.current) {
+      clearTimeout(countdownTimerRef.current);
+    }
+    setShowNextEpisodeWarning(false);
+    if (onNext) {
+      onNext();
+    }
+  }
+
+  function handleEnded() {
+    // Só chama onNext automaticamente se não houver função onNext ou se o autoplay foi cancelado
+    // Se o aviso foi mostrado, o countdown já vai chamar onNext
+    if (!onNext || autoPlayCancelled) {
+      if (onNext) onNext();
+    }
   }
 
   // Lógica de Sincronização Realtime
@@ -159,6 +222,34 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
         </div>
       ))}
 
+      {/* Aviso de Próximo Episódio */}
+      {showNextEpisodeWarning && (
+        <div className="absolute inset-0 z-[10007] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-gradient-to-br from-[#1A1A1F] to-black p-6 sm:p-8 md:p-10 rounded-2xl sm:rounded-3xl border border-white/10 shadow-2xl max-w-md w-full mx-4 text-center">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tighter text-white mb-4">
+              Próximo Episódio
+            </h3>
+            <p className="text-sm sm:text-base md:text-lg text-neutral-300 mb-6">
+              O próximo episódio começará em <span className="text-[#00ADEF] font-bold">{countdown}s</span>
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+              <button
+                onClick={playNextNow}
+                className="px-6 sm:px-8 py-3 sm:py-4 bg-[#00ADEF] text-white font-montserrat font-black uppercase tracking-wider rounded-[12px] sm:rounded-[16px] hover:brightness-110 transition-all transform hover:scale-105 text-sm sm:text-base"
+              >
+                ▶ Assistir Agora
+              </button>
+              <button
+                onClick={cancelAutoPlay}
+                className="px-6 sm:px-8 py-3 sm:py-4 bg-white/10 text-white font-montserrat font-black uppercase tracking-wider rounded-[12px] sm:rounded-[16px] border border-white/20 hover:bg-white/20 transition-all text-sm sm:text-base"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header do Player */}
       <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 md:p-8 z-[10005] flex items-center justify-between bg-gradient-to-b from-black/90 via-black/40 to-transparent pointer-events-none">
         <button
@@ -187,7 +278,7 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
           src={src}
           currentTime={startOffset}
           onTimeUpdate={(detail) => handleProgressUpdate(detail.currentTime)}
-          onEnded={onNext}
+          onEnded={handleEnded}
           key={src}
           autoPlay={!partyRoomId}
           className="w-full h-full vds-cinema-player"
