@@ -258,13 +258,13 @@ function MovieContent() {
       <Navbar />
 
       {/* Banner de Fundo */}
-      <div className="absolute inset-0 h-[90vh] w-full">
+      <div className="absolute inset-0 h-[60vh] sm:h-[70vh] md:h-[90vh] w-full">
         {backdrop && (
           <Image
             src={backdrop}
             alt={title}
             fill
-            className="object-cover opacity-40"
+            className="object-cover object-center opacity-40"
             priority
             sizes="100vw"
             unoptimized
@@ -275,39 +275,39 @@ function MovieContent() {
       </div>
 
       {/* Conteúdo */}
-      <div className="relative pt-[800px] md:pt-[82vh] px-6 md:px-16 pb-20">
+      <div className="relative pt-[40vh] sm:pt-[50vh] md:pt-[60vh] lg:pt-[82vh] px-4 sm:px-6 md:px-16 pb-20">
         <div className="max-w-6xl">
         {movie.tagline && <p className="text-brand-cyan font-bold tracking-widest uppercase text-sm mb-2">{movie.tagline}</p>}
         <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter mb-4 drop-shadow-2xl">
           {title}
         </h1>
 
-        <div className="flex items-center gap-4 mb-8 text-sm md:text-base font-bold">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-6 sm:mb-8 text-xs sm:text-sm md:text-base font-bold">
           {countryCode && (
             <img 
               src={`https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`} 
               alt={countryCode}
-              className="h-6 w-auto object-contain rounded-sm shadow-sm"
+              className="h-4 sm:h-6 w-auto object-contain rounded-sm shadow-sm"
               title={countryCode}
             />
           )}
-          <span className="bg-brand-cyan text-black px-2 py-0.5 rounded text-xs">TMDB {movie.vote_average?.toFixed(1) || movie.rating}</span>
-          <span className="text-neutral-400">{movie.release_date?.slice(0, 4) || movie.year}</span>
+          <span className="bg-brand-cyan text-black px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs">TMDB {movie.vote_average?.toFixed(1) || movie.rating}</span>
+          <span className="text-neutral-400 text-xs sm:text-sm">{movie.release_date?.slice(0, 4) || movie.year}</span>
           {movie.runtime && (
-            <span className="text-neutral-400">{Math.floor(movie.runtime / 60)}h {movie.runtime % 60}min</span>
+            <span className="text-neutral-400 text-xs sm:text-sm">{Math.floor(movie.runtime / 60)}h {movie.runtime % 60}min</span>
           )}
         </div>
 
-        <p className="text-base sm:text-lg md:text-xl text-neutral-300 leading-relaxed mb-8 sm:mb-10 max-w-3xl drop-shadow px-2">
+        <p className="text-sm sm:text-base md:text-lg lg:text-xl text-neutral-300 leading-relaxed mb-6 sm:mb-8 max-w-3xl drop-shadow px-2">
           {description}
         </p>
 
-        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 max-w-2xl">
           <button
             onClick={() => setShowPlayer(true)}
-            className="px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-brand-cyan text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[16px] sm:rounded-[20px] hover:brightness-110 transition-all transform hover:scale-105 focus:ring-4 focus:ring-brand-cyan outline-none border border-transparent text-sm sm:text-base"
+            className="flex-1 min-w-[120px] sm:flex-none px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 bg-brand-cyan text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[12px] sm:rounded-[16px] md:rounded-[20px] hover:brightness-110 transition-all transform hover:scale-105 focus:ring-4 focus:ring-brand-cyan outline-none border border-transparent text-xs sm:text-sm md:text-base"
           >
-            ▶ Assistir Agora
+            ▶ Assistir
           </button>
 
           <button
@@ -315,15 +315,15 @@ function MovieContent() {
               console.log('Botão Assistir Juntos clicado!', e)
               startParty()
             }}
-            className="px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-white/10 text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[16px] sm:rounded-[20px] border border-white/20 hover:bg-brand-cyan hover:text-black transition-all transform hover:scale-105 focus:ring-4 focus:ring-brand-cyan outline-none cursor-pointer text-sm sm:text-base"
+            className="flex-1 min-w-[120px] sm:flex-none px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 bg-white/10 text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[12px] sm:rounded-[16px] md:rounded-[20px] border border-white/20 hover:bg-brand-cyan hover:text-black transition-all transform hover:scale-105 focus:ring-4 focus:ring-brand-cyan outline-none cursor-pointer text-xs sm:text-sm md:text-base"
           >
-            🍿 Assistir Juntos
+            🍿 Juntos
           </button>
 
           {/* Botão Voltar */}
           <button 
             onClick={() => router.back()}
-            className="px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-[#001f3f] text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[16px] sm:rounded-[20px] hover:brightness-125 transition-all focus:ring-4 focus:ring-blue-500 outline-none border border-transparent text-sm sm:text-base"
+            className="flex-1 min-w-[80px] sm:flex-none px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 bg-[#001f3f] text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[12px] sm:rounded-[16px] md:rounded-[20px] hover:brightness-125 transition-all focus:ring-4 focus:ring-blue-500 outline-none border border-transparent text-xs sm:text-sm md:text-base"
           >
             Voltar
           </button>
@@ -333,7 +333,7 @@ function MovieContent() {
               href={movie.trailer}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-[#FF0000] text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[16px] sm:rounded-[20px] hover:brightness-110 transition-all focus:ring-4 focus:ring-red-600 outline-none border border-transparent text-sm sm:text-base"
+              className="flex-1 min-w-[80px] sm:flex-none px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 bg-[#FF0000] text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[12px] sm:rounded-[16px] md:rounded-[20px] hover:brightness-110 transition-all focus:ring-4 focus:ring-red-600 outline-none border border-transparent text-xs sm:text-sm md:text-base"
             >
               🎬 Trailer
             </a>
@@ -341,10 +341,10 @@ function MovieContent() {
           
           <button 
             onClick={toggleFavorite}
-            className={`p-3 sm:p-4 rounded-[16px] sm:rounded-[20px] transition-all border border-white/10 focus:ring-4 outline-none ${isFavorite ? 'bg-red-600/20 border-red-600 text-red-600 focus:ring-red-600' : 'bg-white/5 text-white hover:bg-white/10 focus:ring-white'}`}
+            className={`p-2 sm:p-3 md:p-4 rounded-[12px] sm:rounded-[16px] md:rounded-[20px] transition-all border border-white/10 focus:ring-4 outline-none ${isFavorite ? 'bg-red-600/20 border-red-600 text-red-600 focus:ring-red-600' : 'bg-white/5 text-white hover:bg-white/10 focus:ring-white'}`}
             title={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
           >
-            <Heart className={`w-6 h-6 sm:w-7 sm:h-7 ${isFavorite ? 'fill-red-600 text-red-600' : 'fill-none'}`} />
+            <Heart className={`w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 ${isFavorite ? 'fill-red-600 text-red-600' : 'fill-none'}`} />
           </button>
         </div>
         </div>

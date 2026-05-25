@@ -143,7 +143,7 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
                      (Array.isArray(currentBannerItem.origin_country) ? currentBannerItem.origin_country[0] : currentBannerItem.origin_country) || '';
 
   return (
-    <section className="relative w-full min-h-[70vh] sm:min-h-[80vh] md:min-h-[90vh] lg:min-h-screen overflow-hidden bg-black">
+    <section className="relative w-full min-h-[50vh] sm:min-h-[70vh] md:min-h-[80vh] lg:min-h-screen overflow-hidden bg-black">
       {/* Imagem de Fundo em Alta Resolução */}
       {backdropUrl && (
         <div className="absolute inset-0">
@@ -152,7 +152,7 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
             alt={title}
             fill
             priority
-            className="object-cover object-top opacity-60"
+            className="object-cover object-center opacity-60"
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, 100vw"
             unoptimized
           />
@@ -163,7 +163,7 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
       )}
 
       {/* Conteúdo do Banner */}
-      <div className="relative min-h-[70vh] sm:min-h-[80vh] md:min-h-[90vh] lg:min-h-screen flex flex-col justify-end px-4 sm:px-6 md:px-12 pb-16 sm:pb-20 md:pb-24 lg:pb-32 pt-[100px] sm:pt-[300px] md:pt-[500px] lg:pt-[650px] max-w-4xl">
+      <div className="relative min-h-[50vh] sm:min-h-[70vh] md:min-h-[80vh] lg:min-h-screen flex flex-col justify-end px-4 sm:px-6 md:px-12 pb-12 sm:pb-16 md:pb-20 lg:pb-24 pt-[60px] sm:pt-[200px] md:pt-[400px] lg:pt-[550px] max-w-4xl">
         <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-7xl font-black uppercase tracking-tighter text-white mb-3 sm:mb-4 drop-shadow-2xl px-2">
           {title}
         </h1>
