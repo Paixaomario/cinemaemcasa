@@ -89,8 +89,8 @@ export function PartyChat({ roomId, userName, userAvatar, isHost, onReaction }: 
         }
       })
 
-    // Escutar reações de emoji
-    const emojiChannel = sb.channel(`emoji-${roomId}`)
+    // Escutar reações de emoji - usa o mesmo canal do VideoPlayer
+    const emojiChannel = sb.channel(`party-${roomId}`)
       .on('broadcast', { event: 'emoji-reaction' }, ({ payload }: { payload: { emoji: string; sender: string } }) => {
         console.log('Emoji recebido:', payload);
         const newEmoji = { emoji: payload.emoji, sender: payload.sender, id: Date.now() }
