@@ -63,12 +63,8 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
   }
 
   async function saveProgress(seconds: number) {
-    if (!userId || !contentId || isNaN(seconds)) {
-      console.log('saveProgress ignorado:', { userId, contentId, seconds });
-      return;
-    }
+    if (!userId || !contentId || isNaN(seconds)) return;
     try {
-      console.log('Salvando progresso:', { userId, contentId, seconds });
       await sb.from('view_progress').upsert({
         user_id: userId,
         content_id: contentId,
@@ -76,7 +72,6 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
         updated_at: new Date().toISOString(),
         is_finished: false
       }, { onConflict: 'user_id,content_id' });
-      console.log('Progresso salvo com sucesso');
     } catch (err) {
       console.error('Erro ao salvar progresso:', err);
     }

@@ -38,8 +38,6 @@ export function ContentCard({ item, progress, showProgress = false }: Props) {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  console.log('ContentCard renderizado:', { titulo: title, showProgress, progress, progressPercent, remainingTime });
-
   return (
     <div className="group relative">
       <Link

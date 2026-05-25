@@ -133,10 +133,8 @@ function MovieContent() {
 
           if (existingContent) {
             setContentUuid(existingContent.id)
-            console.log('UUID encontrado:', existingContent.id)
           } else {
             // Cria novo registro na tabela content
-            console.log('Tentando criar novo registro na tabela content para:', localData.titulo)
             const { data: newContent, error: insertError } = await sb
               .from('content')
               .insert({
@@ -147,15 +145,8 @@ function MovieContent() {
               .select('id')
               .maybeSingle()
 
-            if (insertError) {
-              console.error('Erro ao criar registro na tabela content:', insertError)
-            }
-
-            if (newContent) {
+            if (!insertError && newContent) {
               setContentUuid(newContent.id)
-              console.log('UUID criado:', newContent.id)
-            } else {
-              console.log('Não foi possível criar UUID na tabela content, usando ID numérico')
             }
           }
         } catch (err) {
@@ -508,7 +499,6 @@ function MovieContent() {
           onClose={() => setShowPlayer(false)}
         />
       )}
-      {showPlayer && console.log('Player aberto com:', { contentUuid, movieId: movie.id, contentId: contentUuid || String(movie.id), savedProgress })}
 
       {/* Modal de Trailer */}
       {movie.trailer && (
