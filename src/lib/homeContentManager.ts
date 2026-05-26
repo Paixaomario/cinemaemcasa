@@ -20,45 +20,67 @@ interface UserPreferences {
   isNewUser: boolean
 }
 
-// Cache de capas já exibidas nesta sessão
-let displayedContentIds = new Set<string>()
-let sessionStartTime: number | null = null
+const CACHE_KEY = 'home_content_cache'
+const SESSION_START_KEY = 'home_session_start'
 
 /**
  * Inicializa uma nova sessão de capas
  */
 export function initializeContentSession() {
-  displayedContentIds = new Set()
-  sessionStartTime = Date.now()
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(CACHE_KEY, JSON.stringify([]))
+    localStorage.setItem(SESSION_START_KEY, Date.now().toString())
+  }
 }
 
 /**
  * Verifica se a sessão expirou (mais de 1 hora)
  */
 function isSessionExpired(): boolean {
-  if (!sessionStartTime) return true
+  if (typeof window === 'undefined') return true
+  const startTime = localStorage.getItem(SESSION_START_KEY)
+  if (!startTime) return true
   const oneHour = 60 * 60 * 1000
-  return Date.now() - sessionStartTime > oneHour
+  return Date.now() - parseInt(startTime) > oneHour
 }
 
 /**
  * Adiciona um conteúdo ao cache de exibidos
  */
 export function addToDisplayedCache(contentId: string) {
+  if (typeof window === 'undefined') return
   if (isSessionExpired()) {
     initializeContentSession()
   }
-  displayedContentIds.add(contentId)
+  const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]')
+  if (!cache.includes(contentId)) {
+    cache.push(contentId)
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cache))
+  }
 }
 
 /**
  * Verifica se um conteúdo já foi exibido
  */
 export function isContentDisplayed(contentId: string): boolean {
+  if (typeof window === 'undefined') return false
   if (isSessionExpired()) {
     initializeContentSession()
   }
-  return displayedContentIds.has(contentId)
+  const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]')
+  return cache.includes(contentId)
+}
+
+/**
+ * Obtém o cache atual de IDs exibidos
+ */
+export function getDisplayedCache(): Set<string> {
+  if (typeof window === 'undefined') return new Set()
+  if (isSessionExpired()) {
+    initializeContentSession()
+  }
+  const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]')
+  return new Set(cache)
 }
 
 /**
@@ -80,27 +102,31 @@ export async function getUserFavoriteGenres(userId: string): Promise<string[]> {
       return []
     }
 
-    // Busca os gêneros de cada conteúdo visualizado
+    // Extrai todos os content_ids
+    const contentIds = historyData.map(item => String(item.content_id))
+
+    // Busca os gêneros de todos os conteúdos em uma única query
+    const { data: contentData, error: contentError } = await sb
+      .from('content')
+      .select('id, genres')
+      .in('id', contentIds)
+
+    if (contentError || !contentData) {
+      return []
+    }
+
+    // Conta os gêneros
     const genreCounts: Record<string, number> = {}
 
-    for (const item of historyData) {
-      const idStr = String(item.content_id)
-
-      // Tenta buscar na tabela content
-      const { data: contentData } = await sb
-        .from('content')
-        .select('genres')
-        .eq('id', idStr)
-        .maybeSingle()
-
-      if (contentData?.genres) {
-        const genres = Array.isArray(contentData.genres) ? contentData.genres : []
+    contentData.forEach(item => {
+      if (item.genres) {
+        const genres = Array.isArray(item.genres) ? item.genres : []
         genres.forEach(genre => {
           const genreName = genre.toLowerCase().trim()
           genreCounts[genreName] = (genreCounts[genreName] || 0) + 1
         })
       }
-    }
+    })
 
     // Ordena por contagem e retorna os top 5
     const sortedGenres = Object.entries(genreCounts)

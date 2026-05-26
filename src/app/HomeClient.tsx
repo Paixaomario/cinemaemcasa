@@ -8,7 +8,7 @@ import { ContentCard } from '@/components/ui/ContentCard'
 import {
   initializeContentSession,
   addToDisplayedCache,
-  isContentDisplayed,
+  getDisplayedCache,
   getSectionContent,
   getPersonalizedRecommendations,
   getTrendingContent,
@@ -139,14 +139,20 @@ export function HomeClient() {
                   if (typeof duration === 'number') {
                     durationInSeconds = duration
                   } else if (typeof duration === 'string') {
-                    // Formato "2h 21min" ou "107" (minutos)
-                    if (duration.includes('h') && duration.includes('min')) {
-                      const hours = parseInt(duration) || 0
-                      const mins = parseInt(duration.split('h')[1]) || 0
-                      durationInSeconds = hours * 3600 + mins * 60
-                    } else if (!isNaN(parseInt(duration))) {
-                      // Assume que são minutos
-                      durationInSeconds = parseInt(duration) * 60
+                    try {
+                      // Formato "2h 21min" ou "107" (minutos)
+                      if (duration.includes('h') && duration.includes('min')) {
+                        const parts = duration.split('h')
+                        const hours = parseInt(parts[0]) || 0
+                        const mins = parseInt(parts[1]?.replace('min', '').trim()) || 0
+                        durationInSeconds = hours * 3600 + mins * 60
+                      } else if (!isNaN(parseInt(duration))) {
+                        // Assume que são minutos
+                        durationInSeconds = parseInt(duration) * 60
+                      }
+                    } catch (error) {
+                      console.error('Erro ao fazer parsing de duration:', error)
+                      durationInSeconds = null
                     }
                   }
                 }
@@ -225,11 +231,17 @@ export function HomeClient() {
 
       // 3. Carrega os itens para cada seção visível
       const dataMap: Record<string, any[]> = {}
-      const displayedIds = new Set<string>()
+
+      // Obtém o cache atual de IDs exibidos
+      const displayedIds = getDisplayedCache()
 
       // Adiciona IDs do continuar assistindo ao cache
       continueWatching.forEach(item => {
-        if (item.id) displayedIds.add(String(item.id))
+        if (item.id) {
+          const idStr = String(item.id)
+          displayedIds.add(idStr)
+          addToDisplayedCache(idStr)
+        }
       })
 
       await Promise.all(visibleSections.map(async (sec) => {
