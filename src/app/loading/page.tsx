@@ -2,11 +2,9 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { useAuth } from '@/components/AuthProvider'
 
 export default function LoadingPage() {
   const router = useRouter()
-  const { user } = useAuth()
   const [progress, setProgress] = useState(0)
   const [loadingStep, setLoadingStep] = useState('Iniciando...')
 
