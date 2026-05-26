@@ -5,6 +5,15 @@ import { useAuth } from '@/components/layout/SupabaseProvider'
 import { HeroBanner } from '@/components/sections/HeroBanner'
 import { ContentRow } from '@/components/sections/ContentRow'
 import { ContentCard } from '@/components/ui/ContentCard'
+import {
+  initializeContentSession,
+  addToDisplayedCache,
+  isContentDisplayed,
+  getSectionContent,
+  getPersonalizedRecommendations,
+  getTrendingContent,
+  isNewUser
+} from '@/lib/homeContentManager'
 
 interface HomeSection {
   id: string
@@ -43,6 +52,9 @@ export function HomeClient() {
   useEffect(() => {
     async function loadHome() {
       const sb = createClient()
+
+      // Inicializa nova sessão de conteúdo (reseta cache a cada carregamento)
+      initializeContentSession()
 
       // 0. Carregar Continuar Assistindo se houver usuário
       if (user) {
@@ -165,6 +177,11 @@ export function HomeClient() {
           })
           const uniqueItems = Array.from(uniqueMap.values())
           setContinueWatching(uniqueItems)
+
+          // Adiciona ao cache de exibidos
+          uniqueItems.forEach(item => {
+            if (item.id) addToDisplayedCache(String(item.id))
+          })
         }
       } else {
         setContinueWatching([])
@@ -208,31 +225,52 @@ export function HomeClient() {
 
       // 3. Carrega os itens para cada seção visível
       const dataMap: Record<string, any[]> = {}
+      const displayedIds = new Set<string>()
 
-      // Verificar total de itens na tabela cinema
-      const { count: cinemaCount, error: countError } = await sb.from('cinema').select('*', { count: 'exact', head: true })
-
-      // Tentar buscar uma amostra sem filtros
-      const { data: sampleCinema, error: sampleError } = await sb.from('cinema').select('*').limit(5)
+      // Adiciona IDs do continuar assistindo ao cache
+      continueWatching.forEach(item => {
+        if (item.id) displayedIds.add(String(item.id))
+      })
 
       await Promise.all(visibleSections.map(async (sec) => {
-        if (sec.fonte === 'cinema') {
-          let query = sb.from('cinema').select('*')
+        let items: any[] = []
 
-          if (sec.categorias && sec.categorias.length > 0) {
-            // Busca conteúdos que contenham qualquer uma das categorias solicitadas
-            const catFilters = sec.categorias.map(c => `category.ilike.%${c}%`).join(',')
-            query = query.or(catFilters)
+        // Seção especial: Indicados por IA
+        if (sec.titulo.toLowerCase().includes('indicados por ia') || sec.titulo.toLowerCase().includes('ia')) {
+          if (user) {
+            const userIsNew = await isNewUser(user.id)
+            if (userIsNew) {
+              // Novo usuário: mostra conteúdo em alta
+              items = await getTrendingContent(sec.limite)
+            } else {
+              // Usuário existente: recomendações personalizadas
+              items = await getPersonalizedRecommendations(user.id, sec.limite, displayedIds)
+            }
+          } else {
+            // Não logado: mostra conteúdo em alta
+            items = await getTrendingContent(sec.limite)
           }
-
-          // Aplica ordenação conforme configurado na tabela
-          if (sec.ordenacao === 'rating_desc') query = query.order('rating', { ascending: false })
-          else if (sec.ordenacao === 'year_desc') query = query.order('year', { ascending: false })
-          else query = query.order('created_at', { ascending: false })
-
-          const { data: items, error: itemsError } = await query.limit(sec.limite)
-          dataMap[sec.id] = items || []
+        } else if (sec.fonte === 'cinema') {
+          // Seção normal: usa o gerenciador de conteúdo
+          items = await getSectionContent(
+            sec.id,
+            sec.categorias || [],
+            sec.limite,
+            sec.ordenacao,
+            displayedIds
+          )
         }
+
+        // Adiciona IDs ao cache de exibidos
+        items.forEach((item: any) => {
+          if (item.id) {
+            const idStr = String(item.id)
+            displayedIds.add(idStr)
+            addToDisplayedCache(idStr)
+          }
+        })
+
+        dataMap[sec.id] = items
       }))
 
       setSectionsData(dataMap)
