@@ -7,6 +7,10 @@ import { Navbar } from '@/components/layout/Navbar'
 import { useAuth } from '@/components/layout/SupabaseProvider'
 import { CinemaItem } from '@/app/HomeClient'
 import { hydrateCinemaItem } from '@/lib/content'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
+import { ContinueWatchingSection } from '@/components/profile/ContinueWatchingSection'
+import { SettingsSection } from '@/components/profile/SettingsSection'
+import { DevicesSection } from '@/components/profile/DevicesSection'
 
 interface ProfileItem {
   id: string | number;
@@ -16,10 +20,19 @@ interface ProfileItem {
   type?: string | null;
 }
 
+interface ContinueWatchingItem extends CinemaItem {
+  progress?: number
+  duration?: number
+  episode?: number
+  season?: number
+}
+
 export default function PerfilPage() {
   const { user, loading: authLoading } = useAuth()
+  const [profile, setProfile] = useState<any>(null)
   const [favorites, setFavorites] = useState<ProfileItem[]>([])
   const [history, setHistory] = useState<ProfileItem[]>([])
+  const [continueWatching, setContinueWatching] = useState<ContinueWatchingItem[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -27,7 +40,16 @@ export default function PerfilPage() {
     const userId = user.id
     async function loadData() {
       const sb = createClient()
-      // 1. Buscar Favoritos
+
+      // 1. Buscar perfil
+      const { data: profileData } = await sb
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+      setProfile(profileData)
+
+      // 2. Buscar Favoritos
       const { data: favs } = await sb
         .from('favorites')
         .select('content_id')
@@ -40,7 +62,7 @@ export default function PerfilPage() {
         setFavorites(hydratedFavs.filter(Boolean) as ProfileItem[])
       }
 
-      // 2. Buscar Histórico (view_progress)
+      // 3. Buscar Histórico (view_progress)
       const { data: prog } = await sb
         .from('view_progress')
         .select('*')
@@ -52,6 +74,20 @@ export default function PerfilPage() {
           prog.map(p => hydrateCinemaItem(sb, p.content_id))
         )
         setHistory(hydratedHistory.filter(Boolean) as ProfileItem[])
+
+        // 4. Criar lista de continuar assistindo com progresso
+        const continueWatchingItems = await Promise.all(
+          prog.map(async (p) => {
+            const item = await hydrateCinemaItem(sb, p.content_id)
+            if (!item) return null
+            return {
+              ...item,
+              progress: p.last_position,
+              duration: 6000, // valor padrão em segundos
+            }
+          })
+        )
+        setContinueWatching(continueWatchingItems.filter(Boolean) as ContinueWatchingItem[])
       }
 
       setLoading(false)
@@ -59,6 +95,27 @@ export default function PerfilPage() {
 
     loadData()
   }, [user])
+
+  const handleAvatarChange = async (file: File) => {
+    if (!user) return
+
+    const sb = createClient()
+    // TODO: Implementar upload para Supabase Storage
+    console.log('Avatar change:', file.name)
+  }
+
+  const handleSettingsChange = async (settings: any) => {
+    if (!user) return
+
+    const sb = createClient()
+    // TODO: Salvar configurações no banco
+    console.log('Settings change:', settings)
+  }
+
+  const handleLogoutDevice = async (deviceId: string) => {
+    // TODO: Implementar logout de dispositivo
+    console.log('Logout device:', deviceId)
+  }
 
   if (authLoading || (user && loading)) {
     return <div className="min-h-screen bg-black flex items-center justify-center text-[var(--gold-primary)] font-bold uppercase tracking-tighter text-2xl animate-pulse">Carregando Perfil Premium...</div>
@@ -79,34 +136,47 @@ export default function PerfilPage() {
     <main className="min-h-screen bg-black text-white relative overflow-hidden">
       <Navbar />
 
-      {/* Marca d'água de fundo solicitada */}
+      {/* Marca d'água de fundo */}
       <div className="fixed inset-0 z-0 opacity-10 pointer-events-none scale-110">
-        <Image 
-          src="/bg-family.jpg" 
-          alt="" 
-          fill 
+        <Image
+          src="/bg-family.jpg"
+          alt=""
+          fill
           className="object-cover blur-[2px]"
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black via-black/40 to-black" />
       </div>
 
-      <div className="relative z-10 pt-40 px-[var(--container-px)] pb-20 max-w-[2400px] mx-auto">
-        <header className="mb-16 flex items-center gap-8 animate-in fade-in slide-in-from-top-4 duration-700">
-          <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-[var(--red-primary)] to-[var(--gold-primary)] p-1 shadow-2xl">
-            <div className="w-full h-full rounded-[22px] bg-[#0B0B0F] flex items-center justify-center text-5xl">
-              👤
-            </div>
-          </div>
-          <div>
-            <h1 className="text-6xl font-black uppercase tracking-tighter text-white drop-shadow-2xl">Meu Perfil</h1>
-            <p className="text-xl text-[var(--gold-primary)] font-bold mt-2 opacity-80">{user.email}</p>
+      <div className="relative z-10 pt-32 sm:pt-40 px-[var(--container-px)] pb-20 max-w-[2400px] mx-auto">
+        {/* Header do Perfil */}
+        <header className="mb-16 flex flex-col sm:flex-row items-center gap-6 sm:gap-8 animate-in fade-in slide-in-from-top-4 duration-700">
+          <ProfileAvatar
+            avatarUrl={profile?.avatar_url}
+            username={profile?.username || profile?.full_name || user.email}
+            onAvatarChange={handleAvatarChange}
+            editable={true}
+          />
+          <div className="text-center sm:text-left">
+            <h1 className="text-4xl sm:text-6xl font-black uppercase tracking-tighter text-white drop-shadow-2xl">
+              {profile?.full_name || profile?.username || 'Meu Perfil'}
+            </h1>
+            <p className="text-lg sm:text-xl text-[var(--gold-primary)] font-bold mt-2 opacity-80">{user.email}</p>
+            {profile?.is_admin && (
+              <span className="inline-block mt-2 px-3 py-1 bg-[var(--gold-primary)] text-black text-xs font-bold uppercase rounded-full">
+                Administrador
+              </span>
+            )}
           </div>
         </header>
 
-        <div className="space-y-20">
+        {/* Seções do Perfil */}
+        <div className="space-y-16 sm:space-y-20">
+          <ContinueWatchingSection items={continueWatching} />
           <Section title="Meus Favoritos" items={favorites} color="var(--gold-primary)" emptyMsg="Nenhum conteúdo favoritado ainda." />
           <Section title="Histórico de Reprodução" items={history} color="var(--red-primary)" emptyMsg="Você ainda não iniciou nenhum vídeo." />
+          <SettingsSection onSettingsChange={handleSettingsChange} />
+          <DevicesSection onLogoutDevice={handleLogoutDevice} />
         </div>
       </div>
     </main>
@@ -120,18 +190,18 @@ function Section({ title, items, color, emptyMsg }: { title: string, items: Prof
         <span className="w-2 h-10 rounded-full" style={{ backgroundColor: color }}></span>
         {title}
       </h2>
-      
+
       {items.length === 0 ? (
         <div className="p-10 rounded-3xl bg-white/5 border border-white/5 text-gray-500 font-medium italic">
           {emptyMsg}
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
           {items.map(item => {
             const isSeries = (item.type === 'serie' || item.type === 'series')
             const posterPath = item.poster || item.backdrop
-            if (!posterPath && !item.titulo) return null; // Pula itens fantasmas
-            const imageUrl = posterPath; // hydrateCinemaItem já garante a URL completa
+            if (!posterPath && !item.titulo) return null
+            const imageUrl = posterPath
 
             return (
             <Link
@@ -140,10 +210,10 @@ function Section({ title, items, color, emptyMsg }: { title: string, items: Prof
               className="relative aspect-[2/3] w-full group rounded-xl overflow-hidden bg-neutral-900 border border-white/5 hover:border-brand-cyan transition-all shadow-xl"
             >
               {imageUrl ? (
-                <Image 
-                  src={imageUrl} 
-                  alt={item.titulo || ''} 
-                  fill 
+                <Image
+                  src={imageUrl}
+                  alt={item.titulo || ''}
+                  fill
                   className="object-cover transition-transform group-hover:scale-110"
                   unoptimized
                 />
