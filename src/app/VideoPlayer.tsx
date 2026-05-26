@@ -62,7 +62,7 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
     channel.send({ type: 'broadcast', event: 'emoji-reaction', payload: { emoji, sender } });
   }
 
-  async function saveProgress(seconds: number) {
+  async function saveProgress(seconds: number, finished = false) {
     if (!userId || !contentId || isNaN(seconds)) return;
     try {
       await sb.from('view_progress').upsert({
@@ -70,7 +70,7 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
         content_id: contentId,
         last_position: Math.floor(seconds),
         updated_at: new Date().toISOString(),
-        is_finished: false
+        is_finished: finished
       }, { onConflict: 'user_id,content_id' });
     } catch (err) {
       console.error('Erro ao salvar progresso:', err);
@@ -141,6 +141,10 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
   }
 
   function handleEnded() {
+    // Marcar vídeo como terminado
+    if (mediaInstance) {
+      saveProgress(mediaInstance.duration || 0, true)
+    }
     // Só chama onNext automaticamente se não houver função onNext ou se o autoplay foi cancelado
     // Se o aviso foi mostrado, o countdown já vai chamar onNext
     if (!onNext || autoPlayCancelled) {
