@@ -44,7 +44,6 @@ function SeriesContent() {
   // Função para carregar progresso salvo do episódio
   const handleEpisodeClick = useCallback(async (episode: any) => {
     if (!user || !contentUuid) {
-      setSavedProgress(0)
       setActiveEpisode(episode)
       return
     }
@@ -68,7 +67,6 @@ function SeriesContent() {
       setShowResumeModal(true)
       setActiveEpisode(episode)
     } else {
-      setSavedProgress(0)
       setActiveEpisode(episode)
     }
   }, [user, contentUuid])
