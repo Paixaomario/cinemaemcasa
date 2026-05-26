@@ -15,6 +15,8 @@ import { StatisticsSection } from '@/components/profile/StatisticsSection'
 import { AccessibilitySection } from '@/components/profile/AccessibilitySection'
 import { uploadAvatar } from '@/lib/avatarUpload'
 import { saveProfileSettings, getProfileSettings } from '@/lib/profileSettings'
+import { getUserDevices, logoutDevice, detectDeviceType, detectDeviceName } from '@/lib/deviceManager'
+import { getProfileStatistics } from '@/lib/profileStatistics'
 
 interface ProfileItem {
   id: string | number;
@@ -39,6 +41,8 @@ export default function PerfilPage() {
   const [continueWatching, setContinueWatching] = useState<ContinueWatchingItem[]>([])
   const [settings, setSettings] = useState<any>(null)
   const [accessibilitySettings, setAccessibilitySettings] = useState<any>(null)
+  const [devices, setDevices] = useState<any[]>([])
+  const [statistics, setStatistics] = useState<any>(null)
   const [editingName, setEditingName] = useState(false)
   const [tempName, setTempName] = useState('')
   const [loading, setLoading] = useState(true)
@@ -144,6 +148,31 @@ export default function PerfilPage() {
         })
       }
 
+      // 7. Buscar dispositivos conectados
+      try {
+        const userDevices = await getUserDevices(userId)
+        setDevices(userDevices)
+      } catch (error) {
+        console.error('Erro ao buscar dispositivos:', error)
+        setDevices([])
+      }
+
+      // 8. Buscar estatísticas do perfil
+      try {
+        const profileStats = await getProfileStatistics(userId)
+        setStatistics(profileStats)
+      } catch (error) {
+        console.error('Erro ao buscar estatísticas:', error)
+        setStatistics({
+          total_watch_time: 0,
+          movies_watched: 0,
+          series_watched: 0,
+          episodes_watched: 0,
+          last_watch_date: null,
+          most_watched_genre: null,
+        })
+      }
+
       setLoading(false)
     }
 
@@ -207,8 +236,15 @@ export default function PerfilPage() {
   }
 
   const handleLogoutDevice = async (deviceId: string) => {
-    // TODO: Implementar logout de dispositivo
-    console.log('Logout device:', deviceId)
+    if (!user) return
+    try {
+      await logoutDevice(user.id, deviceId)
+      setDevices(devices.filter(d => d.id !== deviceId))
+      alert('Dispositivo desconectado com sucesso')
+    } catch (error) {
+      console.error('Erro ao desconectar dispositivo:', error)
+      alert('Erro ao desconectar dispositivo')
+    }
   }
 
   const handleDeleteHistoryItem = async (itemId: string) => {
@@ -357,10 +393,10 @@ export default function PerfilPage() {
         {/* Seções do Perfil */}
         <div className="space-y-16 sm:space-y-20">
           <Section title="Histórico de Reprodução" items={history} color="var(--red-primary)" emptyMsg="Você ainda não iniciou nenhum vídeo." showDelete={true} onDelete={handleDeleteHistoryItem} onClearAll={handleClearHistory} />
-          <StatisticsSection />
+          <StatisticsSection statistics={statistics} />
           <SettingsSection settings={settings} onSettingsChange={handleSettingsChange} />
           <AccessibilitySection settings={accessibilitySettings} onSettingsChange={handleAccessibilityChange} />
-          <DevicesSection onLogoutDevice={handleLogoutDevice} />
+          <DevicesSection devices={devices} onLogoutDevice={handleLogoutDevice} />
         </div>
       </div>
     </main>
