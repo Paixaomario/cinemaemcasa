@@ -19,6 +19,13 @@ CREATE TABLE IF NOT EXISTS public.profile_settings (
   CONSTRAINT profile_settings_user_id_key UNIQUE (user_id)
 );
 
+-- Trigger para atualizar updated_at (só cria se não existir)
+DROP TRIGGER IF EXISTS update_profile_settings_updated_at ON public.profile_settings;
+CREATE TRIGGER update_profile_settings_updated_at
+  BEFORE UPDATE ON public.profile_settings
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
 -- Tabela de favoritos (já existe, apenas para referência)
 -- CREATE TABLE IF NOT EXISTS public.favorites (...)
 

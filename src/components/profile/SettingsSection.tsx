@@ -14,11 +14,11 @@ interface SettingsSectionProps {
 export function SettingsSection({ settings = {}, onSettingsChange }: SettingsSectionProps) {
   const [localSettings, setLocalSettings] = useState(settings)
 
-  const handleSettingChange = (key: string, value: any) => {
+  const handleSettingChange = async (key: string, value: any) => {
     const newSettings = { ...localSettings, [key]: value }
     setLocalSettings(newSettings)
     if (onSettingsChange) {
-      onSettingsChange(newSettings)
+      await onSettingsChange(newSettings)
     }
   }
 

@@ -173,6 +173,29 @@ export default function PerfilPage() {
         })
       }
 
+      // 9. Registrar dispositivo atual
+      try {
+        const userAgent = navigator.userAgent
+        const deviceType = detectDeviceType(userAgent)
+        const deviceName = detectDeviceName(userAgent)
+
+        await sb
+          .from('connected_devices')
+          .upsert({
+            user_id: userId,
+            device_id: localStorage.getItem('device_id') || crypto.randomUUID(),
+            device_name: deviceName,
+            device_type: deviceType,
+            user_agent: userAgent,
+            last_active: new Date().toISOString(),
+            is_current: true,
+          }, {
+            onConflict: 'user_id,device_id'
+          })
+      } catch (error) {
+        console.error('Erro ao registrar dispositivo:', error)
+      }
+
       setLoading(false)
     }
 
@@ -300,6 +323,40 @@ export default function PerfilPage() {
     setEditingName(false)
   }
 
+  const handleDeleteAccount = async () => {
+    if (!user) return
+    if (!confirm('Tem certeza que deseja excluir sua conta? Esta ação é IRREVERSÍVEL e apagará todos os seus dados permanentemente.')) return
+    if (!confirm('Tem certeza ABSOLUTA? Todos os seus dados serão perdidos para sempre.')) return
+
+    const sb = createClient()
+    try {
+      // Deletar todos os dados do usuário
+      await sb.from('profile_settings').delete().eq('user_id', user.id)
+      await sb.from('accessibility_settings').delete().eq('user_id', user.id)
+      await sb.from('connected_devices').delete().eq('user_id', user.id)
+      await sb.from('active_sessions').delete().eq('user_id', user.id)
+      await sb.from('profile_statistics').delete().eq('user_id', user.id)
+      await sb.from('view_progress').delete().eq('user_id', user.id)
+      await sb.from('favorites').delete().eq('user_id', user.id)
+      await sb.from('profiles').delete().eq('id', user.id)
+
+      // Deletar usuário do auth
+      const { error: authError } = await sb.auth.admin.deleteUser(user.id)
+
+      if (authError) {
+        console.error('Erro ao deletar usuário do auth:', authError)
+        alert('Erro ao deletar conta. Entre em contato com o suporte.')
+        return
+      }
+
+      alert('Conta excluída com sucesso. Redirecionando...')
+      window.location.href = '/'
+    } catch (error) {
+      console.error('Erro ao excluir conta:', error)
+      alert('Erro ao excluir conta. Tente novamente.')
+    }
+  }
+
   if (authLoading || (user && loading)) {
     return <div className="min-h-screen bg-black flex items-center justify-center text-[var(--gold-primary)] font-bold uppercase tracking-tighter text-2xl animate-pulse">Carregando Perfil Premium...</div>
   }
@@ -347,7 +404,7 @@ export default function PerfilPage() {
                   type="text"
                   value={tempName}
                   onChange={(e) => setTempName(e.target.value)}
-                  className="text-4xl sm:text-6xl font-black uppercase tracking-tighter text-white bg-transparent border-b-2 border-[var(--gold-primary)] focus:outline-none"
+                  className="text-4xl sm:text-6xl font-black uppercase tracking-tighter text-white bg-transparent border-b-2 border-[var(--gold-primary)] focus:outline-none focus:border-[var(--gold-primary)]"
                   autoFocus
                 />
                 <div className="flex gap-2 mt-2 sm:mt-0">
@@ -387,6 +444,12 @@ export default function PerfilPage() {
                 Administrador
               </span>
             )}
+            <button
+              onClick={handleDeleteAccount}
+              className="mt-4 px-4 py-2 bg-red-500/20 text-red-400 font-bold rounded-xl hover:bg-red-500/30 transition-colors text-sm"
+            >
+              Excluir Conta
+            </button>
           </div>
         </header>
 
