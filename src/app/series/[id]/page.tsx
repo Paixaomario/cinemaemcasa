@@ -987,9 +987,9 @@ function SeriesContent() {
           <div className="bg-neutral-900 rounded-2xl p-6 sm:p-8 max-w-md w-full border border-white/10 shadow-2xl">
             <div className="flex items-start gap-4 mb-6">
               <div className="w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-800">
-                {series?.poster ? (
+                {series?.poster || series?.capa ? (
                   <Image
-                    src={series.poster.startsWith('http') ? series.poster : `https://image.tmdb.org/t/p/w500${series.poster}`}
+                    src={(series.poster || series.capa).startsWith('http') ? (series.poster || series.capa) : `https://image.tmdb.org/t/p/w500${series.poster || series.capa}`}
                     alt={series.titulo}
                     width={96}
                     height={144}
