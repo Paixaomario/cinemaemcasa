@@ -421,28 +421,19 @@ export async function getSectionContent(
 }
 
 /**
- * Normaliza o título removendo temporadas, coleções e sequências
+ * Normaliza o título removendo apenas temporadas de séries e coleções explícitas
+ * Mantém continuações de filmes como itens distintos
  */
 function normalizeTitle(title: string): string {
   let normalized = title.toLowerCase().trim()
 
-  // Remove padrões de temporadas
+  // Remove APENAS padrões de temporadas (séries)
   normalized = normalized.replace(/\b(temporada|season|s)\s*\d+/gi, '')
   normalized = normalized.replace(/\b(temporada|season|s)\s*[ivxlcdm]+/gi, '')
 
-  // Remove padrões de coleções
-  normalized = normalized.replace(/\b(coleção|collection|colecao)\s*\d*/gi, '')
-  normalized = normalized.replace(/\b(coleção|collection|colecao)\s*[ivxlcdm]+/gi, '')
-
-  // Remove padrões de partes
-  normalized = normalized.replace(/\b(parte|part|pt)\s*\d+/gi, '')
-  normalized = normalized.replace(/\b(parte|part|pt)\s*[ivxlcdm]+/gi, '')
-
-  // Remove números romanos no final
-  normalized = normalized.replace(/\s+[ivxlcdm]+\s*$/gi, '')
-
-  // Remove números no final (sequências)
-  normalized = normalized.replace(/\s*\d+\s*$/gi, '')
+  // Remove APENAS coleções explícitas (não continuações de filmes)
+  normalized = normalized.replace(/\b(coleção|collection|colecao)\s*completa?\b/gi, '')
+  normalized = normalized.replace(/\b(complete\s+collection|complete\s+series)\b/gi, '')
 
   // Remove espaços extras
   normalized = normalized.replace(/\s+/g, ' ').trim()
@@ -451,7 +442,8 @@ function normalizeTitle(title: string): string {
 }
 
 /**
- * Remove duplicatas baseadas no título (case insensitive e detecta temporadas/coleções)
+ * Remove duplicatas baseadas no título (apenas temporadas de séries e coleções explícitas)
+ * Continuações de filmes são mantidas como itens distintos
  */
 function removeDuplicatesByTitle(items: ContentItem[]): ContentItem[] {
   const uniqueMap = new Map<string, ContentItem>()
