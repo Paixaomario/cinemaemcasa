@@ -75,11 +75,13 @@ function SeriesContent() {
 
   const handleResume = () => {
     setShowResumeModal(false)
+    setShowPlayer(true)
   }
 
   const handleRestart = () => {
     setSavedProgress(0)
     setShowResumeModal(false)
+    setShowPlayer(true)
   }
 
   // Estados da Sala (Assistir Juntos)

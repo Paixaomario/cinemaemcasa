@@ -69,8 +69,11 @@ export function HomeClient() {
                 const seriesUuid = idStr.split('-ep-')[0]
                 const { data: dataByUuid } = await sb.from('content').select('*').eq('id', seriesUuid).maybeSingle()
                 if (dataByUuid) {
+                  // Busca o ID numérico da série na tabela series
+                  const { data: seriesData } = await sb.from('series').select('id_n').ilike('titulo', dataByUuid.title.trim()).maybeSingle()
                   contentData = {
                     id: seriesUuid,
+                    id_n: seriesData?.id_n || null, // ID numérico para o link
                     title: dataByUuid.title,
                     type: 'series',
                     poster: dataByUuid.poster
@@ -138,7 +141,7 @@ export function HomeClient() {
 
                 return {
                   id: idStr,
-                  id_n: contentData.type === 'series' ? idStr : undefined,
+                  id_n: contentData.id_n || (contentData.type === 'series' ? idStr : undefined),
                   titulo: contentData.title,
                   poster: contentData.poster || (orig ? (orig.poster || orig.capa || orig.poster_path || orig.banner) : null),
                   type: contentData.type,
