@@ -82,11 +82,6 @@ function SeriesContent() {
     setShowPlayer(true)
   }
 
-  // Log para debug do savedProgress
-  useEffect(() => {
-    console.log('savedProgress mudou:', savedProgress)
-  }, [savedProgress])
-
   // Estados da Sala (Assistir Juntos)
   const [activeRoomId, setActiveRoomId] = useState(searchParams.get('room'))
   const [isGuestMode] = useState(!!searchParams.get('room'))

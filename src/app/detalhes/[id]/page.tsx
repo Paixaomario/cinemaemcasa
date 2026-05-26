@@ -515,23 +515,18 @@ function MovieContent() {
           <div className="bg-neutral-900 rounded-2xl p-6 sm:p-8 max-w-md w-full border border-white/10 shadow-2xl">
             <div className="flex items-start gap-4 mb-6">
               <div className="w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-800">
-                {(() => {
-                  const imageUrl = movie?.poster || movie?.backdrop_path || movie?.capa || movie?.banner
-                  console.log('Imagem disponível (filme):', { moviePoster: movie?.poster, movieBackdrop: movie?.backdrop_path, movieCapa: movie?.capa, movieBanner: movie?.banner, imageUrl })
-                  if (imageUrl) {
-                    return (
-                      <Image
-                        src={imageUrl.startsWith('http') ? imageUrl : `https://image.tmdb.org/t/p/w500${imageUrl}`}
-                        alt={title}
-                        width={96}
-                        height={144}
-                        className="w-full h-full object-cover"
-                        unoptimized
-                      />
-                    )
-                  }
-                  return <div className="w-full h-full flex items-center justify-center text-3xl">🎬</div>
-                })()}
+                {movie?.poster || movie?.backdrop_path || movie?.capa || movie?.banner ? (
+                  <Image
+                    src={(movie.poster || movie.backdrop_path || movie.capa || movie.banner).startsWith('http') ? (movie.poster || movie.backdrop_path || movie.capa || movie.banner) : `https://image.tmdb.org/t/p/w500${movie.poster || movie.backdrop_path || movie.capa || movie.banner}`}
+                    alt={title}
+                    width={96}
+                    height={144}
+                    className="w-full h-full object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-3xl">🎬</div>
+                )}
               </div>
               <div className="flex-1">
                 <h3 className="text-xl sm:text-2xl font-black uppercase text-white mb-2">Continuar Assistindo?</h3>
