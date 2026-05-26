@@ -154,7 +154,9 @@ export default function PerfilPage() {
 
       // 7. Buscar dispositivos conectados
       try {
+        console.log('Buscando dispositivos conectados para usuário:', userId)
         const userDevices = await getUserDevices(userId)
+        console.log('Dispositivos encontrados:', userDevices)
         setDevices(userDevices)
       } catch (error) {
         console.error('Erro ao buscar dispositivos:', error)
@@ -183,12 +185,16 @@ export default function PerfilPage() {
         const deviceType = detectDeviceType(userAgent)
         const deviceName = detectDeviceName(userAgent)
 
+        console.log('Registrando dispositivo:', { deviceName, deviceType })
+
         // Gerar ou recuperar ID do dispositivo
         let deviceId = localStorage.getItem('device_id')
         if (!deviceId) {
           deviceId = crypto.randomUUID()
           localStorage.setItem('device_id', deviceId)
         }
+
+        console.log('Device ID:', deviceId)
 
         // Verificar se dispositivo já existe
         const { data: existingDevice } = await sb
@@ -197,6 +203,8 @@ export default function PerfilPage() {
           .eq('user_id', userId)
           .eq('device_id', deviceId)
           .maybeSingle()
+
+        console.log('Dispositivo existente:', existingDevice)
 
         if (existingDevice) {
           // Atualizar último acesso
@@ -207,6 +215,7 @@ export default function PerfilPage() {
               is_current: true,
             })
             .eq('id', existingDevice.id)
+          console.log('Dispositivo atualizado')
         } else {
           // Criar novo dispositivo
           await sb
@@ -220,6 +229,7 @@ export default function PerfilPage() {
               last_active: new Date().toISOString(),
               is_current: true,
             })
+          console.log('Novo dispositivo criado')
         }
       } catch (error) {
         console.error('Erro ao registrar dispositivo:', error)
@@ -234,31 +244,37 @@ export default function PerfilPage() {
   const handleAvatarChange = async (file: File) => {
     if (!user) return
 
+    console.log('Iniciando upload de avatar:', file.name, file.size)
     try {
       const avatarUrl = await uploadAvatar(file, user.id)
+      console.log('Avatar upload concluído:', avatarUrl)
       setProfile({ ...profile, avatar_url: avatarUrl })
       alert('Avatar atualizado com sucesso!')
     } catch (error) {
       console.error('Erro ao atualizar avatar:', error)
-      alert('Erro ao atualizar avatar. Tente novamente.')
+      alert('Erro ao atualizar avatar: ' + (error as Error).message)
     }
   }
 
   const handleSettingsChange = async (newSettings: any) => {
     if (!user) return
 
+    console.log('Salvando configurações:', newSettings)
     try {
       await saveProfileSettings(user.id, newSettings)
+      console.log('Configurações salvas com sucesso')
       setSettings(newSettings)
+      alert('Configurações salvas com sucesso!')
     } catch (error) {
       console.error('Erro ao salvar configurações:', error)
-      alert('Erro ao salvar configurações. Tente novamente.')
+      alert('Erro ao salvar configurações: ' + (error as Error).message)
     }
   }
 
   const handleAccessibilityChange = async (newSettings: any) => {
     if (!user) return
 
+    console.log('Salvando configurações de acessibilidade:', newSettings)
     const sb = createClient()
     try {
       const { data: existing } = await sb
@@ -281,9 +297,10 @@ export default function PerfilPage() {
           })
       }
       setAccessibilitySettings(newSettings)
+      alert('Configurações de acessibilidade salvas com sucesso!')
     } catch (error) {
       console.error('Erro ao salvar configurações de acessibilidade:', error)
-      alert('Erro ao salvar configurações de acessibilidade. Tente novamente.')
+      alert('Erro ao salvar configurações de acessibilidade: ' + (error as Error).message)
     }
   }
 
@@ -333,14 +350,23 @@ export default function PerfilPage() {
 
   const handleSaveName = async () => {
     if (!user || !tempName.trim()) return
+    console.log('Salvando nome:', tempName.trim())
     const sb = createClient()
     try {
-      await sb
+      const { error } = await sb
         .from('profiles')
         .update({ full_name: tempName.trim() })
         .eq('id', user.id)
+
+      if (error) {
+        console.error('Erro ao atualizar nome no banco:', error)
+        alert('Erro ao atualizar nome: ' + error.message)
+        return
+      }
+
       setProfile({ ...profile, full_name: tempName.trim() })
       setEditingName(false)
+      alert('Nome atualizado com sucesso!')
     } catch (error) {
       console.error('Erro ao atualizar nome:', error)
       alert('Erro ao atualizar nome')
