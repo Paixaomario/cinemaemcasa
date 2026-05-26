@@ -43,6 +43,7 @@ function SeriesContent() {
 
   // Função para carregar progresso salvo do episódio
   const handleEpisodeClick = useCallback(async (episode: any) => {
+    console.log('handleEpisodeClick chamado:', { user: user?.id, contentUuid, episodeId: episode.id_n || episode.id })
     if (!user || !contentUuid) {
       setActiveEpisode(episode)
       return
@@ -51,6 +52,7 @@ function SeriesContent() {
     const sb = createClient()
     // Para séries, usa o content_id da série + episode_id único
     const episodeContentId = `${contentUuid}-ep-${episode.id_n || episode.id}`
+    console.log('Buscando progresso para:', episodeContentId)
 
     const { data: progress } = await sb
       .from('view_progress')
@@ -59,7 +61,9 @@ function SeriesContent() {
       .eq('content_id', episodeContentId)
       .maybeSingle()
 
+    console.log('Progresso encontrado:', progress)
     const savedTime = progress?.last_position || 0
+    console.log('savedTime:', savedTime, 'setando savedProgress para:', savedTime)
     setSavedProgress(savedTime)
 
     // Se houver progresso salvo (mais de 10 segundos), mostra modal
@@ -81,6 +85,11 @@ function SeriesContent() {
     setShowResumeModal(false)
     setShowPlayer(true)
   }
+
+  // Log para debug do savedProgress
+  useEffect(() => {
+    console.log('savedProgress mudou para:', savedProgress)
+  }, [savedProgress])
 
   // Estados da Sala (Assistir Juntos)
   const [activeRoomId, setActiveRoomId] = useState(searchParams.get('room'))
