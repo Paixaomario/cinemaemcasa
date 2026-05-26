@@ -154,26 +154,50 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
     const searchLimit = 1000
 
     // Busca conteúdo com maior rating e mais recente
-    const { data: movies, error: moviesError } = await sb
-      .from('cinema')
-      .select('*')
-      .gte('rating', 7)
-      .order('rating', { ascending: false })
-      .order('year', { ascending: false })
-      .range(randomOffset, randomOffset + searchLimit - 1)
+    let movies = null
+    try {
+      movies = await sb
+        .from('cinema')
+        .select('*')
+        .gte('rating', 7)
+        .order('rating', { ascending: false })
+        .order('year', { ascending: false })
+        .range(randomOffset, randomOffset + searchLimit - 1)
+    } catch (offsetError) {
+      console.warn('Offset falhou em trending movies, tentando sem offset:', offsetError)
+      movies = await sb
+        .from('cinema')
+        .select('*')
+        .gte('rating', 7)
+        .order('rating', { ascending: false })
+        .order('year', { ascending: false })
+        .limit(searchLimit)
+    }
 
-    const { data: series, error: seriesError } = await sb
-      .from('series')
-      .select('*')
-      .gte('rating', 7)
-      .order('rating', { ascending: false })
-      .order('year', { ascending: false })
-      .range(randomOffset, randomOffset + searchLimit - 1)
+    let series = null
+    try {
+      series = await sb
+        .from('series')
+        .select('*')
+        .gte('rating', 7)
+        .order('rating', { ascending: false })
+        .order('year', { ascending: false })
+        .range(randomOffset, randomOffset + searchLimit - 1)
+    } catch (offsetError) {
+      console.warn('Offset falhou em trending series, tentando sem offset:', offsetError)
+      series = await sb
+        .from('series')
+        .select('*')
+        .gte('rating', 7)
+        .order('rating', { ascending: false })
+        .order('year', { ascending: false })
+        .limit(searchLimit)
+    }
 
     const items: ContentItem[] = []
 
-    if (movies) {
-      movies.forEach(movie => {
+    if (movies?.data) {
+      movies.data.forEach(movie => {
         items.push({
           id: movie.id,
           titulo: movie.titulo,
@@ -188,8 +212,8 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
       })
     }
 
-    if (series) {
-      series.forEach(serie => {
+    if (series?.data) {
+      series.data.forEach(serie => {
         items.push({
           id: serie.id,
           titulo: serie.titulo,
@@ -242,16 +266,28 @@ export async function getPersonalizedRecommendations(
 
     // Busca filmes baseados nos gêneros favoritos
     for (const genre of favoriteGenres) {
-      const { data: movies } = await sb
-        .from('cinema')
-        .select('*')
-        .ilike('category', `%${genre}%`)
-        .gte('rating', 6)
-        .order('rating', { ascending: false })
-        .range(randomOffset, randomOffset + searchLimit - 1)
+      let movies = null
+      try {
+        movies = await sb
+          .from('cinema')
+          .select('*')
+          .ilike('category', `%${genre}%`)
+          .gte('rating', 6)
+          .order('rating', { ascending: false })
+          .range(randomOffset, randomOffset + searchLimit - 1)
+      } catch (offsetError) {
+        console.warn('Offset falhou em personalized movies, tentando sem offset:', offsetError)
+        movies = await sb
+          .from('cinema')
+          .select('*')
+          .ilike('category', `%${genre}%`)
+          .gte('rating', 6)
+          .order('rating', { ascending: false })
+          .limit(searchLimit)
+      }
 
-      if (movies) {
-        movies.forEach(movie => {
+      if (movies?.data) {
+        movies.data.forEach(movie => {
           const idStr = String(movie.id)
           if (!excludeIds.has(idStr)) {
             items.push({
@@ -269,16 +305,28 @@ export async function getPersonalizedRecommendations(
         })
       }
 
-      const { data: series } = await sb
-        .from('series')
-        .select('*')
-        .ilike('category', `%${genre}%`)
-        .gte('rating', 6)
-        .order('rating', { ascending: false })
-        .range(randomOffset, randomOffset + searchLimit - 1)
+      let series = null
+      try {
+        series = await sb
+          .from('series')
+          .select('*')
+          .ilike('category', `%${genre}%`)
+          .gte('rating', 6)
+          .order('rating', { ascending: false })
+          .range(randomOffset, randomOffset + searchLimit - 1)
+      } catch (offsetError) {
+        console.warn('Offset falhou em personalized series, tentando sem offset:', offsetError)
+        series = await sb
+          .from('series')
+          .select('*')
+          .ilike('category', `%${genre}%`)
+          .gte('rating', 6)
+          .order('rating', { ascending: false })
+          .limit(searchLimit)
+      }
 
-      if (series) {
-        series.forEach(serie => {
+      if (series?.data) {
+        series.data.forEach(serie => {
           const idStr = String(serie.id)
           if (!excludeIds.has(idStr)) {
             items.push({
@@ -345,11 +393,17 @@ export async function getSectionContent(
       movieQuery = movieQuery.order('created_at', { ascending: false })
     }
 
-    // Adiciona offset aleatório e busca muitos itens
-    const { data: movies } = await movieQuery.range(randomOffset, randomOffset + searchLimit - 1)
+    // Tenta com offset aleatório, se falhar usa sem offset
+    let movies = null
+    try {
+      movies = await movieQuery.range(randomOffset, randomOffset + searchLimit - 1)
+    } catch (offsetError) {
+      console.warn('Offset falhou, tentando sem offset:', offsetError)
+      movies = await movieQuery.limit(searchLimit)
+    }
 
-    if (movies) {
-      movies.forEach(movie => {
+    if (movies?.data) {
+      movies.data.forEach(movie => {
         const idStr = String(movie.id)
         if (!excludeIds.has(idStr)) {
           items.push({
@@ -384,11 +438,17 @@ export async function getSectionContent(
       seriesQuery = seriesQuery.order('created_at', { ascending: false })
     }
 
-    // Adiciona offset aleatório e busca muitos itens
-    const { data: series } = await seriesQuery.range(randomOffset, randomOffset + searchLimit - 1)
+    // Tenta com offset aleatório, se falhar usa sem offset
+    let series = null
+    try {
+      series = await seriesQuery.range(randomOffset, randomOffset + searchLimit - 1)
+    } catch (offsetError) {
+      console.warn('Offset falhou, tentando sem offset:', offsetError)
+      series = await seriesQuery.limit(searchLimit)
+    }
 
-    if (series) {
-      series.forEach(serie => {
+    if (series?.data) {
+      series.data.forEach(serie => {
         const idStr = String(serie.id)
         if (!excludeIds.has(idStr)) {
           items.push({
