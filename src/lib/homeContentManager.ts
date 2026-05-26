@@ -367,6 +367,8 @@ export async function getSectionContent(
   try {
     const items: ContentItem[] = []
 
+    console.log(`getSectionContent - sectionId: ${sectionId}, categories:`, categories, `limit: ${limit}, ordenacao: ${ordenacao}`)
+
     // Busca muitos itens para variedade (sem offset para respeitar ordenação do banco)
     const searchLimit = 1000
 
@@ -375,6 +377,7 @@ export async function getSectionContent(
 
     if (categories && categories.length > 0) {
       const catFilters = categories.map(c => `category.ilike.%${c}%`).join(',')
+      console.log(`Filtros de categoria para filmes:`, catFilters)
       movieQuery = movieQuery.or(catFilters)
     }
 
@@ -395,6 +398,8 @@ export async function getSectionContent(
       console.warn('Erro ao buscar filmes:', error)
       movies = await movieQuery.limit(searchLimit)
     }
+
+    console.log(`Filmes encontrados:`, movies?.data?.length || 0)
 
     if (movies?.data) {
       movies.data.forEach(movie => {
@@ -420,6 +425,7 @@ export async function getSectionContent(
 
     if (categories && categories.length > 0) {
       const catFilters = categories.map(c => `category.ilike.%${c}%`).join(',')
+      console.log(`Filtros de categoria para séries:`, catFilters)
       seriesQuery = seriesQuery.or(catFilters)
     }
 
@@ -441,6 +447,8 @@ export async function getSectionContent(
       series = await seriesQuery.limit(searchLimit)
     }
 
+    console.log(`Séries encontradas:`, series?.data?.length || 0)
+
     if (series?.data) {
       series.data.forEach(serie => {
         const idStr = String(serie.id)
@@ -460,14 +468,21 @@ export async function getSectionContent(
       })
     }
 
-    // Remove duplicatas baseadas no título (incluindo temporadas e coleções)
+    console.log(`Total de itens antes de remover duplicatas:`, items.length)
+
+    // Remove duplicatas baseadas no título (apenas temporadas de séries)
     const uniqueItems = removeDuplicatesByTitle(items)
+
+    console.log(`Total de itens após remover duplicatas:`, uniqueItems.length)
 
     // Embaralha para variedade a cada carregamento
     const shuffled = shuffleArray(uniqueItems)
 
     // Limita ao número solicitado
-    return shuffled.slice(0, limit)
+    const result = shuffled.slice(0, limit)
+    console.log(`Total de itens retornados:`, result.length)
+
+    return result
   } catch (error) {
     console.error('Erro ao buscar conteúdo da seção:', error)
     return []
@@ -475,8 +490,8 @@ export async function getSectionContent(
 }
 
 /**
- * Normaliza o título removendo apenas temporadas de séries e coleções explícitas
- * Mantém continuações de filmes como itens distintos
+ * Normaliza o título removendo APENAS temporadas de séries
+ * NÃO remove coleções ou continuações de filmes
  */
 function normalizeTitle(title: string): string {
   let normalized = title.toLowerCase().trim()
@@ -485,10 +500,6 @@ function normalizeTitle(title: string): string {
   normalized = normalized.replace(/\b(temporada|season|s)\s*\d+/gi, '')
   normalized = normalized.replace(/\b(temporada|season|s)\s*[ivxlcdm]+/gi, '')
 
-  // Remove APENAS coleções explícitas (não continuações de filmes)
-  normalized = normalized.replace(/\b(coleção|collection|colecao)\s*completa?\b/gi, '')
-  normalized = normalized.replace(/\b(complete\s+collection|complete\s+series)\b/gi, '')
-
   // Remove espaços extras
   normalized = normalized.replace(/\s+/g, ' ').trim()
 
@@ -496,8 +507,8 @@ function normalizeTitle(title: string): string {
 }
 
 /**
- * Remove duplicatas baseadas no título (apenas temporadas de séries e coleções explícitas)
- * Continuações de filmes são mantidas como itens distintos
+ * Remove duplicatas baseadas no título (apenas temporadas de séries)
+ * Coleções e continuações de filmes são mantidas como itens distintos
  */
 function removeDuplicatesByTitle(items: ContentItem[]): ContentItem[] {
   const uniqueMap = new Map<string, ContentItem>()

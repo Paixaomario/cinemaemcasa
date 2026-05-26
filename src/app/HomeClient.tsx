@@ -264,9 +264,21 @@ export function HomeClient() {
           }
         } else {
           // Seção normal: usa o gerenciador de conteúdo (independente da fonte)
+          // Converte categorias para array se necessário
+          let categories: string[] = []
+          if (sec.categorias) {
+            if (Array.isArray(sec.categorias)) {
+              categories = sec.categorias
+            } else if (typeof sec.categorias === 'string') {
+              categories = (sec.categorias as string).split(',').map((c: string) => c.trim())
+            }
+          }
+
+          console.log(`Seção: ${sec.titulo}, Categorias:`, categories, `Limite:`, sec.limite, `Ordenação:`, sec.ordenacao)
+
           items = await getSectionContent(
             sec.id,
-            sec.categorias || [],
+            categories,
             sec.limite,
             sec.ordenacao,
             displayedIds
