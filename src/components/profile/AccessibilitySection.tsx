@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface AccessibilitySectionProps {
   settings?: {
@@ -16,11 +16,16 @@ interface AccessibilitySectionProps {
 export function AccessibilitySection({ settings = {}, onSettingsChange }: AccessibilitySectionProps) {
   const [localSettings, setLocalSettings] = useState(settings)
 
-  const handleSettingChange = (key: string, value: any) => {
+  // Sincronizar estado local quando configurações externas mudam
+  useEffect(() => {
+    setLocalSettings(settings)
+  }, [settings])
+
+  const handleSettingChange = async (key: string, value: any) => {
     const newSettings = { ...localSettings, [key]: value }
     setLocalSettings(newSettings)
     if (onSettingsChange) {
-      onSettingsChange(newSettings)
+      await onSettingsChange(newSettings)
     }
   }
 

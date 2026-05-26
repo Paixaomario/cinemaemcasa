@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface SettingsSectionProps {
   settings?: {
@@ -13,6 +13,11 @@ interface SettingsSectionProps {
 
 export function SettingsSection({ settings = {}, onSettingsChange }: SettingsSectionProps) {
   const [localSettings, setLocalSettings] = useState(settings)
+
+  // Sincronizar estado local quando configurações externas mudam
+  useEffect(() => {
+    setLocalSettings(settings)
+  }, [settings])
 
   const handleSettingChange = async (key: string, value: any) => {
     const newSettings = { ...localSettings, [key]: value }
