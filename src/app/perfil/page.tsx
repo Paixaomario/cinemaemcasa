@@ -11,6 +11,9 @@ import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { ContinueWatchingSection } from '@/components/profile/ContinueWatchingSection'
 import { SettingsSection } from '@/components/profile/SettingsSection'
 import { DevicesSection } from '@/components/profile/DevicesSection'
+import { StatisticsSection } from '@/components/profile/StatisticsSection'
+import { uploadAvatar } from '@/lib/avatarUpload'
+import { saveProfileSettings, getProfileSettings } from '@/lib/profileSettings'
 
 interface ProfileItem {
   id: string | number;
@@ -33,6 +36,7 @@ export default function PerfilPage() {
   const [favorites, setFavorites] = useState<ProfileItem[]>([])
   const [history, setHistory] = useState<ProfileItem[]>([])
   const [continueWatching, setContinueWatching] = useState<ContinueWatchingItem[]>([])
+  const [settings, setSettings] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -90,6 +94,22 @@ export default function PerfilPage() {
         setContinueWatching(continueWatchingItems.filter(Boolean) as ContinueWatchingItem[])
       }
 
+      // 5. Buscar configurações do perfil
+      try {
+        const profileSettings = await getProfileSettings(userId)
+        setSettings(profileSettings)
+      } catch (error) {
+        console.error('Erro ao buscar configurações:', error)
+        setSettings({
+          language: 'pt-BR',
+          subtitles: 'off',
+          video_quality: 'auto',
+          autoplay: true,
+          auto_next_episode: true,
+          data_saver: false,
+        })
+      }
+
       setLoading(false)
     }
 
@@ -99,17 +119,26 @@ export default function PerfilPage() {
   const handleAvatarChange = async (file: File) => {
     if (!user) return
 
-    const sb = createClient()
-    // TODO: Implementar upload para Supabase Storage
-    console.log('Avatar change:', file.name)
+    try {
+      const avatarUrl = await uploadAvatar(file, user.id)
+      setProfile({ ...profile, avatar_url: avatarUrl })
+      alert('Avatar atualizado com sucesso!')
+    } catch (error) {
+      console.error('Erro ao atualizar avatar:', error)
+      alert('Erro ao atualizar avatar. Tente novamente.')
+    }
   }
 
-  const handleSettingsChange = async (settings: any) => {
+  const handleSettingsChange = async (newSettings: any) => {
     if (!user) return
 
-    const sb = createClient()
-    // TODO: Salvar configurações no banco
-    console.log('Settings change:', settings)
+    try {
+      await saveProfileSettings(user.id, newSettings)
+      setSettings(newSettings)
+    } catch (error) {
+      console.error('Erro ao salvar configurações:', error)
+      alert('Erro ao salvar configurações. Tente novamente.')
+    }
   }
 
   const handleLogoutDevice = async (deviceId: string) => {
@@ -175,7 +204,8 @@ export default function PerfilPage() {
           <ContinueWatchingSection items={continueWatching} />
           <Section title="Meus Favoritos" items={favorites} color="var(--gold-primary)" emptyMsg="Nenhum conteúdo favoritado ainda." />
           <Section title="Histórico de Reprodução" items={history} color="var(--red-primary)" emptyMsg="Você ainda não iniciou nenhum vídeo." />
-          <SettingsSection onSettingsChange={handleSettingsChange} />
+          <StatisticsSection />
+          <SettingsSection settings={settings} onSettingsChange={handleSettingsChange} />
           <DevicesSection onLogoutDevice={handleLogoutDevice} />
         </div>
       </div>
