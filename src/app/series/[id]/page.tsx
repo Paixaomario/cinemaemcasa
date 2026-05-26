@@ -986,13 +986,10 @@ function SeriesContent() {
             <div className="flex items-start gap-4 mb-6">
               <div className="w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-800">
                 {series?.poster || series?.capa ? (
-                  <Image
+                  <img
                     src={(series.poster || series.capa).startsWith('http') ? (series.poster || series.capa) : `https://image.tmdb.org/t/p/w500${series.poster || series.capa}`}
                     alt={series.titulo}
-                    width={96}
-                    height={144}
                     className="w-full h-full object-cover"
-                    unoptimized
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-3xl">🎬</div>
