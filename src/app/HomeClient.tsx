@@ -62,8 +62,21 @@ export function HomeClient() {
               // Tenta buscar por UUID primeiro, depois por título se for numérico
               let contentData = null
               const isNumeric = /^\d+$/.test(idStr)
+              const isEpisode = idStr.includes('-ep-')
 
-              if (!isNumeric) {
+              if (isEpisode) {
+                // É episódio de série, extrai o UUID da série
+                const seriesUuid = idStr.split('-ep-')[0]
+                const { data: dataByUuid } = await sb.from('content').select('*').eq('id', seriesUuid).maybeSingle()
+                if (dataByUuid) {
+                  contentData = {
+                    id: seriesUuid,
+                    title: dataByUuid.title,
+                    type: 'series',
+                    poster: dataByUuid.poster
+                  }
+                }
+              } else if (!isNumeric) {
                 // É UUID, busca direto
                 const { data: dataByUuid } = await sb.from('content').select('*').eq('id', idStr).maybeSingle()
                 contentData = dataByUuid
