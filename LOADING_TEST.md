@@ -2,48 +2,44 @@
 
 ## Funcionamento
 
-A página de carregamento aparece automaticamente na **primeira visita** do usuário ao site.
+A página de carregamento aparece **sempre** ao acessar o site (`/`), independentemente de visitas anteriores.
 
 ### Como Funciona
 
-1. **Primeira Visita:**
+1. **Acessar `/`:**
    - Usuário acessa `/`
-   - Sistema verifica `localStorage.getItem('has_visited_before')`
-   - Se não existe, redireciona para `/loading`
+   - Sistema redireciona automaticamente para `/loading`
    - Mostra página de loading com progresso
-   - Ao finalizar, marca visita e redireciona para `/`
+   - Ao finalizar, redireciona para `/home`
 
-2. **Visitas Seguintes:**
-   - Usuário acessa `/`
-   - Sistema verifica `localStorage.getItem('has_visited_before')`
-   - Se existe, vai direto para home sem loading
+2. **Acessar `/home` diretamente:**
+   - Usuário acessa `/home`
+   - Vai direto para a home sem loading
+
+3. **Acessar `/loading` diretamente:**
+   - Usuário acessa `/loading`
+   - Mostra página de loading
+   - Ao finalizar, redireciona para `/home`
 
 ## Como Testar
 
-### Testar Primeira Visita
+### Testar Página de Loading
 
-**Opção 1: Limpar LocalStorage**
+**Opção 1: Acessar a Raiz**
+1. Acesse: `/`
+2. A página de loading deve aparecer automaticamente
+3. Ao finalizar, deve redirecionar para `/home`
+
+**Opção 2: Acessar Diretamente**
+1. Acesse: `/loading`
+2. A página de loading deve aparecer
+3. Ao finalizar, deve redirecionar para `/home`
+
+**Opção 3: Limpar LocalStorage e Recarregar**
 1. Abra o console do navegador (F12)
 2. Execute: `localStorage.clear()`
 3. Recarregue a página
 4. A página de loading deve aparecer
-
-**Opção 2: Remover Apenas a Chave**
-1. Abra o console do navegador (F12)
-2. Execute: `localStorage.removeItem('has_visited_before')`
-3. Recarregue a página
-4. A página de loading deve aparecer
-
-**Opção 3: Modo Incognito**
-1. Abra uma janela em modo incognito
-2. Acesse o site
-3. A página de loading deve aparecer
-
-### Testar Acesso Direto
-
-Você também pode acessar diretamente a página de loading:
-- Acesse: `/loading`
-- A página deve mostrar o loading e redirecionar para home
 
 ## O que Verificar
 
@@ -59,7 +55,7 @@ Você também pode acessar diretamente a página de loading:
 ### 2. Barra de Progresso
 - Deve aparecer abaixo do logo
 - Deve mostrar porcentagem de 0 a 100%
-- Deve ter gradiente de vermelho para dourado
+- Deve ter cor `#00ADEF` (cor do logo)
 - Deve ter efeito shimmer
 - Deve preencher gradualmente
 
@@ -73,19 +69,19 @@ Você também pode acessar diretamente a página de loading:
   - "Pronto!"
 
 ### 4. Redirecionamento
-- Ao atingir 100%, deve redirecionar para home
+- Ao atingir 100%, deve redirecionar para `/home`
 - Deve marcar `has_visited_before` no localStorage
-- Não deve mostrar loading em visitas subsequentes
+- Links do navbar apontam para `/home`
 
 ## Solução de Problemas
 
 ### Loading não aparece
-- Verifique se o localStorage foi limpo
+- Verifique se está acessando `/` e não `/home`
 - Verifique o console do navegador para erros
 - Certifique-se de que JavaScript está habilitado
 
 ### Barra de progresso não aparece
-- Verifique se as variáveis CSS estão definidas em `globals.css`
+- Verifique se a cor `#00ADEF` está definida
 - Verifique o console do navegador para erros
 - Certifique-se de que o arquivo `logo.png` existe em `/public`
 
@@ -94,9 +90,9 @@ Você também pode acessar diretamente a página de loading:
 - Verifique se o router está funcionando corretamente
 - Certifique-se de que o localStorage não está bloqueado
 
-### Loading aparece sempre
-- Verifique se `has_visited_before` está sendo salvo corretamente
-- Limpe o localStorage e teste novamente
+### Redireciona para página errada
+- Verifique se o link no loading aponta para `/home`
+- Verifique se o arquivo `/home/page.tsx` existe
 
 ## Duração do Loading
 
@@ -122,3 +118,23 @@ const steps = [
 ```
 
 Ajuste os valores de `duration` conforme necessário.
+
+## Estrutura de Rotas
+
+```
+/           → Redireciona para /loading
+/loading    → Página de carregamento → Redireciona para /home
+/home       → Página inicial (conteúdo real)
+/filmes     → Página de filmes
+/series     → Página de séries
+/favoritos  → Página de favoritos
+/perfil     → Página de perfil
+```
+
+## Links Atualizados
+
+Todos os links que antes apontavam para `/` agora apontam para `/home`:
+- Logo no Navbar
+- Link "Início" no Navbar
+- Botão "Voltar" na página de assistir
+
