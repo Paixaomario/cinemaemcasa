@@ -12,8 +12,6 @@ CREATE TABLE IF NOT EXISTS public.profile_settings (
   language text DEFAULT 'pt-BR',
   subtitles text DEFAULT 'off',
   video_quality text DEFAULT 'auto',
-  autoplay boolean DEFAULT true,
-  auto_next_episode boolean DEFAULT true,
   data_saver boolean DEFAULT false,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),

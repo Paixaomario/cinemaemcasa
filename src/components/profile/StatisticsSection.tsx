@@ -44,7 +44,7 @@ export function StatisticsSection({ statistics }: StatisticsSectionProps) {
         Estatísticas do Perfil
       </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Tempo Total Assistido */}
         <div className="bg-white/5 border border-white/5 rounded-3xl p-6 hover:border-white/10 transition-all">
           <div className="text-4xl mb-2">⏱️</div>
@@ -75,7 +75,7 @@ export function StatisticsSection({ statistics }: StatisticsSectionProps) {
       </div>
 
       {/* Informações Adicionais */}
-      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="mt-6 grid grid-cols-2 gap-6">
         <div className="bg-white/5 border border-white/5 rounded-3xl p-6">
           <h3 className="text-sm text-gray-400 uppercase font-bold mb-2">Última Visualização</h3>
           <p className="text-xl font-bold text-white">{formatDate(stats.last_watch_date)}</p>

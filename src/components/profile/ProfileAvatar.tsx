@@ -79,7 +79,7 @@ export function ProfileAvatar({ avatarUrl, username, onAvatarChange, editable = 
             </span>
           )}
           
-          {editable && (
+          {editable && !preview && (
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <span className="text-3xl">📷</span>
             </div>

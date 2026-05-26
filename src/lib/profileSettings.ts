@@ -4,8 +4,6 @@ export interface ProfileSettings {
   language?: string
   subtitles?: string
   video_quality?: string
-  autoplay?: boolean
-  auto_next_episode?: boolean
   data_saver?: boolean
 }
 
@@ -28,8 +26,6 @@ export async function saveProfileSettings(userId: string, settings: ProfileSetti
     language: settings.language || 'pt-BR',
     subtitles: settings.subtitles || 'off',
     video_quality: settings.video_quality || 'auto',
-    autoplay: settings.autoplay !== undefined ? settings.autoplay : true,
-    auto_next_episode: settings.auto_next_episode !== undefined ? settings.auto_next_episode : true,
     data_saver: settings.data_saver || false,
   }
 
@@ -85,8 +81,6 @@ export async function getProfileSettings(userId: string): Promise<ProfileSetting
       language: 'pt-BR',
       subtitles: 'off',
       video_quality: 'auto',
-      autoplay: true,
-      auto_next_episode: true,
       data_saver: false,
     }
   }
@@ -95,8 +89,6 @@ export async function getProfileSettings(userId: string): Promise<ProfileSetting
     language: data.language,
     subtitles: data.subtitles,
     video_quality: data.video_quality,
-    autoplay: data.autoplay,
-    auto_next_episode: data.auto_next_episode,
     data_saver: data.data_saver,
   }
 }

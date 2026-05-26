@@ -12,6 +12,7 @@ import { ContinueWatchingSection } from '@/components/profile/ContinueWatchingSe
 import { SettingsSection } from '@/components/profile/SettingsSection'
 import { DevicesSection } from '@/components/profile/DevicesSection'
 import { StatisticsSection } from '@/components/profile/StatisticsSection'
+import { AccessibilitySection } from '@/components/profile/AccessibilitySection'
 import { uploadAvatar } from '@/lib/avatarUpload'
 import { saveProfileSettings, getProfileSettings } from '@/lib/profileSettings'
 
@@ -37,6 +38,9 @@ export default function PerfilPage() {
   const [history, setHistory] = useState<ProfileItem[]>([])
   const [continueWatching, setContinueWatching] = useState<ContinueWatchingItem[]>([])
   const [settings, setSettings] = useState<any>(null)
+  const [accessibilitySettings, setAccessibilitySettings] = useState<any>(null)
+  const [editingName, setEditingName] = useState(false)
+  const [tempName, setTempName] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -104,9 +108,39 @@ export default function PerfilPage() {
           language: 'pt-BR',
           subtitles: 'off',
           video_quality: 'auto',
-          autoplay: true,
-          auto_next_episode: true,
           data_saver: false,
+        })
+      }
+
+      // 6. Buscar configurações de acessibilidade
+      try {
+        const { data: accSettings } = await sb
+          .from('accessibility_settings')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle()
+
+        if (accSettings) {
+          setAccessibilitySettings(accSettings)
+        } else {
+          setAccessibilitySettings({
+            subtitle_size: 'medium',
+            subtitle_color: 'white',
+            subtitle_background: 'black',
+            audio_description: false,
+            high_contrast: false,
+            reduced_motion: false,
+          })
+        }
+      } catch (error) {
+        console.error('Erro ao buscar configurações de acessibilidade:', error)
+        setAccessibilitySettings({
+          subtitle_size: 'medium',
+          subtitle_color: 'white',
+          subtitle_background: 'black',
+          audio_description: false,
+          high_contrast: false,
+          reduced_motion: false,
         })
       }
 
@@ -141,9 +175,93 @@ export default function PerfilPage() {
     }
   }
 
+  const handleAccessibilityChange = async (newSettings: any) => {
+    if (!user) return
+
+    const sb = createClient()
+    try {
+      const { data: existing } = await sb
+        .from('accessibility_settings')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (existing) {
+        await sb
+          .from('accessibility_settings')
+          .update(newSettings)
+          .eq('user_id', user.id)
+      } else {
+        await sb
+          .from('accessibility_settings')
+          .insert({
+            user_id: user.id,
+            ...newSettings
+          })
+      }
+      setAccessibilitySettings(newSettings)
+    } catch (error) {
+      console.error('Erro ao salvar configurações de acessibilidade:', error)
+      alert('Erro ao salvar configurações de acessibilidade. Tente novamente.')
+    }
+  }
+
   const handleLogoutDevice = async (deviceId: string) => {
     // TODO: Implementar logout de dispositivo
     console.log('Logout device:', deviceId)
+  }
+
+  const handleDeleteHistoryItem = async (itemId: string) => {
+    if (!user) return
+    const sb = createClient()
+    try {
+      await sb
+        .from('view_progress')
+        .delete()
+        .eq('content_id', itemId)
+        .eq('user_id', user.id)
+      setHistory(history.filter(item => item.id !== itemId))
+    } catch (error) {
+      console.error('Erro ao deletar item do histórico:', error)
+      alert('Erro ao deletar item do histórico')
+    }
+  }
+
+  const handleClearHistory = async () => {
+    if (!user) return
+    if (!confirm('Tem certeza que deseja limpar todo o histórico de reprodução?')) return
+    const sb = createClient()
+    try {
+      await sb
+        .from('view_progress')
+        .delete()
+        .eq('user_id', user.id)
+      setHistory([])
+    } catch (error) {
+      console.error('Erro ao limpar histórico:', error)
+      alert('Erro ao limpar histórico')
+    }
+  }
+
+  const handleSaveName = async () => {
+    if (!user || !tempName.trim()) return
+    const sb = createClient()
+    try {
+      await sb
+        .from('profiles')
+        .update({ full_name: tempName.trim() })
+        .eq('id', user.id)
+      setProfile({ ...profile, full_name: tempName.trim() })
+      setEditingName(false)
+    } catch (error) {
+      console.error('Erro ao atualizar nome:', error)
+      alert('Erro ao atualizar nome')
+    }
+  }
+
+  const handleCancelEditName = () => {
+    setTempName(profile?.full_name || profile?.username || '')
+    setEditingName(false)
   }
 
   if (authLoading || (user && loading)) {
@@ -186,10 +304,47 @@ export default function PerfilPage() {
             onAvatarChange={handleAvatarChange}
             editable={true}
           />
-          <div className="text-center sm:text-left">
-            <h1 className="text-4xl sm:text-6xl font-black uppercase tracking-tighter text-white drop-shadow-2xl">
-              {profile?.full_name || profile?.username || 'Meu Perfil'}
-            </h1>
+          <div className="text-center sm:text-left flex-1">
+            {editingName ? (
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                <input
+                  type="text"
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                  className="text-4xl sm:text-6xl font-black uppercase tracking-tighter text-white bg-transparent border-b-2 border-[var(--gold-primary)] focus:outline-none"
+                  autoFocus
+                />
+                <div className="flex gap-2 mt-2 sm:mt-0">
+                  <button
+                    onClick={handleSaveName}
+                    className="px-4 py-2 bg-[var(--gold-primary)] text-black font-bold rounded-xl hover:bg-[var(--gold-primary)]/80 transition-colors"
+                  >
+                    Salvar
+                  </button>
+                  <button
+                    onClick={handleCancelEditName}
+                    className="px-4 py-2 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <h1 className="text-4xl sm:text-6xl font-black uppercase tracking-tighter text-white drop-shadow-2xl">
+                  {profile?.full_name || profile?.username || 'Meu Perfil'}
+                </h1>
+                <button
+                  onClick={() => {
+                    setTempName(profile?.full_name || profile?.username || '')
+                    setEditingName(true)
+                  }}
+                  className="text-2xl hover:text-[var(--gold-primary)] transition-colors"
+                >
+                  ✏️
+                </button>
+              </div>
+            )}
             <p className="text-lg sm:text-xl text-[var(--gold-primary)] font-bold mt-2 opacity-80">{user.email}</p>
             {profile?.is_admin && (
               <span className="inline-block mt-2 px-3 py-1 bg-[var(--gold-primary)] text-black text-xs font-bold uppercase rounded-full">
@@ -201,11 +356,10 @@ export default function PerfilPage() {
 
         {/* Seções do Perfil */}
         <div className="space-y-16 sm:space-y-20">
-          <ContinueWatchingSection items={continueWatching} />
-          <Section title="Meus Favoritos" items={favorites} color="var(--gold-primary)" emptyMsg="Nenhum conteúdo favoritado ainda." />
-          <Section title="Histórico de Reprodução" items={history} color="var(--red-primary)" emptyMsg="Você ainda não iniciou nenhum vídeo." />
+          <Section title="Histórico de Reprodução" items={history} color="var(--red-primary)" emptyMsg="Você ainda não iniciou nenhum vídeo." showDelete={true} onDelete={handleDeleteHistoryItem} onClearAll={handleClearHistory} />
           <StatisticsSection />
           <SettingsSection settings={settings} onSettingsChange={handleSettingsChange} />
+          <AccessibilitySection settings={accessibilitySettings} onSettingsChange={handleAccessibilityChange} />
           <DevicesSection onLogoutDevice={handleLogoutDevice} />
         </div>
       </div>
@@ -213,13 +367,23 @@ export default function PerfilPage() {
   )
 }
 
-function Section({ title, items, color, emptyMsg }: { title: string, items: ProfileItem[], color: string, emptyMsg: string }) {
+function Section({ title, items, color, emptyMsg, showDelete = false, onDelete, onClearAll }: { title: string, items: ProfileItem[], color: string, emptyMsg: string, showDelete?: boolean, onDelete?: (itemId: string) => void, onClearAll?: () => void }) {
   return (
     <section className="animate-in fade-in slide-in-from-left-4 duration-1000">
-      <h2 className="text-3xl font-black uppercase tracking-tighter mb-8 flex items-center gap-4" style={{ color }}>
-        <span className="w-2 h-10 rounded-full" style={{ backgroundColor: color }}></span>
-        {title}
-      </h2>
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-3xl font-black uppercase tracking-tighter flex items-center gap-4" style={{ color }}>
+          <span className="w-2 h-10 rounded-full" style={{ backgroundColor: color }}></span>
+          {title}
+        </h2>
+        {showDelete && items.length > 0 && onClearAll && (
+          <button
+            onClick={onClearAll}
+            className="px-4 py-2 bg-red-500/20 text-red-400 rounded-xl hover:bg-red-500/30 transition-colors font-bold text-sm"
+          >
+            Limpar Tudo
+          </button>
+        )}
+      </div>
 
       {items.length === 0 ? (
         <div className="p-10 rounded-3xl bg-white/5 border border-white/5 text-gray-500 font-medium italic">
@@ -234,26 +398,38 @@ function Section({ title, items, color, emptyMsg }: { title: string, items: Prof
             const imageUrl = posterPath
 
             return (
-            <Link
-              key={item.id}
-              href={isSeries ? `/series/${item.id}` : `/detalhes/${item.id}`}
-              className="relative aspect-[2/3] w-full group rounded-xl overflow-hidden bg-neutral-900 border border-white/5 hover:border-brand-cyan transition-all shadow-xl"
-            >
-              {imageUrl ? (
-                <Image
-                  src={imageUrl}
-                  alt={item.titulo || ''}
-                  fill
-                  className="object-cover transition-transform group-hover:scale-110"
-                  unoptimized
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full text-5xl">🎬</div>
+            <div key={item.id} className="relative aspect-[2/3] w-full group rounded-xl overflow-hidden bg-neutral-900 border border-white/5 hover:border-brand-cyan transition-all shadow-xl">
+              <Link
+                href={isSeries ? `/series/${item.id}` : `/detalhes/${item.id}`}
+                className="absolute inset-0"
+              >
+                {imageUrl ? (
+                  <Image
+                    src={imageUrl}
+                    alt={item.titulo || ''}
+                    fill
+                    className="object-cover transition-transform group-hover:scale-110"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-5xl">🎬</div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
+                  <p className="text-xs font-black uppercase truncate text-white drop-shadow-md">{item.titulo}</p>
+                </div>
+              </Link>
+              {showDelete && onDelete && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    onDelete(String(item.id))
+                  }}
+                  className="absolute top-2 right-2 w-8 h-8 bg-red-500/80 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 z-10"
+                >
+                  <span className="text-white font-bold">×</span>
+                </button>
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
-                <p className="text-xs font-black uppercase truncate text-white drop-shadow-md">{item.titulo}</p>
-              </div>
-            </Link>
+            </div>
           )})}
         </div>
       )}

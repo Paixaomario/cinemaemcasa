@@ -6,8 +6,6 @@ interface SettingsSectionProps {
     language?: string
     subtitles?: string
     quality?: string
-    autoplay?: boolean
-    autoNext?: boolean
     dataSaver?: boolean
   }
   onSettingsChange?: (settings: any) => void
@@ -83,34 +81,6 @@ export function SettingsSection({ settings = {}, onSettingsChange }: SettingsSec
             <option value="720p">720p HD</option>
             <option value="480p">480p SD</option>
           </select>
-        </div>
-
-        {/* Autoplay */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-white">Reprodução Automática</h3>
-            <p className="text-sm text-gray-400">Reproduzir próximo episódio automaticamente</p>
-          </div>
-          <button
-            onClick={() => handleSettingChange('autoplay', !localSettings.autoplay)}
-            className={`w-14 h-8 rounded-full transition-colors ${localSettings.autoplay ? 'bg-[var(--gold-primary)]' : 'bg-white/10'}`}
-          >
-            <div className={`w-6 h-6 rounded-full bg-white transition-transform ${localSettings.autoplay ? 'translate-x-6' : 'translate-x-1'}`} />
-          </button>
-        </div>
-
-        {/* Auto Next */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-white">Próximo Episódio</h3>
-            <p className="text-sm text-gray-400">Mostrar prévia do próximo episódio</p>
-          </div>
-          <button
-            onClick={() => handleSettingChange('autoNext', !localSettings.autoNext)}
-            className={`w-14 h-8 rounded-full transition-colors ${localSettings.autoNext ? 'bg-[var(--gold-primary)]' : 'bg-white/10'}`}
-          >
-            <div className={`w-6 h-6 rounded-full bg-white transition-transform ${localSettings.autoNext ? 'translate-x-6' : 'translate-x-1'}`} />
-          </button>
         </div>
 
         {/* Economia de Dados */}
