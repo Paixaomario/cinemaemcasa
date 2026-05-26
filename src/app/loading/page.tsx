@@ -78,7 +78,7 @@ export default function LoadingPage() {
       {/* Barra de Progresso */}
       <div className="w-full max-w-2xl">
         <div className="mb-4 flex justify-between items-center">
-          <span className="text-[var(--gold-primary)] font-bold text-lg sm:text-xl uppercase tracking-wider">
+          <span className="text-[#00ADEF] font-bold text-lg sm:text-xl uppercase tracking-wider">
             {loadingStep}
           </span>
           <span className="text-white font-bold text-lg sm:text-xl">
@@ -89,7 +89,7 @@ export default function LoadingPage() {
         {/* Barra de progresso */}
         <div className="h-2 sm:h-3 bg-white/10 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-[var(--red-primary)] to-[var(--gold-primary)] rounded-full transition-all duration-300 ease-out"
+            className="h-full bg-[#00ADEF] rounded-full transition-all duration-300 ease-out"
             style={{ width: `${progress}%` }}
           >
             <div className="h-full w-full animate-shimmer bg-gradient-to-r from-transparent via-white/30 to-transparent" />

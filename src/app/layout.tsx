@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { SupabaseProvider } from '@/components/layout/SupabaseProvider'
 import { MobileNavBar } from '@/components/layout/MobileNavBar'
+import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister'
 import { Inter, Montserrat } from 'next/font/google'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -13,14 +14,20 @@ const montserrat = Montserrat({
 
 export const metadata: Metadata = {
   title: 'Cinema em Casa',
+  manifest: '/manifest.json',
   icons: {
     icon: '/logo.png',
     apple: '/logo.png',
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Cinema em Casa',
+  },
 }
 
 export const viewport: Viewport = {
-  themeColor: '#000000',
+  themeColor: '#00ADEF',
   width: 'device-width',
   initialScale: 1,
 }
@@ -29,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" className={`${inter.variable} ${montserrat.variable}`}>
       <body className="font-sans">
+        <ServiceWorkerRegister />
         <SupabaseProvider>
           {children}
           <MobileNavBar />
