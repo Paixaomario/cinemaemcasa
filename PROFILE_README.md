@@ -104,9 +104,24 @@ src/
 
 ## Configuração do Supabase
 
-### 1. Executar SQL para criar tabelas
+**IMPORTANTE:** Siga o guia completo de configuração em `SUPABASE_SETUP.md`
 
-Execute o arquivo `database/profile_tables.sql` no SQL Editor do Supabase.
+### Resumo Rápido
+
+1. **Executar SQL:** Execute `database/profile_tables.sql` no SQL Editor do Supabase
+2. **Criar Bucket:** Crie o bucket `avatars` no Storage
+3. **Configurar Políticas:** Configure as políticas RLS do Storage (veja SUPABASE_SETUP.md)
+
+### Detalhes Completos
+
+Para instruções detalhadas passo a passo, incluindo:
+- Criação de tabelas
+- Configuração de políticas RLS
+- Criação de bucket de avatares
+- Solução de problemas
+- Logs de debug
+
+**Consulte o arquivo `SUPABASE_SETUP.md`**
 
 ### 2. Criar bucket para avatares
 
