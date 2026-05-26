@@ -149,8 +149,9 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
 
   try {
     // Gera offset aleatório para variedade
-    const randomOffset = Math.floor(Math.random() * 50)
-    const searchLimit = Math.max(limit * 5, 50)
+    const randomOffset = Math.floor(Math.random() * 500)
+    // Busca muitos itens sem limite fixo
+    const searchLimit = 1000
 
     // Busca conteúdo com maior rating e mais recente
     const { data: movies, error: moviesError } = await sb
@@ -235,8 +236,9 @@ export async function getPersonalizedRecommendations(
     const items: ContentItem[] = []
 
     // Gera offset aleatório para variedade
-    const randomOffset = Math.floor(Math.random() * 50)
-    const searchLimit = Math.max(limit * 3, 30)
+    const randomOffset = Math.floor(Math.random() * 500)
+    // Busca muitos itens sem limite fixo
+    const searchLimit = 1000
 
     // Busca filmes baseados nos gêneros favoritos
     for (const genre of favoriteGenres) {
@@ -322,8 +324,9 @@ export async function getSectionContent(
     const items: ContentItem[] = []
 
     // Gera um offset aleatório baseado no timestamp atual para trazer conteúdo diferente
-    const randomOffset = Math.floor(Math.random() * 100)
-    const searchLimit = Math.max(limit * 10, 100) // Aumenta significativamente o limite de busca
+    const randomOffset = Math.floor(Math.random() * 500)
+    // Busca muitos itens para variedade (sem limite fixo)
+    const searchLimit = 1000
 
     // Busca filmes
     let movieQuery = sb.from('cinema').select('*')
@@ -333,7 +336,7 @@ export async function getSectionContent(
       movieQuery = movieQuery.or(catFilters)
     }
 
-    // Aplica ordenação aleatória para variedade
+    // Aplica ordenação
     if (ordenacao === 'rating_desc') {
       movieQuery = movieQuery.order('rating', { ascending: false })
     } else if (ordenacao === 'year_desc') {
@@ -342,7 +345,7 @@ export async function getSectionContent(
       movieQuery = movieQuery.order('created_at', { ascending: false })
     }
 
-    // Adiciona offset aleatório e aumenta limite
+    // Adiciona offset aleatório e busca muitos itens
     const { data: movies } = await movieQuery.range(randomOffset, randomOffset + searchLimit - 1)
 
     if (movies) {
@@ -372,7 +375,7 @@ export async function getSectionContent(
       seriesQuery = seriesQuery.or(catFilters)
     }
 
-    // Aplica ordenação aleatória para variedade
+    // Aplica ordenação
     if (ordenacao === 'rating_desc') {
       seriesQuery = seriesQuery.order('rating', { ascending: false })
     } else if (ordenacao === 'year_desc') {
@@ -381,7 +384,7 @@ export async function getSectionContent(
       seriesQuery = seriesQuery.order('created_at', { ascending: false })
     }
 
-    // Adiciona offset aleatório e aumenta limite
+    // Adiciona offset aleatório e busca muitos itens
     const { data: series } = await seriesQuery.range(randomOffset, randomOffset + searchLimit - 1)
 
     if (series) {
