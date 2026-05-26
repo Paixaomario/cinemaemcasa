@@ -87,6 +87,10 @@ export default function PerfilPage() {
         )
         setHistory(hydratedHistory.filter(Boolean) as ProfileItem[])
 
+        // Atualizar estatísticas após carregar histórico
+        const { updateProfileStatistics } = await import('@/lib/profileStatistics')
+        await updateProfileStatistics(userId)
+
         // 4. Criar lista de continuar assistindo com progresso
         const continueWatchingItems = await Promise.all(
           prog.map(async (p) => {
@@ -179,19 +183,44 @@ export default function PerfilPage() {
         const deviceType = detectDeviceType(userAgent)
         const deviceName = detectDeviceName(userAgent)
 
-        await sb
+        // Gerar ou recuperar ID do dispositivo
+        let deviceId = localStorage.getItem('device_id')
+        if (!deviceId) {
+          deviceId = crypto.randomUUID()
+          localStorage.setItem('device_id', deviceId)
+        }
+
+        // Verificar se dispositivo já existe
+        const { data: existingDevice } = await sb
           .from('connected_devices')
-          .upsert({
-            user_id: userId,
-            device_id: localStorage.getItem('device_id') || crypto.randomUUID(),
-            device_name: deviceName,
-            device_type: deviceType,
-            user_agent: userAgent,
-            last_active: new Date().toISOString(),
-            is_current: true,
-          }, {
-            onConflict: 'user_id,device_id'
-          })
+          .select('*')
+          .eq('user_id', userId)
+          .eq('device_id', deviceId)
+          .maybeSingle()
+
+        if (existingDevice) {
+          // Atualizar último acesso
+          await sb
+            .from('connected_devices')
+            .update({
+              last_active: new Date().toISOString(),
+              is_current: true,
+            })
+            .eq('id', existingDevice.id)
+        } else {
+          // Criar novo dispositivo
+          await sb
+            .from('connected_devices')
+            .insert({
+              user_id: userId,
+              device_id: deviceId,
+              device_name: deviceName,
+              device_type: deviceType,
+              user_agent: userAgent,
+              last_active: new Date().toISOString(),
+              is_current: true,
+            })
+        }
       } catch (error) {
         console.error('Erro ao registrar dispositivo:', error)
       }
@@ -404,7 +433,7 @@ export default function PerfilPage() {
                   type="text"
                   value={tempName}
                   onChange={(e) => setTempName(e.target.value)}
-                  className="text-4xl sm:text-6xl font-black uppercase tracking-tighter text-white bg-transparent border-b-2 border-[var(--gold-primary)] focus:outline-none focus:border-[var(--gold-primary)]"
+                  className="text-4xl sm:text-6xl font-black uppercase tracking-tighter text-white bg-transparent focus:outline-none"
                   autoFocus
                 />
                 <div className="flex gap-2 mt-2 sm:mt-0">

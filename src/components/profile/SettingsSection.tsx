@@ -91,9 +91,9 @@ export function SettingsSection({ settings = {}, onSettingsChange }: SettingsSec
           </div>
           <button
             onClick={() => handleSettingChange('dataSaver', !localSettings.dataSaver)}
-            className={`w-14 h-8 rounded-full transition-colors ${localSettings.dataSaver ? 'bg-[var(--gold-primary)]' : 'bg-white/10'}`}
+            className={`w-14 h-8 rounded-full transition-all duration-300 ${localSettings.dataSaver ? 'bg-[var(--gold-primary)]' : 'bg-white/10'}`}
           >
-            <div className={`w-6 h-6 rounded-full bg-white transition-transform ${localSettings.dataSaver ? 'translate-x-6' : 'translate-x-1'}`} />
+            <div className={`w-6 h-6 rounded-full bg-white transition-all duration-300 ${localSettings.dataSaver ? 'translate-x-6' : 'translate-x-1'}`} />
           </button>
         </div>
       </div>

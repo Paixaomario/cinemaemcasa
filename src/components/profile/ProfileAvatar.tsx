@@ -34,16 +34,15 @@ export function ProfileAvatar({ avatarUrl, username, onAvatarChange, editable = 
 
     // Criar preview
     const reader = new FileReader()
-    reader.onloadend = () => {
+    reader.onloadend = async () => {
       setPreview(reader.result as string)
+      // Chamar callback com o arquivo após criar preview
+      if (onAvatarChange) {
+        await onAvatarChange(file)
+      }
       setIsUploading(false)
     }
     reader.readAsDataURL(file)
-
-    // Chamar callback com o arquivo
-    if (onAvatarChange) {
-      onAvatarChange(file)
-    }
   }
 
   const handleCameraClick = () => {

@@ -93,9 +93,9 @@ export function AccessibilitySection({ settings = {}, onSettingsChange }: Access
           </div>
           <button
             onClick={() => handleSettingChange('audio_description', !localSettings.audio_description)}
-            className={`w-14 h-8 rounded-full transition-colors ${localSettings.audio_description ? 'bg-[var(--gold-primary)]' : 'bg-white/10'}`}
+            className={`w-14 h-8 rounded-full transition-all duration-300 ${localSettings.audio_description ? 'bg-[var(--gold-primary)]' : 'bg-white/10'}`}
           >
-            <div className={`w-6 h-6 rounded-full bg-white transition-transform ${localSettings.audio_description ? 'translate-x-6' : 'translate-x-1'}`} />
+            <div className={`w-6 h-6 rounded-full bg-white transition-all duration-300 ${localSettings.audio_description ? 'translate-x-6' : 'translate-x-1'}`} />
           </button>
         </div>
 
@@ -107,9 +107,9 @@ export function AccessibilitySection({ settings = {}, onSettingsChange }: Access
           </div>
           <button
             onClick={() => handleSettingChange('high_contrast', !localSettings.high_contrast)}
-            className={`w-14 h-8 rounded-full transition-colors ${localSettings.high_contrast ? 'bg-[var(--gold-primary)]' : 'bg-white/10'}`}
+            className={`w-14 h-8 rounded-full transition-all duration-300 ${localSettings.high_contrast ? 'bg-[var(--gold-primary)]' : 'bg-white/10'}`}
           >
-            <div className={`w-6 h-6 rounded-full bg-white transition-transform ${localSettings.high_contrast ? 'translate-x-6' : 'translate-x-1'}`} />
+            <div className={`w-6 h-6 rounded-full bg-white transition-all duration-300 ${localSettings.high_contrast ? 'translate-x-6' : 'translate-x-1'}`} />
           </button>
         </div>
 
@@ -121,9 +121,9 @@ export function AccessibilitySection({ settings = {}, onSettingsChange }: Access
           </div>
           <button
             onClick={() => handleSettingChange('reduced_motion', !localSettings.reduced_motion)}
-            className={`w-14 h-8 rounded-full transition-colors ${localSettings.reduced_motion ? 'bg-[var(--gold-primary)]' : 'bg-white/10'}`}
+            className={`w-14 h-8 rounded-full transition-all duration-300 ${localSettings.reduced_motion ? 'bg-[var(--gold-primary)]' : 'bg-white/10'}`}
           >
-            <div className={`w-6 h-6 rounded-full bg-white transition-transform ${localSettings.reduced_motion ? 'translate-x-6' : 'translate-x-1'}`} />
+            <div className={`w-6 h-6 rounded-full bg-white transition-all duration-300 ${localSettings.reduced_motion ? 'translate-x-6' : 'translate-x-1'}`} />
           </button>
         </div>
       </div>
