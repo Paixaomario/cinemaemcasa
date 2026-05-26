@@ -43,7 +43,6 @@ function SeriesContent() {
 
   // Função para carregar progresso salvo do episódio
   const handleEpisodeClick = useCallback(async (episode: any) => {
-    console.log('handleEpisodeClick chamado:', { user: user?.id, contentUuid, episodeId: episode.id_n || episode.id })
     if (!user || !contentUuid) {
       setSavedProgress(0)
       setActiveEpisode(episode)
@@ -53,7 +52,6 @@ function SeriesContent() {
     const sb = createClient()
     // Para séries, usa o content_id da série + episode_id único
     const episodeContentId = `${contentUuid}-ep-${episode.id_n || episode.id}`
-    console.log('Buscando progresso para:', episodeContentId)
 
     const { data: progress } = await sb
       .from('view_progress')
@@ -62,9 +60,7 @@ function SeriesContent() {
       .eq('content_id', episodeContentId)
       .maybeSingle()
 
-    console.log('Progresso encontrado:', progress)
     const savedTime = progress?.last_position || 0
-    console.log('savedTime:', savedTime)
     setSavedProgress(savedTime)
 
     // Se houver progresso salvo (mais de 10 segundos), mostra modal
@@ -991,23 +987,18 @@ function SeriesContent() {
           <div className="bg-neutral-900 rounded-2xl p-6 sm:p-8 max-w-md w-full border border-white/10 shadow-2xl">
             <div className="flex items-start gap-4 mb-6">
               <div className="w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-800">
-                {(() => {
-                  const imageUrl = series?.poster || series?.backdrop_path || series?.capa || series?.banner || activeEpisode?.poster || activeEpisode?.still_path
-                  console.log('Imagem disponível:', { seriesPoster: series?.poster, seriesBackdrop: series?.backdrop_path, seriesCapa: series?.capa, seriesBanner: series?.banner, episodePoster: activeEpisode?.poster, episodeStill: activeEpisode?.still_path, imageUrl })
-                  if (imageUrl) {
-                    return (
-                      <Image
-                        src={imageUrl.startsWith('http') ? imageUrl : `https://image.tmdb.org/t/p/w500${imageUrl}`}
-                        alt={series.titulo}
-                        width={96}
-                        height={144}
-                        className="w-full h-full object-cover"
-                        unoptimized
-                      />
-                    )
-                  }
-                  return <div className="w-full h-full flex items-center justify-center text-3xl">🎬</div>
-                })()}
+                {series?.poster ? (
+                  <Image
+                    src={series.poster.startsWith('http') ? series.poster : `https://image.tmdb.org/t/p/w500${series.poster}`}
+                    alt={series.titulo}
+                    width={96}
+                    height={144}
+                    className="w-full h-full object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-3xl">🎬</div>
+                )}
               </div>
               <div className="flex-1">
                 <h3 className="text-xl sm:text-2xl font-black uppercase text-white mb-2">Continuar Assistindo?</h3>

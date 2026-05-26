@@ -115,8 +115,8 @@ export function HomeClient() {
                 // Tenta obter duration de várias fontes
                 let duration = orig?.duration || orig?.runtime || contentData.duration || null
 
-                // Se ainda não tiver duration, tenta buscar na tabela content
-                if (!duration && !isNumeric) {
+                // Se ainda não tiver duration e não for episódio, tenta buscar na tabela content
+                if (!duration && !isNumeric && !isEpisode) {
                   const { data: contentWithDuration } = await sb.from('content').select('duration').eq('id', idStr).maybeSingle()
                   duration = contentWithDuration?.duration || null
                 }
