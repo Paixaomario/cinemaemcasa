@@ -514,17 +514,20 @@ function MovieContent() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <div className="bg-neutral-900 rounded-2xl p-6 sm:p-8 max-w-md w-full border border-white/10 shadow-2xl">
             <div className="flex items-start gap-4 mb-6">
-              {movie?.poster && (
-                <div className="w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-800">
+              <div className="w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-800">
+                {movie?.poster || movie?.backdrop_path ? (
                   <Image
-                    src={movie.poster.startsWith('http') ? movie.poster : `https://image.tmdb.org/t/p/w500${movie.poster}`}
+                    src={(movie.poster || movie.backdrop_path).startsWith('http') ? (movie.poster || movie.backdrop_path) : `https://image.tmdb.org/t/p/w500${movie.poster || movie.backdrop_path}`}
                     alt={title}
                     width={96}
                     height={144}
                     className="w-full h-full object-cover"
+                    unoptimized
                   />
-                </div>
-              )}
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-3xl">🎬</div>
+                )}
+              </div>
               <div className="flex-1">
                 <h3 className="text-xl sm:text-2xl font-black uppercase text-white mb-2">Continuar Assistindo?</h3>
                 <p className="text-neutral-300 text-sm">
