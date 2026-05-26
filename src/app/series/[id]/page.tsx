@@ -983,10 +983,25 @@ function SeriesContent() {
       {showResumeModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <div className="bg-neutral-900 rounded-2xl p-6 sm:p-8 max-w-md w-full border border-white/10 shadow-2xl">
-            <h3 className="text-xl sm:text-2xl font-black uppercase text-white mb-4">Continuar Assistindo?</h3>
-            <p className="text-neutral-300 mb-6">
-              Você parou em {Math.floor(savedProgress / 60)}:{(savedProgress % 60).toString().padStart(2, '0')} do episódio.
-            </p>
+            <div className="flex items-start gap-4 mb-6">
+              {series?.poster && (
+                <div className="w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-800">
+                  <Image
+                    src={series.poster.startsWith('http') ? series.poster : `https://image.tmdb.org/t/p/w500${series.poster}`}
+                    alt={series.titulo}
+                    width={96}
+                    height={144}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <div className="flex-1">
+                <h3 className="text-xl sm:text-2xl font-black uppercase text-white mb-2">Continuar Assistindo?</h3>
+                <p className="text-neutral-300 text-sm">
+                  Você parou em {Math.floor(savedProgress / 60)}:{(savedProgress % 60).toString().padStart(2, '0')} do episódio.
+                </p>
+              </div>
+            </div>
             <div className="flex gap-3">
               <button
                 onClick={handleRestart}

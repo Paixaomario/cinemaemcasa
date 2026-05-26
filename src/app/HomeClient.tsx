@@ -46,7 +46,6 @@ export function HomeClient() {
 
       // 0. Carregar Continuar Assistindo se houver usuário
       if (user) {
-        console.log('Carregando continuar assistindo para usuário:', user.id)
         const { data: prog, error: progError } = await sb
           .from('view_progress')
           .select('*')
@@ -55,13 +54,10 @@ export function HomeClient() {
           .order('updated_at', { ascending: false })
           .limit(4)
 
-        console.log('Dados de progresso do banco:', prog, 'Erro:', progError)
-
         if (prog) {
           const hydrated = await Promise.all(
             prog.map(async (p) => {
               const idStr = String(p.content_id)
-              console.log('Processando item:', idStr, 'last_position:', p.last_position)
 
               // Tenta buscar por UUID primeiro, depois por título se for numérico
               let contentData = null
@@ -127,7 +123,7 @@ export function HomeClient() {
                   }
                 }
 
-                const result = {
+                return {
                   id: idStr,
                   id_n: contentData.type === 'series' ? idStr : undefined,
                   titulo: contentData.title,
@@ -136,15 +132,23 @@ export function HomeClient() {
                   last_position: p.last_position,
                   duration: durationInSeconds
                 }
-                console.log('Item hidratado:', result)
-                return result
               }
-              console.log('Não encontrou contentData para:', idStr)
               return null
             })
           )
-          console.log('Itens hidratados finais:', hydrated.filter(Boolean))
-          setContinueWatching(hydrated.filter(Boolean))
+          const filtered = hydrated.filter(Boolean)
+          // Remove duplicatas baseadas no título (mantém o mais recente com UUID)
+          const uniqueMap = new Map()
+          filtered.forEach(item => {
+            if (!item) return
+            const key = item.titulo.toLowerCase().trim()
+            // Se já existe, mantém o que tem UUID (prioridade)
+            if (!uniqueMap.has(key) || (item.id && !/^\d+$/.test(item.id))) {
+              uniqueMap.set(key, item)
+            }
+          })
+          const uniqueItems = Array.from(uniqueMap.values())
+          setContinueWatching(uniqueItems)
         }
       } else {
         setContinueWatching([])

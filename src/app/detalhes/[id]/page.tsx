@@ -38,9 +38,7 @@ function MovieContent() {
 
   // Função para carregar progresso salvo antes de abrir player
   const handleWatchClick = useCallback(async () => {
-    console.log('handleWatchClick chamado:', { user: user?.id, contentUuid })
     if (!user || !contentUuid) {
-      console.log('Sem usuário ou contentUuid, abrindo player sem progresso')
       setShowPlayer(true)
       return
     }
@@ -54,7 +52,6 @@ function MovieContent() {
       .maybeSingle()
 
     const savedTime = progress?.last_position || 0
-    console.log('Progresso carregado:', { contentUuid, savedTime })
     setSavedProgress(savedTime)
 
     // Se houver progresso salvo (mais de 10 segundos), mostra modal
@@ -136,10 +133,8 @@ function MovieContent() {
 
           if (existingContent) {
             setContentUuid(existingContent.id)
-            console.log('UUID encontrado na tabela content:', existingContent.id)
           } else {
             // Cria novo registro na tabela content
-            console.log('Criando novo UUID para:', localData.titulo)
             const { data: newContent, error: insertError } = await sb
               .from('content')
               .insert({
@@ -150,15 +145,8 @@ function MovieContent() {
               .select('id')
               .maybeSingle()
 
-            if (insertError) {
-              console.error('Erro ao criar UUID:', insertError)
-            }
-
             if (!insertError && newContent) {
               setContentUuid(newContent.id)
-              console.log('UUID criado:', newContent.id)
-            } else {
-              console.log('Não foi possível criar UUID, usando ID numérico')
             }
           }
         } catch (err) {
@@ -525,10 +513,25 @@ function MovieContent() {
       {showResumeModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <div className="bg-neutral-900 rounded-2xl p-6 sm:p-8 max-w-md w-full border border-white/10 shadow-2xl">
-            <h3 className="text-xl sm:text-2xl font-black uppercase text-white mb-4">Continuar Assistindo?</h3>
-            <p className="text-neutral-300 mb-6">
-              Você parou em {Math.floor(savedProgress / 60)}:{(savedProgress % 60).toString().padStart(2, '0')} do conteúdo.
-            </p>
+            <div className="flex items-start gap-4 mb-6">
+              {movie?.poster && (
+                <div className="w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-800">
+                  <Image
+                    src={movie.poster.startsWith('http') ? movie.poster : `https://image.tmdb.org/t/p/w500${movie.poster}`}
+                    alt={title}
+                    width={96}
+                    height={144}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <div className="flex-1">
+                <h3 className="text-xl sm:text-2xl font-black uppercase text-white mb-2">Continuar Assistindo?</h3>
+                <p className="text-neutral-300 text-sm">
+                  Você parou em {Math.floor(savedProgress / 60)}:{(savedProgress % 60).toString().padStart(2, '0')} do conteúdo.
+                </p>
+              </div>
+            </div>
             <div className="flex gap-3">
               <button
                 onClick={handleRestart}
