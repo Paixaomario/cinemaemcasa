@@ -515,9 +515,9 @@ function MovieContent() {
           <div className="bg-neutral-900 rounded-2xl p-6 sm:p-8 max-w-md w-full border border-white/10 shadow-2xl">
             <div className="flex items-start gap-4 mb-6">
               <div className="w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-800">
-                {movie?.poster || movie?.backdrop_path ? (
+                {movie?.poster || movie?.backdrop_path || movie?.capa || movie?.banner ? (
                   <Image
-                    src={(movie.poster || movie.backdrop_path).startsWith('http') ? (movie.poster || movie.backdrop_path) : `https://image.tmdb.org/t/p/w500${movie.poster || movie.backdrop_path}`}
+                    src={(movie.poster || movie.backdrop_path || movie.capa || movie.banner).startsWith('http') ? (movie.poster || movie.backdrop_path || movie.capa || movie.banner) : `https://image.tmdb.org/t/p/w500${movie.poster || movie.backdrop_path || movie.capa || movie.banner}`}
                     alt={title}
                     width={96}
                     height={144}
