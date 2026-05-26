@@ -137,3 +137,17 @@ body {
   opacity: 1;
   filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
 }
+
+/* Animação Shimmer para Barra de Progresso */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
