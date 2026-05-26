@@ -5,15 +5,6 @@
 -- funcionalidades avançadas de perfil
 -- ============================================
 
--- Função para atualizar updated_at (só cria se não existir)
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
 -- Tabela de configurações do perfil
 CREATE TABLE IF NOT EXISTS public.profile_settings (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -27,13 +18,6 @@ CREATE TABLE IF NOT EXISTS public.profile_settings (
   CONSTRAINT profile_settings_pkey PRIMARY KEY (id),
   CONSTRAINT profile_settings_user_id_key UNIQUE (user_id)
 );
-
--- Trigger para atualizar updated_at (só cria se não existir)
-DROP TRIGGER IF EXISTS update_profile_settings_updated_at ON public.profile_settings;
-CREATE TRIGGER update_profile_settings_updated_at
-  BEFORE UPDATE ON public.profile_settings
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
 
 -- Tabela de favoritos (já existe, apenas para referência)
 -- CREATE TABLE IF NOT EXISTS public.favorites (...)
@@ -180,7 +164,7 @@ CREATE INDEX IF NOT EXISTS idx_active_sessions_last_activity ON active_sessions(
 CREATE INDEX IF NOT EXISTS idx_recommendations_user_id ON recommendations(user_id);
 CREATE INDEX IF NOT EXISTS idx_recommendations_score ON recommendations(score DESC);
 
--- Triggers para updated_at
+-- Função e Triggers para updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -189,17 +173,23 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_profile_settings_updated_at BEFORE UPDATE ON profile_settings
+-- Triggers com DROP IF EXISTS para evitar erros
+DROP TRIGGER IF EXISTS update_profile_settings_updated_at ON public.profile_settings;
+CREATE TRIGGER update_profile_settings_updated_at BEFORE UPDATE ON public.profile_settings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_parental_control_updated_at BEFORE UPDATE ON parental_control
+DROP TRIGGER IF EXISTS update_parental_control_updated_at ON public.parental_control;
+CREATE TRIGGER update_parental_control_updated_at BEFORE UPDATE ON public.parental_control
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_accessibility_settings_updated_at BEFORE UPDATE ON accessibility_settings
+DROP TRIGGER IF EXISTS update_accessibility_settings_updated_at ON public.accessibility_settings;
+CREATE TRIGGER update_accessibility_settings_updated_at BEFORE UPDATE ON public.accessibility_settings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_visual_preferences_updated_at BEFORE UPDATE ON visual_preferences
+DROP TRIGGER IF EXISTS update_visual_preferences_updated_at ON public.visual_preferences;
+CREATE TRIGGER update_visual_preferences_updated_at BEFORE UPDATE ON public.visual_preferences
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_profile_statistics_updated_at BEFORE UPDATE ON profile_statistics
+DROP TRIGGER IF EXISTS update_profile_statistics_updated_at ON public.profile_statistics;
+CREATE TRIGGER update_profile_statistics_updated_at BEFORE UPDATE ON public.profile_statistics
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
