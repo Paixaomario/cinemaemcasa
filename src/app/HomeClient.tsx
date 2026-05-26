@@ -262,8 +262,8 @@ export function HomeClient() {
             // Não logado: mostra conteúdo em alta
             items = await getTrendingContent(sec.limite)
           }
-        } else if (sec.fonte === 'cinema') {
-          // Seção normal: usa o gerenciador de conteúdo
+        } else {
+          // Seção normal: usa o gerenciador de conteúdo (independente da fonte)
           items = await getSectionContent(
             sec.id,
             sec.categorias || [],

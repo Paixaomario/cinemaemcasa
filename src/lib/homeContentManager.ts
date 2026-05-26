@@ -148,9 +148,7 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
   const sb = createClient()
 
   try {
-    // Gera offset aleatório para variedade
-    const randomOffset = Math.floor(Math.random() * 500)
-    // Busca muitos itens sem limite fixo
+    // Busca muitos itens sem offset para respeitar ordenação
     const searchLimit = 1000
 
     // Busca conteúdo com maior rating e mais recente
@@ -162,9 +160,9 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
         .gte('rating', 7)
         .order('rating', { ascending: false })
         .order('year', { ascending: false })
-        .range(randomOffset, randomOffset + searchLimit - 1)
-    } catch (offsetError) {
-      console.warn('Offset falhou em trending movies, tentando sem offset:', offsetError)
+        .limit(searchLimit)
+    } catch (error) {
+      console.warn('Erro ao buscar trending movies:', error)
       movies = await sb
         .from('cinema')
         .select('*')
@@ -182,9 +180,9 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
         .gte('rating', 7)
         .order('rating', { ascending: false })
         .order('year', { ascending: false })
-        .range(randomOffset, randomOffset + searchLimit - 1)
-    } catch (offsetError) {
-      console.warn('Offset falhou em trending series, tentando sem offset:', offsetError)
+        .limit(searchLimit)
+    } catch (error) {
+      console.warn('Erro ao buscar trending series:', error)
       series = await sb
         .from('series')
         .select('*')
@@ -259,9 +257,7 @@ export async function getPersonalizedRecommendations(
   try {
     const items: ContentItem[] = []
 
-    // Gera offset aleatório para variedade
-    const randomOffset = Math.floor(Math.random() * 500)
-    // Busca muitos itens sem limite fixo
+    // Busca muitos itens sem offset para respeitar ordenação
     const searchLimit = 1000
 
     // Busca filmes baseados nos gêneros favoritos
@@ -274,9 +270,9 @@ export async function getPersonalizedRecommendations(
           .ilike('category', `%${genre}%`)
           .gte('rating', 6)
           .order('rating', { ascending: false })
-          .range(randomOffset, randomOffset + searchLimit - 1)
-      } catch (offsetError) {
-        console.warn('Offset falhou em personalized movies, tentando sem offset:', offsetError)
+          .limit(searchLimit)
+      } catch (error) {
+        console.warn('Erro ao buscar personalized movies:', error)
         movies = await sb
           .from('cinema')
           .select('*')
@@ -313,9 +309,9 @@ export async function getPersonalizedRecommendations(
           .ilike('category', `%${genre}%`)
           .gte('rating', 6)
           .order('rating', { ascending: false })
-          .range(randomOffset, randomOffset + searchLimit - 1)
-      } catch (offsetError) {
-        console.warn('Offset falhou em personalized series, tentando sem offset:', offsetError)
+          .limit(searchLimit)
+      } catch (error) {
+        console.warn('Erro ao buscar personalized series:', error)
         series = await sb
           .from('series')
           .select('*')
@@ -371,9 +367,7 @@ export async function getSectionContent(
   try {
     const items: ContentItem[] = []
 
-    // Gera um offset aleatório baseado no timestamp atual para trazer conteúdo diferente
-    const randomOffset = Math.floor(Math.random() * 500)
-    // Busca muitos itens para variedade (sem limite fixo)
+    // Busca muitos itens para variedade (sem offset para respeitar ordenação do banco)
     const searchLimit = 1000
 
     // Busca filmes
@@ -384,7 +378,7 @@ export async function getSectionContent(
       movieQuery = movieQuery.or(catFilters)
     }
 
-    // Aplica ordenação
+    // Aplica ordenação conforme configurado no banco
     if (ordenacao === 'rating_desc') {
       movieQuery = movieQuery.order('rating', { ascending: false })
     } else if (ordenacao === 'year_desc') {
@@ -393,12 +387,12 @@ export async function getSectionContent(
       movieQuery = movieQuery.order('created_at', { ascending: false })
     }
 
-    // Tenta com offset aleatório, se falhar usa sem offset
+    // Busca sem offset para respeitar a ordenação configurada
     let movies = null
     try {
-      movies = await movieQuery.range(randomOffset, randomOffset + searchLimit - 1)
-    } catch (offsetError) {
-      console.warn('Offset falhou, tentando sem offset:', offsetError)
+      movies = await movieQuery.limit(searchLimit)
+    } catch (error) {
+      console.warn('Erro ao buscar filmes:', error)
       movies = await movieQuery.limit(searchLimit)
     }
 
@@ -429,7 +423,7 @@ export async function getSectionContent(
       seriesQuery = seriesQuery.or(catFilters)
     }
 
-    // Aplica ordenação
+    // Aplica ordenação conforme configurado no banco
     if (ordenacao === 'rating_desc') {
       seriesQuery = seriesQuery.order('rating', { ascending: false })
     } else if (ordenacao === 'year_desc') {
@@ -438,12 +432,12 @@ export async function getSectionContent(
       seriesQuery = seriesQuery.order('created_at', { ascending: false })
     }
 
-    // Tenta com offset aleatório, se falhar usa sem offset
+    // Busca sem offset para respeitar a ordenação configurada
     let series = null
     try {
-      series = await seriesQuery.range(randomOffset, randomOffset + searchLimit - 1)
-    } catch (offsetError) {
-      console.warn('Offset falhou, tentando sem offset:', offsetError)
+      series = await seriesQuery.limit(searchLimit)
+    } catch (error) {
+      console.warn('Erro ao buscar séries:', error)
       series = await seriesQuery.limit(searchLimit)
     }
 
