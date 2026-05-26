@@ -5,6 +5,18 @@
 -- funcionalidades avançadas de perfil
 -- ============================================
 
+-- Tabela de perfis (se não existir)
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  email text,
+  username text,
+  full_name text,
+  avatar_url text,
+  is_admin boolean DEFAULT false,
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT profiles_username_key UNIQUE (username)
+);
+
 -- Tabela de configurações do perfil
 CREATE TABLE IF NOT EXISTS public.profile_settings (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -193,3 +205,124 @@ CREATE TRIGGER update_visual_preferences_updated_at BEFORE UPDATE ON public.visu
 DROP TRIGGER IF EXISTS update_profile_statistics_updated_at ON public.profile_statistics;
 CREATE TRIGGER update_profile_statistics_updated_at BEFORE UPDATE ON public.profile_statistics
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- POLÍTICAS RLS (Row Level Security)
+-- ============================================
+
+-- Habilitar RLS em todas as tabelas
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profile_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.accessibility_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.connected_devices ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.active_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.parental_control ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.visual_preferences ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profile_statistics ENABLE ROW LEVEL SECURITY;
+
+-- Políticas para profiles
+CREATE POLICY "Users can view own profile" ON public.profiles
+  FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "Users can update own profile" ON public.profiles
+  FOR UPDATE USING (auth.uid() = id);
+
+-- Políticas para profile_settings
+CREATE POLICY "Users can view own settings" ON public.profile_settings
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own settings" ON public.profile_settings
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own settings" ON public.profile_settings
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- Políticas para accessibility_settings
+CREATE POLICY "Users can view own accessibility" ON public.accessibility_settings
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own accessibility" ON public.accessibility_settings
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own accessibility" ON public.accessibility_settings
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- Políticas para connected_devices
+CREATE POLICY "Users can view own devices" ON public.connected_devices
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own devices" ON public.connected_devices
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own devices" ON public.connected_devices
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own devices" ON public.connected_devices
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Políticas para active_sessions
+CREATE POLICY "Users can view own sessions" ON public.active_sessions
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own sessions" ON public.active_sessions
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own sessions" ON public.active_sessions
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- Políticas para parental_control
+CREATE POLICY "Users can view own parental" ON public.parental_control
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own parental" ON public.parental_control
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own parental" ON public.parental_control
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- Políticas para visual_preferences
+CREATE POLICY "Users can view own preferences" ON public.visual_preferences
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own preferences" ON public.visual_preferences
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own preferences" ON public.visual_preferences
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- Políticas para profile_statistics
+CREATE POLICY "Users can view own statistics" ON public.profile_statistics
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own statistics" ON public.profile_statistics
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own statistics" ON public.profile_statistics
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- ============================================
+-- SUPABASE STORAGE - BUCKET DE AVATARES
+-- ============================================
+-- Execute os seguintes comandos no Supabase Dashboard:
+-- 1. Vá para Storage > New bucket
+-- 2. Nome do bucket: avatars
+-- 3. Make public: NÃO
+-- 4. Configure as políticas RLS abaixo:
+
+-- Política para upload de avatares
+-- CREATE POLICY "Users can upload own avatar" ON storage.objects
+--   FOR INSERT WITH CHECK (
+--     bucket_id = 'avatars' AND
+--     auth.uid()::text = (storage.foldername(name))[1]
+--   );
+
+-- Política para visualizar avatares públicos
+-- CREATE POLICY "Avatars are publicly viewable" ON storage.objects
+--   FOR SELECT USING (bucket_id = 'avatars');
+
+-- Política para deletar avatares
+-- CREATE POLICY "Users can delete own avatar" ON storage.objects
+--   FOR DELETE WITH CHECK (
+--     bucket_id = 'avatars' AND
+--     auth.uid()::text = (storage.foldername(name))[1]
+--   );
