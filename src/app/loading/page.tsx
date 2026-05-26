@@ -49,7 +49,7 @@ export default function LoadingPage() {
         await new Promise(resolve => setTimeout(resolve, 500))
 
         // Redirecionar para home
-        router.replace('/')
+        router.replace('/home')
       }
     }
 

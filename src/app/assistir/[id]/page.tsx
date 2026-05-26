@@ -101,7 +101,7 @@ export default function WatchPage() {
       >
         {/* Top */}
         <div style={{ padding:'16px 24px', display:'flex', alignItems:'center', gap:16 }}>
-          <Link href="/" style={{
+          <Link href="/home" style={{
             display:'flex', alignItems:'center', gap:8, background:'rgba(0,0,0,0.5)',
             borderRadius:10, padding:'8px 16px', color:'#fff', textDecoration:'none',
             fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:600,
