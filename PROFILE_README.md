@@ -14,48 +14,64 @@ Página de perfil profissional e premium inspirada nas melhores plataformas de s
    - Validação de arquivo (tipo e tamanho)
    - Upload para Supabase Storage
    - Atualização automática do perfil
+   - Emoji de câmera só aparece quando não há foto
 
-2. **Continuar Assistindo**
-   - Thumbnails 16:9
-   - Barra de progresso animada
-   - Tempo assistido
-   - Botão play
-   - Informações de episódio/temporada
+2. **Nome do Perfil Editável**
+   - Clique no ícone de lápis para editar
+   - Salva automaticamente no banco
+   - Validação de campo vazio
 
-3. **Meus Favoritos**
-   - Grid responsivo
-   - Cards elegantes
-   - Hover suave
-   - Links para detalhes
-
-4. **Histórico de Reprodução**
+3. **Histórico de Reprodução**
    - Lista completa de visualizações
    - Ordenação por data
-   - Grid responsivo
+   - Grid responsivo (2 colunas em mobile)
+   - Botão para excluir item individual
+   - Botão para limpar todo o histórico
+   - Confirmação antes de limpar
 
-5. **Configurações**
+4. **Configurações**
    - Idioma da interface
    - Legendas preferidas
    - Qualidade de vídeo
-   - Reprodução automática
-   - Próximo episódio
    - Economia de dados
+   - Salvamento automático no banco
+   - **Nota:** Reprodução automática e próximo episódio são padrão para séries (não configurável no perfil)
+
+5. **Acessibilidade**
+   - Tamanho de legenda (pequeno, médio, grande, extra grande)
+   - Cor de legenda (branco, amarelo, ciano, verde)
+   - Fundo de legenda (preto, transparente, cinza escuro)
+   - Audiodescrição
+   - Alto contraste
+   - Movimento reduzido
    - Salvamento automático no banco
 
 6. **Dispositivos Conectados**
-   - Lista de dispositivos
-   - Ícones por tipo (TV, mobile, tablet, desktop, console)
+   - Lista de dispositivos conectados
+   - Detecção automática de tipo (TV, mobile, tablet, desktop, console)
+   - Detecção automática de nome (iPhone, Android, Windows, Mac, etc.)
+   - Ícones por tipo
    - Última atividade
    - Indicador de dispositivo atual
    - Botão para sair de dispositivos
+   - Logout remoto funcional
 
 7. **Estatísticas do Perfil**
-   - Tempo total assistido
-   - Filmes assistidos
-   - Séries assistidas
-   - Episódios assistidos
+   - Tempo total assistido (calculado do histórico real)
+   - Filmes assistidos (calculado do histórico real)
+   - Séries assistidas (calculado do histórico real)
+   - Episódios assistidos (calculado do histórico real)
    - Última visualização
    - Gênero favorito
+   - Grid responsivo (2 colunas em mobile)
+   - Dados não editáveis pelo usuário
+
+8. **Sincronização entre Dispositivos**
+   - Registro automático de dispositivos
+   - ID único por dispositivo (persistido em localStorage)
+   - Detecção de user agent
+   - Atualização de último acesso
+   - Logout remoto de dispositivos
 
 ### 🔄 Pendentes
 
@@ -64,22 +80,6 @@ Página de perfil profissional e premium inspirada nas melhores plataformas de s
    - Filtro etário
    - Bloqueio de conteúdo adulto
    - Modo infantil
-
-2. **Sincronização entre Dispositivos**
-   - Sincronização em tempo real
-   - Detecção de último dispositivo
-   - Registro de último acesso
-
-3. **Logout de Dispositivo**
-   - Implementação completa
-   - Revogação de sessões
-
-4. **Acessibilidade**
-   - Tamanho de legenda
-   - Cor de legenda
-   - Audiodescrição
-   - Alto contraste
-   - Movimento reduzido
 
 ## Estrutura de Arquivos
 
@@ -91,13 +91,15 @@ src/
 ├── components/
 │   └── profile/
 │       ├── ProfileAvatar.tsx          # Componente de avatar com upload
-│       ├── ContinueWatchingSection.tsx # Seção Continuar Assistindo
 │       ├── SettingsSection.tsx        # Seção de configurações
 │       ├── DevicesSection.tsx         # Seção de dispositivos conectados
-│       └── StatisticsSection.tsx      # Seção de estatísticas
+│       ├── StatisticsSection.tsx      # Seção de estatísticas
+│       └── AccessibilitySection.tsx   # Seção de acessibilidade
 └── lib/
     ├── avatarUpload.ts                # Funções de upload de avatar
-    └── profileSettings.ts             # Funções de configurações do perfil
+    ├── profileSettings.ts             # Funções de configurações do perfil
+    ├── deviceManager.ts               # Funções de gerenciamento de dispositivos
+    └── profileStatistics.ts           # Funções de estatísticas do perfil
 ```
 
 ## Configuração do Supabase
