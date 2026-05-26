@@ -148,6 +148,10 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
   const sb = createClient()
 
   try {
+    // Gera offset aleatório para variedade
+    const randomOffset = Math.floor(Math.random() * 50)
+    const searchLimit = Math.max(limit * 5, 50)
+
     // Busca conteúdo com maior rating e mais recente
     const { data: movies, error: moviesError } = await sb
       .from('cinema')
@@ -155,7 +159,7 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
       .gte('rating', 7)
       .order('rating', { ascending: false })
       .order('year', { ascending: false })
-      .limit(limit)
+      .range(randomOffset, randomOffset + searchLimit - 1)
 
     const { data: series, error: seriesError } = await sb
       .from('series')
@@ -163,7 +167,7 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
       .gte('rating', 7)
       .order('rating', { ascending: false })
       .order('year', { ascending: false })
-      .limit(limit)
+      .range(randomOffset, randomOffset + searchLimit - 1)
 
     const items: ContentItem[] = []
 
@@ -199,8 +203,11 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
       })
     }
 
+    // Remove duplicatas incluindo temporadas e coleções
+    const uniqueItems = removeDuplicatesByTitle(items)
+
     // Embaralha para variedade
-    return shuffleArray(items).slice(0, limit)
+    return shuffleArray(uniqueItems).slice(0, limit)
   } catch (error) {
     console.error('Erro ao buscar conteúdo em alta:', error)
     return []
@@ -227,6 +234,10 @@ export async function getPersonalizedRecommendations(
   try {
     const items: ContentItem[] = []
 
+    // Gera offset aleatório para variedade
+    const randomOffset = Math.floor(Math.random() * 50)
+    const searchLimit = Math.max(limit * 3, 30)
+
     // Busca filmes baseados nos gêneros favoritos
     for (const genre of favoriteGenres) {
       const { data: movies } = await sb
@@ -235,7 +246,7 @@ export async function getPersonalizedRecommendations(
         .ilike('category', `%${genre}%`)
         .gte('rating', 6)
         .order('rating', { ascending: false })
-        .limit(10)
+        .range(randomOffset, randomOffset + searchLimit - 1)
 
       if (movies) {
         movies.forEach(movie => {
@@ -262,7 +273,7 @@ export async function getPersonalizedRecommendations(
         .ilike('category', `%${genre}%`)
         .gte('rating', 6)
         .order('rating', { ascending: false })
-        .limit(10)
+        .range(randomOffset, randomOffset + searchLimit - 1)
 
       if (series) {
         series.forEach(serie => {
@@ -284,7 +295,7 @@ export async function getPersonalizedRecommendations(
       }
     }
 
-    // Remove duplicatas baseadas no título
+    // Remove duplicatas incluindo temporadas e coleções
     const uniqueItems = removeDuplicatesByTitle(items)
 
     // Embaralha e limita
@@ -310,6 +321,10 @@ export async function getSectionContent(
   try {
     const items: ContentItem[] = []
 
+    // Gera um offset aleatório baseado no timestamp atual para trazer conteúdo diferente
+    const randomOffset = Math.floor(Math.random() * 100)
+    const searchLimit = Math.max(limit * 10, 100) // Aumenta significativamente o limite de busca
+
     // Busca filmes
     let movieQuery = sb.from('cinema').select('*')
 
@@ -318,13 +333,17 @@ export async function getSectionContent(
       movieQuery = movieQuery.or(catFilters)
     }
 
-    // Aplica ordenação
-    if (ordenacao === 'rating_desc') movieQuery = movieQuery.order('rating', { ascending: false })
-    else if (ordenacao === 'year_desc') movieQuery = movieQuery.order('year', { ascending: false })
-    else movieQuery = movieQuery.order('created_at', { ascending: false })
+    // Aplica ordenação aleatória para variedade
+    if (ordenacao === 'rating_desc') {
+      movieQuery = movieQuery.order('rating', { ascending: false })
+    } else if (ordenacao === 'year_desc') {
+      movieQuery = movieQuery.order('year', { ascending: false })
+    } else {
+      movieQuery = movieQuery.order('created_at', { ascending: false })
+    }
 
-    // Busca mais itens do que o limite para poder filtrar duplicatas
-    const { data: movies } = await movieQuery.limit(limit * 2)
+    // Adiciona offset aleatório e aumenta limite
+    const { data: movies } = await movieQuery.range(randomOffset, randomOffset + searchLimit - 1)
 
     if (movies) {
       movies.forEach(movie => {
@@ -353,12 +372,17 @@ export async function getSectionContent(
       seriesQuery = seriesQuery.or(catFilters)
     }
 
-    // Aplica ordenação
-    if (ordenacao === 'rating_desc') seriesQuery = seriesQuery.order('rating', { ascending: false })
-    else if (ordenacao === 'year_desc') seriesQuery = seriesQuery.order('year', { ascending: false })
-    else seriesQuery = seriesQuery.order('created_at', { ascending: false })
+    // Aplica ordenação aleatória para variedade
+    if (ordenacao === 'rating_desc') {
+      seriesQuery = seriesQuery.order('rating', { ascending: false })
+    } else if (ordenacao === 'year_desc') {
+      seriesQuery = seriesQuery.order('year', { ascending: false })
+    } else {
+      seriesQuery = seriesQuery.order('created_at', { ascending: false })
+    }
 
-    const { data: series } = await seriesQuery.limit(limit * 2)
+    // Adiciona offset aleatório e aumenta limite
+    const { data: series } = await seriesQuery.range(randomOffset, randomOffset + searchLimit - 1)
 
     if (series) {
       series.forEach(serie => {
@@ -379,7 +403,7 @@ export async function getSectionContent(
       })
     }
 
-    // Remove duplicatas baseadas no título
+    // Remove duplicatas baseadas no título (incluindo temporadas e coleções)
     const uniqueItems = removeDuplicatesByTitle(items)
 
     // Embaralha para variedade a cada carregamento
@@ -394,15 +418,45 @@ export async function getSectionContent(
 }
 
 /**
- * Remove duplicatas baseadas no título (case insensitive)
+ * Normaliza o título removendo temporadas, coleções e sequências
+ */
+function normalizeTitle(title: string): string {
+  let normalized = title.toLowerCase().trim()
+
+  // Remove padrões de temporadas
+  normalized = normalized.replace(/\b(temporada|season|s)\s*\d+/gi, '')
+  normalized = normalized.replace(/\b(temporada|season|s)\s*[ivxlcdm]+/gi, '')
+
+  // Remove padrões de coleções
+  normalized = normalized.replace(/\b(coleção|collection|colecao)\s*\d*/gi, '')
+  normalized = normalized.replace(/\b(coleção|collection|colecao)\s*[ivxlcdm]+/gi, '')
+
+  // Remove padrões de partes
+  normalized = normalized.replace(/\b(parte|part|pt)\s*\d+/gi, '')
+  normalized = normalized.replace(/\b(parte|part|pt)\s*[ivxlcdm]+/gi, '')
+
+  // Remove números romanos no final
+  normalized = normalized.replace(/\s+[ivxlcdm]+\s*$/gi, '')
+
+  // Remove números no final (sequências)
+  normalized = normalized.replace(/\s*\d+\s*$/gi, '')
+
+  // Remove espaços extras
+  normalized = normalized.replace(/\s+/g, ' ').trim()
+
+  return normalized
+}
+
+/**
+ * Remove duplicatas baseadas no título (case insensitive e detecta temporadas/coleções)
  */
 function removeDuplicatesByTitle(items: ContentItem[]): ContentItem[] {
   const uniqueMap = new Map<string, ContentItem>()
 
   items.forEach(item => {
-    const key = item.titulo.toLowerCase().trim()
-    if (!uniqueMap.has(key)) {
-      uniqueMap.set(key, item)
+    const normalizedTitle = normalizeTitle(item.titulo)
+    if (!uniqueMap.has(normalizedTitle)) {
+      uniqueMap.set(normalizedTitle, item)
     }
   })
 
