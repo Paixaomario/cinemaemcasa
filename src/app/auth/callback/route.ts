@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
 
   if (code) {
-    const response = NextResponse.redirect(origin)
+    const response = NextResponse.redirect(`${origin}/home`)
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -33,5 +33,5 @@ export async function GET(request: NextRequest) {
     return response
   }
 
-  return NextResponse.redirect(origin)
+  return NextResponse.redirect(`${origin}/home`)
 }
