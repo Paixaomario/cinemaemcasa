@@ -401,7 +401,6 @@ export async function getSectionContent(
       movies = await movieQuery.limit(searchLimit)
     } catch (error) {
       console.warn('Erro ao buscar filmes:', error)
-      movies = await movieQuery.limit(searchLimit)
     }
 
     if (movies?.data) {

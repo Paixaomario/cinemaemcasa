@@ -209,9 +209,8 @@ export function HomeClient() {
           setContinueWatching(uniqueItems)
 
           // Adiciona ao cache de exibidos
-          uniqueItems.forEach(item => {
-            if (item.id) addToDisplayedCache(String(item.id))
-          })
+      const cwIds = uniqueItems.map(item => String(item.id)).filter(Boolean)
+      addBatchToDisplayedCache(cwIds)
         }
       } else {
         setContinueWatching([])

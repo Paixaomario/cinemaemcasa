@@ -248,7 +248,7 @@ function SearchContent() {
               </button>
             )}
             {/* Botão de busca por voz */}
-            {('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) && (
+            {(typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) && (
               <button
                 type="button"
                 onClick={isListening ? stopVoiceSearch : startVoiceSearch}
