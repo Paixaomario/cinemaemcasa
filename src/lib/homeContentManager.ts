@@ -172,20 +172,6 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
         .limit(searchLimit)
     }
 
-    let series = null
-    try {
-      series = await sb
-        .from('series')
-        .select('*')
-        .gte('rating', 7)
-        .order('rating', { ascending: false })
-        .order('year', { ascending: false })
-        .limit(searchLimit)
-    } catch (seriesError) {
-      console.warn('Erro ao buscar trending series (tabela pode não existir):', seriesError)
-      // Continua apenas com filmes
-    }
-
     const items: ContentItem[] = []
 
     if (movies?.data) {
@@ -204,21 +190,7 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
       })
     }
 
-    if (series?.data) {
-      series.data.forEach(serie => {
-        items.push({
-          id: serie.id,
-          titulo: serie.titulo,
-          poster: serie.poster || serie.capa || serie.poster_path || serie.banner,
-          backdrop: serie.backdrop || serie.banner,
-          type: 'series',
-          year: serie.year,
-          category: serie.category,
-          rating: serie.rating,
-          genres: serie.genres || []
-        })
-      })
-    }
+    // NÃO busca séries - tabela pode não existir ou ter problemas
 
     // NÃO remove duplicatas - cada item é único
     const uniqueItems = removeDuplicatesByTitle(items)
@@ -295,37 +267,7 @@ export async function getPersonalizedRecommendations(
         })
       }
 
-      try {
-        const series = await sb
-          .from('series')
-          .select('*')
-          .ilike('category', `%${genre}%`)
-          .gte('rating', 6)
-          .order('rating', { ascending: false })
-          .limit(searchLimit)
-
-        if (series?.data) {
-          series.data.forEach(serie => {
-            const idStr = String(serie.id)
-            if (!excludeIds.has(idStr)) {
-              items.push({
-                id: serie.id,
-                titulo: serie.titulo,
-                poster: serie.poster || serie.capa || serie.poster_path || serie.banner,
-                backdrop: serie.backdrop || serie.banner,
-                type: 'series',
-                year: serie.year,
-                category: serie.category,
-                rating: serie.rating,
-                genres: serie.genres || []
-              })
-            }
-          })
-        }
-      } catch (seriesError) {
-        console.warn('Erro ao buscar personalized series (tabela pode não existir):', seriesError)
-        // Continua apenas com filmes
-      }
+      // NÃO busca séries - tabela pode não existir ou ter problemas
     }
 
     // NÃO remove duplicatas - cada item é único
@@ -389,8 +331,8 @@ export async function getSectionContent(
         if (!excludeIds.has(idStr)) {
           const poster = movie.poster || movie.capa || movie.poster_path || movie.banner
           // Log para investigar capas com emojis
-          if (!poster || poster.startsWith('http') === false) {
-            console.log('Capa inválida encontrada:', {
+          if (!poster || (typeof poster === 'string' && poster.trim() === '')) {
+            console.log('Capa vazia encontrada:', {
               id: movie.id,
               titulo: movie.titulo,
               poster: poster,
@@ -414,48 +356,8 @@ export async function getSectionContent(
       })
     }
 
-    // Busca séries com tratamento de erro
-    try {
-      let seriesQuery = sb.from('series').select('*')
-
-      if (categories && categories.length > 0) {
-        const catFilters = categories.map(c => `category.ilike.%${c}%`).join(',')
-        seriesQuery = seriesQuery.or(catFilters)
-      }
-
-      // Aplica ordenação conforme configurado no banco
-      if (ordenacao === 'rating_desc') {
-        seriesQuery = seriesQuery.order('rating', { ascending: false })
-      } else if (ordenacao === 'year_desc') {
-        seriesQuery = seriesQuery.order('year', { ascending: false })
-      } else {
-        seriesQuery = seriesQuery.order('created_at', { ascending: false })
-      }
-
-      const series = await seriesQuery.limit(searchLimit)
-
-      if (series?.data) {
-        series.data.forEach(serie => {
-          const idStr = String(serie.id)
-          if (!excludeIds.has(idStr)) {
-            items.push({
-              id: serie.id,
-              titulo: serie.titulo,
-              poster: serie.poster || serie.capa || serie.poster_path || serie.banner,
-              backdrop: serie.backdrop || serie.banner,
-              type: 'series',
-              year: serie.year,
-              category: serie.category,
-              rating: serie.rating,
-              genres: serie.genres || []
-            })
-          }
-        })
-      }
-    } catch (seriesError) {
-      console.warn('Erro ao buscar séries (tabela pode não existir):', seriesError)
-      // Continua apenas com filmes
-    }
+    // NÃO busca séries - tabela pode não existir ou ter problemas
+    // Se precisar de séries no futuro, verificar estrutura da tabela primeiro
 
     // NÃO remove duplicatas - cada item é único
     const uniqueItems = removeDuplicatesByTitle(items)
