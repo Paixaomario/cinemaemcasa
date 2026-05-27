@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { useAuth } from '@/components/layout/SupabaseProvider'
 import { HeroBanner } from '@/components/sections/HeroBanner'
@@ -43,14 +44,25 @@ export interface CinemaItem {
 }
 
 export function HomeClient() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
+  const router = useRouter()
   const [sections, setSections] = useState<HomeSection[]>([])
   const [sectionsData, setSectionsData] = useState<Record<string, any[]>>({})
   const [continueWatching, setContinueWatching] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [pageLoading, setPageLoading] = useState(true)
+
+  // Redireciona para login se não estiver autenticado
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login')
+    }
+  }, [user, loading, router])
 
   useEffect(() => {
     async function loadHome() {
+      // Se não estiver autenticado, não carrega conteúdo
+      if (!user) return
+
       const sb = createClient()
 
       // Inicializa nova sessão de conteúdo (reseta cache a cada carregamento)
@@ -196,7 +208,7 @@ export function HomeClient() {
 
 
       if (error || !secs) {
-        setLoading(false)
+        setPageLoading(false)
         return
       }
 
@@ -290,13 +302,13 @@ export function HomeClient() {
       }))
 
       setSectionsData(dataMap)
-      setLoading(false)
+      setPageLoading(false)
     }
 
     loadHome()
   }, [user])
 
-  if (loading) return <div className="min-h-screen bg-black animate-pulse" />
+  if (loading || pageLoading) return <div className="min-h-screen bg-black animate-pulse" />
 
   return (
     <div className="flex flex-col gap-16 pb-32">

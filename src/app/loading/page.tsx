@@ -2,13 +2,21 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { useAuth } from '@/components/layout/SupabaseProvider'
 
 export default function LoadingPage() {
   const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
   const [progress, setProgress] = useState(0)
   const [loadingStep, setLoadingStep] = useState('Iniciando...')
 
   useEffect(() => {
+    // Se não estiver autenticado, redireciona para login
+    if (!authLoading && !user) {
+      router.replace('/login')
+      return
+    }
+
     let mounted = true
 
     async function loadData() {
@@ -53,12 +61,14 @@ export default function LoadingPage() {
       }
     }
 
-    loadData()
+    if (user) {
+      loadData()
+    }
 
     return () => {
       mounted = false
     }
-  }, [router])
+  }, [user, authLoading, router])
 
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-8">
