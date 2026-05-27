@@ -19,7 +19,6 @@ export function useSpatialNavigation() {
         const isInputActive = document.activeElement?.tagName === 'INPUT' || 
                              document.activeElement?.tagName === 'TEXTAREA'
         
-        // Se não estiver digitando em um input, volta para a página anterior
         if (!isInputActive) {
           const isRoot = window.location.pathname === '/home' || window.location.pathname === '/'
           
@@ -27,7 +26,7 @@ export function useSpatialNavigation() {
             e.preventDefault()
             window.history.back()
           } else {
-            // Se estiver na Home e apertar voltar, exibe confirmação nativa (se disponível no WebOS)
+            // Se estiver na Home e apertar voltar, exibe confirmação nativa
             const confirmExit = window.confirm("Deseja sair do PaixãoFlix?")
             if (confirmExit && (window as any).webOS) {
               (window as any).webOS.terminate()
