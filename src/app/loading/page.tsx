@@ -14,28 +14,10 @@ export default function LoadingPage() {
     let mounted = true
 
     async function loadData() {
-      // Se não estiver autenticado, mostra loading por 2 segundos e redireciona para login
-      if (!authLoading && !user) {
-        setLoadingStep('Redirecionando para login...')
-        
-        // Mostra animação de loading por 2 segundos
-        for (let i = 0; i <= 20; i++) {
-          if (!mounted) return
-          await new Promise(resolve => setTimeout(resolve, 100))
-          setProgress(i * 5)
-        }
-        
-        if (mounted) {
-          router.replace('/login')
-        }
-        return
-      }
-
       const steps = [
-        { name: 'Carregando configurações...', duration: 800 },
-        { name: 'Preparando interface...', duration: 600 },
-        { name: 'Carregando dados do usuário...', duration: 700 },
-        { name: 'Otimizando experiência...', duration: 500 },
+        { name: 'Carregando configurações...', duration: 600 },
+        { name: 'Preparando interface...', duration: 500 },
+        { name: 'Verificando autenticação...', duration: 500 },
         { name: 'Finalizando...', duration: 400 },
       ]
 
@@ -61,14 +43,15 @@ export default function LoadingPage() {
         setProgress(100)
         setLoadingStep('Pronto!')
 
-        // Marcar que o usuário já visitou
-        localStorage.setItem('has_visited_before', 'true')
-
         // Pequeno delay para mostrar 100%
         await new Promise(resolve => setTimeout(resolve, 500))
 
-        // Redirecionar para home
-        router.replace('/home')
+        // Redirecionar baseado em autenticação
+        if (user) {
+          router.replace('/home')
+        } else {
+          router.replace('/login')
+        }
       }
     }
 
@@ -77,7 +60,7 @@ export default function LoadingPage() {
     return () => {
       mounted = false
     }
-  }, [user, authLoading, router])
+  }, [user, router])
 
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-8">
