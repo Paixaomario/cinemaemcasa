@@ -387,10 +387,22 @@ export async function getSectionContent(
       movies.data.forEach(movie => {
         const idStr = String(movie.id)
         if (!excludeIds.has(idStr)) {
+          const poster = movie.poster || movie.capa || movie.poster_path || movie.banner
+          // Log para investigar capas com emojis
+          if (!poster || poster.startsWith('http') === false) {
+            console.log('Capa inválida encontrada:', {
+              id: movie.id,
+              titulo: movie.titulo,
+              poster: poster,
+              capa: movie.capa,
+              poster_path: movie.poster_path,
+              banner: movie.banner
+            })
+          }
           items.push({
             id: movie.id,
             titulo: movie.titulo,
-            poster: movie.poster || movie.capa || movie.poster_path || movie.banner,
+            poster: poster,
             backdrop: movie.backdrop || movie.banner,
             type: 'movie',
             year: movie.year,
