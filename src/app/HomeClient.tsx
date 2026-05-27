@@ -274,8 +274,6 @@ export function HomeClient() {
             }
           }
 
-          console.log(`Seção: ${sec.titulo}, Categorias:`, categories, `Limite:`, sec.limite, `Ordenação:`, sec.ordenacao)
-
           items = await getSectionContent(
             sec.id,
             categories,
