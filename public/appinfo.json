@@ -1,0 +1,18 @@
+{
+    "id": "com.paixaomario.cinemaemcasa",
+    "version": "1.0.0",
+    "vendor": "PaixaoFlix",
+    "type": "web",
+    "main": "index.html",
+    "title": "PaixãoFlix",
+    "icon": "icon.png",
+    "largeIcon": "largeIcon.png",
+    "bgImage": "backgroundImage.png",
+    "resolution": "1920x1080",
+    "category": "video",
+    "checkAppUpdate": true,
+    "requiredMemory": 256,
+    "accessibility": {
+        "supportsAudioGuidance": true
+    }
+}

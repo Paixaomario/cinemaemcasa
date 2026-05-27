@@ -42,6 +42,7 @@ export function ContentCard({ item, progress, showProgress = false }: Props) {
     <div className="group relative">
       <Link
         href={detailHref}
+        tabIndex={0}
         className={`block w-full z-0 focus:z-50 focus:outline-none focus:ring-4 focus:ring-brand-cyan rounded-xl shadow-2xl shadow-black/90 ${showProgress ? 'aspect-video' : 'aspect-[2/3]'} ${showProgress ? '' : 'transition-all duration-300 hover:scale-110 focus:scale-110'}`}
       >
         <div className="absolute inset-0 overflow-hidden rounded-xl bg-neutral-900">

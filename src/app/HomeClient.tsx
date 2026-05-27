@@ -6,9 +6,11 @@ import { useAuth } from '@/components/layout/SupabaseProvider'
 import { HeroBanner } from '@/components/sections/HeroBanner'
 import { ContentRow } from '@/components/sections/ContentRow'
 import { ContentCard } from '@/components/ui/ContentCard'
+import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
 import {
   initializeContentSession,
   addToDisplayedCache,
+  addBatchToDisplayedCache,
   getDisplayedCache,
   getSectionContent,
   getPersonalizedRecommendations,
@@ -50,6 +52,9 @@ export function HomeClient() {
   const [sectionsData, setSectionsData] = useState<Record<string, any[]>>({})
   const [continueWatching, setContinueWatching] = useState<any[]>([])
   const [pageLoading, setPageLoading] = useState(true)
+
+  // Ativa navegação por controle remoto na Home
+  useSpatialNavigation()
 
   // Redireciona para login se não estiver autenticado
   useEffect(() => {
@@ -290,14 +295,10 @@ export function HomeClient() {
         }
 
         // Adiciona IDs ao cache de exibidos
-        items.forEach((item: any) => {
-          if (item.id) {
-            const idStr = String(item.id)
-            displayedIds.add(idStr)
-            addToDisplayedCache(idStr)
-          }
-        })
-
+        const newIds = items.map((item: any) => String(item.id)).filter(Boolean)
+        addBatchToDisplayedCache(newIds)
+        newIds.forEach(id => displayedIds.add(id))
+        
         dataMap[sec.id] = items
       }))
 
@@ -330,7 +331,10 @@ export function HomeClient() {
               <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter mb-8 border-l-4 border-brand-cyan pl-4">
                 {sec.titulo}
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-8">
+              <div 
+                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-8 focus-within:ring-2 focus-within:ring-brand-cyan/20 rounded-xl p-2"
+                tabIndex={-1}
+              >
                 {items.map(item => <ContentCard key={item.id} item={item} />)}
               </div>
             </section>

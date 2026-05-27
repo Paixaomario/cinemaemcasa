@@ -114,8 +114,8 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
     // Inicia o banner imediatamente
     updateBanner();
 
-    // Configura a rotação a cada 5 segundos
-    const interval = setInterval(updateBanner, 5000);
+    // Aumentado para 15 segundos: reduz consumo de API TMDB e processamento em Smart TVs
+    const interval = setInterval(updateBanner, 15000);
 
     return () => clearInterval(interval); // Limpa o intervalo ao desmontar
   }, [contentPool]);
@@ -129,7 +129,7 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
 
   const title = currentBannerItem.titulo || currentBannerItem.title || currentBannerItem.name;
   const rawPath = currentBannerItem.backdrop || currentBannerItem.banner || currentBannerItem.backdrop_path;
-  const backdropUrl = rawPath ? TMDB_IMG.backdrop(rawPath) : null;
+  const backdropUrl = rawPath ? `https://image.tmdb.org/t/p/original${rawPath}` : null;
   const description = currentBannerItem.descricao || currentBannerItem.description || currentBannerItem.overview;
   const id = currentBannerItem.id_n || currentBannerItem.id;
   const detailHref = currentBannerItem.type === 'series' ? `/series/${id}` : `/detalhes/${id}`;
@@ -186,6 +186,16 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
             {description}
           </p>
         )}
+
+        <div className="flex gap-4">
+          <Link
+            href={detailHref}
+            tabIndex={0}
+            className="px-8 py-3 bg-[#00ADEF] text-white font-black uppercase tracking-widest rounded-xl hover:scale-105 transition-transform focus:ring-4 focus:ring-white outline-none"
+          >
+            Ver Detalhes
+          </Link>
+        </div>
       </div>
     </section>
   )

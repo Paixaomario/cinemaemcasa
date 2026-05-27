@@ -10,6 +10,7 @@ import { hydrateCinemaItem } from '@/lib/content'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { ContinueWatchingSection } from '@/components/profile/ContinueWatchingSection'
 import { SettingsSection } from '@/components/profile/SettingsSection'
+import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
 import { DevicesSection } from '@/components/profile/DevicesSection'
 import { StatisticsSection } from '@/components/profile/StatisticsSection'
 import { AccessibilitySection } from '@/components/profile/AccessibilitySection'
@@ -18,6 +19,7 @@ import { saveProfileSettings, getProfileSettings } from '@/lib/profileSettings'
 import { getUserDevices, logoutDevice, detectDeviceType, detectDeviceName } from '@/lib/deviceManager'
 import { getProfileStatistics } from '@/lib/profileStatistics'
 import { SystemAvatarSelector } from '@/components/profile/SystemAvatarSelector'
+import { PinModal } from '@/components/profile/PinModal'
 
 interface ProfileItem {
   id: string | number;
@@ -48,6 +50,12 @@ export default function PerfilPage() {
   const [tempName, setTempName] = useState('')
   const [loading, setLoading] = useState(true)
   const [showAvatarSelector, setShowAvatarSelector] = useState(false)
+  const [isChildMode, setIsChildMode] = useState(false)
+  const [showPinModal, setShowPinModal] = useState(false)
+  const [pin, setPin] = useState('')
+
+  // Habilita navegação por controle remoto
+  useSpatialNavigation()
 
   useEffect(() => {
     if (!user) return
@@ -62,6 +70,7 @@ export default function PerfilPage() {
         .eq('id', userId)
         .single()
       setProfile(profileData)
+      setIsChildMode(profileData?.is_child || false)
 
       // 2. Buscar Favoritos
       const { data: favs } = await sb
@@ -384,6 +393,25 @@ export default function PerfilPage() {
     setEditingName(false)
   }
 
+  const handleToggleChildMode = async () => {
+    if (!user) return
+    const sb = createClient()
+    const newValue = !isChildMode
+    
+    try {
+      const { error } = await sb
+        .from('profiles')
+        .update({ is_child: newValue })
+        .eq('id', user.id)
+
+      if (error) throw error
+      setIsChildMode(newValue)
+      alert(newValue ? "Modo Infantil Ativado!" : "Modo Infantil Desativado!")
+    } catch (error) {
+      console.error('Erro ao alternar modo infantil:', error)
+    }
+  }
+
   const handleDeleteAccount = async () => {
     if (!user) return
     if (!confirm('Tem certeza que deseja excluir sua conta? Esta ação é IRREVERSÍVEL e apagará todos os seus dados permanentemente.')) return
@@ -460,6 +488,7 @@ export default function PerfilPage() {
                 <input
                   type="text"
                   value={tempName}
+                  tabIndex={0}
                   onChange={(e) => setTempName(e.target.value)}
                   className="text-4xl sm:text-6xl font-black uppercase tracking-tighter text-white bg-transparent focus:outline-none"
                   autoFocus
@@ -467,12 +496,14 @@ export default function PerfilPage() {
                 <div className="flex gap-2 mt-2 sm:mt-0">
                   <button
                     onClick={handleSaveName}
+                    tabIndex={0}
                     className="px-4 py-2 bg-[var(--gold-primary)] text-black font-bold rounded-xl hover:bg-[var(--gold-primary)]/80 transition-colors"
                   >
                     Salvar
                   </button>
                   <button
                     onClick={handleCancelEditName}
+                    tabIndex={0}
                     className="px-4 py-2 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors"
                   >
                     Cancelar
@@ -489,6 +520,7 @@ export default function PerfilPage() {
                     setTempName(profile?.full_name || profile?.username || '')
                     setEditingName(true)
                   }}
+                  tabIndex={0}
                   className="text-2xl hover:text-[var(--gold-primary)] transition-colors"
                 >
                   ✏️
@@ -496,6 +528,27 @@ export default function PerfilPage() {
               </div>
             )}
             <p className="text-lg sm:text-xl text-[var(--gold-primary)] font-bold mt-2 opacity-80">{user.email}</p>
+            
+            {/* Controle de Modo Infantil (Nativo para Smart TV) */}
+            <div className="mt-4 flex flex-col items-center sm:items-start gap-2">
+              <p className="text-[10px] font-black uppercase text-neutral-500 tracking-widest">Controle Parental</p>
+              <button
+                onClick={() => {
+                  if (isChildMode) {
+                    setShowPinModal(true)
+                  } else {
+                    handleToggleChildMode()
+                  }
+                }}
+                tabIndex={0}
+                className={`px-6 py-2 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all border-2 ${
+                  isChildMode ? 'bg-brand-cyan text-black border-brand-cyan' : 'bg-white/5 text-white border-white/10 hover:border-brand-cyan'
+                }`}
+              >
+                {isChildMode ? '👧 Modo Infantil Ativo' : '🛡️ Ativar Modo Infantil'}
+              </button>
+            </div>
+
             {profile?.is_admin && (
               <span className="inline-block mt-2 px-3 py-1 bg-[var(--gold-primary)] text-black text-xs font-bold uppercase rounded-full">
                 Administrador
@@ -503,6 +556,7 @@ export default function PerfilPage() {
             )}
             <button
               onClick={handleDeleteAccount}
+              tabIndex={0}
               className="mt-4 px-4 py-2 bg-red-500/20 text-red-400 font-bold rounded-xl hover:bg-red-500/30 transition-colors text-sm"
             >
               Excluir Conta
@@ -528,6 +582,36 @@ export default function PerfilPage() {
           onAvatarSelected={handleSystemAvatarSelected}
         />
       )}
+
+      <PinModal
+        isOpen={showPinModal}
+        onClose={() => setShowPinModal(false)}
+        onConfirm={async (enteredPin) => {
+          const sb = createClient()
+          
+          if (!profile?.pin_code) {
+            // Se não tem PIN, este primeiro registro se torna o PIN oficial
+            const { error } = await sb
+              .from('profiles')
+              .update({ pin_code: enteredPin })
+              .eq('id', user.id)
+            
+            if (error) {
+              alert('Erro ao definir PIN')
+              return
+            }
+            alert('PIN de segurança definido com sucesso!')
+          } else if (enteredPin !== profile.pin_code) {
+            alert('PIN de segurança incorreto!')
+            return
+          }
+          
+          await handleToggleChildMode()
+          setShowPinModal(false)
+        }}
+        title={profile?.pin_code ? "Desativar Modo Infantil" : "Definir PIN de Segurança"}
+        description={profile?.pin_code ? "Insira seu PIN de 4 dígitos" : "Crie um PIN para proteger suas configurações"}
+      />
     </main>
   )
 }
@@ -543,6 +627,7 @@ function Section({ title, items, color, emptyMsg, showDelete = false, onDelete, 
         {showDelete && items.length > 0 && onClearAll && (
           <button
             onClick={onClearAll}
+            tabIndex={0}
             className="px-4 py-2 bg-red-500/20 text-red-400 rounded-xl hover:bg-red-500/30 transition-colors font-bold text-sm"
           >
             Limpar Tudo
@@ -566,6 +651,7 @@ function Section({ title, items, color, emptyMsg, showDelete = false, onDelete, 
             <div key={item.id} className="relative aspect-[2/3] w-full group rounded-xl overflow-hidden bg-neutral-900 border border-white/5 hover:border-brand-cyan transition-all shadow-xl">
               <Link
                 href={isSeries ? `/series/${item.id}` : `/detalhes/${item.id}`}
+                tabIndex={0}
                 className="absolute inset-0"
               >
                 {imageUrl ? (
@@ -589,6 +675,7 @@ function Section({ title, items, color, emptyMsg, showDelete = false, onDelete, 
                     e.preventDefault()
                     onDelete(String(item.id))
                   }}
+                  tabIndex={0}
                   className="absolute top-2 right-2 w-8 h-8 bg-red-500/80 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 z-10"
                 >
                   <span className="text-white font-bold">×</span>

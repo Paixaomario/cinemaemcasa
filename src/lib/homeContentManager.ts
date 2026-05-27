@@ -60,6 +60,22 @@ export function addToDisplayedCache(contentId: string) {
 }
 
 /**
+ * Adiciona múltiplos conteúdos ao cache de uma vez (Otimizado para Smart TVs)
+ */
+export function addBatchToDisplayedCache(contentIds: string[]) {
+  if (typeof window === 'undefined' || contentIds.length === 0) return
+  if (isSessionExpired()) {
+    initializeContentSession()
+  }
+  const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]')
+  const newIds = contentIds.filter(id => !cache.includes(id))
+  if (newIds.length > 0) {
+    const updatedCache = [...cache, ...newIds]
+    localStorage.setItem(CACHE_KEY, JSON.stringify(updatedCache))
+  }
+}
+
+/**
  * Verifica se um conteúdo já foi exibido
  */
 export function isContentDisplayed(contentId: string): boolean {
@@ -144,7 +160,7 @@ export async function getUserFavoriteGenres(userId: string): Promise<string[]> {
 /**
  * Obtém conteúdo em alta (para novos usuários)
  */
-export async function getTrendingContent(limit: number = 20): Promise<ContentItem[]> {
+export async function getTrendingContent(limit: number = 20, isChild: boolean = false): Promise<ContentItem[]> {
   const sb = createClient()
 
   try {
@@ -157,6 +173,10 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
       movies = await sb
         .from('cinema')
         .select('*')
+        // Se for modo infantil, filtra classificações baixas (L, 10, 12)
+        .filter('category', 'not.ilike', '%+18%')
+        .filter('category', 'not.ilike', '%Terror%')
+        .filter('category', 'not.ilike', '%Adulto%')
         .gte('rating', 7)
         .order('rating', { ascending: false })
         .order('year', { ascending: false })
@@ -166,6 +186,9 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
       movies = await sb
         .from('cinema')
         .select('*')
+        .filter('category', 'not.ilike', '%+18%')
+        .filter('category', 'not.ilike', '%Terror%')
+        .filter('category', 'not.ilike', '%Adulto%')
         .gte('rating', 7)
         .order('rating', { ascending: false })
         .order('year', { ascending: false })
@@ -207,6 +230,9 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
 
     if (series?.data) {
       series.data.forEach(serie => {
+        // Filtro manual adicional para garantir segurança em séries
+        if (isChild && (serie.genero?.includes('Adulto') || serie.classificacao?.includes('18'))) return;
+
         items.push({
           id: serie.id_n,
           titulo: serie.titulo,

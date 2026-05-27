@@ -7,6 +7,15 @@ import { TMDBMovie, TMDBShow, TMDB_IMG } from '@/lib/tmdb'
 import { Navbar } from '@/components/layout/Navbar'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
+
+// Definir SpeechRecognition globalmente para evitar erros de tipo
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -39,6 +48,12 @@ function SearchContent() {
   const [categoryFilter, setCategoryFilter] = useState<string>('')
   const [history, setHistory] = useState<string[]>([])
   const sb = createClient()
+  const [lastQuery, setLastQuery] = useState('')
+  const [isListening, setIsListening] = useState(false)
+  const [recognitionError, setRecognitionError] = useState<string | null>(null)
+
+  // Habilita navegação por controle remoto
+  useSpatialNavigation()
 
   useEffect(() => {
     // Limpa a URL ao carregar para não salvar busca anterior
@@ -47,6 +62,48 @@ function SearchContent() {
     }
   }, [query, router])
 
+  // Lógica de busca por voz
+  const startVoiceSearch = () => {
+    if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+      setRecognitionError('Seu navegador não suporta reconhecimento de voz.')
+      return
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    const recognition = new SpeechRecognition()
+    recognition.continuous = false // Para parar após a primeira frase
+    recognition.lang = 'pt-BR' // Define o idioma para português do Brasil
+    recognition.interimResults = false // Retorna apenas resultados finais
+
+    recognition.onstart = () => {
+      setIsListening(true)
+      setRecognitionError(null)
+      setSearchInput('') // Limpa o input ao iniciar a escuta
+    }
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript
+      setSearchInput(transcript)
+      setIsListening(false)
+      // Dispara a busca automaticamente após o reconhecimento
+      // A busca será acionada pelo useEffect que monitora searchInput
+    }
+
+    recognition.onerror = (event: any) => {
+      console.error('Erro no reconhecimento de voz:', event.error)
+      setRecognitionError(`Erro no reconhecimento de voz: ${event.error}`)
+      setIsListening(false)
+    }
+
+    recognition.onend = () => {
+      setIsListening(false)
+    }
+
+    recognition.start()
+  }
+
+  const stopVoiceSearch = () => { /* A API para automaticamente com continuous=false */ }
+
   useEffect(() => {
     // Só busca se houver texto ou filtro de categoria
     if (!searchInput.trim() && !categoryFilter) {
@@ -54,10 +111,12 @@ function SearchContent() {
       return
     }
 
+    if (searchInput === lastQuery && !categoryFilter) return
+
     async function doSearch() {
       setLoading(true)
-      setResults([])
-
+      setLastQuery(searchInput)
+      
       try {
         let cinemaQuery = sb.from('cinema').select('*')
         let seriesQuery = sb.from('series').select('*')
@@ -171,6 +230,7 @@ function SearchContent() {
               type="text"
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
+              tabIndex={0}
               placeholder="Digite para buscar..."
               className="w-full max-w-2xl px-6 py-4 pl-14 pr-14 bg-white/10 border-2 border-white/20 rounded-[20px] text-white text-xl focus:outline-none focus:border-brand-cyan focus:shadow-[0_0_20px_rgba(0,173,239,0.3)] transition-all font-sans"
               autoFocus
@@ -181,9 +241,24 @@ function SearchContent() {
                 id="clearSearch"
                 type="button"
                 onClick={clearInput}
+                tabIndex={0}
                 className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-[20px] bg-black/30 border border-brand-cyan/30 text-brand-cyan hover:bg-brand-cyan/20 transition-all"
               >
                 ✕
+              </button>
+            )}
+            {/* Botão de busca por voz */}
+            {('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) && (
+              <button
+                type="button"
+                onClick={isListening ? stopVoiceSearch : startVoiceSearch}
+                tabIndex={0}
+                className={`absolute right-14 top-1/2 -translate-y-1/2 w-8 h-8 rounded-[20px] flex items-center justify-center transition-all ${
+                  isListening ? 'bg-red-500/30 text-red-400 animate-pulse' : 'bg-black/30 border border-brand-cyan/30 text-brand-cyan hover:bg-brand-cyan/20'
+                }`}
+                title={isListening ? 'Parar de ouvir' : 'Buscar por voz'}
+              >
+                {isListening ? '🔴' : '🎤'}
               </button>
             )}
           </form>
@@ -210,8 +285,8 @@ function SearchContent() {
             ].map(f => (
               <button
                 key={f.value}
+                tabIndex={0}
                 onClick={() => {
-                  // Se clicar no mesmo filtro, desmarca
                   if (filter === f.value) {
                     setFilter('')
                   } else {
@@ -235,6 +310,7 @@ function SearchContent() {
               <button
                 key={suggestion}
                 onClick={() => handleCategoryFilter(suggestion)}
+                tabIndex={0}
                 className={`px-4 py-2 rounded-[20px] border font-montserrat font-bold text-[10px] uppercase tracking-wider transition-all ${
                   categoryFilter === suggestion
                     ? 'bg-brand-cyan text-black border-brand-cyan'
@@ -254,6 +330,7 @@ function SearchContent() {
                 <button
                   id="clearHistory"
                   onClick={clearHistory}
+                  tabIndex={0}
                   className="text-[#FF7878] font-bold text-xs hover:text-[#FFB4B4] transition-all"
                 >
                   Limpar
@@ -264,6 +341,7 @@ function SearchContent() {
                   <button
                     key={idx}
                     onClick={() => setSearchInput(item)}
+                    tabIndex={0}
                     className="flex justify-between items-center p-4 rounded-[20px] border border-white/5 bg-white/5 hover:border-brand-cyan/30 transition-all text-left group"
                   >
                     <span className="font-bold text-sm group-hover:text-brand-cyan transition-colors">{item}</span>
@@ -306,6 +384,7 @@ function SearchContent() {
               <Link 
                 key={item.id} 
                 href={item.type === 'series' ? `/series/${item.id}` : `/detalhes/${item.id}`} 
+                tabIndex={0}
                 className="group relative aspect-[2/3] w-full rounded-xl overflow-hidden transition-all duration-300 hover:scale-110 focus:scale-110 focus:outline-none focus:ring-4 focus:ring-brand-cyan shadow-2xl">
                 {imageUrl ? (
                   <Image 

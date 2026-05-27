@@ -80,7 +80,8 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
   // Função chamada quando o tempo do vídeo muda
   function handleProgressUpdate(time: number) {
     const roundedTime = Math.floor(time);
-    if (roundedTime > 0 && roundedTime % 10 === 0 && roundedTime !== lastSavedTime.current) {
+    // Salva a cada 30 segundos em vez de 10 para economizar requisições no plano gratuito
+    if (roundedTime > 0 && roundedTime % 30 === 0 && roundedTime !== lastSavedTime.current) {
       lastSavedTime.current = roundedTime;
       saveProgress(roundedTime);
     }
@@ -264,12 +265,14 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
                   <div className="flex items-center gap-2 sm:gap-3">
                     <button
                       onClick={playNextNow}
+                      tabIndex={0}
                       className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-[#00ADEF] text-white font-montserrat font-bold uppercase tracking-wider rounded-lg sm:rounded-xl hover:brightness-110 transition-all text-xs sm:text-sm"
                     >
                       ▶ Assistir Agora
                     </button>
                     <button
                       onClick={cancelAutoPlay}
+                      tabIndex={0}
                       className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-white/10 text-white font-montserrat font-bold uppercase tracking-wider rounded-lg sm:rounded-xl border border-white/20 hover:bg-white/20 transition-all text-xs sm:text-sm"
                     >
                       Cancelar
@@ -286,6 +289,7 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
       <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 md:p-8 z-[10005] flex items-center justify-between bg-gradient-to-b from-black/90 via-black/40 to-transparent pointer-events-none">
         <button
           onClick={onClose}
+          tabIndex={0}
           className="flex items-center gap-2 sm:gap-4 text-white text-lg sm:text-2xl font-bold hover:text-[#00ADEF] transition-colors rounded-[12px] sm:rounded-[20px] pointer-events-auto outline-none"
         >
           <span className="text-2xl sm:text-4xl">←</span>
@@ -295,6 +299,7 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
         {partyRoomId && (
           <button
             onClick={() => setShowChat(!showChat)}
+            tabIndex={0}
             className="px-3 sm:px-6 py-1.5 sm:py-2 bg-white/10 hover:bg-[#00ADEF] text-white rounded-[12px] sm:rounded-[20px] pointer-events-auto transition-all font-montserrat font-bold text-[10px] sm:text-xs uppercase tracking-wider sm:tracking-widest"
           >
             {showChat ? '❌' : '💬'}
@@ -323,7 +328,7 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
             seekStep={10}
             slots={{
               beforePlayButton: (
-                <button onClick={handleStop} className="vds-button" title="Parar">
+                <button onClick={handleStop} tabIndex={0} className="vds-button" title="Parar">
                   <svg viewBox="0 0 32 32" className="w-8 h-8 fill-current"><rect x="6" y="6" width="20" height="20" /></svg>
                 </button>
               )

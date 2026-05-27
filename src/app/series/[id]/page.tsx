@@ -10,6 +10,7 @@ import Image from 'next/image'
 import { ContentCard } from '@/components/ui/ContentCard'
 import { TrailerModal } from '@/components/ui/TrailerModal'
 import { useAuth } from '@/components/layout/SupabaseProvider'
+import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
 import { Heart } from 'lucide-react'
 
 export default function SeriesDetailsPage() {
@@ -755,6 +756,7 @@ function SeriesContent() {
           {/* Botão Assistir Agora (Cor do Logo) */}
           <button
             onClick={() => episodes[0] && handleEpisodeClick(episodes[0])}
+            tabIndex={0}
             className="flex-1 min-w-[120px] sm:flex-none px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 bg-brand-cyan text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[12px] sm:rounded-[16px] md:rounded-[20px] hover:brightness-110 transition-all transform hover:scale-105 focus:ring-4 focus:ring-brand-cyan outline-none border border-transparent text-xs sm:text-sm md:text-base"
           >
             ▶ Assistir
@@ -765,6 +767,7 @@ function SeriesContent() {
               console.log('Botão Assistir Juntos clicado!', e)
               startParty()
             }}
+            tabIndex={0}
             className="flex-1 min-w-[120px] sm:flex-none px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 bg-white/10 text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[12px] sm:rounded-[16px] md:rounded-[20px] border border-white/20 hover:bg-brand-cyan hover:text-black transition-all transform hover:scale-105 focus:ring-4 focus:ring-brand-cyan outline-none cursor-pointer text-xs sm:text-sm md:text-base"
           >
             🍿 Juntos
@@ -773,6 +776,7 @@ function SeriesContent() {
           {/* Botão Voltar */}
           <button 
             onClick={() => router.back()}
+            tabIndex={0}
             className="flex-1 min-w-[80px] sm:flex-none px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 bg-[#001f3f] text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[12px] sm:rounded-[16px] md:rounded-[20px] hover:brightness-125 transition-all focus:ring-4 focus:ring-blue-500 outline-none border border-transparent text-xs sm:text-sm md:text-base"
           >
             Voltar
@@ -782,6 +786,7 @@ function SeriesContent() {
           {series.trailer && (
             <button
               onClick={() => setShowTrailerModal(true)}
+              tabIndex={0}
               className="flex-1 min-w-[80px] sm:flex-none px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 bg-[#FF0000] text-white font-montserrat font-black uppercase tracking-wider sm:tracking-widest rounded-[12px] sm:rounded-[16px] md:rounded-[20px] hover:brightness-110 transition-all transform hover:scale-105 focus:ring-4 focus:ring-red-600 outline-none border border-transparent text-xs sm:text-sm md:text-base"
             >
               🎬 Trailer
@@ -791,6 +796,7 @@ function SeriesContent() {
           {/* Botão Favoritos (Apenas ícone) */}
           <button 
             onClick={toggleFavorite}
+            tabIndex={0}
             className={`p-2 sm:p-3 md:p-4 rounded-[12px] sm:rounded-[16px] md:rounded-[20px] transition-all border border-white/10 focus:ring-4 outline-none ${isFavorite ? 'bg-red-600/20 border-red-600 text-red-600 focus:ring-red-600' : 'bg-white/5 text-white hover:bg-white/10 focus:ring-white'}`}
             title={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
           >
@@ -809,6 +815,7 @@ function SeriesContent() {
                 <span className="text-xs font-black uppercase text-neutral-500 tracking-widest">Temporada:</span>
                 <select 
                   value={selectedSeason?.id_n || selectedSeason?.id}
+                  tabIndex={0}
                   onChange={(e) => setSelectedSeason(seasons.find(s => String(s.id_n || s.id) === e.target.value))}
                   className="bg-black text-white border border-white/20 rounded-xl px-6 py-3 font-bold focus:ring-4 focus:ring-brand-cyan/40 outline-none transition-all cursor-pointer hover:bg-neutral-800"
                 >
@@ -828,6 +835,7 @@ function SeriesContent() {
               return (
               <button
                 key={ep.id_n || ep.id}
+                tabIndex={0}
                 onClick={() => handleEpisodeClick(ep)}
                 className="group flex flex-col gap-4 text-left p-4 rounded-2xl hover:bg-white/5 transition-all focus:ring-4 focus:ring-brand-cyan outline-none border border-transparent hover:border-white/10"
               >
@@ -1014,12 +1022,14 @@ function SeriesContent() {
             <div className="flex gap-3">
               <button
                 onClick={handleRestart}
+                tabIndex={0}
                 className="flex-1 px-4 py-3 bg-white/10 hover:bg-white/20 text-white font-bold uppercase rounded-xl transition-all border border-white/20"
               >
                 Reiniciar
               </button>
               <button
                 onClick={handleResume}
+                tabIndex={0}
                 className="flex-1 px-4 py-3 bg-brand-cyan hover:brightness-110 text-white font-bold uppercase rounded-xl transition-all"
               >
                 Continuar
@@ -1027,6 +1037,7 @@ function SeriesContent() {
             </div>
             <button
               onClick={() => setShowResumeModal(false)}
+              tabIndex={0}
               className="mt-4 w-full text-neutral-400 hover:text-white text-sm font-bold uppercase transition-all"
             >
               Cancelar
