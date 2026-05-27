@@ -11,17 +11,17 @@ UPDATE public.series
 SET poster = COALESCE(poster, capa, banner)
 WHERE poster IS NULL AND (capa IS NOT NULL OR banner IS NOT NULL);
 
--- 3. Para tabela temporadas: garantir que capa tenha valor
+-- 3. Para tabela temporadas: garantir que capa tenha valor (apenas capa e banner existem)
 UPDATE public.temporadas 
-SET capa = COALESCE(capa, poster, banner)
-WHERE capa IS NULL AND (poster IS NOT NULL OR banner IS NOT NULL);
+SET capa = COALESCE(capa, banner)
+WHERE capa IS NULL AND banner IS NOT NULL;
 
 -- 4. Adicionar comentários para documentar os campos
 COMMENT ON COLUMN public.cinema.poster IS 'Capa/poster principal do filme (prioridade: poster > backdrop)';
 COMMENT ON COLUMN public.cinema.backdrop IS 'Banner/imagem de fundo do filme';
 COMMENT ON COLUMN public.series.poster IS 'Capa/poster principal da série (prioridade: poster > capa > banner)';
 COMMENT ON COLUMN public.series.capa IS 'Campo legado para capa, usar poster como principal';
-COMMENT ON COLUMN public.temporadas.capa IS 'Capa da temporada (prioridade: capa > poster > banner)';
+COMMENT ON COLUMN public.temporadas.capa IS 'Capa da temporada (prioridade: capa > banner)';
 
 -- 5. Criar função para normalizar capas automaticamente
 CREATE OR REPLACE FUNCTION normalize_cover_fields()
@@ -39,8 +39,8 @@ BEGIN
   
   -- Normalizar temporadas
   UPDATE public.temporadas 
-  SET capa = COALESCE(capa, poster, banner)
-  WHERE capa IS NULL AND (poster IS NOT NULL OR banner IS NOT NULL);
+  SET capa = COALESCE(capa, banner)
+  WHERE capa IS NULL AND banner IS NOT NULL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -60,7 +60,7 @@ BEGIN
   
   -- Para temporadas
   IF TG_TABLE_NAME = 'temporadas' THEN
-    NEW.capa := COALESCE(NEW.capa, NEW.poster, NEW.banner);
+    NEW.capa := COALESCE(NEW.capa, NEW.banner);
   END IF;
   
   RETURN NEW;
