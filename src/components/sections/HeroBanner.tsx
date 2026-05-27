@@ -17,14 +17,14 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
       
       try {
         const { data: movies, error: mError } = await sb.from('cinema').select('id, titulo, poster, backdrop, tmdb_id, category').limit(40)
-        const { data: series, error: sError } = await sb.from('series').select('id_n, titulo, capa, banner, tmdb_id, genero').limit(40)
+        const { data: series, error: sError } = await sb.from('series').select('id_n, titulo, poster, banner, tmdb_id, genero').limit(40)
 
         if (mError || sError) console.error("Erro ao buscar dados para o banner:", mError || sError)
 
         let combinedPool = [
-          ...(movies || []).map(m => ({ ...m, type: 'movie', poster: m.poster || m.backdrop, backdrop: m.backdrop || m.poster, category: m.category })),
-          ...(series || []).map(s => ({ ...s, id: s.id_n, type: 'series', poster: s.capa || s.banner, backdrop: s.banner || s.capa, category: s.genero }))
-        ].filter(item => item.tmdb_id && (item.poster || item.backdrop));
+          ...(movies || []).map(m => ({ ...m, type: 'movie', poster: m.poster, backdrop: m.backdrop || m.poster, category: m.category })),
+          ...(series || []).map(s => ({ ...s, id: s.id_n, type: 'series', poster: s.poster, backdrop: s.banner || s.poster, category: s.genero }))
+        ].filter(item => item.tmdb_id && item.poster);
 
         if (type) {
           combinedPool = combinedPool.filter(item => item.type === type);

@@ -194,7 +194,7 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
         items.push({
           id: movie.id,
           titulo: movie.titulo,
-          poster: movie.poster || movie.capa || movie.poster_path || movie.banner,
+          poster: movie.poster,
           backdrop: movie.backdrop || movie.banner,
           type: 'movie',
           year: movie.year,
@@ -210,7 +210,7 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
         items.push({
           id: serie.id_n,
           titulo: serie.titulo,
-          poster: serie.poster || serie.capa,
+          poster: serie.poster,
           backdrop: serie.banner,
           type: 'series',
           year: serie.ano,
@@ -284,7 +284,7 @@ export async function getPersonalizedRecommendations(
             items.push({
               id: movie.id,
               titulo: movie.titulo,
-              poster: movie.poster || movie.capa || movie.poster_path || movie.banner,
+              poster: movie.poster,
               backdrop: movie.backdrop || movie.banner,
               type: 'movie',
               year: movie.year,
@@ -312,7 +312,7 @@ export async function getPersonalizedRecommendations(
               items.push({
                 id: serie.id_n,
                 titulo: serie.titulo,
-                poster: serie.poster || serie.capa,
+                poster: serie.poster,
                 backdrop: serie.banner,
                 type: 'series',
                 year: serie.ano,
@@ -389,7 +389,7 @@ export async function getSectionContent(
       movies.data.forEach(movie => {
         const idStr = String(movie.id)
         if (!excludeIds.has(idStr)) {
-          const poster = movie.poster || movie.capa || movie.poster_path || movie.banner
+          const poster = movie.poster
           items.push({
             id: movie.id,
             titulo: movie.titulo,
@@ -433,7 +433,7 @@ export async function getSectionContent(
             items.push({
               id: serie.id_n,
               titulo: serie.titulo,
-              poster: serie.poster || serie.capa,
+              poster: serie.poster,
               backdrop: serie.banner,
               type: 'series',
               year: serie.ano,

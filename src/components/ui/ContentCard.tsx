@@ -14,7 +14,7 @@ interface Props {
 export function ContentCard({ item, progress, showProgress = false }: Props) {
   // Mapeamento para lidar com as diferentes tabelas (cinema vs series)
   const title = item.titulo || item.title || 'Sem título'
-  const poster = item.poster || item.capa || item.poster_path
+  const poster = item.poster
   const rating = item.rating || item.vote_average
   const year = item.ano || item.year || (item.release_date ? item.release_date.slice(0, 4) : '')
 
