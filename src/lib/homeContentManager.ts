@@ -148,8 +148,8 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
   const sb = createClient()
 
   try {
-    // Busca muitos itens sem offset para respeitar ordenação
-    const searchLimit = 1000
+    // Reduzindo limite para evitar erros 400
+    const searchLimit = 100
 
     // Busca conteúdo com maior rating e mais recente
     let movies = null
@@ -181,15 +181,9 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
         .order('rating', { ascending: false })
         .order('year', { ascending: false })
         .limit(searchLimit)
-    } catch (error) {
-      console.warn('Erro ao buscar trending series:', error)
-      series = await sb
-        .from('series')
-        .select('*')
-        .gte('rating', 7)
-        .order('rating', { ascending: false })
-        .order('year', { ascending: false })
-        .limit(searchLimit)
+    } catch (seriesError) {
+      console.warn('Erro ao buscar trending series (tabela pode não existir):', seriesError)
+      // Continua apenas com filmes
     }
 
     const items: ContentItem[] = []
@@ -226,7 +220,7 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
       })
     }
 
-    // Remove duplicatas incluindo temporadas e coleções
+    // NÃO remove duplicatas - cada item é único
     const uniqueItems = removeDuplicatesByTitle(items)
 
     // Embaralha para variedade
@@ -257,8 +251,8 @@ export async function getPersonalizedRecommendations(
   try {
     const items: ContentItem[] = []
 
-    // Busca muitos itens sem offset para respeitar ordenação
-    const searchLimit = 1000
+    // Reduzindo limite para evitar erros 400
+    const searchLimit = 100
 
     // Busca filmes baseados nos gêneros favoritos
     for (const genre of favoriteGenres) {
@@ -301,47 +295,40 @@ export async function getPersonalizedRecommendations(
         })
       }
 
-      let series = null
       try {
-        series = await sb
+        const series = await sb
           .from('series')
           .select('*')
           .ilike('category', `%${genre}%`)
           .gte('rating', 6)
           .order('rating', { ascending: false })
           .limit(searchLimit)
-      } catch (error) {
-        console.warn('Erro ao buscar personalized series:', error)
-        series = await sb
-          .from('series')
-          .select('*')
-          .ilike('category', `%${genre}%`)
-          .gte('rating', 6)
-          .order('rating', { ascending: false })
-          .limit(searchLimit)
-      }
 
-      if (series?.data) {
-        series.data.forEach(serie => {
-          const idStr = String(serie.id)
-          if (!excludeIds.has(idStr)) {
-            items.push({
-              id: serie.id,
-              titulo: serie.titulo,
-              poster: serie.poster || serie.capa || serie.poster_path || serie.banner,
-              backdrop: serie.backdrop || serie.banner,
-              type: 'series',
-              year: serie.year,
-              category: serie.category,
-              rating: serie.rating,
-              genres: serie.genres || []
-            })
-          }
-        })
+        if (series?.data) {
+          series.data.forEach(serie => {
+            const idStr = String(serie.id)
+            if (!excludeIds.has(idStr)) {
+              items.push({
+                id: serie.id,
+                titulo: serie.titulo,
+                poster: serie.poster || serie.capa || serie.poster_path || serie.banner,
+                backdrop: serie.backdrop || serie.banner,
+                type: 'series',
+                year: serie.year,
+                category: serie.category,
+                rating: serie.rating,
+                genres: serie.genres || []
+              })
+            }
+          })
+        }
+      } catch (seriesError) {
+        console.warn('Erro ao buscar personalized series (tabela pode não existir):', seriesError)
+        // Continua apenas com filmes
       }
     }
 
-    // Remove duplicatas incluindo temporadas e coleções
+    // NÃO remove duplicatas - cada item é único
     const uniqueItems = removeDuplicatesByTitle(items)
 
     // Embaralha e limita
@@ -369,8 +356,8 @@ export async function getSectionContent(
 
     console.log(`getSectionContent - sectionId: ${sectionId}, categories:`, categories, `limit: ${limit}, ordenacao: ${ordenacao}`)
 
-    // Busca muitos itens para variedade (sem offset para respeitar ordenação do banco)
-    const searchLimit = 1000
+    // Reduzindo limite para evitar erros 400
+    const searchLimit = 100
 
     // Busca filmes
     let movieQuery = sb.from('cinema').select('*')
@@ -420,57 +407,55 @@ export async function getSectionContent(
       })
     }
 
-    // Busca séries
-    let seriesQuery = sb.from('series').select('*')
-
-    if (categories && categories.length > 0) {
-      const catFilters = categories.map(c => `category.ilike.%${c}%`).join(',')
-      console.log(`Filtros de categoria para séries:`, catFilters)
-      seriesQuery = seriesQuery.or(catFilters)
-    }
-
-    // Aplica ordenação conforme configurado no banco
-    if (ordenacao === 'rating_desc') {
-      seriesQuery = seriesQuery.order('rating', { ascending: false })
-    } else if (ordenacao === 'year_desc') {
-      seriesQuery = seriesQuery.order('year', { ascending: false })
-    } else {
-      seriesQuery = seriesQuery.order('created_at', { ascending: false })
-    }
-
-    // Busca sem offset para respeitar a ordenação configurada
-    let series = null
+    // Busca séries com tratamento de erro
     try {
-      series = await seriesQuery.limit(searchLimit)
-    } catch (error) {
-      console.warn('Erro ao buscar séries:', error)
-      series = await seriesQuery.limit(searchLimit)
-    }
+      let seriesQuery = sb.from('series').select('*')
 
-    console.log(`Séries encontradas:`, series?.data?.length || 0)
+      if (categories && categories.length > 0) {
+        const catFilters = categories.map(c => `category.ilike.%${c}%`).join(',')
+        console.log(`Filtros de categoria para séries:`, catFilters)
+        seriesQuery = seriesQuery.or(catFilters)
+      }
 
-    if (series?.data) {
-      series.data.forEach(serie => {
-        const idStr = String(serie.id)
-        if (!excludeIds.has(idStr)) {
-          items.push({
-            id: serie.id,
-            titulo: serie.titulo,
-            poster: serie.poster || serie.capa || serie.poster_path || serie.banner,
-            backdrop: serie.backdrop || serie.banner,
-            type: 'series',
-            year: serie.year,
-            category: serie.category,
-            rating: serie.rating,
-            genres: serie.genres || []
-          })
-        }
-      })
+      // Aplica ordenação conforme configurado no banco
+      if (ordenacao === 'rating_desc') {
+        seriesQuery = seriesQuery.order('rating', { ascending: false })
+      } else if (ordenacao === 'year_desc') {
+        seriesQuery = seriesQuery.order('year', { ascending: false })
+      } else {
+        seriesQuery = seriesQuery.order('created_at', { ascending: false })
+      }
+
+      const series = await seriesQuery.limit(searchLimit)
+
+      console.log(`Séries encontradas:`, series?.data?.length || 0)
+
+      if (series?.data) {
+        series.data.forEach(serie => {
+          const idStr = String(serie.id)
+          if (!excludeIds.has(idStr)) {
+            items.push({
+              id: serie.id,
+              titulo: serie.titulo,
+              poster: serie.poster || serie.capa || serie.poster_path || serie.banner,
+              backdrop: serie.backdrop || serie.banner,
+              type: 'series',
+              year: serie.year,
+              category: serie.category,
+              rating: serie.rating,
+              genres: serie.genres || []
+            })
+          }
+        })
+      }
+    } catch (seriesError) {
+      console.warn('Erro ao buscar séries (tabela pode não existir):', seriesError)
+      // Continua apenas com filmes
     }
 
     console.log(`Total de itens antes de remover duplicatas:`, items.length)
 
-    // Remove duplicatas baseadas no título (apenas temporadas de séries)
+    // NÃO remove duplicatas - cada item é único
     const uniqueItems = removeDuplicatesByTitle(items)
 
     console.log(`Total de itens após remover duplicatas:`, uniqueItems.length)
@@ -490,37 +475,12 @@ export async function getSectionContent(
 }
 
 /**
- * Normaliza o título removendo APENAS temporadas de séries
- * NÃO remove coleções ou continuações de filmes
- */
-function normalizeTitle(title: string): string {
-  let normalized = title.toLowerCase().trim()
-
-  // Remove APENAS padrões de temporadas (séries)
-  normalized = normalized.replace(/\b(temporada|season|s)\s*\d+/gi, '')
-  normalized = normalized.replace(/\b(temporada|season|s)\s*[ivxlcdm]+/gi, '')
-
-  // Remove espaços extras
-  normalized = normalized.replace(/\s+/g, ' ').trim()
-
-  return normalized
-}
-
-/**
- * Remove duplicatas baseadas no título (apenas temporadas de séries)
- * Coleções e continuações de filmes são mantidas como itens distintos
+ * NÃO remove duplicatas - cada item é único
+ * Filmes com continuações são mantidos como itens distintos
  */
 function removeDuplicatesByTitle(items: ContentItem[]): ContentItem[] {
-  const uniqueMap = new Map<string, ContentItem>()
-
-  items.forEach(item => {
-    const normalizedTitle = normalizeTitle(item.titulo)
-    if (!uniqueMap.has(normalizedTitle)) {
-      uniqueMap.set(normalizedTitle, item)
-    }
-  })
-
-  return Array.from(uniqueMap.values())
+  // Retorna todos os itens sem remover duplicatas
+  return items
 }
 
 /**
