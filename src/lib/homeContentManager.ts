@@ -179,7 +179,7 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
         .select('*')
         .gte('rating', 7)
         .order('rating', { ascending: false })
-        .order('year', { ascending: false })
+        .order('ano', { ascending: false })
         .limit(searchLimit)
     } catch (seriesError) {
       console.warn('Erro ao buscar trending series:', seriesError)
@@ -208,15 +208,15 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
     if (series?.data) {
       series.data.forEach(serie => {
         items.push({
-          id: serie.id,
+          id: serie.id_n,
           titulo: serie.titulo,
-          poster: serie.poster || serie.capa || serie.poster_path || serie.banner,
-          backdrop: serie.backdrop || serie.banner,
+          poster: serie.poster || serie.capa,
+          backdrop: serie.banner,
           type: 'series',
-          year: serie.year,
-          category: serie.category,
+          year: serie.ano,
+          category: serie.classificacao || serie.genero,
           rating: serie.rating,
-          genres: serie.genres || []
+          genres: serie.genero ? [serie.genero] : []
         })
       })
     }
@@ -300,25 +300,25 @@ export async function getPersonalizedRecommendations(
         const series = await sb
           .from('series')
           .select('*')
-          .ilike('category', `%${genre}%`)
+          .ilike('classificacao', `%${genre}%`)
           .gte('rating', 6)
           .order('rating', { ascending: false })
           .limit(searchLimit)
 
         if (series?.data) {
           series.data.forEach(serie => {
-            const idStr = String(serie.id)
+            const idStr = String(serie.id_n)
             if (!excludeIds.has(idStr)) {
               items.push({
-                id: serie.id,
+                id: serie.id_n,
                 titulo: serie.titulo,
-                poster: serie.poster || serie.capa || serie.poster_path || serie.banner,
-                backdrop: serie.backdrop || serie.banner,
+                poster: serie.poster || serie.capa,
+                backdrop: serie.banner,
                 type: 'series',
-                year: serie.year,
-                category: serie.category,
+                year: serie.ano,
+                category: serie.classificacao || serie.genero,
                 rating: serie.rating,
-                genres: serie.genres || []
+                genres: serie.genero ? [serie.genero] : []
               })
             }
           })
@@ -410,7 +410,8 @@ export async function getSectionContent(
       let seriesQuery = sb.from('series').select('*')
 
       if (categories && categories.length > 0) {
-        const catFilters = categories.map(c => `category.ilike.%${c}%`).join(',')
+        // Usando classificacao ou genero em vez de category
+        const catFilters = categories.map(c => `classificacao.ilike.%${c}%`).join(',')
         seriesQuery = seriesQuery.or(catFilters)
       }
 
@@ -418,27 +419,27 @@ export async function getSectionContent(
       if (ordenacao === 'rating_desc') {
         seriesQuery = seriesQuery.order('rating', { ascending: false })
       } else if (ordenacao === 'year_desc') {
-        seriesQuery = seriesQuery.order('year', { ascending: false })
+        seriesQuery = seriesQuery.order('ano', { ascending: false })
       } else {
-        seriesQuery = seriesQuery.order('created_at', { ascending: false })
+        seriesQuery = seriesQuery.order('id_n', { ascending: false })
       }
 
       const series = await seriesQuery.limit(searchLimit)
 
       if (series?.data) {
         series.data.forEach(serie => {
-          const idStr = String(serie.id)
+          const idStr = String(serie.id_n)
           if (!excludeIds.has(idStr)) {
             items.push({
-              id: serie.id,
+              id: serie.id_n,
               titulo: serie.titulo,
-              poster: serie.poster || serie.capa || serie.poster_path || serie.banner,
-              backdrop: serie.backdrop || serie.banner,
+              poster: serie.poster || serie.capa,
+              backdrop: serie.banner,
               type: 'series',
-              year: serie.year,
-              category: serie.category,
+              year: serie.ano,
+              category: serie.classificacao || serie.genero,
               rating: serie.rating,
-              genres: serie.genres || []
+              genres: serie.genero ? [serie.genero] : []
             })
           }
         })
