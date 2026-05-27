@@ -51,9 +51,15 @@ function SearchContent() {
   const [lastQuery, setLastQuery] = useState('')
   const [isListening, setIsListening] = useState(false)
   const [recognitionError, setRecognitionError] = useState<string | null>(null)
+  const [isSpeechSupported, setIsSpeechSupported] = useState(false)
 
   // Habilita navegação por controle remoto
   useSpatialNavigation()
+
+  useEffect(() => {
+    // Verifica suporte a voz apenas no cliente para evitar erros de hidratação
+    setIsSpeechSupported(typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window))
+  }, [])
 
   useEffect(() => {
     // Limpa a URL ao carregar para não salvar busca anterior
@@ -248,7 +254,7 @@ function SearchContent() {
               </button>
             )}
             {/* Botão de busca por voz */}
-            {(typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) && (
+            {isSpeechSupported && (
               <button
                 type="button"
                 onClick={isListening ? stopVoiceSearch : startVoiceSearch}
