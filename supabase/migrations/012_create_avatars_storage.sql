@@ -66,11 +66,15 @@ CREATE INDEX IF NOT EXISTS idx_system_avatars_active ON system_avatars(is_active
 ALTER TABLE system_avatars ENABLE ROW LEVEL SECURITY;
 
 -- Política para permitir leitura pública dos avatares do sistema
+DROP POLICY IF EXISTS "Avatares do sistema são públicos" ON system_avatars;
 CREATE POLICY "Avatares do sistema são públicos"
   ON system_avatars FOR SELECT
+  TO public
   USING (true);
 
 -- Política para permitir que usuários selecionem avatares
+DROP POLICY IF EXISTS "Usuários podem selecionar avatares" ON system_avatars;
 CREATE POLICY "Usuários podem selecionar avatares"
   ON system_avatars FOR UPDATE
+  TO authenticated
   USING (true);
