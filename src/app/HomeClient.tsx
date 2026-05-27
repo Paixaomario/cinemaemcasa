@@ -7,6 +7,7 @@ import { HeroBanner } from '@/components/sections/HeroBanner'
 import { ContentRow } from '@/components/sections/ContentRow'
 import { ContentCard } from '@/components/ui/ContentCard'
 import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
+import { useBurnInProtection } from '@/hooks/useBurnInProtection'
 import {
   initializeContentSession,
   addToDisplayedCache,
@@ -56,6 +57,9 @@ export function HomeClient() {
   // Ativa navegação por controle remoto na Home
   useSpatialNavigation()
 
+  // Ativa proteção contra Burn-in para TVs OLED
+  useBurnInProtection(5)
+
   // Redireciona para login se não estiver autenticado
   useEffect(() => {
     if (!loading && !user) {
@@ -69,6 +73,15 @@ export function HomeClient() {
       if (!user) return
 
       const sb = createClient()
+
+      // Busca se o usuário está no Modo Infantil
+      const { data: profile } = await sb
+        .from('profiles')
+        .select('is_child')
+        .eq('id', user.id)
+        .single()
+      
+      const isChild = profile?.is_child || false
 
       // Inicializa nova sessão de conteúdo (reseta cache a cada carregamento)
       initializeContentSession()
@@ -264,14 +277,14 @@ export function HomeClient() {
             const userIsNew = await isNewUser(user.id)
             if (userIsNew) {
               // Novo usuário: mostra conteúdo em alta
-              items = await getTrendingContent(sec.limite)
+              items = await getTrendingContent(sec.limite, isChild)
             } else {
               // Usuário existente: recomendações personalizadas
               items = await getPersonalizedRecommendations(user.id, sec.limite, displayedIds)
             }
           } else {
             // Não logado: mostra conteúdo em alta
-            items = await getTrendingContent(sec.limite)
+            items = await getTrendingContent(sec.limite, isChild)
           }
         } else {
           // Seção normal: usa o gerenciador de conteúdo (independente da fonte)

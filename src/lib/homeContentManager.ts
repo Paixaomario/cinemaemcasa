@@ -169,30 +169,23 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
 
     // Busca conteúdo com maior rating e mais recente
     let movies = null
+    let moviesQuery = sb.from('cinema').select('*')
+    
+    if (isChild) {
+      moviesQuery = moviesQuery
+        .filter('category', 'not.ilike', '%+18%')
+        .filter('category', 'not.ilike', '%Terror%')
+        .filter('category', 'not.ilike', '%Adulto%')
+    }
+
     try {
-      movies = await sb
-        .from('cinema')
-        .select('*')
-        // Se for modo infantil, filtra classificações baixas (L, 10, 12)
-        .filter('category', 'not.ilike', '%+18%')
-        .filter('category', 'not.ilike', '%Terror%')
-        .filter('category', 'not.ilike', '%Adulto%')
+      movies = await moviesQuery
         .gte('rating', 7)
         .order('rating', { ascending: false })
         .order('year', { ascending: false })
         .limit(searchLimit)
-    } catch (error) {
-      console.warn('Erro ao buscar trending movies:', error)
-      movies = await sb
-        .from('cinema')
-        .select('*')
-        .filter('category', 'not.ilike', '%+18%')
-        .filter('category', 'not.ilike', '%Terror%')
-        .filter('category', 'not.ilike', '%Adulto%')
-        .gte('rating', 7)
-        .order('rating', { ascending: false })
-        .order('year', { ascending: false })
-        .limit(searchLimit)
+    } catch (movieError) {
+      console.warn('Erro ao buscar trending movies:', movieError)
     }
 
     let series = null
