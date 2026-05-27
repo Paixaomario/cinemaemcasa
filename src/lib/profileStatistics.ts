@@ -55,8 +55,31 @@ export async function updateProfileStatistics(userId: string): Promise<void> {
     }
   }
 
-  // Buscar gênero mais assistido (simplificado - pode ser melhorado com dados do conteúdo)
-  const mostWatchedGenre = 'Ação' // Placeholder - pode ser implementado com dados reais
+  // Buscar gênero mais assistido via consulta unificada
+  let mostWatchedGenre = 'Geral'
+  try {
+    const contentIds = history.map(h => h.content_id)
+    const { data: contents } = await sb
+      .from('content')
+      .select('genres')
+      .in('id', contentIds)
+
+    if (contents && contents.length > 0) {
+      const genreMap: Record<string, number> = {}
+      contents.forEach(c => {
+        if (c.genres && Array.isArray(c.genres)) {
+          c.genres.forEach(g => {
+            genreMap[g] = (genreMap[g] || 0) + 1
+          })
+        }
+      })
+      const sorted = Object.entries(genreMap).sort((a, b) => b[1] - a[1])
+      if (sorted.length > 0) mostWatchedGenre = sorted[0][0]
+    }
+  } catch (err) {
+    console.warn('Erro ao calcular gênero favorito:', err)
+  }
+
 
   // Verificar se já existe estatística para o usuário
   const { data: existing } = await sb

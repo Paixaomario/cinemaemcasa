@@ -391,15 +391,10 @@ export default function PerfilPage() {
 
     const sb = createClient()
     try {
-      // Deletar todos os dados do usuário
-      await sb.from('profile_settings').delete().eq('user_id', user.id)
-      await sb.from('accessibility_settings').delete().eq('user_id', user.id)
-      await sb.from('connected_devices').delete().eq('user_id', user.id)
-      await sb.from('active_sessions').delete().eq('user_id', user.id)
-      await sb.from('profile_statistics').delete().eq('user_id', user.id)
-      await sb.from('view_progress').delete().eq('user_id', user.id)
-      await sb.from('favorites').delete().eq('user_id', user.id)
-      await sb.from('profiles').delete().eq('id', user.id)
+      // Com ON DELETE CASCADE no DB, basta deletar o perfil ou o próprio usuário
+      const { error: deleteError } = await sb.from('profiles').delete().eq('id', user.id)
+
+      if (deleteError) throw deleteError
 
       // Deletar usuário do auth
       const { error: authError } = await sb.auth.admin.deleteUser(user.id)

@@ -469,8 +469,12 @@ export async function getSectionContent(
  * Filmes com continuações são mantidos como itens distintos
  */
 function removeDuplicatesByTitle(items: ContentItem[]): ContentItem[] {
-  // Retorna todos os itens sem remover duplicatas
-  return items
+  const seen = new Set();
+  return items.filter(item => {
+    const duplicate = seen.has(item.titulo.toLowerCase());
+    seen.add(item.titulo.toLowerCase());
+    return !duplicate;
+  });
 }
 
 /**
