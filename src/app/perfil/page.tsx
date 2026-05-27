@@ -17,6 +17,7 @@ import { uploadAvatar } from '@/lib/avatarUpload'
 import { saveProfileSettings, getProfileSettings } from '@/lib/profileSettings'
 import { getUserDevices, logoutDevice, detectDeviceType, detectDeviceName } from '@/lib/deviceManager'
 import { getProfileStatistics } from '@/lib/profileStatistics'
+import { SystemAvatarSelector } from '@/components/profile/SystemAvatarSelector'
 
 interface ProfileItem {
   id: string | number;
@@ -46,6 +47,7 @@ export default function PerfilPage() {
   const [editingName, setEditingName] = useState(false)
   const [tempName, setTempName] = useState('')
   const [loading, setLoading] = useState(true)
+  const [showAvatarSelector, setShowAvatarSelector] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -256,6 +258,10 @@ export default function PerfilPage() {
     }
   }
 
+  const handleSystemAvatarSelected = (url: string) => {
+    setProfile({ ...profile, avatar_url: url })
+  }
+
   const handleSettingsChange = async (newSettings: any) => {
     if (!user) return
 
@@ -450,6 +456,7 @@ export default function PerfilPage() {
             avatarUrl={profile?.avatar_url}
             username={profile?.username || profile?.full_name || user.email}
             onAvatarChange={handleAvatarChange}
+            onSystemAvatarClick={() => setShowAvatarSelector(true)}
             editable={true}
           />
           <div className="text-center sm:text-left flex-1">
@@ -517,6 +524,15 @@ export default function PerfilPage() {
           <DevicesSection devices={devices} onLogoutDevice={handleLogoutDevice} />
         </div>
       </div>
+
+      {showAvatarSelector && user && (
+        <SystemAvatarSelector
+          userId={user.id}
+          currentAvatarUrl={profile?.avatar_url}
+          onClose={() => setShowAvatarSelector(false)}
+          onAvatarSelected={handleSystemAvatarSelected}
+        />
+      )}
     </main>
   )
 }
