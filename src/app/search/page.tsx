@@ -7,7 +7,7 @@ import { TMDBMovie, TMDBShow, TMDB_IMG } from '@/lib/tmdb'
 import { Navbar } from '@/components/layout/Navbar'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
+import { useSpatialNavigation } from '../../hooks/useSpatialNavigation'
 
 // Definir SpeechRecognition globalmente para evitar erros de tipo
 declare global {

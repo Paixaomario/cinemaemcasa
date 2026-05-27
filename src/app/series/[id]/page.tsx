@@ -10,7 +10,7 @@ import Image from 'next/image'
 import { ContentCard } from '@/components/ui/ContentCard'
 import { TrailerModal } from '@/components/ui/TrailerModal'
 import { useAuth } from '@/components/layout/SupabaseProvider'
-import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
+import { useSpatialNavigation } from '../../../hooks/useSpatialNavigation'
 import { Heart } from 'lucide-react'
 
 export default function SeriesDetailsPage() {

@@ -6,8 +6,8 @@ import { useAuth } from '@/components/layout/SupabaseProvider'
 import { HeroBanner } from '@/components/sections/HeroBanner'
 import { ContentRow } from '@/components/sections/ContentRow'
 import { ContentCard } from '@/components/ui/ContentCard'
-import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
-import { useBurnInProtection } from '@/hooks/useBurnInProtection'
+import { useSpatialNavigation } from '../hooks/useSpatialNavigation'
+import { useBurnInProtection } from '../hooks/useBurnInProtection'
 import {
   initializeContentSession,
   addToDisplayedCache,
