@@ -73,8 +73,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         const aC = { x: a.left + a.width / 2, y: a.top + a.height / 2 }
         const bC = { x: b.left + b.width / 2, y: b.top + b.height / 2 }
 
-        // Penalidade alta para desalinhamento (prioriza elementos na mesma linha/coluna)
-        const mult = 10
+        // Penalidade moderada para desalinhamento (não tão rígida)
+        const mult = 3
         if (dir === 'ArrowRight') return (b.left - activeRect.right) + Math.abs(bC.y - aC.y) * mult
         if (dir === 'ArrowLeft') return (activeRect.left - b.right) + Math.abs(bC.y - aC.y) * mult
         if (dir === 'ArrowDown') return (b.top - activeRect.bottom) + Math.abs(bC.x - aC.x) * mult
@@ -85,8 +85,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       let nearest: HTMLElement | null = null
       let minDist = Infinity
 
-      // Tolerância para considerar elementos na mesma linha/coluna (em pixels)
-      const alignmentTolerance = 30
+      // Tolerância aumentada para considerar elementos na mesma linha/coluna (em pixels)
+      const alignmentTolerance = 100
 
       focusable.forEach(el => {
         if (el === active) return
@@ -98,22 +98,38 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         if (key === 'ArrowDown' && r.top < activeRect.bottom - 1) return
         if (key === 'ArrowUp' && r.bottom > activeRect.top + 1) return
 
-        // Para navegação horizontal, prioriza elementos na mesma linha
+        // Para navegação horizontal, prioriza elementos na mesma linha, mas não ignora se estiver um pouco fora
         if (key === 'ArrowRight' || key === 'ArrowLeft') {
           const activeCenterY = activeRect.top + activeRect.height / 2
           const elCenterY = r.top + r.height / 2
           const verticalDiff = Math.abs(activeCenterY - elCenterY)
-          // Se estiver muito fora da linha, ignora completamente
-          if (verticalDiff > alignmentTolerance) return
+          // Penaliza se estiver muito fora da linha, mas não ignora completamente
+          if (verticalDiff > alignmentTolerance) {
+            // Adiciona penalidade extra na distância para desencorajar, mas não ignora
+            const d = getDistance(activeRect, r, key) + verticalDiff * 10
+            if (d < minDist) {
+              minDist = d
+              nearest = el
+            }
+            return
+          }
         }
 
-        // Para navegação vertical, prioriza elementos na mesma coluna
+        // Para navegação vertical, prioriza elementos na mesma coluna, mas não ignora se estiver um pouco fora
         if (key === 'ArrowDown' || key === 'ArrowUp') {
           const activeCenterX = activeRect.left + activeRect.width / 2
           const elCenterX = r.left + r.width / 2
           const horizontalDiff = Math.abs(activeCenterX - elCenterX)
-          // Se estiver muito fora da coluna, ignora completamente
-          if (horizontalDiff > alignmentTolerance) return
+          // Penaliza se estiver muito fora da coluna, mas não ignora
+          if (horizontalDiff > alignmentTolerance) {
+            // Adiciona penalidade extra na distância para desencorajar, mas não ignora
+            const d = getDistance(activeRect, r, key) + horizontalDiff * 10
+            if (d < minDist) {
+              minDist = d
+              nearest = el
+            }
+            return
+          }
         }
 
         const d = getDistance(activeRect, r, key)
