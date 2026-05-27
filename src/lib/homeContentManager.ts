@@ -330,17 +330,6 @@ export async function getSectionContent(
         const idStr = String(movie.id)
         if (!excludeIds.has(idStr)) {
           const poster = movie.poster || movie.capa || movie.poster_path || movie.banner
-          // Log para investigar capas com emojis
-          if (!poster || (typeof poster === 'string' && poster.trim() === '')) {
-            console.log('Capa vazia encontrada:', {
-              id: movie.id,
-              titulo: movie.titulo,
-              poster: poster,
-              capa: movie.capa,
-              poster_path: movie.poster_path,
-              banner: movie.banner
-            })
-          }
           items.push({
             id: movie.id,
             titulo: movie.titulo,
