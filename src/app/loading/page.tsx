@@ -11,15 +11,26 @@ export default function LoadingPage() {
   const [loadingStep, setLoadingStep] = useState('Iniciando...')
 
   useEffect(() => {
-    // Se não estiver autenticado, redireciona para login
-    if (!authLoading && !user) {
-      router.replace('/login')
-      return
-    }
-
     let mounted = true
 
     async function loadData() {
+      // Se não estiver autenticado, mostra loading por 2 segundos e redireciona para login
+      if (!authLoading && !user) {
+        setLoadingStep('Redirecionando para login...')
+        
+        // Mostra animação de loading por 2 segundos
+        for (let i = 0; i <= 20; i++) {
+          if (!mounted) return
+          await new Promise(resolve => setTimeout(resolve, 100))
+          setProgress(i * 5)
+        }
+        
+        if (mounted) {
+          router.replace('/login')
+        }
+        return
+      }
+
       const steps = [
         { name: 'Carregando configurações...', duration: 800 },
         { name: 'Preparando interface...', duration: 600 },
@@ -61,9 +72,7 @@ export default function LoadingPage() {
       }
     }
 
-    if (user) {
-      loadData()
-    }
+    loadData()
 
     return () => {
       mounted = false
