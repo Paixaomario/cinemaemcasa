@@ -127,17 +127,6 @@ export function HomeClient() {
                 // Tenta obter duration de várias fontes
                 let duration = orig?.duration || orig?.runtime || contentData.duration || null
 
-                // Se ainda não tiver duration e não for episódio, tenta buscar na tabela content
-                if (!duration && !isNumeric && !isEpisode) {
-                  try {
-                    const { data: contentWithDuration } = await sb.from('content').select('duration').eq('id', idStr).maybeSingle()
-                    duration = contentWithDuration?.duration || null
-                  } catch (contentError) {
-                    console.warn('Erro ao buscar duration na tabela content (tabela pode não existir):', contentError)
-                    // Continua sem duration
-                  }
-                }
-
                 // Converte duration de string para segundos
                 let durationInSeconds = null
                 if (duration) {
