@@ -1,10 +1,10 @@
 -- Normalizar campos de capa/poster para consistência
 -- Este script garante que o campo 'poster' seja sempre preenchido com a capa correta
 
--- 1. Para tabela cinema: garantir que poster tenha valor
+-- 1. Para tabela cinema: garantir que poster tenha valor (apenas poster e backdrop existem)
 UPDATE public.cinema 
-SET poster = COALESCE(poster, capa, poster_path, backdrop, banner)
-WHERE poster IS NULL AND (capa IS NOT NULL OR poster_path IS NOT NULL OR backdrop IS NOT NULL OR banner IS NOT NULL);
+SET poster = COALESCE(poster, backdrop)
+WHERE poster IS NULL AND backdrop IS NOT NULL;
 
 -- 2. Para tabela series: garantir que poster tenha valor (priorizar capa)
 UPDATE public.series 
@@ -17,8 +17,8 @@ SET capa = COALESCE(capa, poster, banner)
 WHERE capa IS NULL AND (poster IS NOT NULL OR banner IS NOT NULL);
 
 -- 4. Adicionar comentários para documentar os campos
-COMMENT ON COLUMN public.cinema.poster IS 'Capa/poster principal do filme (prioridade: poster > capa > poster_path > backdrop > banner)';
-COMMENT ON COLUMN public.cinema.capa IS 'Campo legado para capa, usar poster como principal';
+COMMENT ON COLUMN public.cinema.poster IS 'Capa/poster principal do filme (prioridade: poster > backdrop)';
+COMMENT ON COLUMN public.cinema.backdrop IS 'Banner/imagem de fundo do filme';
 COMMENT ON COLUMN public.series.poster IS 'Capa/poster principal da série (prioridade: poster > capa > banner)';
 COMMENT ON COLUMN public.series.capa IS 'Campo legado para capa, usar poster como principal';
 COMMENT ON COLUMN public.temporadas.capa IS 'Capa da temporada (prioridade: capa > poster > banner)';
@@ -29,8 +29,8 @@ RETURNS VOID AS $$
 BEGIN
   -- Normalizar cinema
   UPDATE public.cinema 
-  SET poster = COALESCE(poster, capa, poster_path, backdrop, banner)
-  WHERE poster IS NULL AND (capa IS NOT NULL OR poster_path IS NOT NULL OR backdrop IS NOT NULL OR banner IS NOT NULL);
+  SET poster = COALESCE(poster, backdrop)
+  WHERE poster IS NULL AND backdrop IS NOT NULL;
   
   -- Normalizar series
   UPDATE public.series 
@@ -50,7 +50,7 @@ RETURNS TRIGGER AS $$
 BEGIN
   -- Para cinema
   IF TG_TABLE_NAME = 'cinema' THEN
-    NEW.poster := COALESCE(NEW.poster, NEW.capa, NEW.poster_path, NEW.backdrop, NEW.banner);
+    NEW.poster := COALESCE(NEW.poster, NEW.backdrop);
   END IF;
   
   -- Para series

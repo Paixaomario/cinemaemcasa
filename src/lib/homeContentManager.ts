@@ -194,8 +194,8 @@ export async function getTrendingContent(limit: number = 20): Promise<ContentIte
         items.push({
           id: movie.id,
           titulo: movie.titulo,
-          poster: movie.poster,
-          backdrop: movie.backdrop || movie.banner,
+          poster: movie.poster || movie.backdrop,
+          backdrop: movie.backdrop,
           type: 'movie',
           year: movie.year,
           category: movie.category,
@@ -284,8 +284,8 @@ export async function getPersonalizedRecommendations(
             items.push({
               id: movie.id,
               titulo: movie.titulo,
-              poster: movie.poster,
-              backdrop: movie.backdrop || movie.banner,
+              poster: movie.poster || movie.backdrop,
+              backdrop: movie.backdrop,
               type: 'movie',
               year: movie.year,
               category: movie.category,
@@ -389,12 +389,12 @@ export async function getSectionContent(
       movies.data.forEach(movie => {
         const idStr = String(movie.id)
         if (!excludeIds.has(idStr)) {
-          const poster = movie.poster
+          const poster = movie.poster || movie.backdrop
           items.push({
             id: movie.id,
             titulo: movie.titulo,
             poster: poster,
-            backdrop: movie.backdrop || movie.banner,
+            backdrop: movie.backdrop,
             type: 'movie',
             year: movie.year,
             category: movie.category,

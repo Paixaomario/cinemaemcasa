@@ -22,9 +22,9 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
         if (mError || sError) console.error("Erro ao buscar dados para o banner:", mError || sError)
 
         let combinedPool = [
-          ...(movies || []).map(m => ({ ...m, type: 'movie', poster: m.poster, backdrop: m.backdrop || m.poster, category: m.category })),
+          ...(movies || []).map(m => ({ ...m, type: 'movie', poster: m.poster || m.backdrop, backdrop: m.backdrop || m.poster, category: m.category })),
           ...(series || []).map(s => ({ ...s, id: s.id_n, type: 'series', poster: s.poster, backdrop: s.banner || s.poster, category: s.genero }))
-        ].filter(item => item.tmdb_id && item.poster);
+        ].filter(item => item.tmdb_id && (item.poster || item.backdrop));
 
         if (type) {
           combinedPool = combinedPool.filter(item => item.type === type);
