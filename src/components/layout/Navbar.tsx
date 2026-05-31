@@ -14,8 +14,8 @@ export function Navbar() {
           <Image 
             src="/logo.png" 
             alt="CINECASA" 
-            width={120} 
-            height={40} 
+            width={100} 
+            height={30} 
             priority
             className="nav-logo"
           />

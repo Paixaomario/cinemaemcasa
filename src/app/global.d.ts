@@ -5,8 +5,8 @@ declare global {
     renderTime?: number | null;
     loadTime?: number | null;
     processingStart?: number | null;
-    startTime?: number | null;
-    duration?: number | null;
+    startTime: number;
+    duration: number;
   }
 }
 export {};
