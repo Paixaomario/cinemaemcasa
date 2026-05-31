@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import '@/lib/responsive-core.css'
 import { SupabaseProvider } from '@/components/layout/SupabaseProvider'
 import { MobileNavBar } from '@/components/layout/MobileNavBar'
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister'
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: '#00ADEF',
-  width: '1920', // Fixa a largura para o padrão Full HD da LG
+  width: 'device-width',
   initialScale: 1,
 }
 
@@ -39,7 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans">
         <Script 
           src="https://static.webostv.developer.lge.com/sdk/lib/webOSTVjs-1.2.4/webOSTV.js" 
-          strategy="beforeInteractive"
+          strategy="afterInteractive"
         />
         <ServiceWorkerRegister />
         <SupabaseProvider>
