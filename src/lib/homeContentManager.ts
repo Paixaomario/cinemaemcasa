@@ -121,9 +121,9 @@ export async function getUserFavoriteGenres(userId: string): Promise<string[]> {
     // Extrai todos os content_ids
     const contentIds = historyData.map(item => String(item.content_id))
 
-    // Busca os gêneros de todos os conteúdos em uma única query
+    // CORREÇÃO: Busca na tabela 'cinema' (filmes) que é a tabela principal de conteúdo
     const { data: contentData, error: contentError } = await sb
-      .from('content')
+      .from('cinema')
       .select('id, genres')
       .in('id', contentIds)
 
