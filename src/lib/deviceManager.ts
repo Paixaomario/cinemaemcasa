@@ -184,7 +184,7 @@ export function getViewportMetadata() {
   const ppr = window.devicePixelRatio || 1;
 
   return {
-    isBigScreen: width >= 2560 || (width >= 1920 && ppr < 1.5),
+    isBigScreen: width >= 2560 || (width >= 1920 && ppr <= 1), // Otimizado para telas gigantes/projetores
     isTiny: width < 360,
     aspectRatio: width / height,
     isLandscape: width > height

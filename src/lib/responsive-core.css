@@ -1,14 +1,14 @@
 /* Core de Responsividade Total: Tiny screens até 200" Projectors */
 
 :root {
-  /* Tipografia fluida: Escala entre 14px e 28px baseada no viewport */
-  --base-font-size: clamp(0.875rem, 0.8vw + 0.5rem, 1.75rem);
+  /* Tipografia fluida agressiva: 13px (tiny) até 32px (200") */
+  --base-font-size: clamp(0.8125rem, 1vw + 0.5rem, 2rem);
   
-  /* Safe areas dinâmicas para projetores e Smart TVs (Overscan protection) */
-  --safe-area-top: env(safe-area-inset-top, 5vh);
-  --safe-area-bottom: env(safe-area-inset-bottom, 5vh);
-  --safe-area-left: env(safe-area-inset-left, 6vw);
-  --safe-area-right: env(safe-area-inset-right, 6vw);
+  /* Proteção contra Overscan em Projetores e TVs */
+  --safe-area-top: env(safe-area-inset-top, 4vh);
+  --safe-area-bottom: env(safe-area-inset-bottom, 4vh);
+  --safe-area-left: env(safe-area-inset-left, 5vw);
+  --safe-area-right: env(safe-area-inset-right, 5vw);
   
   --gold-primary: #d4af37;
 }
@@ -37,13 +37,14 @@ body {
 
 /* Ajustes para "Big Screen Mode" (4K TVs, Projetores 200") */
 @media (min-width: 1921px) {
-  :root {
-    --base-font-size: 22px;
-  }
-  
   /* Aumenta a escala para ultra resoluções (8K / 200") */
   @media (min-width: 3840px) {
     :root { --base-font-size: 32px; }
+  }
+  
+  /* Aumenta o tamanho dos posters em telas gigantes */
+  .grid-responsive {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
   }
   
   .container {
