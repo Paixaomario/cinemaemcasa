@@ -14,11 +14,19 @@ export async function POST(req: Request) {
       }
     )
 
+    if (!response.ok) {
+      const errorText = await response.text()
+      return Response.json(
+        { ok: false, error: errorText },
+        { status: 500 }
+      )
+    }
+
     const data = await response.json()
 
     return Response.json({
       ok: true,
-      debug: data
+      vector: data
     })
 
   } catch (err: any) {
