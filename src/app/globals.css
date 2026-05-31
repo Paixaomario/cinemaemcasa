@@ -118,37 +118,42 @@ body {
   100% { transform: translateY(-100vh) scale(1) rotate(-10deg); opacity: 0; }
 }
 
+/* Logotipo: Restrição Global Estrita para todas as plataformas */
+.nav-logo {
+  height: 22px !important;
+  max-height: 22px !important;
+  width: auto !important;
+  object-fit: contain !important;
+  display: block;
+  will-change: transform;
+}
+
 /* =========================================================
    ESTRUTURA RESPONSIVA: ISOLAMENTO MOBILE VS TV/DESKTOP
    ========================================================= */
 
 /* Ajustes para Dispositivos Móveis (Celulares e Tablets) */
 @media (max-width: 1023px) {
-  /* Oculta a barra de menus superior no mobile */
-  header, .header-container, .top-nav {
+  /* Oculta e remove o espaço de qualquer menu superior no mobile */
+  header, .header-container, .top-nav, nav[class*="fixed top-0"], nav[class*="sticky top-0"] {
     display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
   }
 
-  /* Restaura e Garante a barra de menus fixa no rodapé */
-  .mobile-nav-bar, nav[class*="fixed bottom-0"] {
+  /* Restaura e força a exibição da barra de menus original do rodapé */
+  .mobile-nav-bar, nav[class*="fixed bottom-0"], .bottom-nav {
     display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
     position: fixed !important;
     bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    z-index: 9999 !important;
+    z-index: 50 !important;
   }
 }
 
 /* Ajustes para Smart TVs e Desktop */
 @media (min-width: 1024px) {
-  .nav-logo {
-    height: 24px !important; /* Tamanho reduzido e elegante */
-    max-height: 24px !important;
-    width: auto !important;
-    object-fit: contain !important;
-  }
-
   /* Esconde a barra inferior em TVs/Desktop para não duplicar menus */
   .mobile-nav-bar, nav[class*="fixed bottom-0"] {
     display: none !important;
