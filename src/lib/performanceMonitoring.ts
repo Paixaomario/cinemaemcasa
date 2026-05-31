@@ -4,11 +4,11 @@
  */
 
 interface PerformanceMetrics {
-  lcp: number | null | undefined;
-  fid: number | null | undefined;
-  cls: number | null | undefined;
-  ttfb: number | null | undefined;
-  fcp: number | null | undefined;
+  lcp: number | null;
+  fid: number | null;
+  cls: number | null;
+  ttfb: number | null;
+  fcp: number | null;
 }
 
 export const performanceMetrics: PerformanceMetrics = {
