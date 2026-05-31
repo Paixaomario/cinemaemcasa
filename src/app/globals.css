@@ -11,10 +11,12 @@ body {
 :focus-visible, 
 .using-keyboard *:focus {
   outline: none !important;
-  box-shadow: 0 0 0 4px #00ADEF, 0 0 25px rgba(0, 173, 239, 0.8) !important;
+  box-shadow: 0 0 0 4px #00ADEF !important;
   transform: scale(1.05);
   z-index: 100 !important;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Otimizado: Anima apenas o necessário para evitar lag em TVs */
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease-in-out;
+  will-change: transform;
 }
 
 /* Ajuste para elementos com escala nativa no hover/focus */
@@ -114,4 +116,15 @@ body {
   0% { transform: translateY(0) scale(0.5); opacity: 0; }
   20% { opacity: 1; transform: translateY(-20vh) scale(1.2) rotate(10deg); }
   100% { transform: translateY(-100vh) scale(1) rotate(-10deg); opacity: 0; }
+}
+
+/* Logotipo Responsivo na Barra de Menu Superior */
+.nav-logo {
+  /* Altura dinâmica: 24px em Mobile, até 42px em TVs 4K */
+  height: clamp(24px, 4.5vh, 42px) !important;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  /* Melhora a performance de renderização */
+  will-change: transform;
 }
