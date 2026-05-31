@@ -18,10 +18,10 @@ export async function uploadAvatar(file: File, userId: string): Promise<string> 
     throw new Error('A imagem deve ter no máximo 5MB')
   }
 
-  // Gerar nome único para o arquivo
+  // Usar um caminho fixo por usuário para evitar acúmulo de arquivos órfãos
+  // O Supabase Storage substituirá o arquivo se o caminho for o mesmo e upsert for true
   const fileExt = file.name.split('.').pop()
-  const fileName = `${userId}-${Date.now()}.${fileExt}`
-  const filePath = `avatars/${fileName}`
+  const filePath = `${userId}/avatar.${fileExt}`
 
   // Fazer upload
   const { data, error } = await sb.storage

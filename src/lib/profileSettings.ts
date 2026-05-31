@@ -15,44 +15,19 @@ export interface ProfileSettings {
 export async function saveProfileSettings(userId: string, settings: ProfileSettings): Promise<void> {
   const sb = createClient()
 
-  // Verificar se já existe configuração para o usuário
-  const { data: existing } = await sb
+  const { error } = await sb
     .from('profile_settings')
-    .select('id')
-    .eq('user_id', userId)
-    .maybeSingle()
-
-  const settingsData = {
+    .upsert({
+      user_id: userId,
     language: settings.language || 'pt-BR',
     subtitles: settings.subtitles || 'off',
     video_quality: settings.video_quality || 'auto',
     data_saver: settings.data_saver || false,
-  }
+    }, { onConflict: 'user_id' })
 
-  if (existing) {
-    // Atualizar configuração existente
-    const { error } = await sb
-      .from('profile_settings')
-      .update(settingsData)
-      .eq('user_id', userId)
-
-    if (error) {
-      console.error('Erro ao atualizar configurações:', error)
-      throw new Error('Erro ao atualizar configurações')
-    }
-  } else {
-    // Criar nova configuração
-    const { error } = await sb
-      .from('profile_settings')
-      .insert({
-        user_id: userId,
-        ...settingsData
-      })
-
-    if (error) {
-      console.error('Erro ao criar configurações:', error)
-      throw new Error('Erro ao criar configurações')
-    }
+  if (error) {
+    console.error('Erro ao salvar configurações:', error)
+    throw new Error('Erro ao salvar configurações')
   }
 }
 
