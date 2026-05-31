@@ -81,7 +81,7 @@ function NavContent() {
         }
 
         /* Ocultar em Desktop */
-        @media (min-width: 769px) {
+        @media (min-width: 1024px) {
           .mobile-bottom-nav {
             display: none !important;
           }

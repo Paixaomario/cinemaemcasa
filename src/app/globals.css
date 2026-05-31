@@ -119,10 +119,10 @@ body {
 }
 
 /* Logotipo: Restrição ESTREITA para evitar tamanho gigante em todas as telas */
-.nav-logo, .nav-logo img {
-  height: 20px !important; 
+.nav-logo, .nav-logo img, .nav-logo picture {
+  height: 20px !important;
   max-height: 20px !important;
-  width: auto !important;
+  width: auto !important; 
   max-width: 150px !important;
   object-fit: contain !important;
   display: block;
