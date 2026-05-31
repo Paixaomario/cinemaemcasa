@@ -143,9 +143,10 @@ body {
 /* Ajustes para Smart TVs e Desktop */
 @media (min-width: 1024px) {
   .nav-logo {
-    height: 32px !important; /* Reduzido para não ficar gigante */
+    height: 24px !important; /* Tamanho reduzido e elegante */
+    max-height: 24px !important;
     width: auto !important;
-    object-fit: contain;
+    object-fit: contain !important;
   }
 
   /* Esconde a barra inferior em TVs/Desktop para não duplicar menus */
