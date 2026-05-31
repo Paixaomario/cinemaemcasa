@@ -89,7 +89,6 @@ export async function hydrateCinemaItem(sb: any, contentId: string, contentType?
     id: idStr,
     titulo: hydratedItem.titulo || hydratedItem.title || hydratedItem.name || 'Sem título',
     poster: hydratedItem.poster || (hydratedItem.poster_path ? `https://image.tmdb.org/t/p/w500${hydratedItem.poster_path}` : null),
-    // Otimizado para 200 polegadas: usa 'original' para backdrop se disponível para evitar artefatos em projeção
     backdrop: hydratedItem.backdrop || (hydratedItem.backdrop_path ? `https://image.tmdb.org/t/p/original${hydratedItem.backdrop_path}` : null),
     type: itemType,
   } as CinemaItem;

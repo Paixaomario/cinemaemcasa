@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase'
 export interface Device {
   id: string
   name: string
-  type: 'tv' | 'mobile' | 'tablet' | 'desktop' | 'console'
+  type: 'tv' | 'mobile' | 'tablet' | 'desktop' | 'console' | 'projector'
   last_active: string
   is_current: boolean
 }
@@ -184,7 +184,7 @@ export function getViewportMetadata() {
   const ppr = window.devicePixelRatio || 1;
 
   return {
-    isBigScreen: width >= 2560 || (width >= 1920 && ppr < 1.5), // 4K+ ou TV 1080p sem escala
+    isBigScreen: width >= 2560 || (width >= 1920 && ppr < 1.5),
     isTiny: width < 360,
     aspectRatio: width / height,
     isLandscape: width > height
