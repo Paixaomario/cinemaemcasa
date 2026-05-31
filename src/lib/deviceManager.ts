@@ -134,7 +134,7 @@ function generateDeviceId(): string {
 /**
  * Detecta o tipo de dispositivo baseado no user agent
  */
-export function detectDeviceType(userAgent: string): 'tv' | 'mobile' | 'tablet' | 'desktop' | 'console' {
+export function detectDeviceType(userAgent: string): 'tv' | 'mobile' | 'tablet' | 'desktop' | 'console' | 'projector' {
   const ua = userAgent.toLowerCase()
 
   // Consoles
@@ -143,7 +143,18 @@ export function detectDeviceType(userAgent: string): 'tv' | 'mobile' | 'tablet' 
   }
 
   // Smart TVs
-  if (ua.includes('smarttv') || ua.includes('tv') || ua.includes('roku') || ua.includes('chromecast')) {
+  if (
+    ua.includes('smarttv') || 
+    ua.includes('tv') || 
+    ua.includes('webos') || 
+    ua.includes('tizen') || 
+    ua.includes('netcast') || 
+    ua.includes('roku') || 
+    ua.includes('chromecast') ||
+    ua.includes('firetv') ||
+    ua.includes('hbbtv') ||
+    ua.includes('maple') // Samsung legacy
+  ) {
     return 'tv'
   }
 
@@ -159,6 +170,25 @@ export function detectDeviceType(userAgent: string): 'tv' | 'mobile' | 'tablet' 
 
   // Desktop (padrão)
   return 'desktop'
+}
+
+/**
+ * Obtém metadados de visualização baseados no tamanho da tela real
+ * Essencial para telas de 200 polegadas vs telas minúsculas
+ */
+export function getViewportMetadata() {
+  if (typeof window === 'undefined') return { isBigScreen: false, isTiny: false };
+
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const ppr = window.devicePixelRatio || 1;
+
+  return {
+    isBigScreen: width >= 2560 || (width >= 1920 && ppr < 1.5), // 4K+ ou TV 1080p sem escala
+    isTiny: width < 360,
+    aspectRatio: width / height,
+    isLandscape: width > height
+  };
 }
 
 /**
