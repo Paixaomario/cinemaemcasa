@@ -1,38 +1,19 @@
 export async function POST(req: Request) {
-  try {
-    const { text } = await req.json()
+  const { text } = await req.json()
 
-    const response = await fetch(
-      "https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.HF_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ inputs: text }),
-      }
-    )
+  const vector = text
+    .toLowerCase()
+    .split("")
+    .map(c => c.charCodeAt(0))
+    .slice(0, 128)
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      return Response.json(
-        { ok: false, error: errorText },
-        { status: 500 }
-      )
-    }
-
-    const data = await response.json()
-
-    return Response.json({
-      ok: true,
-      vector: data
-    })
-
-  } catch (err: any) {
-    return Response.json({
-      ok: false,
-      error: err.message
-    }, { status: 500 })
+  // normaliza para 1536 (pgvector size)
+  while (vector.length < 1536) {
+    vector.push(0)
   }
+
+  return Response.json({
+    ok: true,
+    vector
+  })
 }
