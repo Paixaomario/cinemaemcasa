@@ -4,10 +4,10 @@ export async function POST(req: Request) {
   const vector = text
     .toLowerCase()
     .split("")
-    .map(c => c.charCodeAt(0))
+    .map((c: string) => c.charCodeAt(0))
     .slice(0, 128)
 
-  // normaliza para 1536 (pgvector size)
+  // completa até 1536 (pgvector)
   while (vector.length < 1536) {
     vector.push(0)
   }
