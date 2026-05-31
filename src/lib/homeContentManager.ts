@@ -267,92 +267,61 @@ export async function getPersonalizedRecommendations(
   }
 
   const sb = createClient()
+  const searchLimit = 100
 
   try {
+    // Constrói filtros OR para todos os gêneros favoritos de uma vez
+    // Isso evita o loop de requisições sequenciais (Otimização crítica para TVs)
+    const movieFilters = favoriteGenres.map(genre => `category.ilike.%${genre}%`).join(',')
+    const seriesFilters = favoriteGenres.map(genre => `classificacao.ilike.%${genre}%`).join(',')
+
+    // Busca filmes e séries em paralelo
+    const [moviesRes, seriesRes] = await Promise.all([
+      sb.from('cinema').select('*').or(movieFilters).gte('rating', 6).order('rating', { ascending: false }).limit(searchLimit),
+      sb.from('series').select('*').or(seriesFilters).gte('rating', 6).order('rating', { ascending: false }).limit(searchLimit)
+    ])
+
     const items: ContentItem[] = []
 
-    // Reduzindo limite para evitar erros 400
-    const searchLimit = 100
-
-    // Busca filmes baseados nos gêneros favoritos
-    for (const genre of favoriteGenres) {
-      let movies = null
-      try {
-        movies = await sb
-          .from('cinema')
-          .select('*')
-          .ilike('category', `%${genre}%`)
-          .gte('rating', 6)
-          .order('rating', { ascending: false })
-          .limit(searchLimit)
-      } catch (error) {
-        console.warn('Erro ao buscar personalized movies:', error)
-        movies = await sb
-          .from('cinema')
-          .select('*')
-          .ilike('category', `%${genre}%`)
-          .gte('rating', 6)
-          .order('rating', { ascending: false })
-          .limit(searchLimit)
-      }
-
-      if (movies?.data) {
-        movies.data.forEach(movie => {
-          const idStr = String(movie.id)
-          if (!excludeIds.has(idStr)) {
-            items.push({
-              id: movie.id,
-              titulo: movie.titulo,
-              poster: movie.poster || movie.backdrop,
-              backdrop: movie.backdrop,
-              type: 'movie',
-              year: movie.year,
-              category: movie.category,
-              rating: movie.rating,
-              genres: movie.genres || []
-            })
-          }
-        })
-      }
-
-      try {
-        const series = await sb
-          .from('series')
-          .select('*')
-          .ilike('classificacao', `%${genre}%`)
-          .gte('rating', 6)
-          .order('rating', { ascending: false })
-          .limit(searchLimit)
-
-        if (series?.data) {
-          series.data.forEach(serie => {
-            const idStr = String(serie.id_n)
-            if (!excludeIds.has(idStr)) {
-              items.push({
-                id: serie.id_n,
-                titulo: serie.titulo,
-                poster: serie.poster,
-                backdrop: serie.banner,
-                type: 'series',
-                year: serie.ano,
-                category: serie.classificacao || serie.genero,
-                rating: serie.rating,
-                genres: serie.genero ? [serie.genero] : []
-              })
-            }
+    if (moviesRes.data) {
+      moviesRes.data.forEach(movie => {
+        const idStr = String(movie.id)
+        if (!excludeIds.has(idStr)) {
+          items.push({
+            id: movie.id,
+            titulo: movie.titulo,
+            poster: movie.poster || movie.backdrop,
+            backdrop: movie.backdrop,
+            type: 'movie',
+            year: movie.year,
+            category: movie.category,
+            rating: movie.rating,
+            genres: movie.genres || []
           })
         }
-      } catch (seriesError) {
-        console.warn('Erro ao buscar personalized series:', seriesError)
-        console.warn('A tabela series pode não existir ou ter estrutura diferente')
-        // Continua apenas com filmes
-      }
+      })
     }
 
-    // NÃO remove duplicatas - cada item é único
-    const uniqueItems = removeDuplicatesByTitle(items)
+    if (seriesRes.data) {
+      seriesRes.data.forEach(serie => {
+        const idStr = String(serie.id_n)
+        if (!excludeIds.has(idStr)) {
+          items.push({
+            id: serie.id_n,
+            titulo: serie.titulo,
+            poster: serie.poster,
+            backdrop: serie.banner,
+            type: 'series',
+            year: serie.ano,
+            category: serie.classificacao || serie.genero,
+            rating: serie.rating,
+            genres: serie.genero ? [serie.genero] : []
+          })
+        }
+      });
+    }
 
-    // Embaralha e limita
+    const uniqueItems = removeDuplicatesByTitle(items)
     return shuffleArray(uniqueItems).slice(0, limit)
   } catch (error) {
     console.error('Erro ao buscar recomendações personalizadas:', error)
@@ -460,7 +429,7 @@ export async function getSectionContent(
               genres: serie.genero ? [serie.genero] : []
             })
           }
-        })
+        });
       }
     } catch (seriesError) {
       console.warn('Erro ao buscar séries:', seriesError)

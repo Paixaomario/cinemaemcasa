@@ -23,7 +23,7 @@ export default function WatchPage() {
   const [videoUrl, setVideoUrl] = useState('')
   const [fetching, setFetching] = useState(true)
   const videoRef  = useRef<HTMLVideoElement>(null)
-  const timerRef  = useRef<ReturnType<typeof setTimeout>>()
+  const timerRef  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const [playing, setPlaying]       = useState(false)
   const [muted, setMuted]           = useState(false)
   const [progress, setProgress]     = useState(0)

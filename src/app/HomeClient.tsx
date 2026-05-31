@@ -6,11 +6,10 @@ import { useAuth } from '@/components/layout/SupabaseProvider'
 import { HeroBanner } from '@/components/sections/HeroBanner'
 import { ContentRow } from '@/components/sections/ContentRow'
 import { ContentCard } from '@/components/ui/ContentCard'
-import { useSpatialNavigation } from '../hooks/useSpatialNavigation'
-import { useBurnInProtection } from '../hooks/useBurnInProtection'
+import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
+import { useBurnInProtection } from '@/hooks/useBurnInProtection'
 import {
   initializeContentSession,
-  addToDisplayedCache,
   addBatchToDisplayedCache,
   getDisplayedCache,
   getSectionContent,
@@ -75,6 +74,7 @@ export function HomeClient() {
       const sb = createClient()
 
       // Busca se o usuário está no Modo Infantil
+      let cwItems: any[] = []
       const { data: profile } = await sb
         .from('profiles')
         .select('is_child')
@@ -205,16 +205,14 @@ export function HomeClient() {
               uniqueMap.set(key, item)
             }
           })
-          const uniqueItems = Array.from(uniqueMap.values())
-          setContinueWatching(uniqueItems)
-
-          // Adiciona ao cache de exibidos
-      const cwIds = uniqueItems.map(item => String(item.id)).filter(Boolean)
-      addBatchToDisplayedCache(cwIds)
+          cwItems = Array.from(uniqueMap.values())
+          setContinueWatching(cwItems)
         }
-      } else {
-        setContinueWatching([])
       }
+
+      // Adiciona ao cache de exibidos em lote (Otimizado)
+      const cwIds = cwItems.map(item => String(item.id)).filter(Boolean)
+      addBatchToDisplayedCache(cwIds)
 
       // 1. Busca seções ativas ordenadas por posição
       const { data: secs, error } = await sb
@@ -258,12 +256,10 @@ export function HomeClient() {
       // Obtém o cache atual de IDs exibidos
       const displayedIds = getDisplayedCache()
 
-      // Adiciona IDs do continuar assistindo ao cache
-      continueWatching.forEach(item => {
+      // Sincroniza o cache local com os itens que já sabemos que serão exibidos
+      cwItems.forEach(item => {
         if (item.id) {
-          const idStr = String(item.id)
-          displayedIds.add(idStr)
-          addToDisplayedCache(idStr)
+          displayedIds.add(String(item.id))
         }
       })
 

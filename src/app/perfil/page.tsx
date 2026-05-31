@@ -10,7 +10,7 @@ import { hydrateCinemaItem } from '@/lib/content'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { ContinueWatchingSection } from '@/components/profile/ContinueWatchingSection'
 import { SettingsSection } from '@/components/profile/SettingsSection'
-import { useSpatialNavigation } from '../../hooks/useSpatialNavigation'
+import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
 import { DevicesSection } from '@/components/profile/DevicesSection'
 import { StatisticsSection } from '@/components/profile/StatisticsSection'
 import { AccessibilitySection } from '@/components/profile/AccessibilitySection'
@@ -466,8 +466,9 @@ export default function PerfilPage() {
           src="/bg-family.jpg"
           alt=""
           fill
-          className="object-cover blur-[2px]"
+          className="object-cover blur-[4px] scale-105"
           priority
+          unoptimized
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black via-black/40 to-black" />
       </div>

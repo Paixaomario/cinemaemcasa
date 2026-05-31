@@ -1,0 +1,301 @@
+/**
+ * Search Suggestions Module
+ * Provides real-time search suggestions with autocomplete functionality
+ * Cloud-based configuration for future AI maintenance
+ * 
+ * Features:
+ * - Real-time autocomplete with debouncing
+ * - Popular searches tracking
+ * - Category-based suggestions
+ * - Fuzzy matching support
+ */
+
+import { createClient } from './supabase'
+
+export interface SuggestionItem {
+  id: string
+  text: string
+  type: 'history' | 'category' | 'popular' | 'prediction'
+  icon?: string
+  metadata?: {
+    resultCount?: number
+    trending?: boolean
+  }
+}
+
+interface SuggestionsConfig {
+  maxHistoryResults: number
+  maxPopularResults: number
+  maxPredictions: number
+  debounceMs: number
+  minCharsForSuggestions: number
+}
+
+// Configuration padrão (pode ser sobrescrita via Cloud Config)
+const DEFAULT_CONFIG: SuggestionsConfig = {
+  maxHistoryResults: 5,
+  maxPopularResults: 3,
+  maxPredictions: 5,
+  debounceMs: 300,
+  minCharsForSuggestions: 2
+}
+
+// Cache em memória para sugestões (até 1 hora)
+const suggestionCache = new Map<string, { data: SuggestionItem[]; timestamp: number }>()
+const CACHE_DURATION = 60 * 60 * 1000 // 1 hora
+
+/**
+ * Fuzzy search para encontrar correspondências próximas
+ */
+function fuzzyMatch(input: string, target: string): number {
+  if (!input || !target) return 0
+  const inputStr = String(input)
+  const targetStr = String(target)
+  const inputLower = inputStr.toLowerCase()
+  const targetLower = targetStr.toLowerCase()
+
+  if (!inputLower.length) return 0
+  if (targetLower.startsWith(inputLower)) return 100 // Match exato no início
+  if (targetLower.includes(inputLower)) return 80 // Match exato em qualquer lugar
+
+  // Levenshtein distance simplificado (1-2 caracteres de diferença)
+  let matches = 0
+  for (let char of inputLower) {
+    if (targetLower.includes(char)) matches++
+  }
+
+  return (matches / inputLower.length) * 100
+}
+
+/**
+ * Gera sugestões baseadas no input do usuário
+ * Combina histórico, categorias populares e previsões
+ */
+export async function generateSuggestions(
+  input: string,
+  searchHistory: Array<string | { query: string; count?: number; resultCount?: number; timestamp?: number }> = [],
+  categories: string[] = ['Ação', 'Comédia', 'Terror', 'Drama', 'Ficção', 'Romance', 'Animação', 'Documentário']
+): Promise<SuggestionItem[]> {
+  const config = DEFAULT_CONFIG
+
+  // Retorna sugestões vazias se input for muito curto
+  if (input.trim().length < config.minCharsForSuggestions) {
+    return []
+  }
+
+  // Verifica cache
+  const cached = suggestionCache.get(input.toLowerCase())
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data
+  }
+
+  const suggestions: SuggestionItem[] = []
+
+  try {
+    // 1. Normalize e sugestões do histórico (fuzzy match)
+    const normalizedHistory = (searchHistory || []).map(h => (typeof h === 'string' ? h : h.query || ''))
+    const historyMatches = normalizedHistory
+      .map(historyItem => ({
+        item: historyItem,
+        score: fuzzyMatch(input, historyItem)
+      }))
+      .filter(h => h.score >= 60)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, config.maxHistoryResults)
+      .map(h => ({
+        id: `history-${h.item}`,
+        text: h.item,
+        type: 'history' as const,
+        icon: '🕐'
+      }))
+
+    suggestions.push(...historyMatches)
+
+    // 2. Sugestões de categorias (fuzzy match)
+    const categoryMatches = categories
+      .map(cat => ({
+        item: cat,
+        score: fuzzyMatch(input, cat)
+      }))
+      .filter(c => c.score >= 60)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, config.maxPopularResults)
+      .map(c => ({
+        id: `category-${c.item}`,
+        text: c.item,
+        type: 'category' as const,
+        icon: '🏷️'
+      }))
+
+    suggestions.push(...categoryMatches)
+
+    // 3. Buscar previsões do banco de dados (títulos populares)
+    const predictions = await fetchPredictions(input, config.maxPredictions)
+    suggestions.push(...predictions)
+
+    // Cache resultado
+    suggestionCache.set(input.toLowerCase(), {
+      data: suggestions,
+      timestamp: Date.now()
+    })
+
+    return suggestions
+  } catch (error) {
+    console.error('Error generating suggestions:', error)
+    // Retorna sugestões vazias em caso de erro
+    return []
+  }
+}
+
+/**
+ * Busca previsões de títulos no banco de dados
+ * Usa full-text search quando disponível
+ */
+async function fetchPredictions(
+  input: string,
+  limit: number
+): Promise<SuggestionItem[]> {
+  try {
+    const sb = createClient()
+    
+    // Buscar filmes correspondentes
+    const { data: movies } = await sb
+      .from('cinema')
+      .select('id, titulo')
+      .ilike('titulo', `${input}%`)
+      .limit(limit / 2)
+
+    // Buscar séries correspondentes
+    const { data: series } = await sb
+      .from('series')
+      .select('id_n AS id, titulo')
+      .ilike('titulo', `${input}%`)
+      .limit(limit / 2)
+
+    const predictions: SuggestionItem[] = []
+
+    // Adicionar filmes como previsões
+    if (movies) {
+      predictions.push(
+        ...movies.map((m: any) => ({
+          id: `prediction-movie-${m.id}`,
+          text: m.titulo,
+          type: 'prediction' as const,
+          icon: '🎬',
+          metadata: { resultCount: 1 }
+        }))
+      )
+    }
+
+    // Adicionar séries como previsões
+    if (series) {
+      predictions.push(
+        ...series.map((s: any) => ({
+          id: `prediction-series-${s.id}`,
+          text: s.titulo,
+          type: 'prediction' as const,
+          icon: '📺',
+          metadata: { resultCount: 1 }
+        }))
+      )
+    }
+
+    return predictions.slice(0, limit)
+  } catch (error) {
+    console.error('Error fetching predictions:', error)
+    return []
+  }
+}
+
+/**
+ * Rastreia buscas populares (agregado anônimo)
+ * Armazenado em tabela de analytics
+ */
+export async function trackSearch(query: string, resultCount: number) {
+  try {
+    const sb = createClient()
+    const date = new Date().toISOString().split('T')[0]
+
+    const { data: existing } = await sb
+      .from('search_analytics')
+      .select('count')
+      .eq('query', query.toLowerCase().trim())
+      .eq('date', date)
+      .single()
+
+    if (existing) {
+      await sb
+        .from('search_analytics')
+        .update({
+          count: existing.count + 1,
+          last_result_count: resultCount,
+          updated_at: new Date().toISOString()
+        })
+        .eq('query', query.toLowerCase().trim())
+        .eq('date', date)
+    } else {
+      await sb
+        .from('search_analytics')
+        .insert({
+          query: query.toLowerCase().trim(),
+          count: 1,
+          result_count: resultCount,
+          date,
+          created_at: new Date().toISOString()
+        })
+    }
+  } catch (error) {
+    // Falha silenciosa em analytics
+    console.debug('Analytics tracking failed:', error)
+  }
+}
+
+/**
+ * Limpa cache de sugestões (útil para testes ou atualizações)
+ */
+export function clearSuggestionsCache() {
+  suggestionCache.clear()
+}
+
+/**
+ * Obtém sugestões populares para a tela inicial da busca
+ */
+export async function getPopularSearches(): Promise<SuggestionItem[]> {
+  try {
+    const sb = createClient()
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+    const { data } = await sb
+      .from('search_analytics')
+      .select('query, count')
+      .gte('date', sevenDaysAgo.toISOString().split('T')[0])
+      .order('count', { ascending: false })
+      .limit(10)
+
+    return (data || [])
+      .map((item: any) => ({
+        id: `popular-${item.query}`,
+        text: item.query,
+        type: 'popular' as const,
+        icon: '🔥',
+        metadata: { trending: true }
+      }))
+      .slice(0, 5)
+  } catch (error) {
+    console.error('Error fetching popular searches:', error)
+    return []
+  }
+}
+
+/**
+ * Limpa sugestões antigas do cache (chamado periodicamente)
+ */
+export function cleanupCache() {
+  const now = Date.now()
+  for (const [key, value] of suggestionCache.entries()) {
+    if (now - value.timestamp > CACHE_DURATION) {
+      suggestionCache.delete(key)
+    }
+  }
+}

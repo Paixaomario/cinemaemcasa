@@ -2,30 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --red-primary: #E50914;
-  --gold-primary: #FFD700;
-}
-
 body {
   @apply bg-black text-white;
   background-color: #000000;
-  padding-bottom: 80px;
-}
-
-@media (min-width: 640px) {
-  body {
-    padding-bottom: 0;
-  }
 }
 
 /* Estilo de Foco Global para Navegação por Controle/Teclado */
-:focus-visible {
+:focus-visible, 
+.using-keyboard *:focus {
   outline: none !important;
   box-shadow: 0 0 0 4px #00ADEF, 0 0 25px rgba(0, 173, 239, 0.8) !important;
   transform: scale(1.05);
   z-index: 100 !important;
-  transition: all 0.2s ease-in-out;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Ajuste para elementos com escala nativa no hover/focus */
@@ -50,44 +39,24 @@ body {
 
 /* Utilitários de Layout para Streaming */
 .section-px {
-  padding-left: clamp(0.75rem, 3vw, 2rem);
-  padding-right: clamp(0.75rem, 3vw, 2rem);
+  padding-left: clamp(1rem, 4vw, 3rem);
+  padding-right: clamp(1rem, 4vw, 3rem);
 }
 
 .scroll-row {
   display: flex;
-  gap: 0.75rem;
+  gap: 1.5rem; /* Espaço entre as capas */
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: visible; /* Garante que a escala não seja cortada */
   width: 100%;
-  padding: 40px 0;
-  margin: -40px 0;
+  /* Cria um túnel invisível para a escala crescer sem cortar */
+  padding: 60px 0;
+  margin: -60px 0;
 }
 
 .scroll-row > * {
   flex-shrink: 0;
-  width: clamp(120px, 20vw, 180px);
-}
-
-@media (min-width: 640px) {
-  .scroll-row {
-    gap: 1rem;
-  }
-
-  .scroll-row > * {
-    width: clamp(140px, 18vw, 220px);
-  }
-}
-
-/* Cards de Continuar Assistindo (16:9 horizontal - estilo Netflix) */
-.scroll-row.continue-watching > * {
-  width: clamp(200px, 35vw, 320px);
-}
-
-@media (min-width: 640px) {
-  .scroll-row.continue-watching > * {
-    width: clamp(280px, 40vw, 480px);
-  }
+  width: clamp(218px, 22vw, 390px); /* Tamanho reduzido em 22% para melhor equilíbrio visual */
 }
 
 /* =========================================================
@@ -132,27 +101,17 @@ body {
 
 /* Efeito de Emojis Voadores (Party Mode) */
 .emoji-reaction {
-  position: fixed;
-  bottom: 20%;
-  left: 50%;
-  font-size: 4rem;
+  position: absolute;
+  bottom: 0;
+  font-size: 2.5rem;
   z-index: 10006;
   pointer-events: none;
-  color: white;
-  opacity: 1;
+  animation: flyUp 3s forwards ease-out;
   filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
 }
 
-/* Animação Shimmer para Barra de Progresso */
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-.animate-shimmer {
-  animation: shimmer 2s infinite;
+@keyframes flyUp {
+  0% { transform: translateY(0) scale(0.5); opacity: 0; }
+  20% { opacity: 1; transform: translateY(-20vh) scale(1.2) rotate(10deg); }
+  100% { transform: translateY(-100vh) scale(1) rotate(-10deg); opacity: 0; }
 }

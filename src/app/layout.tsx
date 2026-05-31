@@ -4,6 +4,7 @@ import { SupabaseProvider } from '@/components/layout/SupabaseProvider'
 import { MobileNavBar } from '@/components/layout/MobileNavBar'
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister'
 import { Inter, Montserrat } from 'next/font/google'
+import Script from 'next/script'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const montserrat = Montserrat({ 
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: '#00ADEF',
-  width: 'device-width',
+  width: '1920', // Fixa a largura para o padrão Full HD da LG
   initialScale: 1,
 }
 
@@ -36,6 +37,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" className={`${inter.variable} ${montserrat.variable}`}>
       <body className="font-sans">
+        <Script 
+          src="https://static.webostv.developer.lge.com/sdk/lib/webOSTVjs-1.2.4/webOSTV.js" 
+          strategy="beforeInteractive"
+        />
         <ServiceWorkerRegister />
         <SupabaseProvider>
           {children}

@@ -62,7 +62,7 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
         
         if (!potentialItem) break;
 
-        const currentCategory = potentialItem.type === 'movie' ? potentialItem.category : potentialItem.genero;
+        const currentCategory = potentialItem.category || potentialItem.genero;
         const currentSeriesId = potentialItem.type === 'series' ? String(potentialItem.id) : null;
 
         // Regras de filtragem

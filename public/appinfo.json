@@ -1,18 +1,35 @@
 {
-    "id": "com.paixaomario.cinemaemcasa",
-    "version": "1.0.0",
-    "vendor": "PaixaoFlix",
+    "id": "com.paixaoflix.cinemaemcasa",
+    "version": "0.1.0",
+    "vendor": "PaixãoFlix",
     "type": "web",
     "main": "index.html",
-    "title": "PaixãoFlix",
+    "title": "Cinema em Casa",
+    "subtitle": "Sua plataforma de streaming pessoal",
     "icon": "icon.png",
     "largeIcon": "largeIcon.png",
-    "bgImage": "backgroundImage.png",
+    "bgImage": "splash.png",
     "resolution": "1920x1080",
     "category": "video",
     "checkAppUpdate": true,
     "requiredMemory": 256,
+    "requiredPermissions": [
+        "time.query",
+        "settings.query",
+        "device.info",
+        "application.manager",
+        "internet"
+    ],
     "accessibility": {
-        "supportsAudioGuidance": true
-    }
+        "supportsAudioGuidance": true,
+        "supportsAudioDescription": true
+    },
+    "supportedResolutions": [
+        "1920x1080",
+        "3840x2160"
+    ],
+    "transparent": false,
+    "hardwareAcceleration": "on",
+    "scrollSmooth": true,
+    "disableBackHistoryAPI": false
 }
