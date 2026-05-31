@@ -33,6 +33,9 @@ body {
   .hide-on-tiny { display: none !important; }
   .grid-responsive { grid-template-columns: 1fr !important; }
   :root { --base-font-size: 13px; }
+  .nav-logo { height: 1.2rem !important; }
+  /* Compacta o menu para telas minúsculas */
+  .mobile-nav-bar { height: 3rem; padding: 0.2rem !important; }
 }
 
 /* Ajustes para "Big Screen Mode" (4K TVs, Projetores 200") */

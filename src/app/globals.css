@@ -118,21 +118,30 @@ body {
   100% { transform: translateY(-100vh) scale(1) rotate(-10deg); opacity: 0; }
 }
 
-/* Logotipo: Restrição NUCLEAR para todas as plataformas */
+/* Logotipo: Escalonamento Fluido para todas as escalas (Tiny a 200") */
 .nav-logo {
-  height: 28px !important;
-  max-height: 28px !important;
-  width: auto !important;
-  max-width: 180px !important;
+  height: clamp(1.5rem, 5vh, 4.5rem) !important; /* Escala de 24px até ~72px em telas gigantes */
+  width: auto;
+  max-width: clamp(120px, 15vw, 400px) !important;
   object-fit: contain !important;
   display: block;
   will-change: transform;
+  transition: all 0.3s ease-in-out;
 }
 
 /* Garante que o logotipo dentro de links ou containers também respeite o tamanho */
 .nav-logo img, a .nav-logo {
-  height: 28px !important;
-  max-height: 28px !important;
+  height: 100% !important;
+  width: auto !important;
+}
+
+/* Barra de Menus (Header e Nav) Adaptativa */
+header, .mobile-nav-bar {
+  padding-left: var(--safe-area-left) !important;
+  padding-right: var(--safe-area-right) !important;
+  min-height: clamp(3.5rem, 8vh, 7rem);
+  align-items: center;
+  gap: clamp(1rem, 2vw, 3rem);
 }
 
 /* =========================================================
@@ -154,7 +163,10 @@ body {
     visibility: visible !important;
     opacity: 1 !important;
     position: fixed !important;
-    bottom: 0 !important;
+    bottom: 0 !important; 
+    /* Garante que ícones e textos da barra inferior escalem em celulares pequenos */
+    font-size: clamp(0.7rem, 2vh, 1rem);
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
