@@ -119,11 +119,12 @@ body {
 }
 
 /* Logotipo: Restrição ESTREITA para evitar tamanho gigante em todas as telas */
-.nav-logo {
-  height: 22px !important; 
-  width: auto !important; 
+.nav-logo, .nav-logo img {
+  height: 20px !important; 
+  max-height: 20px !important;
+  width: auto !important;
   max-width: 150px !important;
-  object-fit: contain;
+  object-fit: contain !important;
   display: block;
   will-change: transform;
 }
@@ -177,13 +178,14 @@ header, .mobile-nav-bar {
 /* Ajustes para Smart TVs e Desktop */
 @media (min-width: 1024px) {
   /* Esconde a barra inferior em TVs/Desktop para não duplicar menus */
-  .mobile-nav-bar, nav[class*="fixed bottom-0"], .bottom-nav, [class*="MobileNav"] {
+  .mobile-nav-bar, nav.fixed.bottom-0, .mobile-bottom-nav, .bottom-nav, [class*="MobileNav"] {
     display: none !important;
   }
 
   /* Garante que a barra superior apareça em TVs e Computadores */
-  header, .header-container, .top-nav {
+  header, .header-container, .top-nav, nav.fixed.top-0 {
     display: flex !important;
     visibility: visible !important;
+    height: auto !important;
   }
 }
