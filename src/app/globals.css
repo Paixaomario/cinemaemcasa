@@ -118,15 +118,15 @@ body {
   100% { transform: translateY(-100vh) scale(1) rotate(-10deg); opacity: 0; }
 }
 
-/* Logotipo: Escalonamento Fluido para todas as escalas (Tiny a 200") */
+/* Logotipo: Restrição NUCLEAR para todas as plataformas */
 .nav-logo {
-  height: clamp(1.5rem, 5vh, 4.5rem) !important; /* Escala de 24px até ~72px em telas gigantes */
-  width: auto;
-  max-width: clamp(120px, 15vw, 400px) !important;
+  height: 28px !important;
+  max-height: 28px !important;
+  width: auto !important;
+  max-width: 180px !important;
   object-fit: contain !important;
   display: block;
   will-change: transform;
-  transition: all 0.3s ease-in-out;
 }
 
 /* Garante que o logotipo dentro de links ou containers também respeite o tamanho */
@@ -151,14 +151,14 @@ header, .mobile-nav-bar {
 /* Ajustes para Dispositivos Móveis (Celulares e Tablets) */
 @media (max-width: 1023px) {
   /* OCULTA TOTALMENTE a barra superior no Mobile */
-  header, .header-container, .top-nav, nav[class*="fixed top-0"], nav[class*="sticky top-0"], [class*="Header"] {
+  header, .header-container, .top-nav, nav[class*="fixed top-0"], nav[class*="sticky top-0"], nav.fixed.top-0, [class*="Header"] {
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
   }
 
   /* RESTAURA a barra inferior fixa no rodapé */
-  .mobile-nav-bar, nav[class*="fixed bottom-0"], .bottom-nav, [class*="MobileNav"] {
+  .mobile-nav-bar, nav[class*="fixed bottom-0"], nav.fixed.bottom-0, .mobile-bottom-nav, .bottom-nav, [class*="MobileNav"] {
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
