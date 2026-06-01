@@ -43,14 +43,15 @@ export function Navbar() {
           </Link>
         ))}
       </div>
+      </div>
 
-      {/* Lado Direito: Ações (Busca e Perfil) */}
-      <div className="flex items-center gap-3">
-        <Link href="/search" className="p-2 hover:bg-white/10 rounded-full focus:ring-4 focus:ring-brand-cyan/40 outline-none transition-all text-white hover:text-brand-cyan">
-          <span className="text-[27px] block">🔍</span>
+      {/* Lado Direito: Ações com z-index para ficar acima do container central */}
+      <div className="flex items-center gap-4 relative z-10">
+        <Link href="/search" tabIndex={0} className="p-3 hover:bg-white/10 rounded-full focus:bg-brand-cyan focus:text-black outline-none transition-all">
+          <span className="text-[24px] block">🔍</span>
         </Link>
-        <Link href="/perfil" className="p-2 hover:bg-white/10 rounded-full focus:ring-4 focus:ring-brand-cyan/40 outline-none transition-all text-white hover:text-brand-cyan">
-          <span className="text-[27px] block">👤</span>
+        <Link href="/perfil" tabIndex={0} className="p-3 hover:bg-white/10 rounded-full focus:bg-brand-cyan focus:text-black outline-none transition-all">
+          <span className="text-[24px] block">👤</span>
         </Link>
       </div>
     </nav>

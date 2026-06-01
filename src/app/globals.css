@@ -188,21 +188,28 @@ header, .mobile-nav-bar {
     visibility: hidden !important;
   }
 
-  /* Ocultamos a Navbar superior tradicional para usar a Sidebar Lateral "Premium" */
+  /* Restauramos e configuramos a Navbar Superior para Smart TVs */
   header, nav.fixed.top-0, [class*="Navbar"] {
-    display: none !important;
+    display: flex !important;
+    visibility: visible !important;
+    height: 121px !important;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(20px);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Espaçamento para a Sidebar */
+  /* Reset do main (remover margem da sidebar antiga) */
   main {
-    margin-left: 80px;
-    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-left: 0 !important;
+    padding-top: 121px; /* Espaço para a barra não cobrir o conteúdo */
   }
 
-  /* Logotipo aumentado em mais 30% (Total ~81px de altura) */
+  /* Logotipo configurado para 121px */
   .nav-logo, .nav-logo img {
-    height: 81px !important;
-    max-height: 81px !important;
+    height: 121px !important;
+    max-height: 121px !important;
+    width: auto !important;
+    transition: transform 0.3s ease;
   }
 }
 
