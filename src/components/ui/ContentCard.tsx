@@ -51,38 +51,38 @@ export function ContentCard({ item, progress, showProgress = false }: Props) {
               src={poster.startsWith('http') ? poster : `https://image.tmdb.org/t/p/w500${poster}`}
               alt={title}
               fill
-              sizes="(max-width: 320px) 100vw, (max-width: 480px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 25vw, (max-width: 1440px) 20vw, (max-width: 1920px) 18vw, 16vw"
+              sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, 20vw"
               className={`object-cover ${showProgress ? 'object-center' : 'transition-transform duration-500 group-hover:scale-110'}`}
               unoptimized
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-responsive-lg bg-neutral-800">🎬</div>
+            <div className="flex h-full items-center justify-center text-3xl sm:text-4xl bg-neutral-800">🎬</div>
           )}
         </div>
 
         {/* Overlay com informações (visível no hover ou foco, ou sempre se showProgress) */}
-        <div className={`absolute inset-0 overflow-hidden rounded-xl flex flex-col justify-end bg-gradient-to-t from-black via-black/20 to-transparent p-responsive-sm ${showProgress ? 'opacity-100' : 'opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus:opacity-100'}`}>
-          <p className="text-responsive-sm font-black uppercase leading-tight text-white line-clamp-2">
+        <div className={`absolute inset-0 overflow-hidden rounded-xl flex flex-col justify-end bg-gradient-to-t from-black via-black/20 to-transparent p-3 sm:p-4 ${showProgress ? 'opacity-100' : 'opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus:opacity-100'}`}>
+          <p className="text-xs sm:text-sm font-black uppercase leading-tight text-white line-clamp-2">
             {title}
           </p>
-          <div className="mt-responsive-xs flex items-center gap-responsive-sm">
-            {rating > 0 && <span className="text-responsive-xs font-bold text-gold-primary">⭐ {Number(rating).toFixed(1)}</span>}
-            {year && <span className="text-responsive-xs font-bold text-neutral-400">{year}</span>}
+          <div className="mt-1.5 sm:mt-2 flex items-center gap-1.5 sm:gap-2">
+            {rating > 0 && <span className="text-[9px] sm:text-[10px] font-bold text-gold-primary">⭐ {Number(rating).toFixed(1)}</span>}
+            {year && <span className="text-[9px] sm:text-[10px] font-bold text-neutral-400">{year}</span>}
           </div>
         </div>
       </Link>
 
       {/* Informações de progresso abaixo da capa - sempre visíveis quando showProgress */}
       {showProgress && progress && (
-        <div className="mt-responsive-sm px-responsive-xs">
-          <div className="h-responsive-xs bg-white/20 rounded-responsive overflow-hidden">
+        <div className="mt-2 px-1">
+          <div className="h-1 bg-white/20 rounded-full overflow-hidden">
             <div
               className="h-full bg-[#00ADEF] transition-all duration-300"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
-          <div className="flex items-center justify-between mt-responsive-xs">
-            <span className="text-responsive-xs font-bold text-neutral-300">{formatTime(remainingTime)} restantes</span>
+          <div className="flex items-center justify-between mt-1">
+            <span className="text-[10px] sm:text-[11px] font-bold text-neutral-300">{formatTime(remainingTime)} restantes</span>
           </div>
         </div>
       )}

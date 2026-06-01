@@ -47,18 +47,18 @@ body {
 
 .scroll-row {
   display: flex;
-  gap: clamp(1rem, 2vw, 1.5rem); /* Espaço entre as capas */
+  gap: 1.5rem; /* Espaço entre as capas */
   overflow-x: auto;
   overflow-y: visible; /* Garante que a escala não seja cortada */
   width: 100%;
   /* Cria um túnel invisível para a escala crescer sem cortar */
-  padding: clamp(40px, 8vh, 60px) 0;
-  margin: clamp(-40px, -8vh, -60px) 0;
+  padding: 60px 0;
+  margin: -60px 0;
 }
 
 .scroll-row > * {
   flex-shrink: 0;
-  width: clamp(140px, 18vw, 280px); /* Tamanho responsivo */
+  width: clamp(218px, 22vw, 390px); /* Tamanho reduzido em 22% para melhor equilíbrio visual */
 }
 
 /* =========================================================
@@ -118,15 +118,22 @@ body {
   100% { transform: translateY(-100vh) scale(1) rotate(-10deg); opacity: 0; }
 }
 
-/* Logotipo: Restrição ESTREITA para evitar tamanho gigante em todas as telas */
-.nav-logo, .nav-logo img, .nav-logo picture, a img[alt="CINECASA"] {
-  height: 20px !important;
-  max-height: 20px !important;
+/* Logotipo: Base responsiva */
+.nav-logo, .nav-logo img {
   width: auto !important;
-  max-width: 120px !important;
   object-fit: contain !important;
   display: block;
   will-change: transform;
+  margin: 0;
+  padding: 0;
+}
+
+/* Mobile: Mantém pequeno */
+@media (max-width: 1023px) {
+  .nav-logo, .nav-logo img {
+    height: 22px !important;
+    max-height: 22px !important;
+  }
 }
 
 /* Barra de Menus (Header e Nav) Adaptativa */
@@ -145,7 +152,7 @@ header, .mobile-nav-bar {
 /* Ajustes para Dispositivos Móveis (Celulares e Tablets) */
 @media (max-width: 1023px) {
   /* OCULTA TOTALMENTE a barra superior no Mobile */
-  header, .header-container, .top-nav, nav.fixed.top-0, [class*="Navbar"], .nav-fixed-top {
+  header, .header-container, .top-nav, nav.fixed.top-0, [class*="Navbar"], .nav-fixed-top, nav.whitespace-nowrap {
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
@@ -158,8 +165,6 @@ header, .mobile-nav-bar {
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
-    position: fixed !important;
-    bottom: 0 !important; 
     /* Garante que ícones e textos da barra inferior escalem em celulares pequenos */
     font-size: clamp(0.7rem, 2vh, 1rem);
     padding-bottom: max(10px, env(safe-area-inset-bottom));
@@ -186,6 +191,42 @@ header, .mobile-nav-bar {
   header, .header-container, .top-nav, nav.fixed.top-0 {
     display: flex !important;
     visibility: visible !important;
-    height: auto !important;
+    height: 81px !important; /* Ajustado para ficar exatamente rente ao logotipo */
   }
+
+  /* Logotipo aumentado em mais 30% (Total ~81px de altura) */
+  .nav-logo, .nav-logo img {
+    height: 81px !important;
+    max-height: 81px !important;
+  }
+}
+
+/* Estilo unificado para botões de "Ver Detalhes" - Redução de comprimento */
+.btn-detalhes,
+button[aria-label*="detalhes"],
+a[href*="/detalhes"]:not(.group),
+a[href*="/series"]:not(.group) {
+  padding-left: 3px !important;
+  padding-right: 3px !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+/* =========================================================
+   LAYOUT DA PÁGINA DE PESQUISA
+   ========================================================= */
+
+/* Garante que o container de pesquisa organize os itens em coluna */
+.search-main-container, 
+.search-page-layout {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2rem !important;
+}
+
+/* Força a barra de digitação (search-bar) para o topo, acima das categorias */
+.search-bar-wrapper {
+  order: -1 !important;
+  margin-bottom: 1rem;
 }

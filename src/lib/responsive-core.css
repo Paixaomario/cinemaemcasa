@@ -10,21 +10,7 @@
   --safe-area-left: env(safe-area-inset-left, 5vw);
   --safe-area-right: env(safe-area-inset-right, 5vw);
   
-  /* Cores do sistema */
   --gold-primary: #d4af37;
-  --brand-primary: #00ADEF;
-  
-  /* Espaçamentos responsivos */
-  --spacing-xs: clamp(0.25rem, 0.5vw, 0.5rem);
-  --spacing-sm: clamp(0.5rem, 1vw, 1rem);
-  --spacing-md: clamp(1rem, 2vw, 1.5rem);
-  --spacing-lg: clamp(1.5rem, 3vw, 2rem);
-  --spacing-xl: clamp(2rem, 4vw, 3rem);
-  
-  /* Tamanhos de componentes */
-  --poster-width: clamp(140px, 18vw, 280px);
-  --poster-height: clamp(210px, 27vw, 420px);
-  --nav-height: clamp(3rem, 6vh, 5rem);
 }
 
 html {
@@ -42,370 +28,36 @@ body {
   color-scheme: dark;
 }
 
-/* =========================================================
-   BREAKPOINTS COMPLETOS
-   ========================================================= */
-
-/* Tiny Screens (< 320px) - Galaxy Fold, Smartwatches */
-@media (max-width: 319px) {
+/* Ajustes para Telas Minúsculas (< 320px como Galaxy Fold ou Smartwatches) */
+@media (max-width: 359px) {
   .hide-on-tiny { display: none !important; }
   .grid-responsive { grid-template-columns: 1fr !important; }
-  :root { 
-    --base-font-size: 13px;
-    --poster-width: 100px;
-    --poster-height: 150px;
-    --nav-height: 2.5rem;
-  }
-  .nav-logo { height: 1rem !important; max-width: 80px !important; }
-  .mobile-nav-bar { height: 2.5rem; padding: 0.2rem !important; }
-  .scroll-row > * { width: 100px !important; }
+  :root { --base-font-size: 13px; }
+  .nav-logo { height: 1.2rem !important; }
+  /* Compacta o menu para telas minúsculas */
+  .mobile-nav-bar { height: 3rem; padding: 0.2rem !important; }
 }
 
-/* Small Mobile (320px - 480px) - iPhones antigos */
-@media (min-width: 320px) and (max-width: 479px) {
-  :root { 
-    --base-font-size: 14px;
-    --poster-width: 120px;
-    --poster-height: 180px;
-    --nav-height: 3rem;
-  }
-  .nav-logo { height: 1.2rem !important; max-width: 90px !important; }
-  .scroll-row > * { width: 120px !important; }
-  .grid-responsive { grid-template-columns: repeat(2, 1fr) !important; }
-}
-
-/* Mobile (480px - 768px) - iPhones modernos, Androids */
-@media (min-width: 480px) and (max-width: 767px) {
-  :root { 
-    --base-font-size: 15px;
-    --poster-width: 140px;
-    --poster-height: 210px;
-    --nav-height: 3.5rem;
-  }
-  .nav-logo { height: 1.4rem !important; max-width: 100px !important; }
-  .scroll-row > * { width: 140px !important; }
-  .grid-responsive { grid-template-columns: repeat(2, 1fr) !important; }
-}
-
-/* Tablet Portrait (768px - 1024px) - iPads portrait */
-@media (min-width: 768px) and (max-width: 1023px) and (orientation: portrait) {
-  :root { 
-    --base-font-size: 16px;
-    --poster-width: 160px;
-    --poster-height: 240px;
-    --nav-height: 4rem;
-  }
-  .scroll-row > * { width: 160px !important; }
-  .grid-responsive { grid-template-columns: repeat(3, 1fr) !important; }
-}
-
-/* Tablet Landscape (768px - 1024px) - iPads landscape */
-@media (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
-  :root { 
-    --base-font-size: 16px;
-    --poster-width: 180px;
-    --poster-height: 270px;
-    --nav-height: 4rem;
-  }
-  .scroll-row > * { width: 180px !important; }
-  .grid-responsive { grid-template-columns: repeat(4, 1fr) !important; }
-}
-
-/* Desktop (1024px - 1440px) - Laptops, desktops */
-@media (min-width: 1024px) and (max-width: 1439px) {
-  :root { 
-    --base-font-size: 16px;
-    --poster-width: 200px;
-    --poster-height: 300px;
-    --nav-height: 4.5rem;
-  }
-  .scroll-row > * { width: 200px !important; }
-  .grid-responsive { grid-template-columns: repeat(5, 1fr) !important; }
-}
-
-/* Large Desktop (1440px - 1920px) - Monitores grandes */
-@media (min-width: 1440px) and (max-width: 1919px) {
-  :root { 
-    --base-font-size: 17px;
-    --poster-width: 220px;
-    --poster-height: 330px;
-    --nav-height: 5rem;
-  }
-  .scroll-row > * { width: 220px !important; }
-  .grid-responsive { grid-template-columns: repeat(6, 1fr) !important; }
-}
-
-/* TV/Full HD (1920px - 2560px) - TVs 1080p */
-@media (min-width: 1920px) and (max-width: 2559px) {
-  :root { 
-    --base-font-size: 18px;
-    --poster-width: 240px;
-    --poster-height: 360px;
-    --nav-height: 5.5rem;
-  }
-  .scroll-row > * { width: 240px !important; }
-  .grid-responsive { grid-template-columns: repeat(7, 1fr) !important; }
-  
-  /* 10ft UI: Aumenta o destaque de foco para navegação à distância */
-  *:focus {
-    outline: 3px solid var(--brand-primary) !important;
-    outline-offset: 3px;
-  }
-}
-
-/* 4K (2560px - 3840px) - TVs 4K */
-@media (min-width: 2560px) and (max-width: 3839px) {
-  :root { 
-    --base-font-size: 20px;
-    --poster-width: 280px;
-    --poster-height: 420px;
-    --nav-height: 6rem;
-  }
-  .scroll-row > * { width: 280px !important; }
-  .grid-responsive { grid-template-columns: repeat(8, 1fr) !important; }
-  
-  /* 10ft UI: Aumenta ainda mais o destaque de foco */
-  *:focus {
-    outline: 4px solid var(--brand-primary) !important;
-    outline-offset: 4px;
+/* Ajustes para "Big Screen Mode" (4K TVs, Projetores 200") */
+@media (min-width: 1921px) {
+  /* Aumenta a escala para ultra resoluções (8K / 200") */
+  @media (min-width: 3840px) {
+    :root { --base-font-size: 32px; }
   }
   
-  .container {
-    max-width: 95vw;
-    margin: 0 auto;
-  }
-}
-
-/* 8K+ (3840px+) - TVs 8K, Projetores 200" */
-@media (min-width: 3840px) {
-  :root { 
-    --base-font-size: 24px;
-    --poster-width: 320px;
-    --poster-height: 480px;
-    --nav-height: 7rem;
-  }
-  .scroll-row > * { width: 320px !important; }
-  .grid-responsive { grid-template-columns: repeat(10, 1fr) !important; }
-  
-  /* 10ft UI: Destaque máximo de foco para navegação à distância */
-  *:focus {
-    outline: 5px solid var(--brand-primary) !important;
-    outline-offset: 5px;
+  /* Aumenta o tamanho dos posters em telas gigantes */
+  .grid-responsive {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
   }
   
   .container {
     max-width: 90vw;
     margin: 0 auto;
   }
-}
-
-/* =========================================================
-   ORIENTAÇÃO (Portrait vs Landscape)
-   ========================================================= */
-
-/* Portrait - Ajustes para telas verticais */
-@media (orientation: portrait) {
-  .hide-on-portrait { display: none !important; }
-  .scroll-row { 
-    padding: 40px 0;
-    margin: -40px 0;
+  
+  /* 10ft UI: Aumenta o destaque de foco para navegação à distância */
+  *:focus {
+    outline: 4px solid var(--gold-primary) !important;
+    outline-offset: 4px;
   }
-  .scroll-row > * {
-    width: clamp(120px, 25vw, 200px) !important;
-  }
-}
-
-/* Landscape - Ajustes para telas horizontais */
-@media (orientation: landscape) {
-  .hide-on-landscape { display: none !important; }
-  .scroll-row > * {
-    width: clamp(180px, 20vw, 280px) !important;
-  }
-}
-
-/* =========================================================
-   UTILITÁRIOS DE RESPONSIVIDADE
-   ========================================================= */
-
-/* Container responsivo */
-.container-responsive {
-  width: 100%;
-  max-width: 100%;
-  padding-left: var(--spacing-md);
-  padding-right: var(--spacing-md);
-  margin: 0 auto;
-}
-
-@media (min-width: 768px) {
-  .container-responsive {
-    max-width: 720px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .container-responsive {
-    max-width: 960px;
-  }
-}
-
-@media (min-width: 1440px) {
-  .container-responsive {
-    max-width: 1200px;
-  }
-}
-
-@media (min-width: 1920px) {
-  .container-responsive {
-    max-width: 1600px;
-  }
-}
-
-/* Texto responsivo */
-.text-responsive {
-  font-size: clamp(0.875rem, 1.5vw, 1.25rem);
-  line-height: 1.5;
-}
-
-.text-responsive-sm {
-  font-size: clamp(0.75rem, 1.2vw, 1rem);
-  line-height: 1.4;
-}
-
-.text-responsive-lg {
-  font-size: clamp(1rem, 2vw, 1.5rem);
-  line-height: 1.6;
-}
-
-.text-responsive-xl {
-  font-size: clamp(1.25rem, 2.5vw, 2rem);
-  line-height: 1.7;
-}
-
-/* Espaçamento responsivo */
-.padding-responsive {
-  padding: var(--spacing-md);
-}
-
-.padding-responsive-sm {
-  padding: var(--spacing-sm);
-}
-
-.padding-responsive-lg {
-  padding: var(--spacing-lg);
-}
-
-.padding-responsive-xl {
-  padding: var(--spacing-xl);
-}
-
-/* Grid responsivo */
-.grid-responsive {
-  display: grid;
-  gap: var(--spacing-md);
-  grid-template-columns: repeat(auto-fill, minmax(var(--poster-width), 1fr));
-}
-
-/* Flex responsivo */
-.flex-responsive {
-  display: flex;
-  gap: var(--spacing-md);
-  flex-wrap: wrap;
-}
-
-/* Imagem responsiva */
-.img-responsive {
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-}
-
-/* Botão responsivo */
-.btn-responsive {
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-size: var(--base-font-size);
-  border-radius: 0.5rem;
-  transition: all 0.2s ease;
-}
-
-.btn-responsive:hover {
-  transform: scale(1.05);
-}
-
-.btn-responsive:active {
-  transform: scale(0.95);
-}
-
-/* Input responsivo */
-.input-responsive {
-  width: 100%;
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-size: var(--base-font-size);
-  border-radius: 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(0, 0, 0, 0.5);
-  color: white;
-}
-
-.input-responsive:focus {
-  outline: 2px solid var(--brand-primary);
-  outline-offset: 2px;
-}
-
-/* Card responsivo */
-.card-responsive {
-  background: rgba(20, 20, 30, 0.8);
-  border-radius: 1rem;
-  padding: var(--spacing-md);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Modal responsivo */
-.modal-responsive {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(10, 10, 15, 0.95);
-  border-radius: 1rem;
-  padding: var(--spacing-lg);
-  max-width: 90vw;
-  max-height: 90vh;
-  overflow-y: auto;
-  z-index: 1000;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-@media (min-width: 768px) {
-  .modal-responsive {
-    max-width: 600px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .modal-responsive {
-    max-width: 800px;
-  }
-}
-
-/* Loading responsivo */
-.loading-responsive {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: var(--spacing-lg);
-}
-
-/* Skeleton responsivo */
-.skeleton-responsive {
-  background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-  border-radius: 0.5rem;
-}
-
-@keyframes skeleton-loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
 }
