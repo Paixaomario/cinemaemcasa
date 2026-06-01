@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { SupabaseProvider } from '@/components/layout/SupabaseProvider'
 import { Navbar } from '@/components/layout/Navbar'
-import { Sidebar } from '@/components/layout/Sidebar'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { CommandReceiverProvider } from '@/components/layout/CommandReceiverProvider'
 import { Inter, Montserrat } from 'next/font/google'
@@ -30,7 +29,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans">
         <SupabaseProvider>
           <CommandReceiverProvider>
-            <Sidebar />
             <Navbar />
             <main className="min-h-screen">{children}</main>
             <MobileBottomNav />

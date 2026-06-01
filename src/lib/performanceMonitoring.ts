@@ -32,8 +32,7 @@ export function initializeMetrics(): void {
         const entries = list.getEntries();
         const lastEntry = entries[entries.length - 1] as any;
         // Fallback seguro para evitar o erro de build da Vercel
-        const lcpValue = lastEntry?.renderTime || lastEntry?.loadTime || lastEntry?.startTime || 0;
-        performanceMetrics.lcp = lcpValue;
+        performanceMetrics.lcp = lastEntry?.renderTime || lastEntry?.loadTime || lastEntry?.startTime || 0;
       });
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
     } catch (e) {
