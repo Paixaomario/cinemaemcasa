@@ -30,9 +30,9 @@ export function initializeMetrics(): void {
     try {
       const lcpObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        const lastEntry = entries[entries.length - 1] as any;
+        const lastEntry = entries[entries.length - 1] as PerformanceEntry;
         // Fallback seguro para evitar o erro de build da Vercel
-        performanceMetrics.lcp = lastEntry?.renderTime || lastEntry?.loadTime || 0;
+        performanceMetrics.lcp = (lastEntry as any).renderTime || (lastEntry as any).loadTime || lastEntry.startTime || 0;
       });
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
     } catch (e) {
