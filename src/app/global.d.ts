@@ -2,9 +2,9 @@ declare module "*.css";
 
 declare global {
   interface PerformanceEntry {
-    renderTime?: number;
-    loadTime?: number;
-    processingStart?: number;
+    renderTime: any;
+    loadTime: any;
+    processingStart: any;
   }
 }
 
