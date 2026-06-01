@@ -183,15 +183,20 @@ header, .mobile-nav-bar {
 /* Ajustes para Smart TVs e Desktop */
 @media (min-width: 1024px) {
   /* Esconde a barra inferior em TVs/Desktop para não duplicar menus */
-  .mobile-nav-bar, nav.fixed.bottom-0, .mobile-bottom-nav, .bottom-nav, [class*="MobileNav"] {
+  .mobile-bottom-nav, .mobile-nav-bar, nav.fixed.bottom-0 {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Ocultamos a Navbar superior tradicional para usar a Sidebar Lateral "Premium" */
+  header, nav.fixed.top-0, [class*="Navbar"] {
     display: none !important;
   }
 
-  /* Garante que a barra superior apareça em TVs e Computadores */
-  header, .header-container, .top-nav, nav.fixed.top-0 {
-    display: flex !important;
-    visibility: visible !important;
-    height: 81px !important; /* Ajustado para ficar exatamente rente ao logotipo */
+  /* Espaçamento para a Sidebar */
+  main {
+    margin-left: 80px;
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Logotipo aumentado em mais 30% (Total ~81px de altura) */

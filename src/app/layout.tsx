@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import '@/lib/responsive-core.css'
 import { SupabaseProvider } from '@/components/layout/SupabaseProvider'
-import { MobileNavBar } from '@/components/layout/MobileNavBar'
-import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister'
+import { Navbar } from '@/components/layout/Navbar'
+import { Sidebar } from '@/components/layout/Sidebar'
+import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
+import { CommandReceiverProvider } from '@/components/layout/CommandReceiverProvider'
 import { Inter, Montserrat } from 'next/font/google'
-import Script from 'next/script'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const montserrat = Montserrat({ 
@@ -15,21 +15,11 @@ const montserrat = Montserrat({
 })
 
 export const metadata: Metadata = {
-  title: 'Cinema em Casa',
-  manifest: '/manifest.json',
-  icons: {
-    icon: '/logo.png',
-    apple: '/logo.png',
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'Cinema em Casa',
-  },
+  title: 'Meu Projeto Clean',
 }
 
 export const viewport: Viewport = {
-  themeColor: '#00ADEF',
+  themeColor: '#000000',
   width: 'device-width',
   initialScale: 1,
 }
@@ -38,14 +28,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" className={`${inter.variable} ${montserrat.variable}`}>
       <body className="font-sans">
-        <Script 
-          src="https://static.webostv.developer.lge.com/sdk/lib/webOSTVjs-1.2.4/webOSTV.js" 
-          strategy="afterInteractive"
-        />
-        <ServiceWorkerRegister />
         <SupabaseProvider>
-          {children}
-          <MobileNavBar />
+          <CommandReceiverProvider>
+            <Sidebar />
+            <Navbar />
+            <main className="min-h-screen">{children}</main>
+            <MobileBottomNav />
+          </CommandReceiverProvider>
         </SupabaseProvider>
       </body>
     </html>
