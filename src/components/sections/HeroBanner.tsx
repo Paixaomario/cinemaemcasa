@@ -121,20 +121,20 @@ export function HeroBanner({ type }: HeroBannerProps = {}) {
     // Inicia o banner imediatamente
     updateBanner();
 
-    // Configura a rotação a cada 5 segundos
-    const interval = setInterval(updateBanner, 5000);
+    // Configura a rotação a cada 20 segundos (Padrão Profissional Streaming)
+    const interval = setInterval(updateBanner, 20000);
 
     return () => clearInterval(interval); // Limpa o intervalo ao desmontar
   }, [contentPool]);
 
-  // Lógica para ativar o trailer após 300ms
+  // Lógica para ativar o trailer após 2 segundos de visualização (Padrão Disney+/HBO Max)
   useEffect(() => {
     setShowTrailer(false);
     if (!currentBannerItem?.trailer) return;
 
     const timer = setTimeout(() => {
       setShowTrailer(true);
-    }, 300);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [currentBannerItem]);
@@ -170,7 +170,7 @@ export function HeroBanner({ type }: HeroBannerProps = {}) {
     <section className="relative w-full min-h-[90vh] md:min-h-screen overflow-hidden bg-black">
       {/* Trailer em Segundo Plano */}
       {showTrailer && youtubeId && (
-        <div className="absolute inset-0 z-0 scale-110">
+        <div className="absolute inset-0 z-0 scale-105 animate-in fade-in duration-1000">
           <iframe
             src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&rel=0&modestbranding=1`}
             className="w-full h-full pointer-events-none"
@@ -184,7 +184,7 @@ export function HeroBanner({ type }: HeroBannerProps = {}) {
 
       {/* Imagem de Fundo em Alta Resolução */}
       {backdropUrl && !showTrailer && (
-        <div className="absolute inset-0 animate-in fade-in duration-700">
+        <div className="absolute inset-0 animate-in fade-in duration-1000">
           <Image 
             src={backdropUrl}
             alt={title}
