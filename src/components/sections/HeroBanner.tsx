@@ -5,26 +5,40 @@ import { getMovieDetails, getShowDetails, TMDB_IMG } from '@/lib/tmdb'
 import Image from 'next/image'
 import Link from 'next/link'
 
-export function HeroBanner() {
+interface HeroBannerProps {
+  type?: 'movie' | 'series'
+}
+
+export function HeroBanner({ type }: HeroBannerProps = {}) {
   const [currentBannerItem, setCurrentBannerItem] = useState<any>(null)
   const [contentPool, setContentPool] = useState<any[]>([])
+  const [showTrailer, setShowTrailer] = useState(false)
   const currentIndexRef = useRef(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchFeatured() {
       const sb = createClient()
-      
-      // Busca itens recentes como pool inicial (a aleatoriedade real será feita no embaralhamento abaixo)
-      // O uso de RANDOM() no .order() do Supabase JS gera erro 400.
-      const { data: movies, error: mError } = await sb.from('cinema').select('id, titulo, poster, backdrop, tmdb_id, category, type').limit(40)
-      const { data: series, error: sError } = await sb.from('series').select('id_n, titulo, capa, banner, tmdb_id, genero, type').limit(40)
 
-      if (mError || sError) console.error("Erro ao buscar dados para o banner:", mError || sError)
+      let moviesData: any[] = [];
+      let seriesData: any[] = [];
+
+      // Busca condicional baseada na prop 'type'
+      if (!type || type === 'movie') {
+        const { data: movies, error: mError } = await sb.from('cinema').select('id, titulo, poster, backdrop, tmdb_id, category, type, trailer').limit(40)
+        if (mError) console.error("Erro ao buscar filmes para o banner:", mError)
+        moviesData = movies || [];
+      }
+
+      if (!type || type === 'series') {
+        const { data: series, error: sError } = await sb.from('series').select('id_n, titulo, capa, banner, tmdb_id, genero, type, trailer').limit(40)
+        if (sError) console.error("Erro ao buscar séries para o banner:", sError)
+        seriesData = series || [];
+      }
 
       const combinedPool = [
-        ...(movies || []).map(m => ({ ...m, type: 'movie', poster: m.poster || m.backdrop, backdrop: m.backdrop || m.poster, category: m.category })),
-        ...(series || []).map(s => ({ ...s, id: s.id_n, type: 'series', poster: s.capa || s.banner, backdrop: s.banner || s.capa, category: s.genero }))
+        ...moviesData.map(m => ({ ...m, type: 'movie', poster: m.poster || m.backdrop, backdrop: m.backdrop || m.poster, category: m.category, trailer: m.trailer })),
+        ...seriesData.map(s => ({ ...s, id: s.id_n, type: 'series', poster: s.capa || s.banner, backdrop: s.banner || s.capa, category: s.genero, trailer: s.trailer }))
       ].filter(item => item.tmdb_id && (item.poster || item.backdrop)); // Filtra itens sem imagem
 
       // Embaralha o pool combinado
@@ -37,7 +51,7 @@ export function HeroBanner() {
       setLoading(false);
     }
     fetchFeatured();
-  }, []);
+  }, [type]);
 
   useEffect(() => {
     if (contentPool.length === 0) return;
@@ -113,6 +127,18 @@ export function HeroBanner() {
     return () => clearInterval(interval); // Limpa o intervalo ao desmontar
   }, [contentPool]);
 
+  // Lógica para ativar o trailer após 300ms
+  useEffect(() => {
+    setShowTrailer(false);
+    if (!currentBannerItem?.trailer) return;
+
+    const timer = setTimeout(() => {
+      setShowTrailer(true);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [currentBannerItem]);
+
   if (loading || !currentBannerItem) {
     return <div className="w-full h-[50vh] md:h-[80vh] bg-neutral-900 animate-pulse" />
   }
@@ -131,11 +157,34 @@ export function HeroBanner() {
   const countryCode = currentBannerItem.production_countries?.[0]?.iso_3166_1 || 
                      (Array.isArray(currentBannerItem.origin_country) ? currentBannerItem.origin_country[0] : currentBannerItem.origin_country) || '';
 
+  // Extrair ID do YouTube
+  const getYouTubeId = (url: string) => {
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
+  };
+
+  const youtubeId = currentBannerItem.trailer ? getYouTubeId(currentBannerItem.trailer) : null;
+
   return (
     <section className="relative w-full min-h-[90vh] md:min-h-screen overflow-hidden bg-black">
+      {/* Trailer em Segundo Plano */}
+      {showTrailer && youtubeId && (
+        <div className="absolute inset-0 z-0 scale-110">
+          <iframe
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&rel=0&modestbranding=1`}
+            className="w-full h-full pointer-events-none"
+            allow="autoplay; encrypted-media"
+            style={{ border: 'none' }}
+          />
+          {/* Overlay para suavizar a transição do vídeo para o conteúdo */}
+          <div className="absolute inset-0 bg-black/20" />
+        </div>
+      )}
+
       {/* Imagem de Fundo em Alta Resolução */}
-      {backdropUrl && (
-        <div className="absolute inset-0">
+      {backdropUrl && !showTrailer && (
+        <div className="absolute inset-0 animate-in fade-in duration-700">
           <Image 
             src={backdropUrl}
             alt={title}
