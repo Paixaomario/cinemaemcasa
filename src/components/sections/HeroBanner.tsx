@@ -197,8 +197,8 @@ export function HeroBanner({ type }: HeroBannerProps = {}) {
         </div>
       )}
 
-      {/* Conteúdo do Banner */}
-      <div className="relative h-full flex flex-col justify-end px-6 pb-24 md:px-12 md:pb-32 max-w-4xl z-10">
+      {/* Conteúdo do Banner - Padding ajustado para o texto não ficar atrás da sidebar de 75px */}
+      <div className="relative h-full flex flex-col justify-end pl-24 pr-6 pb-24 md:pl-48 md:pr-12 md:pb-32 max-w-5xl z-10">
         <h1 className="text-4xl md:text-7xl font-black uppercase tracking-tighter text-white mb-4 drop-shadow-2xl">
           {title}
         </h1>

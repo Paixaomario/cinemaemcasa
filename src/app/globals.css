@@ -207,17 +207,17 @@ header, .mobile-nav-bar {
     visibility: hidden !important;
   }
 
-  /* Ajuste do main: Adicionamos margem lateral para a Sidebar e removemos o padding do topo */
+  /* Ajuste do main: Removemos a margem lateral para que o conteúdo preencha a tela toda por baixo da sidebar */
   main {
-    margin-left: 75px !important;
+    margin-left: 0 !important;
     padding-top: 0 !important;
-    transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: none;
   }
 
-  /* Seletor para quando a sidebar expandir (opcional para empurrar o conteúdo) */
+  /* Garantimos que o conteúdo não se mova quando a sidebar expandir (Overlay Style) */
   body:has(aside:hover) main,
   body:has(aside:focus-within) main {
-    margin-left: 75px !important;
+    margin-left: 0 !important;
   }
 
   /* GARANTIMOS a exibição da Sidebar lateral */
