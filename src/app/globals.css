@@ -178,6 +178,11 @@ header, .mobile-nav-bar {
   body {
     padding-bottom: 80px !important;
   }
+
+  /* Oculta Sidebar no Mobile */
+  aside, .sidebar-container {
+    display: none !important;
+  }
 }
 
 /* Ajustes para Smart TVs e Desktop */
@@ -188,28 +193,40 @@ header, .mobile-nav-bar {
     visibility: hidden !important;
   }
 
-  /* Restauramos e configuramos a Navbar Superior para Smart TVs */
+  /* OCULTAMOS a Navbar Superior para priorizar a Sidebar Lateral Premium */
   header, nav.fixed.top-0, [class*="Navbar"] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Ajuste do main: Adicionamos margem lateral para a Sidebar e removemos o padding do topo */
+  main {
+    margin-left: 65px !important;
+    padding-top: 0 !important;
+    transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Seletor para quando a sidebar expandir (opcional para empurrar o conteúdo) */
+  body:has(aside:hover) main,
+  body:has(aside:focus-within) main {
+    margin-left: 65px !important;
+  }
+
+  /* GARANTIMOS a exibição da Sidebar lateral */
+  aside, .sidebar-container {
     display: flex !important;
     visibility: visible !important;
-    height: 121px !important;
-    background-color: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(20px);
-    transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s ease;
+    /* Garante que a sidebar seja vista mesmo sem hover */
+    background-color: rgba(15, 15, 15, 0.95) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
   }
 
-  /* Reset do main (remover margem da sidebar antiga) */
-  main {
-    margin-left: 0 !important;
-    padding-top: 121px; /* Espaço para a barra não cobrir o conteúdo */
-  }
-
-  /* Logotipo configurado para 121px */
-  .nav-logo, .nav-logo img {
-    height: 121px !important;
+  /* Ajuste do Logotipo para 121px na Sidebar */
+  aside .nav-logo, aside .nav-logo img {
+    height: auto !important;
     max-height: 121px !important;
-    width: auto !important;
-    transition: transform 0.3s ease;
+    width: 240px !important; /* Largura base para cálculo de escala */
+    object-fit: contain !important;
   }
 }
 
