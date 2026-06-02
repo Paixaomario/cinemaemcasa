@@ -5,7 +5,7 @@ import { getMovieDetails, getShowDetails, TMDB_IMG } from '@/lib/tmdb'
 import Image from 'next/image'
 import Link from 'next/link'
 
-export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
+export function HeroBanner() {
   const [currentBannerItem, setCurrentBannerItem] = useState<any>(null)
   const [contentPool, setContentPool] = useState<any[]>([])
   const currentIndexRef = useRef(0)
@@ -15,36 +15,29 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
     async function fetchFeatured() {
       const sb = createClient()
       
-      try {
-        const { data: movies, error: mError } = await sb.from('cinema').select('id, titulo, poster, backdrop, tmdb_id, category').limit(40)
-        const { data: series, error: sError } = await sb.from('series').select('id_n, titulo, poster, banner, tmdb_id, genero').limit(40)
+      // Busca itens recentes como pool inicial (a aleatoriedade real será feita no embaralhamento abaixo)
+      // O uso de RANDOM() no .order() do Supabase JS gera erro 400.
+      const { data: movies, error: mError } = await sb.from('cinema').select('id, titulo, poster, backdrop, tmdb_id, category, type').limit(40)
+      const { data: series, error: sError } = await sb.from('series').select('id_n, titulo, capa, banner, tmdb_id, genero, type').limit(40)
 
-        if (mError || sError) console.error("Erro ao buscar dados para o banner:", mError || sError)
+      if (mError || sError) console.error("Erro ao buscar dados para o banner:", mError || sError)
 
-        let combinedPool = [
-          ...(movies || []).map(m => ({ ...m, type: 'movie', poster: m.poster || m.backdrop, backdrop: m.backdrop || m.poster, category: m.category })),
-          ...(series || []).map(s => ({ ...s, id: s.id_n, type: 'series', poster: s.poster, backdrop: s.banner || s.poster, category: s.genero }))
-        ].filter(item => item.tmdb_id && (item.poster || item.backdrop));
+      const combinedPool = [
+        ...(movies || []).map(m => ({ ...m, type: 'movie', poster: m.poster || m.backdrop, backdrop: m.backdrop || m.poster, category: m.category })),
+        ...(series || []).map(s => ({ ...s, id: s.id_n, type: 'series', poster: s.capa || s.banner, backdrop: s.banner || s.capa, category: s.genero }))
+      ].filter(item => item.tmdb_id && (item.poster || item.backdrop)); // Filtra itens sem imagem
 
-        if (type) {
-          combinedPool = combinedPool.filter(item => item.type === type);
-        }
-
-        // Embaralha o pool combinado
-        for (let i = combinedPool.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [combinedPool[i], combinedPool[j]] = [combinedPool[j], combinedPool[i]];
-        }
-
-        setContentPool(combinedPool);
-      } catch (err) {
-        console.error("Critical error in HeroBanner fetch:", err);
-      } finally {
-        setLoading(false);
+      // Embaralha o pool combinado
+      for (let i = combinedPool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [combinedPool[i], combinedPool[j]] = [combinedPool[j], combinedPool[i]];
       }
+
+      setContentPool(combinedPool);
+      setLoading(false);
     }
     fetchFeatured();
-  }, [type]);
+  }, []);
 
   useEffect(() => {
     if (contentPool.length === 0) return;
@@ -62,7 +55,7 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
         
         if (!potentialItem) break;
 
-        const currentCategory = potentialItem.category || potentialItem.genero;
+        const currentCategory = potentialItem.type === 'movie' ? potentialItem.category : potentialItem.genero;
         const currentSeriesId = potentialItem.type === 'series' ? String(potentialItem.id) : null;
 
         // Regras de filtragem
@@ -114,22 +107,18 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
     // Inicia o banner imediatamente
     updateBanner();
 
-    // Aumentado para 15 segundos: reduz consumo de API TMDB e processamento em Smart TVs
-    const interval = setInterval(updateBanner, 15000);
+    // Configura a rotação a cada 5 segundos
+    const interval = setInterval(updateBanner, 5000);
 
     return () => clearInterval(interval); // Limpa o intervalo ao desmontar
   }, [contentPool]);
 
-  // Se não houver itens no banco, não exibe o banner mas permite que o resto da página carregue
-  if (!currentBannerItem || loading) {
-    // Retorna um placeholder fixo para não travar a renderização em TVs
-    if (loading) return <div className="w-full h-[60vh] md:h-[80vh] bg-black animate-pulse" />;
-    return null;
+  if (loading || !currentBannerItem) {
+    return <div className="w-full h-[50vh] md:h-[80vh] bg-neutral-900 animate-pulse" />
   }
 
   const title = currentBannerItem.titulo || currentBannerItem.title || currentBannerItem.name;
-  const rawPath = currentBannerItem.backdrop || currentBannerItem.banner || currentBannerItem.backdrop_path;
-  const backdropUrl = rawPath ? `https://image.tmdb.org/t/p/original${rawPath}` : null;
+  const backdropUrl = TMDB_IMG.backdrop(currentBannerItem.backdrop || currentBannerItem.banner || currentBannerItem.backdrop_path);
   const description = currentBannerItem.descricao || currentBannerItem.description || currentBannerItem.overview;
   const id = currentBannerItem.id_n || currentBannerItem.id;
   const detailHref = currentBannerItem.type === 'series' ? `/series/${id}` : `/detalhes/${id}`;
@@ -143,7 +132,7 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
                      (Array.isArray(currentBannerItem.origin_country) ? currentBannerItem.origin_country[0] : currentBannerItem.origin_country) || '';
 
   return (
-    <section className="relative w-full min-h-[50vh] sm:min-h-[70vh] md:min-h-[80vh] lg:min-h-screen overflow-hidden bg-black">
+    <section className="relative w-full min-h-[90vh] md:min-h-screen overflow-hidden bg-black">
       {/* Imagem de Fundo em Alta Resolução */}
       {backdropUrl && (
         <div className="absolute inset-0">
@@ -152,50 +141,37 @@ export function HeroBanner({ type }: { type?: 'movie' | 'series' }) {
             alt={title}
             fill
             priority
-            className="object-cover object-center opacity-60"
-            sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, 100vw"
+            className="object-cover object-top opacity-100"
+            sizes="100vw"
             unoptimized
           />
-          {/* Gradientes Cinematográficos */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/30" />
         </div>
       )}
 
       {/* Conteúdo do Banner */}
-      <div className="relative min-h-[50vh] sm:min-h-[70vh] md:min-h-[80vh] lg:min-h-screen flex flex-col justify-end px-4 sm:px-6 md:px-12 pb-12 sm:pb-16 md:pb-20 lg:pb-24 pt-[60px] sm:pt-[200px] md:pt-[400px] lg:pt-[550px] max-w-4xl">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-7xl font-black uppercase tracking-tighter text-white mb-3 sm:mb-4 drop-shadow-2xl px-2">
+      <div className="relative min-h-[90vh] md:min-h-screen flex flex-col justify-end px-6 pb-24 pt-[500px] md:px-12 md:pb-32 md:pt-[650px] max-w-4xl">
+        <h1 className="text-4xl md:text-7xl font-black uppercase tracking-tighter text-white mb-4 drop-shadow-2xl">
           {title}
         </h1>
         
-        <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-3 sm:mb-4 text-xs sm:text-sm md:text-base font-bold text-white drop-shadow-md">
+        <div className="flex items-center gap-4 mb-4 text-sm md:text-base font-bold text-white drop-shadow-md">
           {countryCode && (
             <img 
               src={`https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`} 
               alt={countryCode}
-              className="h-4 sm:h-5 w-auto object-contain rounded-sm shadow-sm"
+              className="h-5 w-auto object-contain rounded-sm shadow-sm"
               title={countryCode}
             />
           )}
-          {rating > 0 && <span className="bg-[#00ADEF] text-black px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs">TMDB {Number(rating).toFixed(1)}</span>}
-          {year && <span className="text-neutral-300 text-xs sm:text-sm">{year}</span>}
+          {rating > 0 && <span className="bg-[#00ADEF] text-black px-2 py-0.5 rounded text-xs">TMDB {Number(rating).toFixed(1)}</span>}
+          {year && <span className="text-neutral-300">{year}</span>}
         </div>
 
         {description && (
-          <p className="text-xs sm:text-sm md:text-lg text-neutral-300 line-clamp-2 sm:line-clamp-3 md:line-clamp-2 mb-6 sm:mb-8 max-w-xl font-medium drop-shadow px-2">
+          <p className="text-sm md:text-lg text-neutral-300 line-clamp-2 mb-8 max-w-xl font-medium drop-shadow">
             {description}
           </p>
         )}
-
-        <div className="flex gap-4">
-          <Link
-            href={detailHref}
-            tabIndex={0}
-            className="px-8 py-3 bg-[#00ADEF] text-white font-black uppercase tracking-widest rounded-xl hover:scale-105 transition-transform focus:ring-4 focus:ring-white outline-none"
-          >
-            Ver Detalhes
-          </Link>
-        </div>
       </div>
     </section>
   )
