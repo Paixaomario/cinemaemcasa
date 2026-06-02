@@ -121,26 +121,31 @@ export async function getUserFavoriteGenres(userId: string): Promise<string[]> {
     // Extrai todos os content_ids
     const contentIds = historyData.map(item => String(item.content_id))
 
-    // CORREÇÃO: Busca na tabela 'cinema' (filmes) que é a tabela principal de conteúdo
-    const { data: contentData, error: contentError } = await sb
-      .from('cinema')
-      .select('id, genres')
-      .in('id', contentIds)
-
-    if (contentError || !contentData) {
-      return []
-    }
+    // Busca gêneros de filmes e séries em paralelo (Otimização crítica)
+    const [moviesRes, seriesRes] = await Promise.all([
+      sb.from('cinema').select('genres').in('id', contentIds),
+      sb.from('series').select('genero').in('id_n', contentIds)
+    ])
 
     // Conta os gêneros
     const genreCounts: Record<string, number> = {}
 
-    contentData.forEach(item => {
+    // Processa gêneros de filmes
+    moviesRes.data?.forEach(item => {
       if (item.genres) {
         const genres = Array.isArray(item.genres) ? item.genres : []
         genres.forEach(genre => {
           const genreName = genre.toLowerCase().trim()
           genreCounts[genreName] = (genreCounts[genreName] || 0) + 1
         })
+      }
+    })
+
+    // Processa gêneros de séries
+    seriesRes.data?.forEach(item => {
+      if (item.genero) {
+        const genreName = item.genero.toLowerCase().trim()
+        genreCounts[genreName] = (genreCounts[genreName] || 0) + 1
       }
     })
 
