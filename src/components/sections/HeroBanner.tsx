@@ -121,8 +121,8 @@ export function HeroBanner({ type }: HeroBannerProps = {}) {
     // Inicia o banner imediatamente
     updateBanner();
 
-    // Configura a rotação a cada 20 segundos (Padrão Profissional Streaming)
-    const interval = setInterval(updateBanner, 20000);
+    // Configura a rotação a cada 30 segundos (Padrão Profissional Streaming)
+    const interval = setInterval(updateBanner, 30000);
 
     return () => clearInterval(interval); // Limpa o intervalo ao desmontar
   }, [contentPool]);
