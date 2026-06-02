@@ -167,18 +167,18 @@ export function HeroBanner({ type }: HeroBannerProps = {}) {
   const youtubeId = currentBannerItem.trailer ? getYouTubeId(currentBannerItem.trailer) : null;
 
   return (
-    <section className="relative w-full min-h-[90vh] md:min-h-screen overflow-hidden bg-black">
+    <section className="relative w-full h-screen overflow-hidden bg-black">
       {/* Trailer em Segundo Plano */}
       {showTrailer && youtubeId && (
-        <div className="absolute inset-0 z-0 scale-105 animate-in fade-in duration-1000">
+        <div className="absolute inset-0 z-0 scale-[1.3] animate-in fade-in duration-1000">
           <iframe
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&rel=0&modestbranding=1`}
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=0&controls=0&loop=1&playlist=${youtubeId}&rel=0&modestbranding=1&enablejsapi=1&iv_load_policy=3&disablekb=1&fs=0&autohide=1`}
             className="w-full h-full pointer-events-none"
             allow="autoplay; encrypted-media"
             style={{ border: 'none' }}
           />
           {/* Overlay para suavizar a transição do vídeo para o conteúdo */}
-          <div className="absolute inset-0 bg-black/20" />
+          <div className="absolute inset-0 bg-black/10" />
         </div>
       )}
 
@@ -198,7 +198,7 @@ export function HeroBanner({ type }: HeroBannerProps = {}) {
       )}
 
       {/* Conteúdo do Banner */}
-      <div className="relative min-h-[90vh] md:min-h-screen flex flex-col justify-end px-6 pb-24 pt-[500px] md:px-12 md:pb-32 md:pt-[650px] max-w-4xl">
+      <div className="relative h-full flex flex-col justify-end px-6 pb-24 md:px-12 md:pb-32 max-w-4xl z-10">
         <h1 className="text-4xl md:text-7xl font-black uppercase tracking-tighter text-white mb-4 drop-shadow-2xl">
           {title}
         </h1>
