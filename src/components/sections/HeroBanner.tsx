@@ -127,6 +127,17 @@ export function HeroBanner({ type }: HeroBannerProps = {}) {
     return () => clearInterval(interval); // Limpa o intervalo ao desmontar
   }, [contentPool]);
 
+  // Muta o trailer ao rolar a página para não atrapalhar a experiência
+  const [isMutedByScroll, setIsMutedByScroll] = useState(false);
+  useEffect(() => {
+    const handleScroll = () => {
+      // Se rolar mais de 100px para baixo, muta o vídeo
+      setIsMutedByScroll(window.scrollY > 100);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // Lógica para ativar o trailer após 2 segundos de visualização (Padrão Disney+/HBO Max)
   useEffect(() => {
     setShowTrailer(false);
@@ -167,12 +178,12 @@ export function HeroBanner({ type }: HeroBannerProps = {}) {
   const youtubeId = currentBannerItem.trailer ? getYouTubeId(currentBannerItem.trailer) : null;
 
   return (
-    <section className="relative w-full h-screen overflow-hidden bg-black">
+    <section className="relative w-[calc(100%+75px)] -ml-[75px] h-screen overflow-hidden bg-black">
       {/* Trailer em Segundo Plano */}
       {showTrailer && youtubeId && (
         <div className="absolute inset-0 z-0 scale-[1.3] animate-in fade-in duration-1000">
           <iframe
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=0&controls=0&loop=1&playlist=${youtubeId}&rel=0&modestbranding=1&enablejsapi=1&iv_load_policy=3&disablekb=1&fs=0&autohide=1`}
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=${isMutedByScroll ? 1 : 0}&controls=0&loop=1&playlist=${youtubeId}&rel=0&modestbranding=1&enablejsapi=1&iv_load_policy=3&disablekb=1&fs=0&autohide=1`}
             className="w-full h-full pointer-events-none"
             allow="autoplay; encrypted-media"
             style={{ border: 'none' }}
@@ -197,8 +208,8 @@ export function HeroBanner({ type }: HeroBannerProps = {}) {
         </div>
       )}
 
-      {/* Conteúdo do Banner - Padding ajustado para o texto não ficar atrás da sidebar de 75px */}
-      <div className="relative h-full flex flex-col justify-end pl-24 pr-6 pb-24 md:pl-48 md:pr-12 md:pb-32 max-w-5xl z-10">
+      {/* Conteúdo do Banner - Padding sincronizado com a margem do main (75px) */}
+      <div className="relative h-full flex flex-col justify-end pl-[100px] md:pl-[140px] pr-6 pb-24 md:pb-32 max-w-6xl z-10">
         <h1 className="text-4xl md:text-7xl font-black uppercase tracking-tighter text-white mb-4 drop-shadow-2xl">
           {title}
         </h1>
