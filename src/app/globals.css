@@ -225,8 +225,8 @@ header, .mobile-nav-bar {
     display: flex !important;
     visibility: visible !important;
     /* Efeito Vidro Quase Transparente */
-    background-color: rgba(0, 0, 0, 0.15) !important;
-    backdrop-filter: blur(25px) brightness(0.6) !important;
+    background-color: rgba(10, 10, 10, 0.4) !important;
+    backdrop-filter: blur(30px) saturate(150%) !important;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
   }
 
