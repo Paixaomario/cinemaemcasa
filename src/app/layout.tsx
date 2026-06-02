@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { SupabaseProvider } from '@/components/layout/SupabaseProvider'
-import { Navbar } from '@/components/layout/Navbar'
+import { Sidebar } from '@/components/layout/Sidebar'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { CommandReceiverProvider } from '@/components/layout/CommandReceiverProvider'
 import { Inter, Montserrat } from 'next/font/google'
@@ -14,7 +14,7 @@ const montserrat = Montserrat({
 })
 
 export const metadata: Metadata = {
-  title: 'Meu Projeto Clean',
+  title: 'Cinema em Casa',
 }
 
 export const viewport: Viewport = {
@@ -29,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans">
         <SupabaseProvider>
           <CommandReceiverProvider>
-            <Navbar />
+            <Sidebar />
             <main className="min-h-screen">{children}</main>
             <MobileBottomNav />
           </CommandReceiverProvider>

@@ -18,16 +18,16 @@ export function Sidebar() {
   ]
 
   return (
-    <aside className="fixed left-0 top-0 h-screen z-[6000] hidden lg:flex flex-col bg-black/40 hover:bg-black/95 focus-within:bg-black/95 w-[75px] hover:w-[280px] focus-within:w-[280px] transition-all duration-500 group border-r border-white/10 backdrop-blur-3xl shadow-[20px_0_60px_rgba(0,0,0,0.95)] overflow-hidden">
+    <aside className="fixed left-0 top-0 h-screen z-[6000] hidden lg:flex flex-col bg-black/40 hover:bg-black/95 focus-within:bg-black/95 w-[75px] hover:w-72 focus-within:w-72 transition-all duration-500 group border-r border-white/10 backdrop-blur-3xl shadow-[20px_0_60px_rgba(0,0,0,0.95)] overflow-hidden">
       {/* Container do Logotipo (Altura 121px) */}
       <div className="h-[121px] mt-4 mb-4 flex items-center px-4 overflow-hidden shrink-0">
-        <div className="relative w-full flex items-center justify-center group-hover:justify-start group-focus-within:justify-start transition-all duration-500 pl-0 group-hover:pl-2">
+        <div className="relative w-full flex items-center justify-center group-hover:justify-start group-focus-within:justify-start transition-all duration-500">
           <Image 
             src="/logo.png" 
             alt="Logo" 
-            width={240} 
+            width={300} 
             height={121} 
-            className="object-contain transition-all duration-500 scale-[0.28] group-hover:scale-100 group-focus-within:scale-100 origin-center group-hover:origin-left nav-logo" 
+            className="object-contain transition-all duration-500 scale-[0.32] group-hover:scale-100 group-focus-within:scale-100 origin-center group-hover:origin-left nav-logo" 
           />
         </div>
       </div>
@@ -44,7 +44,7 @@ export function Sidebar() {
               href={item.href}
               tabIndex={0}
               className={`
-                flex items-center rounded-xl transition-all duration-300 outline-none h-[36px] w-full shrink-0
+                flex items-center rounded-xl transition-all duration-300 outline-none h-9 w-full shrink-0
                 ${isActive 
                   ? 'bg-brand-cyan/20 text-brand-cyan' 
                   : 'text-neutral-400 hover:bg-white/10 hover:text-white focus:bg-brand-cyan focus:text-black focus:scale-110'
