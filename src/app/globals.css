@@ -126,6 +126,14 @@ body {
   will-change: transform;
   margin: 0;
   padding: 0;
+  /* Identidade @logo: Brilho Neon Cyan */
+  filter: drop-shadow(0 0 8px rgba(0, 173, 239, 0.4));
+  transition: filter 0.3s ease, transform 0.3s ease;
+}
+
+.nav-logo:hover, 
+.group:focus-within .nav-logo {
+  filter: drop-shadow(0 0 15px rgba(0, 173, 239, 0.8));
 }
 
 /* Mobile: Mantém pequeno */
@@ -201,7 +209,7 @@ header, .mobile-nav-bar {
 
   /* Ajuste do main: Adicionamos margem lateral para a Sidebar e removemos o padding do topo */
   main {
-    margin-left: 65px !important;
+    margin-left: 75px !important;
     padding-top: 0 !important;
     transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -209,16 +217,17 @@ header, .mobile-nav-bar {
   /* Seletor para quando a sidebar expandir (opcional para empurrar o conteúdo) */
   body:has(aside:hover) main,
   body:has(aside:focus-within) main {
-    margin-left: 65px !important;
+    margin-left: 75px !important;
   }
 
   /* GARANTIMOS a exibição da Sidebar lateral */
   aside, .sidebar-container {
     display: flex !important;
     visibility: visible !important;
-    /* Garante que a sidebar seja vista mesmo sem hover */
-    background-color: rgba(15, 15, 15, 0.95) !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+    /* Efeito Vidro Quase Transparente */
+    background-color: rgba(0, 0, 0, 0.15) !important;
+    backdrop-filter: blur(25px) brightness(0.6) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
   }
 
   /* Ajuste do Logotipo para 121px na Sidebar */
