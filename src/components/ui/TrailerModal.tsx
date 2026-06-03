@@ -34,7 +34,7 @@ export function TrailerModal({ isOpen, onClose, trailerUrl }: TrailerModalProps)
         <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl">
           {youtubeId ? (
             <iframe
-              src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`}
+              src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&controls=0&showinfo=0&modestbranding=1&iv_load_policy=3&disablekb=1`}
               title="Trailer"
               className="absolute inset-0 w-full h-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

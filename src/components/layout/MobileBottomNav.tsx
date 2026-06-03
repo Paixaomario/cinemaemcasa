@@ -24,25 +24,11 @@ function NavContent() {
     <>
       <nav className="mobile-bottom-nav">
         <div className="nav-wrapper">
-          {/* Lado Esquerdo */}
           <div className="nav-group">
-            {navItems.slice(0, 3).map((item) => (
+            {navItems.map((item) => (
               <Link key={item.href} href={item.href} className={`nav-item ${pathname === item.href ? 'active' : ''}`}>
                 <span className="icon">{item.icon}</span>
-              </Link>
-            ))}
-          </div>
-
-          {/* Logo Central */}
-          <div className="logo-center">
-            <Image src="/logo.png" alt="CineCasa" width={64} height={64} objectFit="contain" priority />
-          </div>
-
-          {/* Lado Direito */}
-          <div className="nav-group">
-            {navItems.slice(3).map((item) => (
-              <Link key={item.href} href={item.href} className={`nav-item ${pathname === item.href ? 'active' : ''}`}>
-                <span className="icon">{item.icon}</span>
+                <span className="legend">{item.label}</span>
               </Link>
             ))}
           </div>
@@ -59,13 +45,18 @@ function NavContent() {
           max-width: 450px !important;
           margin: 0 auto !important;
           z-index: 9999;
-          background: rgba(10, 10, 15, 0.8);
+          background: linear-gradient(135deg, rgba(20, 20, 25, 0.9) 0%, rgba(10, 10, 15, 0.95) 100%);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
-          border: 1.5px solid rgba(0, 173, 239, 0.35);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-top: 1px solid rgba(0, 173, 239, 0.4);
           border-radius: 28px;
-          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 173, 239, 0.15);
-          padding: 8px 5px;
+          box-shadow: 
+            0 25px 50px -12px rgba(0, 0, 0, 0.9),
+            0 0 20px rgba(0, 173, 239, 0.15),
+            inset 0 1px 1px rgba(255, 255, 255, 0.1);
+          padding: 12px 10px;
+          transform: perspective(1000px) rotateX(2deg);
         }
 
         .nav-wrapper {
@@ -97,22 +88,13 @@ function NavContent() {
           transform: translateY(-3px);
         }
 
-        .icon { font-size: 22px; }
-
-        .logo-center {
-          width: 86px;
-          height: 86px;
-          background: #000;
-          border: 2px solid #00ADEF;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: -55px 10px 0 10px;
-          box-shadow: 0 8px 20px rgba(0, 173, 239, 0.4);
-          overflow: hidden;
-          flex-shrink: 0;
-          transition: transform 0.3s ease;
+        .icon { font-size: 18px; margin-bottom: 4px; }
+        .legend { 
+          font-size: 9px; 
+          font-weight: 800; 
+          text-transform: uppercase; 
+          letter-spacing: 0.5px;
+          opacity: 0.8;
         }
 
         @media (min-width: 1024px) { .mobile-bottom-nav { display: none !important; } }

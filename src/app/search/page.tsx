@@ -193,8 +193,12 @@ export default function SearchPage() {
 
           {/* Auto-complete Visual Profissional (Sugestões de Títulos) */}
           {query.length >= 2 && liveSuggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-[#141414] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[60] animate-in fade-in zoom-in-95 duration-200">
-              <div className="p-2">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-[#141414] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[60] animate-in fade-in zoom-in-95 duration-200 group/list">
+              {/* Efeito Esfumaçado Netflix */}
+              <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-[#141414] to-transparent z-10 pointer-events-none" />
+              <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-[#141414] to-transparent z-10 pointer-events-none" />
+              
+              <div className="p-2 max-h-[60vh] overflow-y-auto no-scrollbar relative">
                 {liveSuggestions.map((suggestion) => (
                   <button
                     key={suggestion.id}
