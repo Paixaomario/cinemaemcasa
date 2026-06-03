@@ -178,7 +178,7 @@ export function HeroBanner({ type }: HeroBannerProps = {}) {
   const youtubeId = currentBannerItem.trailer ? getYouTubeId(currentBannerItem.trailer) : null;
 
   return (
-    <section className="relative w-full h-screen overflow-hidden bg-black">
+    <section className="relative w-[calc(100%+75px)] -ml-[75px] h-screen overflow-hidden bg-black">
       {/* Trailer em Segundo Plano */}
       {showTrailer && youtubeId && (
         <div className="absolute inset-0 z-0 scale-[1.3] animate-in fade-in duration-1000">
@@ -208,8 +208,8 @@ export function HeroBanner({ type }: HeroBannerProps = {}) {
         </div>
       )}
 
-      {/* Conteúdo do Banner - Padding ajustado para telas gigantes e Smart TVs */}
-      <div className="relative h-full flex flex-col justify-end pl-10 md:pl-16 pr-6 pb-24 md:pb-32 max-w-6xl z-10">
+      {/* Conteúdo do Banner - 100px da borda (75px sidebar + 25px gap) */}
+      <div className="relative h-full flex flex-col justify-end pl-[100px] pr-6 pb-24 md:pb-32 max-w-7xl z-10">
         <h1 className="text-4xl md:text-7xl font-black uppercase tracking-tighter text-white mb-4 drop-shadow-2xl">
           {title}
         </h1>

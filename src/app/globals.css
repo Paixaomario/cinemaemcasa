@@ -41,8 +41,11 @@ body {
 
 /* Utilitários de Layout para Streaming */
 .section-px {
-  padding-left: clamp(1rem, 4vw, 3rem);
+  padding-left: 1.5rem; /* Padrão Mobile */
   padding-right: clamp(1rem, 4vw, 3rem);
+}
+@media (min-width: 1024px) {
+  .section-px { padding-left: 25px !important; } /* 25px de distância solicitado */
 }
 
 .scroll-row {
@@ -224,10 +227,10 @@ header, .mobile-nav-bar {
   aside, .sidebar-container {
     display: flex !important;
     visibility: visible !important;
-    /* Ultra Otimização: Backdrop blur desativado em TVs para 60FPS constantes */
-    background-color: #0F0F0F !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+    /* Restaurado: Efeito Vidro Premium */
+    background-color: rgba(15, 15, 15, 0.7) !important;
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
     box-shadow: 10px 0 30px rgba(0,0,0,0.5);
   }

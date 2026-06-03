@@ -21,13 +21,13 @@ export function Sidebar() {
     <aside className="fixed left-0 top-0 h-screen z-[6000] hidden lg:flex flex-col bg-black/40 hover:bg-black/95 focus-within:bg-black/95 w-[75px] hover:w-[195px] focus-within:w-[195px] transition-all duration-500 group border-r border-white/10 backdrop-blur-3xl shadow-[15px_0_50px_rgba(0,0,0,0.95)] overflow-hidden">
       {/* Container do Logotipo (Altura 121px) */}
       <div className="h-[121px] mt-4 mb-4 flex items-center px-0 overflow-hidden shrink-0">
-        <div className="relative w-full flex items-center justify-start pl-[12px] transition-all duration-500">
+        <div className="relative w-[75px] flex items-center justify-center transition-all duration-500">
           <Image 
             src="/logo.png" 
             alt="Logo" 
             width={240} 
             height={121} 
-            className="object-contain transition-all duration-500 scale-[0.3125] group-hover:scale-100 group-focus-within:scale-100 origin-left nav-logo" 
+            className="object-contain transition-all duration-500 scale-[0.3125] origin-center nav-logo" 
           />
         </div>
       </div>
@@ -52,7 +52,7 @@ export function Sidebar() {
               `}
             >
               <div className="w-[75px] flex-none flex items-center justify-center">
-                <Icon className="w-[26px] h-[26px] lg:w-[41px] lg:h-[41px] 2xl:w-[46px] 2xl:h-[46px] transition-transform group-hover:scale-110" strokeWidth={isActive ? 2.5 : 1.5} />
+                <Icon className="w-[26px] h-[26px] transition-transform group-hover:scale-110" strokeWidth={isActive ? 2.5 : 1.5} />
               </div>
               <span className="font-montserrat font-bold uppercase tracking-[0.1em] text-xs opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-500 whitespace-nowrap">
                 {item.label}
