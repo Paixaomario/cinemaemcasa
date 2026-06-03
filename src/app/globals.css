@@ -207,14 +207,14 @@ header, .mobile-nav-bar {
     visibility: hidden !important;
   }
 
-  /* Ajuste do main: Adicionamos margem para a sidebar fechada (75px) para não cobrir conteúdo */
+  /* Fix: Margem rígida para garantir que nenhum conteúdo (Home, Filmes, Perfil) seja coberto */
   main {
-    margin-left: 75px !important;
+    margin-left: 75px !important; 
     padding-top: 0 !important;
-    transition: margin-left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: none; /* Remove transição no main para evitar 'pulos' em CPUs lentas de TV */
   }
 
-  /* Quando a sidebar expande, o main NÃO se move (efeito Overlay profissional) */
+  /* O conteúdo permanece estático enquanto a barra flutua por cima ao abrir */
   body:has(aside:hover) main,
   body:has(aside:focus-within) main {
     margin-left: 75px !important;
@@ -224,11 +224,12 @@ header, .mobile-nav-bar {
   aside, .sidebar-container {
     display: flex !important;
     visibility: visible !important;
-    /* Otimizado para Smart TVs: Fundo mais sólido para evitar lag no GPU */
-    background-color: rgba(15, 15, 15, 0.85) !important;
-    backdrop-filter: blur(15px) !important;
-    -webkit-backdrop-filter: blur(15px) !important;
+    /* Ultra Otimização: Backdrop blur desativado em TVs para 60FPS constantes */
+    background-color: #0F0F0F !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 10px 0 30px rgba(0,0,0,0.5);
   }
 
   /* Ajuste do Logotipo para 121px na Sidebar */
