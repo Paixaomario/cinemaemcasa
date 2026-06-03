@@ -63,6 +63,11 @@ body {
   margin: -60px 0;
 }
 
+.scroll-row > * {
+  flex-shrink: 0;
+  width: clamp(218px, 22vw, 390px); /* Restaurado tamanho original para Desktop/TV */
+}
+
 /* Regras de Responsividade Crítica para Mobile */
 @media (max-width: 1023px) {
   .scroll-row > * {
@@ -84,11 +89,10 @@ body {
   }
 }
 
-/* Breakpoint para Telas Gigantes (4K/8K) */
-@media (min-width: 2400px) {
-  .scroll-row > * { width: 520px; }
-  .section-px { padding-left: max(60px, env(safe-area-inset-left)) !important; }
-  .grid-cols-8 { grid-template-columns: repeat(10, minmax(0, 1fr)) !important; }
+/* Oculta Navbar Superior no Mobile para colar o banner ao topo */
+@media (max-width: 1023px) {
+  header, .navbar-fixed, .top-nav { display: none !important; }
+  main { padding-top: 0 !important; margin-top: 0 !important; }
 }
 
 /* =========================================================

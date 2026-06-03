@@ -728,13 +728,13 @@ function SeriesContent() {
     <main className="min-h-screen bg-black text-white relative">
       <Navbar />
 
-      {/* Banner Imersivo (Hero Style) */}
-      <div className="absolute top-0 left-0 right-0 h-[75vh] sm:h-[85vh] md:h-[100vh] w-full overflow-hidden">
+      {/* Banner Imersivo (Hero Style) - Colado ao topo */}
+      <div className="absolute top-0 left-0 right-0 h-[80vh] sm:h-[90vh] md:h-[100vh] w-full overflow-hidden">
         {showBannerTrailer && canAutoPlayTrailer && series.trailer ? (
           <div className="absolute inset-0 w-full h-full scale-125">
              <iframe
                src={`https://www.youtube.com/embed/${series.trailer.split('v=')[1] || series.trailer.split('/').pop()}?autoplay=1&mute=1&controls=0&loop=1&playlist=${series.trailer.split('v=')[1] || series.trailer.split('/').pop()}&showinfo=0&modestbranding=1&iv_load_policy=3&rel=0`}
-               className="w-full h-full pointer-events-none opacity-60"
+               className="w-full h-full pointer-events-none opacity-50"
                allow="autoplay"
              />
           </div>
@@ -750,12 +750,12 @@ function SeriesContent() {
             />
           )
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-transparent" />
       </div>
 
       {/* Conteúdo - Ajustado padding para visibilidade imediata das temporadas */}
-      <div className="relative pt-[20vh] sm:pt-[45vh] md:pt-[55vh] lg:pt-[75vh] px-4 sm:px-6 md:px-16 z-10">
+      <div className="relative pt-[15vh] sm:pt-[40vh] md:pt-[50vh] lg:pt-[70vh] px-4 sm:px-6 md:px-16 z-10">
         <div className="max-w-6xl">
         <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter mb-4 drop-shadow-2xl">
           {title}
