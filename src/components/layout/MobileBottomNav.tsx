@@ -28,8 +28,10 @@ function NavContent() {
           <div className="nav-group">
             {navItems.map((item) => (
               <Link key={item.href} href={item.href} className={`nav-item ${pathname === item.href ? 'active' : ''}`}>
-                <span className="icon">{item.icon}</span>
-                <span className="legend">{item.label}</span>
+                <div className="nav-item-inner">
+                  <span className="icon">{item.icon}</span>
+                  <span className="legend">{item.label}</span>
+                </div>
               </Link>
             ))}
           </div>
@@ -107,14 +109,19 @@ function NavContent() {
         }
 
         .nav-item {
-          display: flex !important;
-          flex-direction: column !important;
-          align-items: center;
-          justify-content: center;
           flex: 1;
           text-decoration: none;
           color: rgba(255, 255, 255, 0.5);
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-item-inner {
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          gap: 2px;
         }
 
         .nav-item.active {

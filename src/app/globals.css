@@ -181,10 +181,13 @@ header, .mobile-nav-bar {
 /* Ajustes para Dispositivos Móveis (Celulares e Tablets) */
 @media (max-width: 1023px) {
   /* OCULTA TOTALMENTE a barra superior no Mobile */
-  header, .header-container, .top-nav, nav.fixed.top-0, [class*="Navbar"], .nav-fixed-top, nav.whitespace-nowrap {
+  header, .header-container, .top-nav, nav.fixed.top-0, [class*="Navbar"], .nav-fixed-top, nav.whitespace-nowrap, .navbar-fixed {
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
     opacity: 0 !important;
     pointer-events: none !important;
   }
