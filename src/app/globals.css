@@ -197,9 +197,6 @@ header, .mobile-nav-bar {
     /* Garante que ícones e textos da barra inferior escalem em celulares pequenos */
     font-size: clamp(0.7rem, 2vh, 1rem);
     padding-bottom: max(10px, env(safe-area-inset-bottom));
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
     z-index: 50 !important;
   }
 

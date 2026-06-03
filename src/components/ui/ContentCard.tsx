@@ -2,7 +2,15 @@
 import Image from 'next/image'
 import Link from 'next/link'
 
-export function ContentCard({ item }: { item: any }) {
+export function ContentCard({ 
+  item, 
+  showProgress = false, 
+  progress 
+}: { 
+  item: any; 
+  showProgress?: boolean; 
+  progress?: { lastPosition: any; duration: any } 
+}) {
   // Mapeamento para lidar com as diferentes tabelas (cinema vs series)
   const title = item.titulo || item.title || 'Sem título'
   const poster = item.poster || item.capa || item.poster_path
@@ -13,6 +21,11 @@ export function ContentCard({ item }: { item: any }) {
   const isSeries = !!item.id_n
   const id = isSeries ? item.id_n : item.id
   const detailHref = isSeries ? `/series/${id}` : `/detalhes/${id}`
+
+  // Cálculo do progresso em porcentagem
+  const progressPercent = showProgress && progress 
+    ? Math.min((Number(progress.lastPosition) / (Number(progress.duration) || 6000)) * 100, 100) 
+    : 0
 
   return (
     <Link 
@@ -30,6 +43,16 @@ export function ContentCard({ item }: { item: any }) {
           />
         ) : (
           <div className="flex h-full items-center justify-center text-4xl bg-neutral-800">🎬</div>
+        )}
+
+        {/* Barra de progresso opcional (ex: seção Continuar Assistindo) */}
+        {showProgress && progressPercent > 0 && (
+          <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/60 z-20">
+            <div 
+              className="h-full bg-brand-cyan shadow-[0_0_10px_rgba(0,173,239,0.8)] transition-all duration-500"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
         )}
       </div>
 

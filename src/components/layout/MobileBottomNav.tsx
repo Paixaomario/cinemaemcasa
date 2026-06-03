@@ -1,6 +1,7 @@
 'use client'
 import React, { Suspense } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useAuth } from './SupabaseProvider'
 
@@ -12,189 +13,112 @@ function NavContent() {
 
   // Visível em todas as páginas, o player usará Z-index superior para cobrir
   const navItems = [
-    { href: '/', label: 'Home', icon: '🏠', active: pathname === '/' },
-    { href: '/filmes', label: 'Filmes', icon: '🎬', active: pathname === '/filmes' },
-    { href: '/series', label: 'Séries', icon: '📺', active: pathname === '/series' },
-    { href: '/favoritos', label: 'Favoritos', icon: '❤️', active: pathname === '/favoritos' },
-    { href: '/assistir', label: 'Assistir Depois', icon: '⏰', active: pathname === '/assistir' },
-    { href: '/search', label: 'Localizar', icon: '🔍', active: pathname === '/search' },
-    { href: user ? '/perfil' : '/login', label: 'Perfil', icon: '👤', active: pathname === '/perfil' && !currentTab },
+    { href: '/', label: 'Home', icon: '🏠' },
+    { href: '/filmes', label: 'Filmes', icon: '🎬' },
+    { href: '/series', label: 'Séries', icon: '📺' },
+    { href: '/search', label: 'Localizar', icon: '🔍' },
+    { href: user ? '/perfil' : '/login', label: 'Perfil', icon: '👤' },
   ]
 
   return (
     <>
       <nav className="mobile-bottom-nav">
-        {navItems.map((item) => {
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`nav-item ${item.active ? 'active' : ''}`}
-              aria-label={item.label}
-              title={item.label}
-            >
-              <span className="icon">{item.icon}</span>
-            </Link>
-          )
-        })}
+        <div className="nav-wrapper">
+          {/* Lado Esquerdo */}
+          <div className="nav-group">
+            {navItems.slice(0, 3).map((item) => (
+              <Link key={item.href} href={item.href} className={`nav-item ${pathname === item.href ? 'active' : ''}`}>
+                <span className="icon">{item.icon}</span>
+                <span className="legend">{item.label}</span>
+              </Link>
+            ))}
+          </div>
+
+          {/* Logo Central */}
+          <div className="logo-center">
+            <Image src="/logo.png" alt="CineCasa" width={32} height={32} objectFit="contain" priority />
+          </div>
+
+          {/* Lado Direito */}
+          <div className="nav-group">
+            {navItems.slice(3).map((item) => (
+              <Link key={item.href} href={item.href} className={`nav-item ${pathname === item.href ? 'active' : ''}`}>
+                <span className="icon">{item.icon}</span>
+                <span className="legend">{item.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
       </nav>
 
       <style jsx>{`
-        /* =========================================================
-           PAIXAOFLIX - BARRA DE RODAPÉ MOBILE (MODELO 2 - GLASS)
-           ========================================================= */
-        
         .mobile-bottom-nav {
           position: fixed;
-          bottom: 18px;
-          left: 4vw !important;
-          right: 4vw !important;
+          bottom: 25px;
+          left: 5% !important;
+          right: 5% !important;
+          width: 90% !important;
+          max-width: 450px !important;
           margin: 0 auto !important;
-          z-index: 5000;
+          z-index: 9999;
+          background: rgba(10, 10, 15, 0.8);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1.5px solid rgba(0, 173, 239, 0.35);
+          border-radius: 28px;
+          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 173, 239, 0.15);
+          padding: 8px 5px;
+        }
 
-          width: auto !important;
-          max-width: 500px !important;
-          height: 80px !important;
-
+        .nav-wrapper {
           display: flex;
-          justify-content: space-around;
+          justify-content: space-between;
           align-items: center;
-
-          padding: 12px 6px;
-          border-radius: 20px; /* Arredondado para 20px */
-
-          /* efeito glass / fosco */
-          background: rgba(20, 10, 10, 0.55);
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
-
-          /* borda metálica leve */
-          border: 2px solid rgba(255, 140, 80, 0.22);
-
-          /* sombra suave de flutuação */
-          box-shadow:
-            0px 18px 40px rgba(0, 0, 0, 0.75),
-            0px 0px 16px rgba(255, 40, 40, 0.12);
-
-          overflow: hidden;
-          transition: transform 0.3s ease;
+          width: 100%;
         }
 
-        /* Ocultar em Desktop */
-        @media (min-width: 1024px) {
-          .mobile-bottom-nav {
-            display: none !important;
-          }
-        }
-
-        /* brilho inferior bem discreto (efeito 3D) */
-        .mobile-bottom-nav::after {
-          content: "";
-          position: absolute;
-          bottom: -18px;
-          left: 12%;
-          width: 76%;
-          height: 40px;
-          background: radial-gradient(
-            ellipse,
-            rgba(255, 0, 0, 0.18) 0%,
-            rgba(255, 0, 0, 0.08) 45%,
-            rgba(255, 0, 0, 0.00) 70%
-          );
-          filter: blur(10px);
-          opacity: 0.55;
-          pointer-events: none;
-        }
-
-        /* linha superior metálica leve */
-        .mobile-bottom-nav::before {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 8%;
-          width: 84%;
-          height: 2px;
-          background: linear-gradient(
-            90deg,
-            rgba(255, 140, 80, 0.00) 0%,
-            rgba(255, 180, 120, 0.22) 50%,
-            rgba(255, 140, 80, 0.00) 100%
-          );
-          opacity: 0.55;
-          pointer-events: none;
+        .nav-group {
+          display: flex;
+          flex: 1;
+          justify-content: space-evenly;
+          align-items: center;
         }
 
         .nav-item {
-          position: relative;
-          z-index: 5;
-          width: auto;
-          height: 100%;
-          flex: 1;
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
           text-decoration: none;
-          cursor: pointer;
-          border-radius: 20px; /* Arredondado para 20px */
-          transition: 0.2s ease;
-        }
-
-        .nav-item .icon {
-          font-size: 28px !important;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: rgba(255, 190, 90, 0.75);
-          transition: 0.2s ease;
-        }
-
-        /* Sobrescrever estilo inline em mobile */
-        @media (max-width: 768px) {
-          .nav-item .icon {
-            font-size: 32px !important;
-          }
+          color: rgba(255, 255, 255, 0.5);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .nav-item.active {
-          background: rgba(255, 0, 0, 0.06);
-          border: 2px solid rgba(255, 60, 60, 0.15);
-          box-shadow:
-            inset 0px 0px 14px rgba(255, 0, 0, 0.15),
-            0px 0px 18px rgba(255, 0, 0, 0.10);
+          color: #00ADEF;
+          transform: translateY(-3px);
         }
 
-        .nav-item.active .icon,
-        .nav-item.active .icon {
-          color: rgba(255, 90, 60, 0.85);
+        .icon { font-size: 20px; margin-bottom: 2px; }
+        .legend { font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.8px; }
+
+        .logo-center {
+          width: 58px;
+          height: 58px;
+          background: #000;
+          border: 2px solid #00ADEF;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: -40px 10px 0 10px;
+          box-shadow: 0 8px 20px rgba(0, 173, 239, 0.4);
+          overflow: hidden;
+          flex-shrink: 0;
+          transition: transform 0.3s ease;
         }
 
-        .nav-item:hover {
-          transform: translateY(-2px);
-        }
-
-        .nav-item:hover .icon,
-        .nav-item:hover .icon {
-          color: rgba(255, 220, 150, 0.95);
-        }
-
-        @media (max-width: 768px) {
-          .mobile-bottom-nav {
-            left: 4vw !important;
-            right: 4vw !important;
-            transform: none !important;
-            margin: 0 auto !important;
-
-            height: 75px !important;
-            border-radius: 20px; /* Arredondado para 20px */
-            padding: 0 4px;
-            bottom: 15px;
-          }
-          .nav-item {
-            width: auto;
-            flex: 1;
-            height: 70px !important;
-          }
-        }
+        @media (min-width: 1024px) { .mobile-bottom-nav { display: none !important; } }
       `}</style>
     </>
   )

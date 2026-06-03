@@ -848,7 +848,6 @@ function SeriesContent() {
                       alt={ep.titulo || ''} 
                       fill 
                       className="object-cover group-hover:scale-110 transition-transform duration-500" 
-                      unoptimized 
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center text-4xl">📺</div>
@@ -902,7 +901,7 @@ function SeriesContent() {
               {series.credits.cast.slice(0, 12).map((actor: any) => (
                 <div key={actor.id} className="min-w-[140px] text-center group">
                   <div className="relative w-28 h-28 mx-auto rounded-full overflow-hidden border-2 border-white/5 group-hover:border-brand-cyan transition-colors mb-3">
-                    <Image src={TMDB_IMG.profile(actor.profile_path) || 'https://via.placeholder.com/185x185?text=👤'} alt={actor.name} fill className="object-cover" unoptimized />
+                    <Image src={TMDB_IMG.profile(actor.profile_path) || 'https://via.placeholder.com/185x185?text=👤'} alt={actor.name} fill className="object-cover" />
                   </div>
                   <p className="text-xs font-bold text-white line-clamp-1">{actor.name}</p>
                   <p className="text-[10px] text-neutral-500 line-clamp-1">{actor.character}</p>
