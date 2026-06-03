@@ -709,7 +709,7 @@ function SeriesContent() {
       <Navbar />
 
       {/* Banner de Fundo */}
-      <div className="absolute inset-0 h-[60vh] sm:h-[70vh] md:h-[90vh] w-full">
+      <div className="absolute top-0 left-0 right-0 h-[65vh] sm:h-[80vh] md:h-[95vh] w-full">
         {backdrop && (
           <Image
             src={backdrop}
@@ -720,12 +720,12 @@ function SeriesContent() {
             sizes="100vw"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-transparent" />
       </div>
 
       {/* Conteúdo - Ajustado padding para visibilidade imediata das temporadas */}
-      <div className="relative pt-[40vh] sm:pt-[50vh] md:pt-[60vh] lg:pt-[82vh] px-4 sm:px-6 md:px-16 z-10">
+      <div className="relative pt-[25vh] sm:pt-[40vh] md:pt-[50vh] lg:pt-[65vh] px-4 sm:px-6 md:px-16 z-10">
         <div className="max-w-6xl">
         <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter mb-4 drop-shadow-2xl">
           {title}

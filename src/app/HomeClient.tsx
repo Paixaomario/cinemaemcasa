@@ -53,12 +53,28 @@ export function HomeClient() {
   const [continueWatching, setContinueWatching] = useState<any[]>([])
   const [pageLoading, setPageLoading] = useState(true)
   const [resumeItem, setResumeItem] = useState<any>(null)
+  const [canAutoPlayTrailer, setCanAutoPlayTrailer] = useState(false)
 
   // Ativa navegação por controle remoto na Home
   useSpatialNavigation()
 
   // Ativa proteção contra Burn-in para TVs OLED
   useBurnInProtection(5)
+
+  // Detecta qualidade da rede para Auto-Play de trailers
+  useEffect(() => {
+    const checkNetwork = () => {
+      const conn = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+      if (conn) {
+        // Só permite se não for modo economia de dados e se for wifi ou 4g/5g forte
+        const isGoodConnection = !conn.saveData && (conn.type === 'wifi' || ['4g', '5g'].includes(conn.effectiveType));
+        setCanAutoPlayTrailer(isGoodConnection);
+      } else {
+        setCanAutoPlayTrailer(true); // Fallback para navegadores sem API (TVs)
+      }
+    };
+    checkNetwork();
+  }, []);
 
   // Redireciona para login se não estiver autenticado
   useEffect(() => {

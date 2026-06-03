@@ -9,7 +9,8 @@ function NavContent() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const currentTab = searchParams.get('tab')
-  const { user } = useAuth()
+  const { user, profile } = useAuth() as any
+  const isChild = profile?.is_child || false
 
   // Visível em todas as páginas, o player usará Z-index superior para cobrir
   const navItems = [
@@ -22,7 +23,7 @@ function NavContent() {
 
   return (
     <>
-      <nav className="mobile-bottom-nav">
+      <nav className={`mobile-bottom-nav ${isChild ? 'child-mode-border' : ''}`}>
         <div className="nav-wrapper">
           <div className="nav-group">
             {navItems.map((item) => (
@@ -120,13 +121,15 @@ function NavContent() {
           transform: translateY(-3px);
         }
 
-        .icon { font-size: 18px; margin-bottom: 4px; }
+        .icon { font-size: 22px; margin-bottom: 2px; }
         .legend { 
-          font-size: 9px; 
-          font-weight: 800; 
+          font-size: 8px; 
+          font-weight: 900; 
           text-transform: uppercase; 
-          letter-spacing: 0.5px;
+          letter-spacing: 0.3px;
           opacity: 0.8;
+          display: block;
+          text-align: center;
         }
 
         @media (min-width: 1024px) { .mobile-bottom-nav { display: none !important; } }

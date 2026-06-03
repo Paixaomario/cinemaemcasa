@@ -203,12 +203,16 @@ header, .mobile-nav-bar {
   /* Adiciona espaço no fundo para o conteúdo não ficar escondido atrás do menu */
   body {
     padding-bottom: 80px !important;
+    padding-top: 0 !important; /* Banner colado ao topo */
   }
 
   /* Oculta Sidebar no Mobile */
   aside, .sidebar-container {
     display: none !important;
   }
+
+  /* Remove padding do main para o banner encostar no topo */
+  main { padding-top: 0 !important; }
 }
 
 /* Ajustes para Smart TVs e Desktop (Breakpoint reduzido para 768px) */
@@ -287,4 +291,19 @@ a[href*="/series"]:not(.group) {
 .search-bar-wrapper {
   order: -1 !important;
   margin-bottom: 1rem;
+}
+
+/* Animação Arco-Íris para Modo Infantil */
+@keyframes rainbow-glow {
+  0% { border-color: #ff0000; box-shadow: 0 0 15px rgba(255, 0, 0, 0.5); }
+  20% { border-color: #ff8800; box-shadow: 0 0 15px rgba(255, 136, 0, 0.5); }
+  40% { border-color: #ffff00; box-shadow: 0 0 15px rgba(255, 255, 0, 0.5); }
+  60% { border-color: #00ff00; box-shadow: 0 0 15px rgba(0, 255, 0, 0.5); }
+  80% { border-color: #0000ff; box-shadow: 0 0 15px rgba(0, 0, 255, 0.5); }
+  100% { border-color: #ff00ff; box-shadow: 0 0 15px rgba(255, 0, 255, 0.5); }
+}
+
+.child-mode-border {
+  animation: rainbow-glow 3s linear infinite !important;
+  border-width: 2px !important;
 }
