@@ -114,7 +114,7 @@ export default function SearchPage() {
           .select('*')
           .limit(24);
         
-        if (query.trim().length > 1) {
+        if (query.trim().length >= 1) {
           searchBuilder = searchBuilder.ilike('titulo', `%${query}%`);
         }
         if (selectedGenre) {

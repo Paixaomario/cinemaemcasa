@@ -112,24 +112,6 @@ export async function generateSuggestions(
 
     suggestions.push(...historyMatches)
 
-    // 2. Sugestões de categorias (fuzzy match)
-    const categoryMatches = categories
-      .map(cat => ({
-        item: cat,
-        score: fuzzyMatch(input, cat)
-      }))
-      .filter(c => c.score >= 60)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, config.maxPopularResults)
-      .map(c => ({
-        id: `category-${c.item}`,
-        text: c.item,
-        type: 'category' as const,
-        icon: '🏷️'
-      }))
-
-    suggestions.push(...categoryMatches)
-
     // 3. Buscar previsões do banco de dados (títulos populares)
     const predictions = await fetchPredictions(input, config.maxPredictions)
     suggestions.push(...predictions)
