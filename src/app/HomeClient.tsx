@@ -417,7 +417,7 @@ export function HomeClient() {
                 {sec.titulo}
               </h2>
               <div 
-                className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 md:gap-8 focus-within:ring-2 focus-within:ring-brand-cyan/20 rounded-xl p-2"
+                className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 md:gap-8 focus-within:ring-2 focus-within:ring-brand-cyan/20 rounded-xl p-2"
                 tabIndex={-1}
               >
                 {items.map(item => <ContentCard key={item.id} item={item} />)}

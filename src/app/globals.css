@@ -71,20 +71,13 @@ body {
 /* Regras de Responsividade Crítica para Mobile */
 @media (max-width: 1023px) {
   .scroll-row > * {
-    width: calc(33.33% - 1rem); /* Aproximadamente 3 itens por linha com gap */
+    width: calc(50% - 1rem); /* Mostra 2 itens por linha com gap */
     min-width: 110px;
   }
 }
 
-/* Prevenção de quebra em telas pequenas e minúsculas */
-@media (max-width: 420px) {
-  .grid-cols-3 {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
-}
-
 @media (max-width: 300px) {
-  .grid-cols-3, .grid-cols-2 {
+  .grid-cols-2 {
     grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
   }
 }
