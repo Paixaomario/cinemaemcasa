@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
+import { Search, User } from 'lucide-react'
 
 export function Navbar() {
   const pathname = usePathname()
@@ -38,7 +39,7 @@ export function Navbar() {
               className={`text-lg font-bold uppercase tracking-widest transition-all duration-300 outline-none px-4 py-2 rounded-xl
                 ${pathname === link.href 
                   ? 'text-brand-cyan drop-shadow-[0_0_15px_rgba(0,173,239,0.5)] scale-110' 
-                  : 'text-white/70 hover:text-white focus:text-brand-cyan focus:scale-110'
+                  : 'text-white hover:text-white focus:text-brand-cyan focus:scale-110'
                 }`}
             >
               {link.label}
@@ -49,11 +50,21 @@ export function Navbar() {
 
       {/* Lado Direito: Ações (Busca e Perfil) */}
       <div className="flex items-center gap-4 relative z-20">
-        <Link href="/search" tabIndex={0} className="p-3 hover:bg-white/10 rounded-full focus:bg-brand-cyan focus:text-black outline-none transition-all" aria-label="Pesquisar">
-          <span className="text-[24px] block">🔍</span>
+        <Link 
+          href="/search" 
+          tabIndex={0} 
+          className={`p-3 hover:bg-white/10 rounded-full outline-none transition-all ${pathname === '/search' ? 'text-brand-cyan' : 'text-white'}`} 
+          aria-label="Pesquisar"
+        >
+          <Search size={24} />
         </Link>
-        <Link href="/perfil" tabIndex={0} className="p-3 hover:bg-white/10 rounded-full focus:bg-brand-cyan focus:text-black outline-none transition-all" aria-label="Perfil">
-          <span className="text-[24px] block">👤</span>
+        <Link 
+          href="/perfil" 
+          tabIndex={0} 
+          className={`p-3 hover:bg-white/10 rounded-full outline-none transition-all ${pathname === '/perfil' ? 'text-brand-cyan' : 'text-white'}`} 
+          aria-label="Perfil"
+        >
+          <User size={24} />
         </Link>
       </div>
     </nav>

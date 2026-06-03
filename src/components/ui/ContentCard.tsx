@@ -41,7 +41,7 @@ export function ContentCard({
   return (
     <Link 
       href={detailHref}
-      className="group relative block aspect-[2/3] w-full transition-all duration-300 hover:scale-110 focus:scale-110 z-0 hover:z-50 focus:z-50 focus:outline-none focus:ring-4 focus:ring-brand-cyan rounded-xl shadow-2xl shadow-black/90"
+      className="group relative block aspect-[2/3] w-full transition-all duration-300 z-0 hover:z-50 focus:z-50 focus:outline-none focus:ring-4 focus:ring-brand-cyan rounded-xl shadow-2xl shadow-black/90"
     >
       <div className="absolute inset-0 overflow-hidden rounded-xl bg-neutral-900">
         {poster ? (
@@ -50,7 +50,7 @@ export function ContentCard({
             alt={title}
             fill
             sizes="(max-width: 768px) 50vw, 20vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-110"
+            className="object-cover transition-transform duration-500"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-4xl bg-neutral-800">🎬</div>

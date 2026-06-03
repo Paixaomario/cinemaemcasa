@@ -877,7 +877,7 @@ function SeriesContent() {
                       src={imageUrl} 
                       alt={ep.titulo || ''} 
                       fill 
-                      className="object-cover group-hover:scale-110 transition-transform duration-500" 
+                      className="object-cover transition-transform duration-500" 
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center text-4xl">📺</div>

@@ -17,16 +17,14 @@ body {
 .using-keyboard *:focus {
   outline: none !important;
   box-shadow: 0 0 0 4px var(--brand-cyan, #00ADEF) !important;
-  transform: scale(1.05);
   z-index: 100 !important;
   /* Otimizado: Anima apenas o necessário para evitar lag em TVs */
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease-in-out;
+  transition: box-shadow 0.2s ease-in-out;
   will-change: transform;
 }
 
 /* Ajuste para elementos com escala nativa no hover/focus */
 .group:focus-visible {
-  transform: scale(1.1) !important;
   border-radius: 12px;
 }
 

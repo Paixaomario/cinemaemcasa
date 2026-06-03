@@ -47,14 +47,14 @@ export function MobileNavBar() {
                     className={`
                       relative p-2 rounded-xl transition-all duration-300
                       ${isActive 
-                        ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.3)]' 
-                        : 'text-neutral-400 group-hover:text-neutral-200 group-hover:bg-white/5'
+                        ? 'bg-brand-cyan/20 text-brand-cyan shadow-[0_0_20px_rgba(0,173,239,0.3)]' 
+                        : 'text-white group-hover:text-neutral-200 group-hover:bg-white/5'
                       }
                     `}
                   >
                     {/* Efeito de brilho no ícone ativo */}
                     {isActive && (
-                      <div className="absolute inset-0 bg-cyan-400/20 blur-xl rounded-xl" />
+                      <div className="absolute inset-0 bg-brand-cyan/20 blur-xl rounded-xl" />
                     )}
                     <Icon className="relative w-5 h-5" strokeWidth={2.5} />
                   </div>
@@ -63,7 +63,7 @@ export function MobileNavBar() {
                   <span
                     className={`
                       text-[9px] sm:text-[10px] font-medium tracking-wide transition-all duration-300 whitespace-nowrap
-                      ${isActive ? 'text-cyan-400 font-semibold' : 'text-neutral-500 group-hover:text-neutral-300'}
+                      ${isActive ? 'text-brand-cyan font-semibold' : 'text-white group-hover:text-neutral-300'}
                     `}
                   >
                     {item.name}

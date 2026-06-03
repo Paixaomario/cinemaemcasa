@@ -58,7 +58,7 @@ export function ContinueWatchingSection({ items }: ContinueWatchingSectionProps)
                     src={imageUrl} 
                     alt={item.titulo || ''} 
                     fill 
-                    className="object-cover transition-transform group-hover:scale-105"
+                    className="object-cover transition-transform"
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full text-4xl bg-neutral-800">🎬</div>

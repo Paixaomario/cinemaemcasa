@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useAuth } from './SupabaseProvider'
+import { Home, Film, Tv, Search, User } from 'lucide-react'
 
 function NavContent() {
   const pathname = usePathname()
@@ -14,11 +15,11 @@ function NavContent() {
 
   // Visível em todas as páginas, o player usará Z-index superior para cobrir
   const navItems = [
-    { href: '/', label: 'Home', icon: '🏠' },
-    { href: '/filmes', label: 'Filmes', icon: '🎬' },
-    { href: '/series', label: 'Séries', icon: '📺' },
-    { href: '/search', label: 'Localizar', icon: '🔍' },
-    { href: user ? '/perfil' : '/login', label: 'Perfil', icon: '👤' },
+    { href: '/', label: 'Home', icon: Home },
+    { href: '/filmes', label: 'Filmes', icon: Film },
+    { href: '/series', label: 'Séries', icon: Tv },
+    { href: '/search', label: 'Localizar', icon: Search },
+    { href: user ? '/perfil' : '/login', label: 'Perfil', icon: User },
   ]
 
   return (
@@ -29,7 +30,7 @@ function NavContent() {
             {navItems.map((item) => (
               <Link key={item.href} href={item.href} className={`nav-item ${pathname === item.href ? 'active' : ''}`}>
                 <div className="nav-item-inner">
-                  <span className="icon">{item.icon}</span>
+                  <item.icon className="icon" size={22} />
                   <span className="legend">{item.label}</span>
                 </div>
               </Link>
@@ -115,7 +116,7 @@ function NavContent() {
           align-items: center;
           justify-content: center;
           text-decoration: none;
-          color: rgba(255, 255, 255, 0.5);
+          color: #ffffff;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           gap: 2px;
         }

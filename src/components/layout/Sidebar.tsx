@@ -47,7 +47,7 @@ export function Sidebar() {
                 flex items-center rounded-lg transition-all duration-200 outline-none h-[36px] lg:h-[51px] 2xl:h-[56px] w-full shrink-0
                 ${isActive 
                   ? 'bg-brand-cyan/15 text-brand-cyan' 
-                  : 'text-neutral-400 hover:bg-white/10 hover:text-white focus:bg-brand-cyan focus:text-black focus:scale-110'
+                  : 'text-white hover:bg-white/10 hover:text-white focus:bg-brand-cyan focus:text-black focus:scale-110'
                 }
               `}
             >
