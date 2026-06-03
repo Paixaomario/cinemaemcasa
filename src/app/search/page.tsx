@@ -411,7 +411,7 @@ export default function SearchPage() {
               <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter mb-8 flex items-center gap-3">
                 <Sparkles className="text-brand-cyan w-6 h-6" /> Recomendados para você
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 tv-grid-layout gap-4 sm:gap-6">
                 {suggestions.map((item) => (
                   <div key={item.id} onClick={() => handleResultClick(item)}>
                     <ContentCard item={{
@@ -439,7 +439,7 @@ export default function SearchPage() {
             </div>
 
             {results.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 tv-grid-layout gap-4 md:gap-8">
                 {results.map((item) => (
                   <div key={item.id} onClick={() => handleResultClick(item)}>
                     <ContentCard item={{

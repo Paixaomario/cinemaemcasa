@@ -63,7 +63,26 @@ body {
 
 .scroll-row > * {
   flex-shrink: 0;
-  width: clamp(218px, 22vw, 390px); /* Restaurado tamanho original para Desktop/TV */
+}
+
+/* Configuração para Smart TV até 65 polegadas (5 capas por linha) */
+@media (min-width: 1024px) {
+  .scroll-row > * {
+    width: calc((100% - (4 * 1.5rem)) / 5.4) !important; /* Fits 5 items + peek */
+  }
+  .tv-grid-layout {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Configuração para Smart TV 70+ polegadas e Telas Gigantes (7 capas por linha) */
+@media (min-width: 2500px) {
+  .scroll-row > * {
+    width: calc((100% - (6 * 1.5rem)) / 7.4) !important; /* Fits 7 items + peek */
+  }
+  .tv-grid-layout {
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  }
 }
 
 /* Regras de Responsividade Crítica para Mobile */
@@ -238,7 +257,7 @@ header, .mobile-nav-bar {
 
   /* Fix: Margem rígida para garantir que nenhum conteúdo (Home, Filmes, Perfil) seja coberto */
   main {
-    margin-left: 75px !important; 
+    margin-left: 100px !important; 
     padding-top: 0 !important;
     transition: none; /* Remove transição no main para evitar 'pulos' em CPUs lentas de TV */
   }
@@ -246,7 +265,7 @@ header, .mobile-nav-bar {
   /* O conteúdo permanece estático enquanto a barra flutua por cima ao abrir */
   body:has(aside:hover) main,
   body:has(aside:focus-within) main {
-    margin-left: 75px !important;
+    margin-left: 100px !important;
   }
 
   /* GARANTIMOS a exibição da Sidebar lateral */

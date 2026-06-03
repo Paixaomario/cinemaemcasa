@@ -945,7 +945,7 @@ function SeriesContent() {
         {filteredRecommendations.length > 0 && (
           <section className="mb-32">
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-8 border-l-4 border-brand-cyan pl-4">Você também pode gostar</h2>
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 tv-grid-layout gap-4 sm:gap-6">
               {filteredRecommendations.slice(0, 6).map((item: any) => (
                 <ContentCard 
                   key={item.id} 
