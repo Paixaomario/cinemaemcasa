@@ -35,7 +35,7 @@ function NavContent() {
 
           {/* Logo Central */}
           <div className="logo-center">
-            <Image src="/logo.png" alt="CineCasa" width={48} height={48} objectFit="contain" priority />
+            <Image src="/logo.png" alt="CineCasa" width={56} height={56} objectFit="contain" priority />
           </div>
 
           {/* Lado Direito */}
@@ -100,15 +100,15 @@ function NavContent() {
         .icon { font-size: 26px; }
 
         .logo-center {
-          width: 68px;
-          height: 68px;
+          width: 76px;
+          height: 76px;
           background: #000;
           border: 2px solid #00ADEF;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          margin: -45px 10px 0 10px;
+          margin: -50px 10px 0 10px;
           box-shadow: 0 8px 20px rgba(0, 173, 239, 0.4);
           overflow: hidden;
           flex-shrink: 0;
