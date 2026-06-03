@@ -29,14 +29,13 @@ function NavContent() {
             {navItems.slice(0, 3).map((item) => (
               <Link key={item.href} href={item.href} className={`nav-item ${pathname === item.href ? 'active' : ''}`}>
                 <span className="icon">{item.icon}</span>
-                <span className="legend">{item.label}</span>
               </Link>
             ))}
           </div>
 
           {/* Logo Central */}
           <div className="logo-center">
-            <Image src="/logo.png" alt="CineCasa" width={32} height={32} objectFit="contain" priority />
+            <Image src="/logo.png" alt="CineCasa" width={48} height={48} objectFit="contain" priority />
           </div>
 
           {/* Lado Direito */}
@@ -44,7 +43,6 @@ function NavContent() {
             {navItems.slice(3).map((item) => (
               <Link key={item.href} href={item.href} className={`nav-item ${pathname === item.href ? 'active' : ''}`}>
                 <span className="icon">{item.icon}</span>
-                <span className="legend">{item.label}</span>
               </Link>
             ))}
           </div>
@@ -99,19 +97,18 @@ function NavContent() {
           transform: translateY(-3px);
         }
 
-        .icon { font-size: 20px; margin-bottom: 2px; }
-        .legend { font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.8px; }
+        .icon { font-size: 26px; }
 
         .logo-center {
-          width: 58px;
-          height: 58px;
+          width: 68px;
+          height: 68px;
           background: #000;
           border: 2px solid #00ADEF;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          margin: -40px 10px 0 10px;
+          margin: -45px 10px 0 10px;
           box-shadow: 0 8px 20px rgba(0, 173, 239, 0.4);
           overflow: hidden;
           flex-shrink: 0;
