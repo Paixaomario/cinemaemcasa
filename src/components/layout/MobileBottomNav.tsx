@@ -107,10 +107,11 @@ function NavContent() {
         }
 
         .nav-item {
-          display: flex;
-          flex-direction: column;
+          display: flex !important;
+          flex-direction: column !important;
           align-items: center;
           justify-content: center;
+          flex: 1;
           text-decoration: none;
           color: rgba(255, 255, 255, 0.5);
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -128,7 +129,9 @@ function NavContent() {
           text-transform: uppercase; 
           letter-spacing: 0.3px;
           opacity: 0.8;
-          display: block;
+          display: block !important;
+          width: 100%;
+          white-space: nowrap;
           text-align: center;
         }
 

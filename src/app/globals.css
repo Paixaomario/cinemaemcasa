@@ -307,3 +307,61 @@ a[href*="/series"]:not(.group) {
   animation: rainbow-glow 3s linear infinite !important;
   border-width: 2px !important;
 }
+
+/* Efeito de Vidro Quebrado para Terror */
+.glass-crack-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0 L30 30 M100 100 L70 70 M100 0 L70 30 M0 100 L30 70 M50 0 L50 20 M50 100 L50 80 M0 50 L20 50 M100 50 L80 50 M30 30 L70 30 L70 70 L30 70 Z' stroke='white' stroke-width='0.5' fill='none' opacity='0.6'/%3E%3Cpath d='M30 30 L10 10 M70 30 L90 10 M70 70 L90 90 M30 70 L10 90' stroke='white' stroke-width='0.3' fill='none' opacity='0.4'/%3E%3C/svg%3E");
+  background-size: cover;
+  transition: opacity 0.2s ease-in;
+  filter: drop-shadow(0 0 2px rgba(255,255,255,0.3));
+}
+
+.group:hover .glass-crack-overlay,
+.group:focus .glass-crack-overlay {
+  opacity: 1;
+  animation: glass-shatter-impact 0.3s ease-out forwards;
+}
+
+@keyframes glass-shatter-impact {
+  0% { transform: scale(1); filter: brightness(2) contrast(2); }
+  25% { transform: scale(1.02) rotate(1deg); }
+  50% { transform: scale(0.98) rotate(-1deg); }
+  75% { transform: scale(1.01); filter: brightness(1.2) contrast(1.2); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* Efeito de Névoa/Fumaça para Mistério e Ficção */
+.fog-mist-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 35;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.2) 0%, transparent 70%);
+  filter: blur(15px);
+  mix-blend-mode: screen;
+  transition: opacity 0.4s ease-in-out;
+}
+
+.group:hover .fog-mist-overlay,
+.group:focus .fog-mist-overlay {
+  opacity: 0.7;
+  animation: fog-drift 4s infinite alternate ease-in-out;
+}
+
+@keyframes fog-drift {
+  0% { transform: scale(1) translateX(-5%) translateY(5%); opacity: 0.4; }
+  50% { transform: scale(1.2) translateX(5%) translateY(-5%); opacity: 0.8; }
+  100% { transform: scale(1.1) translateX(-2%) translateY(2%); opacity: 0.6; }
+}
+
+/* Garantia de toque no menu mobile */
+.mobile-bottom-nav * {
+  pointer-events: auto !important;
+  touch-action: manipulation;
+}

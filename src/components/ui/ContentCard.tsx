@@ -17,6 +17,17 @@ export function ContentCard({
   const rating = item.rating || item.vote_average
   const year = item.ano || item.year || (item.release_date ? item.release_date.slice(0, 4) : '')
   
+  // Detecta se é conteúdo de Terror/Horror para o efeito de vidro quebrado
+  const genres = String(item.genero || item.genre || '').toLowerCase()
+  const isHorror = genres.includes('terror') || 
+                   genres.includes('horror') || 
+                   (item.genre_ids?.includes(27)) // ID padrão TMDB para Horror
+
+  // Detecta Mistério ou Ficção para efeito de névoa
+  const isMistOrFiccao = genres.includes('mistério') || 
+                         genres.includes('ficção') ||
+                         (item.genre_ids?.includes(9648) || item.genre_ids?.includes(878))
+
   // Detecta se é uma série (tabela 'series' usa id_n conforme sua migration)
   const isSeries = !!item.id_n
   const id = isSeries ? item.id_n : item.id
@@ -44,6 +55,12 @@ export function ContentCard({
         ) : (
           <div className="flex h-full items-center justify-center text-4xl bg-neutral-800">🎬</div>
         )}
+
+        {/* Efeito de Vidro Quebrado (Apenas para Terror) */}
+        {isHorror && <div className="glass-crack-overlay" />}
+
+        {/* Efeito de Névoa (Apenas para Mistério ou Ficção) */}
+        {isMistOrFiccao && <div className="fog-mist-overlay" />}
 
         {/* Barra de progresso opcional (ex: seção Continuar Assistindo) */}
         {showProgress && progressPercent > 0 && (
