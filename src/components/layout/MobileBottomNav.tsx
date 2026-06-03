@@ -57,6 +57,36 @@ function NavContent() {
             inset 0 1px 1px rgba(255, 255, 255, 0.1);
           padding: 12px 10px;
           transform: perspective(1000px) rotateX(2deg);
+          overflow: hidden;
+        }
+
+        /* Efeito de Reflexo Glossy (Vidro Polido) */
+        .mobile-bottom-nav::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: -150%;
+          width: 80%;
+          height: 100%;
+          background: linear-gradient(
+            120deg, 
+            transparent, 
+            rgba(255, 255, 255, 0.1) 20%, 
+            rgba(255, 255, 255, 0.3) 50%, 
+            rgba(255, 255, 255, 0.1) 80%, 
+            transparent
+          );
+          animation: shine 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+          animation-delay: 0.8s;
+          pointer-events: none;
+          z-index: 1;
+        }
+
+        @keyframes shine {
+          0% { left: -150%; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { left: 150%; opacity: 0; }
         }
 
         .nav-wrapper {
@@ -64,6 +94,8 @@ function NavContent() {
           justify-content: space-between;
           align-items: center;
           width: 100%;
+          position: relative;
+          z-index: 2;
         }
 
         .nav-group {
