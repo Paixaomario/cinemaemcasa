@@ -36,7 +36,7 @@ export function ContinueWatchingSection({ items }: ContinueWatchingSectionProps)
         Continuar Assistindo
       </h2>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
         {items.map((item) => {
           const isSeries = (item.type === 'serie' || item.type === 'series')
           const posterPath = item.poster || item.backdrop

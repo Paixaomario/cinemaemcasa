@@ -63,16 +63,25 @@ body {
   margin: -60px 0;
 }
 
-/* Prevenção de quebra em telas minúsculas */
-@media (max-width: 400px) {
-  .grid-cols-2 {
-    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+/* Regras de Responsividade Crítica para Mobile */
+@media (max-width: 1023px) {
+  .scroll-row > * {
+    width: calc(33.33% - 1rem); /* Aproximadamente 3 itens por linha com gap */
+    min-width: 110px;
   }
 }
 
-.scroll-row > * {
-  flex-shrink: 0;
-  width: clamp(218px, 22vw, 390px); /* Tamanho reduzido em 22% para melhor equilíbrio visual */
+/* Prevenção de quebra em telas pequenas e minúsculas */
+@media (max-width: 420px) {
+  .grid-cols-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 300px) {
+  .grid-cols-3, .grid-cols-2 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
 }
 
 /* Breakpoint para Telas Gigantes (4K/8K) */
@@ -325,7 +334,9 @@ a[href*="/series"]:not(.group) {
 }
 
 .group:hover .glass-crack-overlay,
-.group:focus .glass-crack-overlay {
+.group:focus .glass-crack-overlay,
+.group:focus-within .glass-crack-overlay,
+.group:active .glass-crack-overlay {
   opacity: 1;
   animation: glass-shatter-impact 0.3s ease-out forwards;
 }
@@ -352,7 +363,9 @@ a[href*="/series"]:not(.group) {
 }
 
 .group:hover .fog-mist-overlay,
-.group:focus .fog-mist-overlay {
+.group:focus .fog-mist-overlay,
+.group:focus-within .fog-mist-overlay,
+.group:active .fog-mist-overlay {
   opacity: 0.7;
   animation: fog-drift 4s infinite alternate ease-in-out;
 }

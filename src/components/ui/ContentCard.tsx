@@ -18,7 +18,7 @@ export function ContentCard({
   const year = item.ano || item.year || (item.release_date ? item.release_date.slice(0, 4) : '')
   
   // Detecta se é conteúdo de Terror/Horror para o efeito de vidro quebrado
-  const genres = String(item.genero || item.genre || '').toLowerCase()
+  const genres = String(item.genero || item.genre || item.category || '').toLowerCase()
   const isHorror = genres.includes('terror') || 
                    genres.includes('horror') || 
                    (item.genre_ids?.includes(27)) // ID padrão TMDB para Horror

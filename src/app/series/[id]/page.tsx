@@ -45,6 +45,26 @@ function SeriesContent() {
   const [savedProgress, setSavedProgress] = useState<number>(0)
   const [showResumeModal, setShowResumeModal] = useState(false)
 
+  // Lógica de Banner Imersivo e Trailer Auto-Play
+  const [canAutoPlayTrailer, setCanAutoPlayTrailer] = useState(false)
+  const [showBannerTrailer, setShowBannerTrailer] = useState(false)
+
+  useEffect(() => {
+    const checkNetwork = () => {
+      const conn = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+      if (conn) {
+        const isGoodConnection = !conn.saveData && (conn.type === 'wifi' || ['4g', '5g'].includes(conn.effectiveType));
+        setCanAutoPlayTrailer(isGoodConnection);
+      } else {
+        setCanAutoPlayTrailer(true);
+      }
+    };
+    checkNetwork();
+
+    const timer = setTimeout(() => setShowBannerTrailer(true), 3000);
+    return () => clearTimeout(timer);
+  }, [id]);
+
   // Função para carregar progresso salvo do episódio
   const handleEpisodeClick = useCallback(async (episode: any) => {
     console.log('handleEpisodeClick chamado:', { user: user?.id, contentUuid, episodeId: episode.id_n || episode.id })
@@ -708,19 +728,29 @@ function SeriesContent() {
     <main className="min-h-screen bg-black text-white relative">
       <Navbar />
 
-      {/* Banner de Fundo */}
-      <div className="absolute top-0 left-0 right-0 h-[75vh] sm:h-[85vh] md:h-[100vh] w-full">
-        {backdrop && (
-          <Image
-            src={backdrop}
-            alt={title}
-            fill
-            className="object-cover object-top sm:object-center opacity-60 sm:opacity-40"
-            priority
-            sizes="100vw"
-          />
+      {/* Banner Imersivo (Hero Style) */}
+      <div className="absolute top-0 left-0 right-0 h-[75vh] sm:h-[85vh] md:h-[100vh] w-full overflow-hidden">
+        {showBannerTrailer && canAutoPlayTrailer && series.trailer ? (
+          <div className="absolute inset-0 w-full h-full scale-125">
+             <iframe
+               src={`https://www.youtube.com/embed/${series.trailer.split('v=')[1] || series.trailer.split('/').pop()}?autoplay=1&mute=1&controls=0&loop=1&playlist=${series.trailer.split('v=')[1] || series.trailer.split('/').pop()}&showinfo=0&modestbranding=1&iv_load_policy=3&rel=0`}
+               className="w-full h-full pointer-events-none opacity-60"
+               allow="autoplay"
+             />
+          </div>
+        ) : (
+          backdrop && (
+            <Image
+              src={backdrop}
+              alt={title}
+              fill
+              className="object-cover object-top sm:object-center opacity-60 sm:opacity-40 transition-opacity duration-1000"
+              priority
+              sizes="100vw"
+            />
+          )
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-transparent" />
       </div>
 
@@ -915,7 +945,7 @@ function SeriesContent() {
         {filteredRecommendations.length > 0 && (
           <section className="mb-32">
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-8 border-l-4 border-brand-cyan pl-4">Você também pode gostar</h2>
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-6">
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-4 sm:gap-6">
               {filteredRecommendations.slice(0, 6).map((item: any) => (
                 <ContentCard 
                   key={item.id} 
