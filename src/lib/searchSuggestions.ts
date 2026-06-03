@@ -48,7 +48,7 @@ const CACHE_DURATION = 60 * 60 * 1000 // 1 hora
 /**
  * Fuzzy search para encontrar correspondências próximas
  */
-function fuzzyMatch(input: string, target: string): number {
+export function fuzzyMatch(input: string, target: string): number {
   if (!input || !target) return 0
   const inputStr = String(input)
   const targetStr = String(target)

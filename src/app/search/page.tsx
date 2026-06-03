@@ -7,6 +7,7 @@ import { Search, Mic, X, Trash2, History, Sparkles, ChevronDown, Flame } from 'l
 import { useVoiceSearch } from '@/hooks/useVoiceSearch'
 import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
 import Image from 'next/image'
+import type { SuggestionItem } from '@/lib/searchSuggestions'
 
 export default function SearchPage() {
   const { user } = useAuth()

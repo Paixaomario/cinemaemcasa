@@ -718,7 +718,6 @@ function SeriesContent() {
             className="object-cover object-center opacity-40"
             priority
             sizes="100vw"
-            unoptimized
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />

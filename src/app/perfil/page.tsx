@@ -678,7 +678,6 @@ function Section({ title, items, color, emptyMsg, showDelete = false, onDelete, 
                     alt={item.titulo || ''}
                     fill
                     className="object-cover transition-transform group-hover:scale-110"
-                    unoptimized
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full text-5xl">🎬</div>
