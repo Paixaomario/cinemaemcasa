@@ -196,15 +196,15 @@ header, .mobile-nav-bar {
   }
 }
 
-/* Ajustes para Smart TVs e Desktop */
-@media (min-width: 1024px) {
+/* Ajustes para Smart TVs e Desktop (Breakpoint reduzido para 768px) */
+@media (min-width: 768px) {
   /* Esconde a barra inferior em TVs/Desktop para não duplicar menus */
   .mobile-bottom-nav, .mobile-nav-bar, nav.fixed.bottom-0 {
     display: none !important;
     visibility: hidden !important;
   }
 
-  /* OCULTAMOS a Navbar Superior para priorizar a Sidebar Lateral Premium */
+  /* Oculta Navbar Superior para total imersão vertical */
   header, nav.fixed.top-0, [class*="Navbar"] {
     display: none !important;
     visibility: hidden !important;
@@ -227,10 +227,10 @@ header, .mobile-nav-bar {
   aside, .sidebar-container {
     display: flex !important;
     visibility: visible !important;
-    /* Restaurado: Efeito Vidro Premium */
-    background-color: rgba(15, 15, 15, 0.7) !important;
-    backdrop-filter: blur(15px) !important;
-    -webkit-backdrop-filter: blur(15px) !important;
+    /* Otimizado para Smart TVs (Zero Lag): Fundo sólido ou quase sólido */
+    background-color: #0F0F0F !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
     box-shadow: 10px 0 30px rgba(0,0,0,0.5);
   }

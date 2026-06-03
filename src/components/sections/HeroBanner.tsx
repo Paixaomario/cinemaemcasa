@@ -178,12 +178,12 @@ export function HeroBanner({ type }: HeroBannerProps = {}) {
   const youtubeId = currentBannerItem.trailer ? getYouTubeId(currentBannerItem.trailer) : null;
 
   return (
-    <section className="relative w-[calc(100%+75px)] -ml-[75px] h-screen overflow-hidden bg-black">
+    <section className="relative w-[calc(100%+75px)] -ml-[75px] h-screen overflow-hidden bg-black z-0">
       {/* Trailer em Segundo Plano */}
       {showTrailer && youtubeId && (
-        <div className="absolute inset-0 z-0 scale-[1.3] animate-in fade-in duration-1000">
+        <div className="absolute inset-0 z-0 scale-[1.15] animate-in fade-in duration-1000">
           <iframe
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=${isMutedByScroll ? 1 : 0}&controls=0&loop=1&playlist=${youtubeId}&rel=0&modestbranding=1&enablejsapi=1&iv_load_policy=3&disablekb=1&fs=0&autohide=1`}
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=${isMutedByScroll ? 1 : 0}&controls=0&loop=1&playlist=${youtubeId}&rel=0&modestbranding=1&enablejsapi=1&iv_load_policy=3&disablekb=1&fs=0&autohide=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
             className="w-full h-full pointer-events-none"
             allow="autoplay; encrypted-media"
             style={{ border: 'none' }}

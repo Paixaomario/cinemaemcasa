@@ -18,22 +18,18 @@
         }
     </style>
     <script>
-        // Inicialização robusta para Smart TVs
         function startApp() {
-            // Garante que o histórico da TV seja limpo antes do redirect
             if (window.webOS && window.webOS.app && window.webOS.app.setWindowProperties) {
                 window.webOS.app.setWindowProperties({ "keepAlive": true });
             }
-            
-            // Redirecionamento com fallback para navegadores antigos de TV
-            setTimeout(function() {
-                window.location.href = "https://cinemaemcasa.vercel.app";
-            }, 100);
+            // Redirecionamento direto e imediato para a versão live
+            window.location.replace("https://cinemaemcasa.vercel.app");
         }
-        window.onload = startApp;
+        // Inicia o processo imediatamente sem esperar o carregamento de imagens pesadas
+        startApp();
     </script>
 </head>
 <body>
-    <div style="font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase;">Iniciando Cinema em Casa...</div>
+    <div style="font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase; color: #00ADEF;">Iniciando Cinema em Casa...</div>
 </body>
 </html>
