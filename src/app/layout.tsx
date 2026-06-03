@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { CommandReceiverProvider } from '@/components/layout/CommandReceiverProvider'
 import { Inter, Montserrat } from 'next/font/google'
+import { VisualPreferencesProvider } from '@/components/layout/VisualPreferencesProvider'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const montserrat = Montserrat({ 
@@ -33,11 +34,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" className={`${inter.variable} ${montserrat.variable}`}>
       <body className="font-sans">
         <SupabaseProvider>
-          <CommandReceiverProvider>
-            <Sidebar />
-            <main className="min-h-screen">{children}</main>
-            <MobileBottomNav />
-          </CommandReceiverProvider>
+          <VisualPreferencesProvider>
+            <CommandReceiverProvider>
+              <Sidebar />
+              <main className="min-h-screen">{children}</main>
+              <MobileBottomNav />
+            </CommandReceiverProvider>
+          </VisualPreferencesProvider>
         </SupabaseProvider>
       </body>
     </html>

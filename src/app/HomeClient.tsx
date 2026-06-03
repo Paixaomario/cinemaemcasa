@@ -52,6 +52,7 @@ export function HomeClient() {
   const [sectionsData, setSectionsData] = useState<Record<string, any[]>>({})
   const [continueWatching, setContinueWatching] = useState<any[]>([])
   const [pageLoading, setPageLoading] = useState(true)
+  const [resumeItem, setResumeItem] = useState<any>(null)
 
   // Ativa navegação por controle remoto na Home
   useSpatialNavigation()
@@ -163,16 +164,16 @@ export function HomeClient() {
                   if (typeof duration === 'number') {
                     durationInSeconds = duration
                   } else if (typeof duration === 'string') {
+                    const cleanedDuration = duration.toLowerCase().trim()
                     try {
-                      // Formato "2h 21min" ou "107" (minutos)
-                      if (duration.includes('h') && duration.includes('min')) {
-                        const parts = duration.split('h')
+                      if (cleanedDuration.includes('h')) {
+                        const parts = cleanedDuration.split('h')
                         const hours = parseInt(parts[0]) || 0
-                        const mins = parseInt(parts[1]?.replace('min', '').trim()) || 0
-                        durationInSeconds = hours * 3600 + mins * 60
-                      } else if (!isNaN(parseInt(duration))) {
-                        // Assume que são minutos
-                        durationInSeconds = parseInt(duration) * 60
+                        const mins = parseInt(parts[1]?.replace('min', '')) || 0
+                        durationInSeconds = (hours * 3600) + (mins * 60)
+                      } else {
+                        const mins = parseInt(cleanedDuration)
+                        if (!isNaN(mins)) durationInSeconds = mins * 60
                       }
                     } catch (error) {
                       console.error('Erro ao fazer parsing de duration:', error)
@@ -251,19 +252,10 @@ export function HomeClient() {
       setSections(visibleSections)
 
       // 3. Carrega os itens para cada seção visível
-      const dataMap: Record<string, any[]> = {}
+      setPageLoading(false) // Mostra a estrutura da página imediatamente
 
-      // Obtém o cache atual de IDs exibidos
-      const displayedIds = getDisplayedCache()
-
-      // Sincroniza o cache local com os itens que já sabemos que serão exibidos
-      cwItems.forEach(item => {
-        if (item.id) {
-          displayedIds.add(String(item.id))
-        }
-      })
-
-      await Promise.all(visibleSections.map(async (sec) => {
+      visibleSections.forEach(async (sec) => {
+        const displayedIds = getDisplayedCache()
         let items: any[] = []
 
         // Seção especial: Indicados por IA
@@ -271,14 +263,15 @@ export function HomeClient() {
           if (user) {
             const userIsNew = await isNewUser(user.id)
             if (userIsNew) {
-              // Novo usuário: mostra conteúdo em alta
               items = await getTrendingContent(sec.limite, isChild)
             } else {
-              // Usuário existente: recomendações personalizadas
-              items = await getPersonalizedRecommendations(user.id, sec.limite, displayedIds)
+              // Em 3G, buscamos recomendações em paralelo para não travar o resto
+              getPersonalizedRecommendations(user.id, sec.limite, displayedIds).then(recItems => {
+                setSectionsData(prev => ({ ...prev, [sec.id]: recItems }))
+              })
+              return
             }
           } else {
-            // Não logado: mostra conteúdo em alta
             items = await getTrendingContent(sec.limite, isChild)
           }
         } else {
@@ -305,33 +298,101 @@ export function HomeClient() {
         // Adiciona IDs ao cache de exibidos
         const newIds = items.map((item: any) => String(item.id)).filter(Boolean)
         addBatchToDisplayedCache(newIds)
-        newIds.forEach(id => displayedIds.add(id))
-        
-        dataMap[sec.id] = items
-      }))
 
-      setSectionsData(dataMap)
-      setPageLoading(false)
+        setSectionsData(prev => ({ ...prev, [sec.id]: items }))
+      })
     }
 
     loadHome()
   }, [user])
 
-  if (loading || pageLoading) return <div className="min-h-screen bg-black animate-pulse" />
+  // Mostra skeleton real em vez de um pulso vazio
+  if (loading) return <div className="min-h-screen bg-black" />
 
   return (
     <div className="flex flex-col gap-16 pb-32">
       {/* Banner de Destaque */}
       <HeroBanner />
 
+      {/* Popup de Continuar ou Reiniciar */}
+      {resumeItem && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-[#1A1A1F] p-8 rounded-3xl border border-white/10 shadow-2xl max-w-md w-full mx-4">
+            <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Continuar assistindo?</h3>
+            <p className="text-neutral-400 mb-8 font-medium">Você já iniciou este conteúdo. Como deseja prosseguir?</p>
+            
+            <div className="flex flex-col gap-4">
+              <button
+                autoFocus
+                tabIndex={0}
+                onClick={() => {
+                  const id = resumeItem.id_n || resumeItem.id;
+                  router.push(`/assistir/${id}?t=${resumeItem.last_position}`);
+                  setResumeItem(null);
+                }}
+                className="w-full py-4 bg-[#00ADEF] text-white font-bold uppercase tracking-widest rounded-xl hover:scale-105 transition-transform outline-none focus:ring-4 focus:ring-white/20"
+              >
+                Continuar de onde parei
+              </button>
+              <button
+                tabIndex={0}
+                onClick={() => {
+                  const id = resumeItem.id_n || resumeItem.id;
+                  router.push(`/assistir/${id}?t=0`);
+                  setResumeItem(null);
+                }}
+                className="w-full py-4 bg-white/5 text-white font-bold uppercase tracking-widest rounded-xl border border-white/10 hover:bg-white/10 transition-all outline-none focus:ring-4 focus:ring-white/20"
+              >
+                Reiniciar do início
+              </button>
+              <button
+                tabIndex={0}
+                onClick={() => setResumeItem(null)}
+                className="mt-2 text-neutral-500 hover:text-white transition-colors text-sm font-bold uppercase tracking-widest"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Continuar Assistindo */}
       {continueWatching.length > 0 && (
-        <ContentRow title="Continuar Assistindo" items={continueWatching} showProgress={true} />
+        <div onClick={(e) => {
+          // Intercepta cliques para mostrar o modal em vez de ir para detalhes
+          const target = (e.target as HTMLElement).closest('a');
+          if (target) {
+            const href = target.getAttribute('href');
+            const itemId = href?.split('/').pop();
+            const item = continueWatching.find(i => String(i.id_n || i.id) === itemId);
+            if (item) {
+              e.preventDefault();
+              setResumeItem(item);
+            }
+          }
+        }}>
+          <ContentRow title="Continuar Assistindo" items={continueWatching} showProgress={true} />
+        </div>
       )}
 
       {sections.map(sec => {
         const items = sectionsData[sec.id] || []
-        if (items.length === 0 || sec.layout === 'featured') return null
+        
+        // Seção em carregamento (Skeleton Row para 3G/4G)
+        if (items.length === 0) {
+          if (sec.layout === 'featured') return null
+          return (
+            <section key={sec.id} className="px-6 md:px-16 animate-pulse">
+              <div className="h-8 w-48 bg-neutral-800 rounded mb-8" />
+              <div className="flex gap-6 overflow-hidden">
+                {[1, 2, 3, 4, 5, 6].map(i => (
+                  <div key={i} className="aspect-[2/3] w-[200px] bg-neutral-900 rounded-xl flex-shrink-0" />
+                ))}
+              </div>
+            </section>
+          )
+        }
 
         if (sec.layout === 'grid') {
           return (
@@ -340,7 +401,7 @@ export function HomeClient() {
                 {sec.titulo}
               </h2>
               <div 
-                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-8 focus-within:ring-2 focus-within:ring-brand-cyan/20 rounded-xl p-2"
+                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-6 md:gap-8 focus-within:ring-2 focus-within:ring-brand-cyan/20 rounded-xl p-2"
                 tabIndex={-1}
               >
                 {items.map(item => <ContentCard key={item.id} item={item} />)}

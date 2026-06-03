@@ -17,6 +17,7 @@ export interface SuggestionItem {
   text: string
   type: 'history' | 'category' | 'popular' | 'prediction'
   icon?: string
+  poster?: string | null
   metadata?: {
     resultCount?: number
     trending?: boolean
@@ -158,49 +159,27 @@ async function fetchPredictions(
   try {
     const sb = createClient()
     
-    // Buscar filmes correspondentes
-    const { data: movies } = await sb
-      .from('cinema')
-      .select('id, titulo')
+    // Busca unificada no catálogo de pesquisa para performance profissional
+    const { data: matches } = await sb
+      .from('search_catalog')
+      .select('source_id, source_table, titulo, poster, tipo')
       .ilike('titulo', `${input}%`)
-      .limit(limit / 2)
-
-    // Buscar séries correspondentes
-    const { data: series } = await sb
-      .from('series')
-      .select('id_n AS id, titulo')
-      .ilike('titulo', `${input}%`)
-      .limit(limit / 2)
+      .limit(limit)
 
     const predictions: SuggestionItem[] = []
 
-    // Adicionar filmes como previsões
-    if (movies) {
-      predictions.push(
-        ...movies.map((m: any) => ({
-          id: `prediction-movie-${m.id}`,
-          text: m.titulo,
-          type: 'prediction' as const,
-          icon: '🎬',
-          metadata: { resultCount: 1 }
-        }))
-      )
+    if (matches) {
+      return matches.map((item: any) => ({
+        id: `prediction-${item.source_table}-${item.source_id}`,
+        text: item.titulo,
+        type: 'prediction' as const,
+        poster: item.poster,
+        icon: item.tipo === 'movie' ? '🎬' : '📺',
+        metadata: { resultCount: 1 }
+      }))
     }
 
-    // Adicionar séries como previsões
-    if (series) {
-      predictions.push(
-        ...series.map((s: any) => ({
-          id: `prediction-series-${s.id}`,
-          text: s.titulo,
-          type: 'prediction' as const,
-          icon: '📺',
-          metadata: { resultCount: 1 }
-        }))
-      )
-    }
-
-    return predictions.slice(0, limit)
+    return []
   } catch (error) {
     console.error('Error fetching predictions:', error)
     return []
@@ -211,7 +190,7 @@ async function fetchPredictions(
  * Rastreia buscas populares (agregado anônimo)
  * Armazenado em tabela de analytics
  */
-export async function trackSearch(query: string, resultCount: number) {
+export async function trackSearch(query: string, resultCount: number, region: string = 'BR') {
   try {
     const sb = createClient()
     const date = new Date().toISOString().split('T')[0]
@@ -221,18 +200,20 @@ export async function trackSearch(query: string, resultCount: number) {
       .select('count')
       .eq('query', query.toLowerCase().trim())
       .eq('date', date)
-      .single()
+      .eq('region', region)
+      .maybeSingle()
 
     if (existing) {
       await sb
         .from('search_analytics')
         .update({
           count: existing.count + 1,
-          last_result_count: resultCount,
+          result_count: resultCount,
           updated_at: new Date().toISOString()
         })
         .eq('query', query.toLowerCase().trim())
         .eq('date', date)
+        .eq('region', region)
     } else {
       await sb
         .from('search_analytics')
@@ -241,6 +222,7 @@ export async function trackSearch(query: string, resultCount: number) {
           count: 1,
           result_count: resultCount,
           date,
+          region,
           created_at: new Date().toISOString()
         })
     }
@@ -260,7 +242,7 @@ export function clearSuggestionsCache() {
 /**
  * Obtém sugestões populares para a tela inicial da busca
  */
-export async function getPopularSearches(): Promise<SuggestionItem[]> {
+export async function getPopularSearches(region: string = 'BR'): Promise<SuggestionItem[]> {
   try {
     const sb = createClient()
     const sevenDaysAgo = new Date()
@@ -269,6 +251,7 @@ export async function getPopularSearches(): Promise<SuggestionItem[]> {
     const { data } = await sb
       .from('search_analytics')
       .select('query, count')
+      .eq('region', region)
       .gte('date', sevenDaysAgo.toISOString().split('T')[0])
       .order('count', { ascending: false })
       .limit(10)

@@ -14,6 +14,8 @@ import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
 import { DevicesSection } from '@/components/profile/DevicesSection'
 import { StatisticsSection } from '@/components/profile/StatisticsSection'
 import { AccessibilitySection } from '@/components/profile/AccessibilitySection'
+import { VisualPreferencesSection } from '@/components/profile/VisualPreferencesSection'
+import { useVisualPreferences } from '@/components/layout/VisualPreferencesProvider'
 import { uploadAvatar } from '@/lib/avatarUpload'
 import { saveProfileSettings, getProfileSettings } from '@/lib/profileSettings'
 import { getUserDevices, logoutDevice, detectDeviceType, detectDeviceName } from '@/lib/deviceManager'
@@ -38,11 +40,13 @@ interface ContinueWatchingItem extends CinemaItem {
 
 export default function PerfilPage() {
   const { user, loading: authLoading } = useAuth()
+  const { setPrefs } = useVisualPreferences()
   const [profile, setProfile] = useState<any>(null)
   const [favorites, setFavorites] = useState<ProfileItem[]>([])
   const [history, setHistory] = useState<ProfileItem[]>([])
   const [continueWatching, setContinueWatching] = useState<ContinueWatchingItem[]>([])
   const [settings, setSettings] = useState<any>(null)
+  const [visualPreferences, setVisualPreferences] = useState<any>(null)
   const [accessibilitySettings, setAccessibilitySettings] = useState<any>(null)
   const [devices, setDevices] = useState<any[]>([])
   const [statistics, setStatistics] = useState<any>(null)
@@ -283,6 +287,18 @@ export default function PerfilPage() {
     } catch (error) {
       console.error('Erro ao salvar configurações:', error)
       alert('Erro ao salvar configurações: ' + (error as Error).message)
+    }
+  }
+
+  const handleVisualPreferencesChange = async (newPrefs: any) => {
+    if (!user) return
+    try {
+      const { saveVisualPreferences } = await import('@/lib/visualPreferences')
+      await saveVisualPreferences(user.id, newPrefs)
+      setVisualPreferences(newPrefs)
+      setPrefs(newPrefs) // Atualiza o estado global imediatamente
+    } catch (error) {
+      console.error('Erro ao salvar preferências visuais:', error)
     }
   }
 
@@ -569,6 +585,7 @@ export default function PerfilPage() {
         <div className="space-y-16 sm:space-y-20">
           <Section title="Histórico de Reprodução" items={history} color="var(--red-primary)" emptyMsg="Você ainda não iniciou nenhum vídeo." showDelete={true} onDelete={handleDeleteHistoryItem} onClearAll={handleClearHistory} />
           <StatisticsSection statistics={statistics} />
+          <VisualPreferencesSection preferences={visualPreferences} onPreferencesChange={handleVisualPreferencesChange} />
           <SettingsSection settings={settings} onSettingsChange={handleSettingsChange} />
           <AccessibilitySection settings={accessibilitySettings} onSettingsChange={handleAccessibilityChange} />
           <DevicesSection devices={devices} onLogoutDevice={handleLogoutDevice} />

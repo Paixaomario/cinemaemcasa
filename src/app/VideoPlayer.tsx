@@ -45,6 +45,8 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
   const lastSavedTime = useRef<number>(0);
   const [showChat, setShowChat] = useState(!!partyRoomId);
   const { user } = useAuth()
+  const lastBroadcastTime = useRef<number>(0);
+  const lastBroadcastState = useRef<boolean | null>(null);
   const sb = useMemo(() => createClient(), [])
   const [emojis, setEmojis] = useState<{ emoji: string; sender: string; id: number }[]>([])
 
@@ -162,10 +164,18 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
     if (!isGuest) {
       // Anfitrião envia comandos
       const unsubPlay = mediaInstance.subscribe(({ paused, currentTime }) => {
-        if (!paused) {
-          channel.send({ type: 'broadcast', event: 'sync-play', payload: { time: currentTime } });
-        } else {
-          channel.send({ type: 'broadcast', event: 'sync-pause', payload: { time: currentTime } });
+        // Só envia se o estado mudou ou se houve um pulo maior que 2 segundos
+        const timeDrift = Math.abs(currentTime - lastBroadcastTime.current);
+        const stateChanged = lastBroadcastState.current !== paused;
+        
+        if (stateChanged || timeDrift > 2) {
+          if (!paused) {
+            channel.send({ type: 'broadcast', event: 'sync-play', payload: { time: currentTime } });
+          } else {
+            channel.send({ type: 'broadcast', event: 'sync-pause', payload: { time: currentTime } });
+          }
+          lastBroadcastState.current = paused;
+          lastBroadcastTime.current = currentTime;
         }
       });
 
@@ -183,7 +193,7 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
         .on('broadcast', { event: 'sync-play' }, ({ payload }) => {
           console.log('Convidado recebeu sync-play:', payload);
           const drift = Math.abs(mediaInstance.currentTime - payload.time);
-          if (drift > 1.5) mediaInstance.currentTime = payload.time;
+          if (drift > 1.2) mediaInstance.currentTime = payload.time; // Otimizado para 1.2s
           // Tenta dar play com promise para capturar erros de autoplay
           mediaInstance.play().catch(err => {
             console.log('Autoplay bloqueado pelo navegador, tentando novamente:', err);
@@ -246,7 +256,6 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
                       alt={nextEpisode.title}
                       fill
                       className="object-cover"
-                      unoptimized
                     />
                   </div>
                 )}

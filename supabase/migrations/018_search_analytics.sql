@@ -9,11 +9,12 @@ CREATE TABLE IF NOT EXISTS search_analytics (
   count INT DEFAULT 1,
   result_count INT,
   date DATE NOT NULL,
+  region TEXT DEFAULT 'BR',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   
   -- Índices para performance de queries
-  UNIQUE(query, date)
+  UNIQUE(query, date, region)
 );
 
 CREATE INDEX idx_search_analytics_query ON search_analytics(query);
@@ -59,6 +60,7 @@ CREATE TABLE IF NOT EXISTS user_search_history (
   result_count INT,
   clicked_result_id TEXT, -- ID do resultado que o usuário clicou
   clicked_at TIMESTAMP WITH TIME ZONE,
+  region TEXT DEFAULT 'BR',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   created_date DATE DEFAULT CURRENT_DATE
 );
@@ -87,16 +89,17 @@ CREATE POLICY "Users can insert own search history"
 CREATE OR REPLACE FUNCTION aggregate_search_analytics()
 RETURNS void AS $$
 BEGIN
-  INSERT INTO search_analytics (query, count, result_count, date)
+  INSERT INTO search_analytics (query, count, result_count, date, region)
   SELECT 
     query,
     COUNT(*)::INT as count,
     ROUND(AVG(CAST(result_count AS NUMERIC)))::INT as result_count,
-    CURRENT_DATE
+    CURRENT_DATE,
+    region
   FROM user_search_history
   WHERE created_at::DATE = CURRENT_DATE
-  GROUP BY query
-  ON CONFLICT (query, date) DO UPDATE SET
+  GROUP BY query, region
+  ON CONFLICT (query, date, region) DO UPDATE SET
     count = EXCLUDED.count,
     result_count = EXCLUDED.result_count,
     updated_at = CURRENT_TIMESTAMP;

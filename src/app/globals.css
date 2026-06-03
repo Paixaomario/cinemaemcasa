@@ -5,13 +5,18 @@
 body {
   @apply bg-black text-white;
   background-color: #000000;
+  /* Proteção contra Overscan em Projetores e TVs */
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
 }
 
 /* Estilo de Foco Global para Navegação por Controle/Teclado */
 :focus-visible, 
 .using-keyboard *:focus {
   outline: none !important;
-  box-shadow: 0 0 0 4px #00ADEF !important;
+  box-shadow: 0 0 0 4px var(--brand-cyan, #00ADEF) !important;
   transform: scale(1.05);
   z-index: 100 !important;
   /* Otimizado: Anima apenas o necessário para evitar lag em TVs */
@@ -45,23 +50,36 @@ body {
   padding-right: clamp(1rem, 4vw, 3rem);
 }
 @media (min-width: 1024px) {
-  .section-px { padding-left: 25px !important; } /* 25px de distância solicitado */
+  .section-px { padding-left: max(25px, env(safe-area-inset-left)) !important; }
 }
 
 .scroll-row {
   display: flex;
   gap: 1.5rem; /* Espaço entre as capas */
   overflow-x: auto;
-  overflow-y: visible; /* Garante que a escala não seja cortada */
+  overflow-y: visible;
   width: 100%;
-  /* Cria um túnel invisível para a escala crescer sem cortar */
   padding: 60px 0;
   margin: -60px 0;
+}
+
+/* Prevenção de quebra em telas minúsculas */
+@media (max-width: 400px) {
+  .grid-cols-2 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
 }
 
 .scroll-row > * {
   flex-shrink: 0;
   width: clamp(218px, 22vw, 390px); /* Tamanho reduzido em 22% para melhor equilíbrio visual */
+}
+
+/* Breakpoint para Telas Gigantes (4K/8K) */
+@media (min-width: 2400px) {
+  .scroll-row > * { width: 520px; }
+  .section-px { padding-left: max(60px, env(safe-area-inset-left)) !important; }
+  .grid-cols-8 { grid-template-columns: repeat(10, minmax(0, 1fr)) !important; }
 }
 
 /* =========================================================
@@ -149,8 +167,8 @@ body {
 
 /* Barra de Menus (Header e Nav) Adaptativa */
 header, .mobile-nav-bar {
-  padding-left: var(--safe-area-left) !important;
-  padding-right: var(--safe-area-right) !important;
+  padding-left: max(1.5rem, env(safe-area-inset-left)) !important;
+  padding-right: max(1rem, env(safe-area-inset-right)) !important;
   min-height: clamp(3.5rem, 8vh, 7rem);
   align-items: center;
   gap: clamp(1rem, 2vw, 3rem);
