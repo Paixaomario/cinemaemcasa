@@ -203,7 +203,6 @@ export function HeroBanner({ type }: HeroBannerProps = {}) {
             priority
             className="object-cover object-top opacity-100"
             sizes="100vw"
-            unoptimized
           />
         </div>
       )}
