@@ -53,8 +53,13 @@ export default function SearchPage() {
   const loadInitialData = useCallback(async () => {
     try {
       // 1.1 Carregar opções de filtro (Independente de usuário)
-      const { data: filters } = await sb.from('search_catalog').select('genero, ano, tipo').limit(1000);
-      if (filters) {
+      const { data: filters, error: filtersError } = await sb.from('search_catalog').select('genero, ano, tipo').limit(1000);
+      
+      if (filtersError) {
+        console.error("Erro crítico: Tabela search_catalog não encontrada. Execute as migrações SQL.");
+      }
+
+      if (filters && filters.length > 0) {
         // Limpeza cinematográfica: Remove colchetes, aspas e limpa espaços
         const cleanRegex = /[\[\]"']/g;
         const cleanValue = (val: any) => String(val || '').replace(cleanRegex, '').trim();

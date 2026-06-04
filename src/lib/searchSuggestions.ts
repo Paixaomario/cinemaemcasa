@@ -230,13 +230,18 @@ export async function getPopularSearches(region: string = 'BR'): Promise<Suggest
     const sevenDaysAgo = new Date()
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
-    const { data } = await sb
+    const { data, error } = await sb
       .from('search_analytics')
       .select('query, count')
       .eq('region', region)
       .gte('date', sevenDaysAgo.toISOString().split('T')[0])
       .order('count', { ascending: false })
       .limit(10)
+
+    if (error) {
+      console.warn('Aviso: Tabela search_analytics não encontrada ou sem acesso RLS.');
+      return [];
+    }
 
     return (data || [])
       .map((item: any) => ({

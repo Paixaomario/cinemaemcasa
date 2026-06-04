@@ -17,20 +17,22 @@ CREATE TABLE IF NOT EXISTS search_analytics (
   UNIQUE(query, date, region)
 );
 
-CREATE INDEX idx_search_analytics_query ON search_analytics(query);
-CREATE INDEX idx_search_analytics_date ON search_analytics(date DESC);
-CREATE INDEX idx_search_analytics_count ON search_analytics(count DESC);
+CREATE INDEX IF NOT EXISTS idx_search_analytics_query ON search_analytics(query);
+CREATE INDEX IF NOT EXISTS idx_search_analytics_date ON search_analytics(date DESC);
+CREATE INDEX IF NOT EXISTS idx_search_analytics_count ON search_analytics(count DESC);
 
 -- Row-level security para search_analytics
 ALTER TABLE search_analytics ENABLE ROW LEVEL SECURITY;
 
 -- Política: Anyone can read search analytics (agregado, sem dados pessoais)
+DROP POLICY IF EXISTS "Search analytics are readable" ON search_analytics;
 CREATE POLICY "Search analytics are readable"
   ON search_analytics
   FOR SELECT
   USING (true);
 
 -- Política: Only service role can write (via triggers/functions)
+DROP POLICY IF EXISTS "Only service role can write search analytics" ON search_analytics;
 CREATE POLICY "Only service role can write search analytics"
   ON search_analytics
   FOR INSERT
@@ -65,20 +67,22 @@ CREATE TABLE IF NOT EXISTS user_search_history (
   created_date DATE DEFAULT CURRENT_DATE
 );
 
-CREATE INDEX idx_user_search_history_user ON user_search_history(user_id);
-CREATE INDEX idx_user_search_history_created ON user_search_history(created_at DESC);
-CREATE UNIQUE INDEX idx_user_search_history_unique ON user_search_history(user_id, query, created_date);
+CREATE INDEX IF NOT EXISTS idx_user_search_history_user ON user_search_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_search_history_created ON user_search_history(created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_search_history_unique ON user_search_history(user_id, query, created_date);
 
 -- RLS para user_search_history
 ALTER TABLE user_search_history ENABLE ROW LEVEL SECURITY;
 
 -- Política: Users can only see their own search history
+DROP POLICY IF EXISTS "Users can see own search history" ON user_search_history;
 CREATE POLICY "Users can see own search history"
   ON user_search_history
   FOR SELECT
   USING (auth.uid() = user_id);
 
 -- Política: Users can insert their own search history
+DROP POLICY IF EXISTS "Users can insert own search history" ON user_search_history;
 CREATE POLICY "Users can insert own search history"
   ON user_search_history
   FOR INSERT
