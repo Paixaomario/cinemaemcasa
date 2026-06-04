@@ -258,7 +258,7 @@ header, .mobile-nav-bar {
 
   /* Fix: Margem rígida para garantir que nenhum conteúdo (Home, Filmes, Perfil) seja coberto */
   main {
-    margin-left: 100px !important; 
+    margin-left: 80px !important; 
     padding-top: 0 !important;
     transition: none; /* Remove transição no main para evitar 'pulos' em CPUs lentas de TV */
   }
@@ -266,18 +266,19 @@ header, .mobile-nav-bar {
   /* O conteúdo permanece estático enquanto a barra flutua por cima ao abrir */
   body:has(aside:hover) main,
   body:has(aside:focus-within) main {
-    margin-left: 100px !important;
+    margin-left: 80px !important;
   }
 
   /* GARANTIMOS a exibição da Sidebar lateral */
   aside, .sidebar-container {
     display: flex !important;
     visibility: visible !important;
-    /* Profissional: Transparente por padrão, Vidro no Hover */
+    /* Profissional: Transparente e Recuada (Z-Index baixo) por padrão */
     background-color: transparent !important;
     backdrop-filter: none;
     border-right: 1px solid transparent !important;
-    transition: background-color 0.5s ease, backdrop-filter 0.5s ease, border-color 0.5s ease !important;
+    z-index: 40 !important;
+    transition: background-color 0.4s ease, backdrop-filter 0.4s ease, z-index 0.1s ease !important;
   }
 
   aside:hover, aside:focus-within {
@@ -286,6 +287,7 @@ header, .mobile-nav-bar {
     -webkit-backdrop-filter: blur(40px) !important;
     border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
     box-shadow: 20px 0 50px rgba(0,0,0,0.9);
+    z-index: 6000 !important; /* Sobrepõe tudo apenas em ação */
   }
 
   /* Ajuste do Logotipo para 121px na Sidebar */

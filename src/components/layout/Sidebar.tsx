@@ -18,22 +18,22 @@ export function Sidebar() {
   ]
 
   return (
-    <aside className="fixed left-0 top-0 h-screen z-[6000] hidden lg:flex flex-col w-[100px] hover:w-[220px] focus-within:w-[220px] transition-all duration-500 group">
+    <aside className="fixed left-0 top-0 h-screen hidden lg:flex flex-col w-[80px] hover:w-[240px] focus-within:w-[240px] transition-all duration-500 group">
       {/* Container do Logotipo (Altura 121px) */}
-      <div className="h-[121px] mt-8 flex items-center justify-center px-0 shrink-0">
-        <div className="relative flex items-center justify-center transition-all duration-500">
+      <div className="h-[121px] mt-4 flex items-center justify-center w-[80px] shrink-0 overflow-visible">
+        <div className="relative w-[80px] flex items-center justify-center transition-all duration-500">
           <Image 
             src="/logo.png" 
             alt="Logo" 
             width={240} 
             height={121} 
-            className="object-contain transition-all duration-500 scale-[1.3] group-hover:scale-100 group-focus-within:scale-100 nav-logo" 
+            className="object-contain transition-all duration-500 scale-[1.8] group-hover:scale-100 group-focus-within:scale-100 nav-logo" 
           />
         </div>
       </div>
 
-      {/* Navegação: 120px abaixo do logo e centralizada */}
-      <nav className="mt-[120px] flex flex-col gap-6 px-2 overflow-y-auto no-scrollbar">
+      {/* Navegação: Colada ao logo para evitar rolagem */}
+      <nav className="mt-8 flex flex-col gap-4 px-0 overflow-y-auto no-scrollbar">
         {menuItems.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href
@@ -44,17 +44,17 @@ export function Sidebar() {
               href={item.href}
               tabIndex={0}
               className={`
-                flex items-center transition-all duration-200 outline-none h-[56px] w-full shrink-0
+                flex items-center transition-all duration-200 outline-none h-[60px] w-full shrink-0
                 ${isActive 
                   ? 'bg-brand-cyan/15 text-brand-cyan' 
                   : 'text-white hover:bg-white/10 hover:text-white focus:bg-brand-cyan focus:text-black'
                 }
               `}
             >
-              <div className="w-[100px] flex-none flex items-center justify-center">
+              <div className="w-[80px] flex-none flex items-center justify-center">
                 <Icon className="w-[28px] h-[28px]" strokeWidth={isActive ? 2.5 : 1.5} />
               </div>
-              <span className="font-montserrat font-bold uppercase tracking-[0.1em] text-[10px] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-500 whitespace-nowrap pr-[7px]">
+              <span className="font-montserrat font-bold uppercase tracking-[0.1em] text-[11px] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-500 whitespace-nowrap pr-[7px]">
                 {item.label}
               </span>
             </Link>
