@@ -125,11 +125,13 @@ function NavContent() {
           flex: 1;
           text-decoration: none;
           color: #ffffff;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: all 0.2s ease;
           gap: 4px;
           pointer-events: auto !important;
+          touch-action: manipulation; /* Remove tap delay no mobile */
           min-width: 0;
           width: 100%;
+          height: 100%;
         }
 
         .nav-item.active {

@@ -46,47 +46,47 @@ export default function SearchPage() {
 
   // 1. Carregar Sugestões Iniciais (6 itens relevantes) e Histórico
   const loadInitialData = useCallback(async () => {
-    if (!user) return;
+    try {
+      // 1.1 Carregar opções de filtro (Independente de usuário)
+      const { data: filters } = await sb.from('search_catalog').select('genero, ano, tipo').limit(1000);
+      if (filters) {
+        // Limpeza profunda de gêneros (remove [], "", '')
+        const cleanStr = (s: string) => s.replace(/[\[\]"']/g, '').trim();
+        const allGenres = filters.flatMap(f => f.genero ? f.genero.split(',').map(g => cleanStr(g)) : []);
+        setAvailableGenres(Array.from(new Set(allGenres)).filter(g => g && g.length > 1).sort() as string[]);
+        setAvailableYears(Array.from(new Set(filters.map(f => f.ano))).filter(Boolean).sort((a: any, b: any) => b - a) as string[]);
+        setAvailableTypes(Array.from(new Set(filters.map(f => f.tipo))).filter(Boolean).sort() as string[]);
+      }
 
-    // Busca Recomendações Inteligentes da tabela recommendations
-    const { data: aiRecs } = await sb
-      .from('recommendations')
-      .select('content_id')
-      .eq('user_id', user.id)
-      .order('score', { ascending: false })
-      .limit(6);
+      // 1.2 Carregar buscas populares (Independente de usuário)
+      const { getPopularSearches } = await import('@/lib/searchSuggestions')
+      setPopularSearches(await getPopularSearches(userRegion))
 
-    if (aiRecs && aiRecs.length > 0) {
-      const ids = aiRecs.map(r => r.content_id);
-      const { data: catalogItems } = await sb.from('search_catalog').select('*').in('source_id', ids);
-      if (catalogItems) setSuggestions(catalogItems);
-    } else {
-      // Fallback: Itens mais recentes se não houver recomendações ainda
-      const { data: fallback } = await sb.from('search_catalog').select('*').limit(6).order('created_at', { ascending: false });
-      if (fallback) setSuggestions(fallback);
+      // 1.3 Recomendações e Histórico (Se logado)
+      if (user) {
+        const { data: aiRecs } = await sb
+          .from('recommendations')
+          .select('content_id')
+          .eq('user_id', user.id)
+          .order('score', { ascending: false })
+          .limit(6);
+
+        if (aiRecs?.length) {
+          const ids = aiRecs.map(r => r.content_id);
+          const { data: catalogItems } = await sb.from('search_catalog').select('*').in('source_id', ids);
+          if (catalogItems) setSuggestions(catalogItems);
+        } else {
+          const { data: fallback } = await sb.from('search_catalog').select('*').limit(6).order('created_at', { ascending: false });
+          if (fallback) setSuggestions(fallback);
+        }
+      } else {
+        // Fallback para visitantes
+        const { data: fallback } = await sb.from('search_catalog').select('*').limit(6).order('created_at', { ascending: false });
+        if (fallback) setSuggestions(fallback);
+      }
+    } catch (err) {
+      console.error("Erro ao carregar dados iniciais:", err);
     }
-
-    // Carregar opções de filtro (Otimizado com seleção única)
-    const { data: filters } = await sb.from('search_catalog').select('genero, ano, tipo').limit(1000);
-    
-    if (filters) {
-      // Extrai e limpa gêneros (lidando com strings separadas por vírgula)
-      const allGenres = filters.flatMap(f => f.genero ? f.genero.split(',').map((s: string) => s.trim()) : []);
-      const genres = Array.from(new Set(allGenres)).filter(Boolean).sort() as string[];
-      
-      const years = Array.from(new Set(filters.map(f => f.ano))).filter(Boolean).sort((a: any, b: any) => b - a) as string[];
-      const types = Array.from(new Set(filters.map(f => f.tipo))).filter(Boolean).sort() as string[];
-      
-      setAvailableGenres(genres);
-      setAvailableYears(years);
-      setAvailableTypes(types);
-    }
-
-    // Carregar buscas populares (Tendências)
-    const { getPopularSearches } = await import('@/lib/searchSuggestions')
-    const popular = await getPopularSearches(userRegion)
-    setPopularSearches(popular)
-
 
     if (user) {
       const { data: hist } = await sb
@@ -236,6 +236,7 @@ export default function SearchPage() {
                         {suggestion.type === 'history' && <History size={10} />}
                         {suggestion.type === 'popular' && <Flame size={10} className="text-orange-500" />}
                         {suggestion.type === 'prediction' && <Sparkles size={10} className="text-brand-cyan" />}
+                        <span className="ml-1 opacity-50">{suggestion.type}</span>
                       </p>
                     </div>
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity pr-2">
@@ -280,6 +281,7 @@ export default function SearchPage() {
           <select
             value={selectedGenre}
             onChange={(e) => setSelectedGenre(e.target.value)}
+            tabIndex={0}
             className="bg-white/5 border border-white/10 rounded-full px-5 py-2 text-sm font-medium text-white focus:border-brand-cyan/50 focus:ring-1 focus:ring-brand-cyan/50 outline-none appearance-none pr-8"
           >
             <option value="">Todos os Gêneros</option>
@@ -297,6 +299,7 @@ export default function SearchPage() {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
+            tabIndex={0}
             className="bg-white/5 border border-white/10 rounded-full px-5 py-2 text-sm font-medium text-white focus:border-brand-cyan/50 focus:ring-1 focus:ring-brand-cyan/50 outline-none appearance-none pr-8"
           >
             <option value="">Todos os Anos</option>
@@ -314,12 +317,12 @@ export default function SearchPage() {
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
+            tabIndex={0}
             className="bg-white/5 border border-white/10 rounded-full px-5 py-2 text-sm font-medium text-white focus:border-brand-cyan/50 focus:ring-1 focus:ring-brand-cyan/50 outline-none appearance-none pr-8"
           >
             <option value="">Todos os Tipos</option>
-            {availableTypes.map(type => (
-              <option key={type} value={type}>{type === 'movie' ? 'Filme' : type === 'series' ? 'Série' : type}</option>
-            ))}
+            <option value="movie">Filmes</option>
+            <option value="series">Séries</option>
           </select>
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
             <ChevronDown size={16} />
@@ -421,7 +424,7 @@ export default function SearchPage() {
                       id: item.source_id,
                       id_n: item.source_table === 'series' ? item.source_id : undefined,
                       titulo: item.titulo,
-                      poster: item.poster || item.banner || item.capa || item.backdrop,
+                      poster: item.poster || item.banner || item.backdrop || item.capa,
                       type: item.tipo
                     }} />
                   </div>
@@ -449,7 +452,7 @@ export default function SearchPage() {
                       id: item.source_id,
                       id_n: item.source_table === 'series' ? item.source_id : undefined,
                       titulo: item.titulo,
-                      poster: item.poster || item.banner || item.capa || item.backdrop,
+                      poster: item.poster || item.banner || item.backdrop || item.capa,
                       type: item.tipo,
                       year: item.ano
                     }} />

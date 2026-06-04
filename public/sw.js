@@ -19,27 +19,18 @@ self.addEventListener('activate', e => {
 })
 
 self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return
-  if (e.request.url.includes('api.themoviedb.org') || e.request.url.includes('supabase.co')) return
-
-  // Sempre buscar novos ícones do servidor para garantir atualização
-  if (e.request.url.includes('logo.png') || e.request.url.includes('icon')) {
-    e.respondWith(
-      fetch(e.request)
-        .then(response => {
-          // Atualizar cache com nova versão
-          const responseClone = response.clone()
-          caches.open(CACHE).then(cache => {
-            cache.put(e.request, responseClone)
-          })
-          return response
-        })
-        .catch(() => caches.match(e.request))
-    )
-    return
-  }
+  if (e.request.method !== 'GET') return;
+  
+  // Não interceptar chamadas de API externas para evitar erros de CORS/Response
+  const url = new URL(e.request.url);
+  if (url.origin !== self.location.origin) return;
 
   e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
-  )
-})
+    fetch(e.request)
+      .catch(() => {
+        return caches.match(e.request).then(cachedResponse => {
+          return cachedResponse || new Response("Rede indisponível", { status: 503, headers: { 'Content-Type': 'text/plain' } });
+        });
+      })
+  );
+});
