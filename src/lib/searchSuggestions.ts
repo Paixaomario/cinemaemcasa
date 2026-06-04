@@ -229,17 +229,19 @@ export async function getPopularSearches(region: string = 'BR'): Promise<Suggest
     const sb = createClient()
     const sevenDaysAgo = new Date()
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+    const dateStr = sevenDaysAgo.toISOString().split('T')[0]
 
+    // Usamos um limite menor e tratamento de erro silencioso para evitar que falhas de rede/banco travem a UI
     const { data, error } = await sb
       .from('search_analytics')
       .select('query, count')
-      .eq('region', region)
-      .gte('date', sevenDaysAgo.toISOString().split('T')[0])
+      .eq('region', region || 'BR')
+      .gte('date', dateStr)
       .order('count', { ascending: false })
-      .limit(10)
+      .limit(5);
 
     if (error) {
-      console.warn('Aviso: Tabela search_analytics não encontrada ou sem acesso RLS.');
+      console.debug('Analytics Query Error (Non-critical):', error.message);
       return [];
     }
 
@@ -251,7 +253,6 @@ export async function getPopularSearches(region: string = 'BR'): Promise<Suggest
         icon: '🔥',
         metadata: { trending: true }
       }))
-      .slice(0, 5)
   } catch (error) {
     console.error('Error fetching popular searches:', error)
     return []

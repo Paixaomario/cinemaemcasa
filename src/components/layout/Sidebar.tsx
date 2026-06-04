@@ -18,22 +18,22 @@ export function Sidebar() {
   ]
 
   return (
-    <aside className="fixed left-0 top-0 h-screen hidden lg:flex flex-col w-[80px] z-[6000] group overflow-visible">
+    <aside className="fixed left-0 top-0 h-screen hidden lg:flex flex-col w-[80px] z-[9999] group overflow-visible bg-black/20 backdrop-blur-sm">
       {/* Container do Logotipo (Altura 121px) */}
-      <div className="h-[121px] mt-4 flex items-center justify-center w-[80px] shrink-0 overflow-visible pointer-events-auto">
-        <div className="relative w-[80px] flex items-center justify-center flex-none">
+      <div className="h-[121px] mt-4 flex items-center justify-center w-[80px] shrink-0 overflow-hidden pointer-events-none">
+        <div className="relative w-[80px] flex items-center justify-center flex-none scale-125">
           <Image 
             src="/logo.png" 
             alt="Logo" 
-            width={240} 
-            height={121} 
-            className="object-contain transition-all duration-500 scale-[1.8] nav-logo" 
+            width={120} 
+            height={60} 
+            className="object-contain transition-all duration-500 nav-logo" 
           />
         </div>
       </div>
 
       {/* Navegação: Colada ao logo para eliminar rolagem em TVs */}
-      <nav className="mt-2 flex flex-col gap-2 px-0 overflow-y-auto no-scrollbar">
+      <nav className="mt-2 flex flex-col gap-2 px-0 overflow-y-auto no-scrollbar relative z-10">
         {menuItems.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href
@@ -44,10 +44,10 @@ export function Sidebar() {
               href={item.href}
               tabIndex={0}
               className={`
-                flex items-center transition-all duration-200 outline-none h-[54px] w-full shrink-0
+                flex items-center transition-all duration-200 outline-none h-[54px] w-full shrink-0 relative z-20 pointer-events-auto
                 ${isActive 
                   ? 'bg-brand-cyan/15 text-brand-cyan' 
-                  : 'text-white hover:bg-white/10 hover:text-white focus:bg-brand-cyan focus:text-black'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white focus:bg-brand-cyan focus:text-black'
                 }
               `}
             >

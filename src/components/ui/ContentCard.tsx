@@ -44,11 +44,12 @@ export function ContentCard({
       className="group relative block aspect-[2/3] w-full transition-all duration-300 z-0 hover:z-50 focus:z-50 focus:outline-none focus:ring-4 focus:ring-brand-cyan rounded-xl shadow-2xl shadow-black/90 touch-pan-y"
     >
       <div className="absolute inset-0 overflow-hidden rounded-xl bg-neutral-900">
-        {poster && String(poster).length > 5 && String(poster) !== 'null' && String(poster) !== 'undefined' ? (
+        {poster && String(poster).length > 10 && !String(poster).includes('undefined') && String(poster) !== 'null' ? (
           <Image
-            src={String(poster).startsWith('http') 
-              ? String(poster) 
-              : `https://image.tmdb.org/t/p/w500${String(poster).startsWith('/') ? '' : '/'}${poster}`
+            src={
+              String(poster).startsWith('http') 
+                ? String(poster) 
+                : `https://image.tmdb.org/t/p/w500${String(poster).startsWith('/') ? '' : '/'}${String(poster).replace(/^\//, '')}`
             }
             alt={title}
             fill

@@ -165,12 +165,14 @@ export default function SearchPage() {
           searchBuilder = searchBuilder.or(`cast_names.cs.{${selectedArtist}},director_names.cs.{${selectedArtist}}`);
         }
 
-        const { data } = await searchBuilder;
+        const { data, error } = await searchBuilder;
         
-        if (data) {
+        if (!error && data) {
           setResults(data);
-          setIsLoadingResults(false);
+        } else {
+          setResults([]);
         }
+        setIsLoadingResults(false);
       } else if (!query && !selectedGenre && !selectedYear && !selectedType) {
         setResults([]);
         setIsSearching(false);

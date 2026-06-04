@@ -246,8 +246,10 @@ export function HomeClient() {
         .eq('ativo', true)
         .order('posicao', { ascending: true })
 
+      console.log(`[Home] ${secs?.length || 0} seções encontradas.`);
 
       if (error || !secs) {
+        console.error("[Home] Erro ao buscar seções:", error);
         setPageLoading(false)
         return
       }
@@ -259,8 +261,12 @@ export function HomeClient() {
 
       const visibleSections = (secs as HomeSection[]).filter(sec => {
         // Validação de intervalo de datas
-        if (sec.data_inicio && currentIsoDate < sec.data_inicio) return false
-        if (sec.data_fim && currentIsoDate > sec.data_fim) return false
+        try {
+          if (sec.data_inicio && currentIsoDate < sec.data_inicio) return false
+          if (sec.data_fim && currentIsoDate > sec.data_fim) return false
+        } catch (e) {
+          console.warn(`[Home] Erro ao validar datas da seção ${sec.titulo}:`, e);
+        }
         
         // Validação de intervalo de horários
         if (sec.hora_inicio && sec.hora_fim) {
