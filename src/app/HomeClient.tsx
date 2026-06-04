@@ -8,6 +8,7 @@ import { ContentRow } from '@/components/sections/ContentRow'
 import { ContentCard } from '@/components/ui/ContentCard'
 import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
 import { useBurnInProtection } from '@/hooks/useBurnInProtection'
+import { getViewportMetadata } from '@/lib/deviceManager'
 import {
   initializeContentSession,
   addBatchToDisplayedCache,
@@ -54,12 +55,19 @@ export function HomeClient() {
   const [pageLoading, setPageLoading] = useState(true)
   const [resumeItem, setResumeItem] = useState<any>(null)
   const [canAutoPlayTrailer, setCanAutoPlayTrailer] = useState(false)
+  const [isTVLayout, setIsTVLayout] = useState(false)
 
   // Ativa navegação por controle remoto na Home
   useSpatialNavigation()
 
   // Ativa proteção contra Burn-in para TVs OLED
   useBurnInProtection(5)
+
+  // Ajuste de Layout para TV (Safe Area)
+  useEffect(() => {
+    const { isBigScreen } = getViewportMetadata()
+    setIsTVLayout(isBigScreen)
+  }, [])
 
   // Detecta qualidade da rede para Auto-Play de trailers
   useEffect(() => {
@@ -96,7 +104,7 @@ export function HomeClient() {
         .from('profiles')
         .select('is_child')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
       
       const isChild = profile?.is_child || false
 
@@ -176,26 +184,26 @@ export function HomeClient() {
 
                 // Converte duration de string para segundos
                 let durationInSeconds = null
-                if (duration) {
-                  if (typeof duration === 'number') {
-                    durationInSeconds = duration
-                  } else if (typeof duration === 'string') {
-                    const cleanedDuration = duration.toLowerCase().trim()
-                    try {
-                      if (cleanedDuration.includes('h')) {
-                        const parts = cleanedDuration.split('h')
-                        const hours = parseInt(parts[0]) || 0
-                        const mins = parseInt(parts[1]?.replace('min', '')) || 0
+                try {
+                  if (duration) {
+                    if (typeof duration === 'number') {
+                      durationInSeconds = duration
+                    } else if (typeof duration === 'string') {
+                      const cleaned = duration.toLowerCase().trim()
+                      // Regex robusto para extrair apenas números de cada parte
+                      if (cleaned.includes('h')) {
+                        const [hPart, mPart] = cleaned.split('h')
+                        const hours = parseInt(hPart.replace(/[^0-9]/g, '')) || 0
+                        const mins = parseInt(mPart?.replace(/[^0-9]/g, '') || '0') || 0
                         durationInSeconds = (hours * 3600) + (mins * 60)
                       } else {
-                        const mins = parseInt(cleanedDuration)
+                        const mins = parseInt(cleaned.replace(/[^0-9]/g, ''))
                         if (!isNaN(mins)) durationInSeconds = mins * 60
                       }
-                    } catch (error) {
-                      console.error('Erro ao fazer parsing de duration:', error)
-                      durationInSeconds = null
                     }
                   }
+                } catch (err) {
+                  console.warn('Falha silenciosa no parsing de duração:', err)
                 }
 
                 return {
@@ -282,7 +290,7 @@ export function HomeClient() {
               items = await getTrendingContent(sec.limite, isChild)
             } else {
               // Em 3G, buscamos recomendações em paralelo para não travar o resto
-              getPersonalizedRecommendations(user.id, sec.limite, displayedIds).then(recItems => {
+              getPersonalizedRecommendations(user.id, sec.limite, displayedIds, isChild).then(recItems => {
                 setSectionsData(prev => ({ ...prev, [sec.id]: recItems }))
               })
               return
@@ -307,7 +315,8 @@ export function HomeClient() {
             categories,
             sec.limite,
             sec.ordenacao,
-            displayedIds
+            displayedIds,
+            isChild
           )
         }
 
@@ -326,7 +335,7 @@ export function HomeClient() {
   if (loading) return <div className="min-h-screen bg-black" />
 
   return (
-    <div className="flex flex-col gap-16 pb-32">
+    <div className={`flex flex-col gap-16 pb-32 ${isTVLayout ? 'px-[6%] py-[4%]' : 'px-4 md:px-0'}`}>
       {/* Banner de Destaque */}
       <HeroBanner />
 

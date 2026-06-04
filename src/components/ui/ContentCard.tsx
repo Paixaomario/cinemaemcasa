@@ -41,16 +41,17 @@ export function ContentCard({
   return (
     <Link 
       href={detailHref}
-      className="group relative block aspect-[2/3] w-full transition-all duration-300 z-0 hover:z-50 focus:z-50 focus:outline-none focus:ring-4 focus:ring-brand-cyan rounded-xl shadow-2xl shadow-black/90"
+      className="group relative block aspect-[2/3] w-full transition-all duration-300 z-0 hover:z-50 focus:z-50 focus:outline-none focus:ring-4 focus:ring-brand-cyan rounded-xl shadow-2xl shadow-black/90 touch-pan-y"
     >
       <div className="absolute inset-0 overflow-hidden rounded-xl bg-neutral-900">
-        {poster ? (
+        {poster && String(poster).length > 5 ? (
           <Image
-            src={String(poster).startsWith('http') ? poster : `https://image.tmdb.org/t/p/w500${poster}`}
+            src={String(poster).startsWith('http') ? String(poster) : `https://image.tmdb.org/t/p/w500${poster}`}
             alt={title}
             fill
-            sizes="(max-width: 768px) 50vw, 20vw"
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 15vw"
             className="object-cover transition-transform duration-500"
+            priority={false}
           />
         ) : (
           <div className="flex h-full items-center justify-center text-4xl bg-neutral-800">🎬</div>

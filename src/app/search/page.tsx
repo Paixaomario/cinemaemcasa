@@ -26,6 +26,7 @@ export default function SearchPage() {
   const [userRegion, setUserRegion] = useState('BR')
   const [selectedArtist, setSelectedArtist] = useState<string>('') // Novo estado para artista selecionado
   const [regionName, setRegionName] = useState('Brasil')
+  const [isLoadingResults, setIsLoadingResults] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
   const sb = createClient()
 
@@ -34,11 +35,15 @@ export default function SearchPage() {
   // Detecção de Localização com Fallback
   useEffect(() => {
     async function detectLocation() {
-      const { getLocationWithFallback, getRegionDisplay } = await import('@/lib/geolocation')
-      const loc = await getLocationWithFallback()
-      if (loc.region) {
-        setUserRegion(loc.region)
-        setRegionName(getRegionDisplay(loc.region))
+      try {
+        const { getLocationWithFallback, getRegionDisplay } = await import('@/lib/geolocation')
+        const loc = await getLocationWithFallback()
+        if (loc && loc.region) {
+          setUserRegion(loc.region)
+          setRegionName(getRegionDisplay(loc.region))
+        }
+      } catch (err) {
+        console.info("Usando região padrão (BR) devido a restrições de geolocalização.")
       }
     }
     detectLocation()
@@ -50,17 +55,24 @@ export default function SearchPage() {
       // 1.1 Carregar opções de filtro (Independente de usuário)
       const { data: filters } = await sb.from('search_catalog').select('genero, ano, tipo').limit(1000);
       if (filters) {
-        // Limpeza profunda de gêneros (remove [], "", '')
-        const cleanStr = (s: string) => s.replace(/[\[\]"']/g, '').trim();
-        const allGenres = filters.flatMap((f: any) => f.genero ? String(f.genero).split(',').map((g: string) => cleanStr(g)) : []);
-        setAvailableGenres(Array.from(new Set(allGenres)).filter((g: string) => g && g.length > 1).sort() as string[]);
-        setAvailableYears(Array.from(new Set(filters.map((f: any) => f.ano))).filter(Boolean).sort((a: any, b: any) => Number(b) - Number(a)) as string[]);
-        setAvailableTypes(Array.from(new Set(filters.map((f: any) => f.tipo))).filter(Boolean).sort() as string[]);
-      }
+        // Limpeza cinematográfica: Remove colchetes, aspas e limpa espaços
+        const cleanRegex = /[\[\]"']/g;
+        const cleanValue = (val: any) => String(val || '').replace(cleanRegex, '').trim();
+        
+        const genresSet = new Set<string>();
+        const yearsSet = new Set<string>();
+        const typesSet = new Set<string>();
 
-      // 1.2 Carregar buscas populares (Independente de usuário)
-      const { getPopularSearches } = await import('@/lib/searchSuggestions')
-      setPopularSearches(await getPopularSearches(userRegion))
+        filters.forEach((f: any) => {
+          if (f.genero) cleanValue(f.genero).split(',').forEach(g => { const s = g.trim(); if(s.length > 1) genresSet.add(s); });
+          const y = cleanValue(f.ano); if (y.length === 4) yearsSet.add(y);
+          const t = cleanValue(f.tipo); if (t.length > 2) typesSet.add(t);
+        });
+
+        setAvailableGenres(Array.from(genresSet).sort());
+        setAvailableYears(Array.from(yearsSet).sort((a, b) => Number(b) - Number(a)));
+        setAvailableTypes(Array.from(typesSet).sort());
+      }
 
       // 1.3 Recomendações e Histórico (Se logado)
       if (user) {
@@ -88,6 +100,10 @@ export default function SearchPage() {
       console.error("Erro ao carregar dados iniciais:", err);
     }
 
+    // 1.2 Carregar buscas populares (Independente de usuário)
+    const { getPopularSearches } = await import('@/lib/searchSuggestions')
+    getPopularSearches(userRegion).then(setPopularSearches)
+
     if (user) {
       const { data: hist } = await sb
         .from('user_search_history')
@@ -105,10 +121,15 @@ export default function SearchPage() {
 
   // 2. Busca Global em Tempo Real
   useEffect(() => {
+    // Feedback visual imediato ao começar a digitar ou filtrar
+    if (query.trim().length >= 1 || selectedGenre || selectedYear || selectedType || selectedArtist) {
+      setIsLoadingResults(true);
+    }
+
     const delayDebounceFn = setTimeout(async () => {
-      if (query.trim().length > 1 || selectedGenre || selectedYear || selectedType || selectedArtist) {
+      if (query.trim().length >= 1 || selectedGenre || selectedYear || selectedType || selectedArtist) {
         // Busca sugestões visuais para o dropdown
-        if (query.trim().length > 1) {
+        if (query.trim().length >= 1) {
           const { generateSuggestions } = await import('@/lib/searchSuggestions')
           const live = await generateSuggestions(query)
           setLiveSuggestions(live)
@@ -122,7 +143,7 @@ export default function SearchPage() {
           .select('*')
           .limit(24);
         
-        if (query.trim().length > 1) {
+        if (query.trim().length >= 1) {
           searchBuilder = searchBuilder.ilike('titulo', `%${query}%`);
         }
         if (selectedGenre) {
@@ -141,10 +162,14 @@ export default function SearchPage() {
 
         const { data } = await searchBuilder;
         
-        if (data) setResults(data)
+        if (data) {
+          setResults(data);
+          setIsLoadingResults(false);
+        }
       } else if (!query && !selectedGenre && !selectedYear && !selectedType) {
         setResults([]);
         setIsSearching(false);
+        setIsLoadingResults(false);
       }
     }, 300); // Debounce para evitar muitas requisições
 
@@ -187,7 +212,7 @@ export default function SearchPage() {
       <div className="sticky top-0 z-50 bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-white/5 px-6 py-6 md:px-16">
         <div className="max-w-7xl mx-auto relative group">
           <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-            <Search className={`w-6 h-6 ${isSearching ? 'text-brand-cyan' : 'text-neutral-500'} transition-colors`} />
+            <Search className={`w-6 h-6 ${isLoadingResults ? 'text-brand-cyan animate-pulse' : isSearching ? 'text-brand-cyan' : 'text-neutral-500'} transition-colors`} />
           </div>
           
           <input

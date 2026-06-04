@@ -1,52 +1,45 @@
 import '@testing-library/jest-dom';
-import dotenv from 'dotenv';
-import path from 'path';
 
-// Load .env.test or fallback to process env; provide dummy supabase vars for tests
-dotenv.config({ path: path.resolve(process.cwd(), '.env.test') });
-process.env.NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321';
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'test-anon-key';
+// Mock do LocalStorage
+const localStorageMock = (function() {
+  let store: Record<string, string> = {};
+  return {
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => { store[key] = value.toString(); },
+    clear: () => { store = {}; },
+    removeItem: (key: string) => { delete store[key]; }
+  };
+})();
 
-// Mock window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
+Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
-// Mock IntersectionObserver
-global.IntersectionObserver = class IntersectionObserver {
-  constructor() {}
-  disconnect() {}
-  observe() {}
-  takeRecords() {
-    return [];
-  }
-  unobserve() {}
-} as any;
+// Mock do Supabase Client
+jest.mock('@/lib/supabase', () => ({
+  createClient: () => ({
+    from: jest.fn().mockReturnThis(),
+    select: jest.fn().mockReturnThis(),
+    eq: jest.fn().mockReturnThis(),
+    in: jest.fn().mockReturnThis(),
+    order: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockReturnThis(),
+    gte: jest.fn().mockReturnThis(),
+    not: jest.fn().mockReturnThis(),
+    maybeSingle: jest.fn(),
+    or: jest.fn().mockReturnThis(),
+    storage: {
+      from: jest.fn().mockReturnThis(),
+      upload: jest.fn(),
+      getPublicUrl: jest.fn(),
+      remove: jest.fn(),
+    },
+  }),
+}));
 
-// Mock Web Speech API
-(window as any).SpeechRecognition = class SpeechRecognition {
-  start() {}
-  stop() {}
-  abort() {}
-  addEventListener() {}
-  removeEventListener() {}
-};
-
-// Mock navigator.serviceWorker
-Object.defineProperty(navigator, 'serviceWorker', {
+// Mock do Navigator para detecção de rede e voz
+Object.defineProperty(window, 'navigator', {
   value: {
-    ready: Promise.resolve({}),
-    register: jest.fn(),
+    connection: { saveData: false, type: 'wifi', effectiveType: '4g' },
+    geolocation: { getCurrentPosition: jest.fn(), watchPosition: jest.fn() }
   },
-  writable: true,
+  configurable: true
 });

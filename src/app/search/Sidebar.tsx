@@ -47,7 +47,7 @@ export function Sidebar() {
                 flex items-center gap-4 p-3 rounded-2xl transition-all duration-200 outline-none
                 ${isActive 
                   ? 'bg-brand-cyan/20 text-brand-cyan' 
-                  : 'text-neutral-400 hover:bg-white/10 hover:text-white focus:bg-brand-cyan focus:text-black'
+                  : 'text-neutral-400 hover:bg-white/10 hover:text-white focus:bg-brand-cyan focus:text-black focus:scale-110 focus:shadow-[0_0_20px_rgba(0,173,239,0.4)]'
                 }
               `}
             >
@@ -63,8 +63,11 @@ export function Sidebar() {
       {/* Indicador de Foco para TV */}
       <style jsx global>{`
         .using-keyboard aside *:focus {
-          transform: scale(1.1) translateX(10px);
+          transform: scale(1.1) translateX(8px);
           box-shadow: 0 0 30px rgba(0, 173, 239, 0.4) !important;
+        }
+        aside:hover {
+          box-shadow: 20px 0 50px rgba(0,0,0,0.5);
         }
       `}</style>
     </aside>

@@ -262,13 +262,14 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
 export async function getPersonalizedRecommendations(
   userId: string,
   limit: number = 20,
-  excludeIds: Set<string> = new Set()
+  excludeIds: Set<string> = new Set(),
+  isChild: boolean = false
 ): Promise<ContentItem[]> {
   const favoriteGenres = await getUserFavoriteGenres(userId)
 
   if (favoriteGenres.length === 0) {
     // Se não há gêneros favoritos, retorna conteúdo em alta
-    return getTrendingContent(limit)
+    return getTrendingContent(limit, isChild)
   }
 
   const sb = createClient()
@@ -280,10 +281,17 @@ export async function getPersonalizedRecommendations(
     const movieFilters = favoriteGenres.map(genre => `category.ilike.%${genre}%`).join(',')
     const seriesFilters = favoriteGenres.map(genre => `classificacao.ilike.%${genre}%`).join(',')
 
+    let moviesQuery = sb.from('cinema').select('*').or(movieFilters).gte('rating', 6);
+    let seriesQuery = sb.from('series').select('*').or(seriesFilters).gte('rating', 6);
+
+    if (isChild) {
+      moviesQuery = moviesQuery.not('category', 'ilike', '%+18%').not('category', 'ilike', '%Terror%');
+    }
+
     // Busca filmes e séries em paralelo
     const [moviesRes, seriesRes] = await Promise.all([
-      sb.from('cinema').select('*').or(movieFilters).gte('rating', 6).order('rating', { ascending: false }).limit(searchLimit),
-      sb.from('series').select('*').or(seriesFilters).gte('rating', 6).order('rating', { ascending: false }).limit(searchLimit)
+      moviesQuery.order('rating', { ascending: false }).limit(searchLimit),
+      seriesQuery.order('rating', { ascending: false }).limit(searchLimit)
     ])
 
     const items: ContentItem[] = []
@@ -309,6 +317,9 @@ export async function getPersonalizedRecommendations(
 
     if (seriesRes.data) {
       seriesRes.data.forEach(serie => {
+        // Filtro manual adicional para segurança
+        if (isChild && (serie.genero?.includes('Adulto') || serie.classificacao?.includes('18'))) return;
+
         const idStr = String(serie.id_n)
         if (!excludeIds.has(idStr)) {
           items.push({
@@ -330,7 +341,7 @@ export async function getPersonalizedRecommendations(
     return shuffleArray(uniqueItems).slice(0, limit)
   } catch (error) {
     console.error('Erro ao buscar recomendações personalizadas:', error)
-    return getTrendingContent(limit)
+    return getTrendingContent(limit, isChild)
   }
 }
 
@@ -342,7 +353,8 @@ export async function getSectionContent(
   categories: string[],
   limit: number,
   ordenacao: string,
-  excludeIds: Set<string> = new Set()
+  excludeIds: Set<string> = new Set(),
+  isChild: boolean = false
 ): Promise<ContentItem[]> {
   const sb = createClient()
 
@@ -358,6 +370,11 @@ export async function getSectionContent(
     if (categories && categories.length > 0) {
       const catFilters = categories.map(c => `category.ilike.%${c}%`).join(',')
       movieQuery = movieQuery.or(catFilters)
+    }
+
+    // Aplica filtro parental
+    if (isChild) {
+      movieQuery = movieQuery.not('category', 'ilike', '%+18%').not('category', 'ilike', '%Terror%');
     }
 
     // Aplica ordenação conforme configurado no banco
@@ -420,6 +437,9 @@ export async function getSectionContent(
 
       if (series?.data) {
         series.data.forEach(serie => {
+          // Filtro manual adicional para segurança
+          if (isChild && (serie.genero?.includes('Adulto') || serie.classificacao?.includes('18'))) return;
+
           const idStr = String(serie.id_n)
           if (!excludeIds.has(idStr)) {
             items.push({

@@ -342,7 +342,6 @@ export function VideoPlayer({ src, title, contentId, userId, startOffset = 0, on
                 </button>
               )
             }}
-            noScrubGesture 
           />
         </MediaPlayer>
       </div>

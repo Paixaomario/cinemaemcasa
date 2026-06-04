@@ -1,35 +1,38 @@
-// PAIXAOFLIX Service Worker — PWA offline support
-const CACHE = 'paixaoflix-v2'
-const STATIC = ['/', '/filmes', '/series', '/ao-vivo', '/logo.png', '/manifest.json']
+const CACHE_NAME = 'cinema-em-casa-v2-cache';
+const OFFLINE_URL = '/';
 
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(STATIC)).catch(() => {}))
-  self.skipWaiting()
-})
+const ASSETS_TO_CACHE = [
+  '/',
+  '/logo.png',
+  '/manifest.json',
+  '/globals.css'
+];
 
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(k => k !== CACHE).map(k => caches.delete(k))
-      )
-    )
-  )
-  self.clients.claim()
-})
-
-self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
-  
-  // Não interceptar chamadas de API externas para evitar erros de CORS/Response
-  const url = new URL(e.request.url);
-  if (url.origin !== self.location.origin || url.pathname.startsWith('/api')) return;
-
-  e.respondWith(
-    fetch(e.request).catch(async () => {
-      const cached = await caches.match(e.request);
-      if (cached) return cached;
-      return new Response("Rede indisponível", { status: 503, headers: { "Content-Type": "text/plain" } });
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS_TO_CACHE);
     })
   );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name))
+      );
+    })
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match(OFFLINE_URL);
+      })
+    );
+  }
 });

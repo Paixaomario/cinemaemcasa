@@ -21,6 +21,12 @@ export const metadata: Metadata = {
     shortcut: '/logo.png',
     apple: '/logo.png',
   },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Cinema em Casa',
+  },
 }
 
 export const viewport: Viewport = {
@@ -42,6 +48,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </CommandReceiverProvider>
           </VisualPreferencesProvider>
         </SupabaseProvider>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').catch(function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                  });
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   )
