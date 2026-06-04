@@ -48,7 +48,7 @@ body {
   padding-right: clamp(1rem, 4vw, 3rem);
 }
 @media (min-width: 1024px) {
-  .section-px { padding-left: max(25px, env(safe-area-inset-left)) !important; }
+  .section-px { padding-left: 20px !important; } /* Redução do espaço para as categorias */
 }
 
 .scroll-row {
@@ -258,7 +258,7 @@ header, .mobile-nav-bar {
 
   /* Fix: Margem rígida para garantir que nenhum conteúdo (Home, Filmes, Perfil) seja coberto */
   main {
-    margin-left: 80px !important; 
+    margin-left: 80px !important;
     padding-top: 0 !important;
     transition: none; /* Remove transição no main para evitar 'pulos' em CPUs lentas de TV */
   }
@@ -273,18 +273,19 @@ header, .mobile-nav-bar {
   aside, .sidebar-container {
     display: flex !important;
     visibility: visible !important;
-    /* Profissional: Transparente e Recuada (Z-Index baixo) por padrão */
+    /* BARRA INVISÍVEL POR PADRÃO */
     background-color: transparent !important;
-    backdrop-filter: none;
+    backdrop-filter: none !important;
     border-right: 1px solid transparent !important;
     z-index: 40 !important;
-    transition: background-color 0.4s ease, backdrop-filter 0.4s ease, z-index 0.1s ease !important;
+    transition: background-color 0.4s ease, backdrop-filter 0.4s ease, width 0.5s ease, z-index 0.1s ease !important;
   }
 
   aside:hover, aside:focus-within {
-    background-color: rgba(10, 10, 15, 0.8) !important;
-    backdrop-filter: blur(40px) !important;
-    -webkit-backdrop-filter: blur(40px) !important;
+    /* EFEITO VIDRO APENAS NA AÇÃO */
+    background-color: rgba(10, 10, 15, 0.85) !important;
+    backdrop-filter: blur(30px) !important;
+    -webkit-backdrop-filter: blur(30px) !important;
     border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
     box-shadow: 20px 0 50px rgba(0,0,0,0.9);
     z-index: 6000 !important; /* Sobrepõe tudo apenas em ação */

@@ -18,16 +18,16 @@ export function Sidebar() {
   ]
 
   return (
-    <aside className="fixed left-0 top-0 h-screen hidden lg:flex flex-col w-[80px] hover:w-[240px] focus-within:w-[240px] transition-all duration-500 group">
+    <aside className="fixed left-0 top-0 h-screen hidden lg:flex flex-col w-[80px] hover:w-[190px] focus-within:w-[190px] transition-all duration-500 group">
       {/* Container do Logotipo (Altura 121px) */}
-      <div className="h-[121px] mt-4 flex items-center justify-center w-[80px] shrink-0 overflow-visible">
-        <div className="relative w-[80px] flex items-center justify-center transition-all duration-500">
+      <div className="h-[121px] mt-4 flex items-center justify-start w-[80px] shrink-0 overflow-visible">
+        <div className="relative w-[80px] flex items-center justify-center flex-none transition-all duration-500">
           <Image 
             src="/logo.png" 
             alt="Logo" 
             width={240} 
             height={121} 
-            className="object-contain transition-all duration-500 scale-[1.8] group-hover:scale-100 group-focus-within:scale-100 nav-logo" 
+            className="object-contain transition-all duration-500 scale-[1.8] group-hover:scale-[0.8] group-focus-within:scale-[0.8] nav-logo" 
           />
         </div>
       </div>
@@ -54,7 +54,7 @@ export function Sidebar() {
               <div className="w-[80px] flex-none flex items-center justify-center">
                 <Icon className="w-[28px] h-[28px]" strokeWidth={isActive ? 2.5 : 1.5} />
               </div>
-              <span className="font-montserrat font-bold uppercase tracking-[0.1em] text-[11px] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-500 whitespace-nowrap pr-[7px]">
+              <span className="font-montserrat font-bold uppercase tracking-[0.1em] text-[11px] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-500 whitespace-nowrap pr-[5px]">
                 {item.label}
               </span>
             </Link>
