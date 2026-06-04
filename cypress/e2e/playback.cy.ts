@@ -25,8 +25,8 @@ describe('Fluxo de Reprodução de Vídeo', () => {
     
     // Clica em retomar e verifica se o tempo de início não é zero
     cy.contains('Continuar de onde parei').click();
-    cy.get('media-player').then(($player) => {
-      const currentTime = $player[0].currentTime;
+    cy.get('media-player').then(($player: JQuery<HTMLMediaElement>) => {
+      const currentTime = $player[0].currentTime; // Agora o TypeScript reconhece currentTime
       expect(currentTime).to.be.greaterThan(0);
     });
   });
