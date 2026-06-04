@@ -145,7 +145,7 @@ async function fetchPredictions(
     const { data: matches } = await sb
       .from('search_catalog')
       .select('source_id, source_table, titulo, poster, tipo')
-      .ilike('titulo', `${input}%`)
+      .ilike('titulo', `%${input}%`) // Busca em qualquer parte do título
       .limit(limit)
 
     const predictions: SuggestionItem[] = []

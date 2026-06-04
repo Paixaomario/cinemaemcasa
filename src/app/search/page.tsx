@@ -98,9 +98,9 @@ export default function SearchPage() {
   // 2. Busca Global em Tempo Real
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
-      if (query.trim().length > 1 || selectedGenre || selectedYear || selectedType || selectedArtist) {
+      if (query.trim().length >= 1 || selectedGenre || selectedYear || selectedType || selectedArtist) {
         // Busca sugestões visuais para o dropdown
-        if (query.trim().length > 1) {
+        if (query.trim().length >= 1) {
           const { generateSuggestions } = await import('@/lib/searchSuggestions')
           const live = await generateSuggestions(query)
           setLiveSuggestions(live)
@@ -131,9 +131,13 @@ export default function SearchPage() {
           searchBuilder = searchBuilder.or(`cast_names.cs.{${selectedArtist}},director_names.cs.{${selectedArtist}}`);
         }
 
-        const { data } = await searchBuilder;
+        const { data, error } = await searchBuilder;
         
-        if (data) setResults(data)
+        if (error) {
+          console.error("Erro na busca:", error.message);
+        } else if (data) {
+          setResults(data);
+        }
       } else if (!query && !selectedGenre && !selectedYear && !selectedType) {
         setResults([]);
         setIsSearching(false);
