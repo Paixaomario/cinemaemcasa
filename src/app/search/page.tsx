@@ -46,32 +46,40 @@ export default function SearchPage() {
 
   // 1. Carregar Sugestões Iniciais (6 itens relevantes) e Histórico
   const loadInitialData = useCallback(async () => {
-    // Busca 6 itens aleatórios/populares para o estado inicial
-    const { data: recs } = await sb
-      .from('search_catalog')
-      .select('*')
-      .limit(6)
-      .order('ano', { ascending: false })
+    if (!user) return;
+
+    // Busca Recomendações Inteligentes da tabela recommendations
+    const { data: aiRecs } = await sb
+      .from('recommendations')
+      .select('content_id')
+      .eq('user_id', user.id)
+      .order('score', { ascending: false })
+      .limit(6);
+
+    if (aiRecs && aiRecs.length > 0) {
+      const ids = aiRecs.map(r => r.content_id);
+      const { data: catalogItems } = await sb.from('search_catalog').select('*').in('source_id', ids);
+      if (catalogItems) setSuggestions(catalogItems);
+    } else {
+      // Fallback: Itens mais recentes se não houver recomendações ainda
+      const { data: fallback } = await sb.from('search_catalog').select('*').limit(6).order('created_at', { ascending: false });
+      if (fallback) setSuggestions(fallback);
+    }
+
+    // Carregar opções de filtro (Otimizado com seleção única)
+    const { data: filters } = await sb.from('search_catalog').select('genero, ano, tipo').limit(1000);
     
-    if (recs) setSuggestions(recs)
-
-    // Carregar opções de filtro
-    const { data: genresData } = await sb.from('search_catalog').select('genero').not('genero', 'is', null);
-    if (genresData) {
-      const distinctGenres = [...new Set(genresData.map(item => item.genero).filter(Boolean))].sort();
-      setAvailableGenres(distinctGenres);
-    }
-
-    const { data: yearsData } = await sb.from('search_catalog').select('ano').not('ano', 'is', null);
-    if (yearsData) {
-      const distinctYears = [...new Set(yearsData.map(item => item.ano).filter(Boolean))].sort((a, b) => b - a); // Descending
-      setAvailableYears(distinctYears);
-    }
-
-    const { data: typesData } = await sb.from('search_catalog').select('tipo').not('tipo', 'is', null);
-    if (typesData) {
-      const distinctTypes = [...new Set(typesData.map(item => item.tipo).filter(Boolean))].sort();
-      setAvailableTypes(distinctTypes);
+    if (filters) {
+      // Extrai e limpa gêneros (lidando com strings separadas por vírgula)
+      const allGenres = filters.flatMap(f => f.genero ? f.genero.split(',').map((s: string) => s.trim()) : []);
+      const genres = Array.from(new Set(allGenres)).filter(Boolean).sort() as string[];
+      
+      const years = Array.from(new Set(filters.map(f => f.ano))).filter(Boolean).sort((a: any, b: any) => b - a) as string[];
+      const types = Array.from(new Set(filters.map(f => f.tipo))).filter(Boolean).sort() as string[];
+      
+      setAvailableGenres(genres);
+      setAvailableYears(years);
+      setAvailableTypes(types);
     }
 
     // Carregar buscas populares (Tendências)
@@ -98,9 +106,9 @@ export default function SearchPage() {
   // 2. Busca Global em Tempo Real
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
-      if (query.trim().length >= 1 || selectedGenre || selectedYear || selectedType || selectedArtist) {
+      if (query.trim().length > 1 || selectedGenre || selectedYear || selectedType || selectedArtist) {
         // Busca sugestões visuais para o dropdown
-        if (query.trim().length >= 1) {
+        if (query.trim().length > 1) {
           const { generateSuggestions } = await import('@/lib/searchSuggestions')
           const live = await generateSuggestions(query)
           setLiveSuggestions(live)
@@ -114,7 +122,7 @@ export default function SearchPage() {
           .select('*')
           .limit(24);
         
-        if (query.trim().length >= 1) {
+        if (query.trim().length > 1) {
           searchBuilder = searchBuilder.ilike('titulo', `%${query}%`);
         }
         if (selectedGenre) {
@@ -131,13 +139,9 @@ export default function SearchPage() {
           searchBuilder = searchBuilder.or(`cast_names.cs.{${selectedArtist}},director_names.cs.{${selectedArtist}}`);
         }
 
-        const { data, error } = await searchBuilder;
+        const { data } = await searchBuilder;
         
-        if (error) {
-          console.error("Erro na busca:", error.message);
-        } else if (data) {
-          setResults(data);
-        }
+        if (data) setResults(data)
       } else if (!query && !selectedGenre && !selectedYear && !selectedType) {
         setResults([]);
         setIsSearching(false);
@@ -197,12 +201,8 @@ export default function SearchPage() {
 
           {/* Auto-complete Visual Profissional (Sugestões de Títulos) */}
           {query.length >= 2 && liveSuggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-[#141414] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[60] animate-in fade-in zoom-in-95 duration-200 group/list">
-              {/* Efeito Esfumaçado Netflix */}
-              <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-[#141414] to-transparent z-10 pointer-events-none" />
-              <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-[#141414] to-transparent z-10 pointer-events-none" />
-              
-              <div className="p-2 max-h-[60vh] overflow-y-auto no-scrollbar relative">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-[#141414] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[60] animate-in fade-in zoom-in-95 duration-200">
+              <div className="p-2">
                 {liveSuggestions.map((suggestion) => (
                   <button
                     key={suggestion.id}
@@ -236,7 +236,6 @@ export default function SearchPage() {
                         {suggestion.type === 'history' && <History size={10} />}
                         {suggestion.type === 'popular' && <Flame size={10} className="text-orange-500" />}
                         {suggestion.type === 'prediction' && <Sparkles size={10} className="text-brand-cyan" />}
-                        {suggestion.type}
                       </p>
                     </div>
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity pr-2">
@@ -415,14 +414,14 @@ export default function SearchPage() {
               <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter mb-8 flex items-center gap-3">
                 <Sparkles className="text-brand-cyan w-6 h-6" /> Recomendados para você
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 tv-grid-layout gap-4 sm:gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
                 {suggestions.map((item) => (
                   <div key={item.id} onClick={() => handleResultClick(item)}>
                     <ContentCard item={{
                       id: item.source_id,
                       id_n: item.source_table === 'series' ? item.source_id : undefined,
                       titulo: item.titulo,
-                      poster: item.poster,
+                      poster: item.poster || item.banner || item.capa || item.backdrop,
                       type: item.tipo
                     }} />
                   </div>
@@ -443,14 +442,14 @@ export default function SearchPage() {
             </div>
 
             {results.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 tv-grid-layout gap-4 md:gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 md:gap-8">
                 {results.map((item) => (
                   <div key={item.id} onClick={() => handleResultClick(item)}>
                     <ContentCard item={{
                       id: item.source_id,
                       id_n: item.source_table === 'series' ? item.source_id : undefined,
                       titulo: item.titulo,
-                      poster: item.poster,
+                      poster: item.poster || item.banner || item.capa || item.backdrop,
                       type: item.tipo,
                       year: item.ano
                     }} />

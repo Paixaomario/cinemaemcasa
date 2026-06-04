@@ -144,7 +144,7 @@ async function fetchPredictions(
     // Busca unificada no catálogo de pesquisa para performance profissional
     const { data: matches } = await sb
       .from('search_catalog')
-      .select('source_id, source_table, titulo, poster, tipo')
+      .select('source_id, source_table, titulo, poster, banner, tipo')
       .ilike('titulo', `%${input}%`) // Busca em qualquer parte do título
       .limit(limit)
 
@@ -155,7 +155,7 @@ async function fetchPredictions(
         id: `prediction-${item.source_table}-${item.source_id}`,
         text: item.titulo,
         type: 'prediction' as const,
-        poster: item.poster,
+        poster: item.poster || item.banner,
         icon: item.tipo === 'movie' ? '🎬' : '📺',
         metadata: { resultCount: 1 }
       }))
