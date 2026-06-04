@@ -25,20 +25,20 @@ export function HeroBanner({ type }: HeroBannerProps = {}) {
 
       // Busca condicional baseada na prop 'type'
       if (!type || type === 'movie') {
-        const { data: movies, error: mError } = await sb.from('cinema').select('id, titulo, poster, backdrop, tmdb_id, category, type, trailer').limit(40)
+        const { data: movies, error: mError } = await sb.from('cinema').select('id, titulo, poster, backdrop, tmdb_id, category, trailer').limit(40)
         if (mError) console.error("Erro ao buscar filmes para o banner:", mError)
         moviesData = movies || [];
       }
 
       if (!type || type === 'series') {
-        const { data: series, error: sError } = await sb.from('series').select('id_n, titulo, capa, banner, tmdb_id, genero, type, trailer').limit(40)
+        const { data: series, error: sError } = await sb.from('series').select('id_n, titulo, poster, banner, tmdb_id, genero, trailer').limit(40)
         if (sError) console.error("Erro ao buscar séries para o banner:", sError)
         seriesData = series || [];
       }
 
       const combinedPool = [
         ...moviesData.map(m => ({ ...m, type: 'movie', poster: m.poster || m.backdrop, backdrop: m.backdrop || m.poster, category: m.category, trailer: m.trailer })),
-        ...seriesData.map(s => ({ ...s, id: s.id_n, type: 'series', poster: s.capa || s.banner, backdrop: s.banner || s.capa, category: s.genero, trailer: s.trailer }))
+        ...seriesData.map(s => ({ ...s, id: s.id_n, type: 'series', poster: s.poster || s.banner, backdrop: s.banner || s.poster, category: s.genero, trailer: s.trailer }))
       ].filter(item => item.tmdb_id && (item.poster || item.backdrop)); // Filtra itens sem imagem
 
       // Embaralha o pool combinado
@@ -69,7 +69,7 @@ export function HeroBanner({ type }: HeroBannerProps = {}) {
         
         if (!potentialItem) break;
 
-        const currentCategory = potentialItem.type === 'movie' ? potentialItem.category : potentialItem.genero;
+        const currentCategory = potentialItem.category; // Unificado no mapeamento acima
         const currentSeriesId = potentialItem.type === 'series' ? String(potentialItem.id) : null;
 
         // Regras de filtragem
