@@ -18,10 +18,10 @@ export function Sidebar() {
   ]
 
   return (
-    <aside className="fixed left-0 top-0 h-screen hidden lg:flex flex-col w-[80px] transition-all duration-300 group overflow-visible">
+    <aside className="fixed left-0 top-0 h-screen hidden lg:flex flex-col w-[80px] z-[6000] group overflow-visible">
       {/* Container do Logotipo (Altura 121px) */}
-      <div className="h-[121px] mt-4 flex items-center justify-start w-[80px] shrink-0 overflow-visible">
-        <div className="relative w-[80px] flex items-center justify-center flex-none transition-all duration-500">
+      <div className="h-[121px] mt-4 flex items-center justify-center w-[80px] shrink-0 overflow-visible pointer-events-auto">
+        <div className="relative w-[80px] flex items-center justify-center flex-none">
           <Image 
             src="/logo.png" 
             alt="Logo" 

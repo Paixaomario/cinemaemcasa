@@ -23,14 +23,13 @@ self.addEventListener('fetch', e => {
   
   // Não interceptar chamadas de API externas para evitar erros de CORS/Response
   const url = new URL(e.request.url);
-  if (url.origin !== self.location.origin) return;
+  if (url.origin !== self.location.origin || url.pathname.startsWith('/api')) return;
 
   e.respondWith(
-    fetch(e.request)
-      .catch(() => {
-        return caches.match(e.request).then(cachedResponse => {
-          return cachedResponse || new Response("Rede indisponível", { status: 503, headers: { 'Content-Type': 'text/plain' } });
-        });
-      })
+    fetch(e.request).catch(async () => {
+      const cached = await caches.match(e.request);
+      if (cached) return cached;
+      return new Response("Rede indisponível", { status: 503, headers: { "Content-Type": "text/plain" } });
+    })
   );
 });

@@ -17,9 +17,9 @@ body {
 .using-keyboard *:focus {
   outline: none !important;
   box-shadow: 0 0 0 4px var(--brand-cyan, #00ADEF) !important;
-  z-index: 100 !important;
-  /* Otimizado: Anima apenas o necessário para evitar lag em TVs */
-  transition: box-shadow 0.2s ease-in-out;
+  z-index: 9999 !important;
+  /* TVs sofrem com sombras complexas; simplificamos para ganhar FPS */
+  transition: box-shadow 0.1s ease-out;
   will-change: transform;
 }
 
@@ -273,22 +273,25 @@ header, .mobile-nav-bar {
   aside, .sidebar-container {
     display: flex !important;
     visibility: visible !important;
-    /* BARRA INVISÍVEL POR PADRÃO */
+    /* BARRA INVISÍVEL: Otimizada para não processar transparência sem necessidade */
     background-color: transparent !important;
     backdrop-filter: none !important;
     border-right: 1px solid transparent !important;
+    pointer-events: none; /* Não bloqueia cliques no conteúdo quando invisível */
     z-index: 40 !important;
-    transition: background-color 0.4s ease, backdrop-filter 0.4s ease, width 0.5s ease, z-index 0.1s ease !important;
+    transition: opacity 0.3s ease;
   }
+
+  aside > * { pointer-events: auto; } /* Permite clicar nos ícones */
 
   aside:hover, aside:focus-within {
     /* EFEITO VIDRO APENAS NA AÇÃO */
     background-color: rgba(10, 10, 15, 0.85) !important;
-    backdrop-filter: blur(30px) !important;
-    -webkit-backdrop-filter: blur(30px) !important;
+    backdrop-filter: blur(12px) !important; /* Blur reduzido de 30 para 12 para evitar lag em TVs */
+    -webkit-backdrop-filter: blur(12px) !important;
     border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 20px 0 50px rgba(0,0,0,0.9);
     z-index: 6000 !important; /* Sobrepõe tudo apenas em ação */
+    pointer-events: auto;
   }
 
   /* Ajuste do Logotipo para 121px na Sidebar */

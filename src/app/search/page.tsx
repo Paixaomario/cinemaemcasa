@@ -52,10 +52,10 @@ export default function SearchPage() {
       if (filters) {
         // Limpeza profunda de gêneros (remove [], "", '')
         const cleanStr = (s: string) => s.replace(/[\[\]"']/g, '').trim();
-        const allGenres = filters.flatMap(f => f.genero ? f.genero.split(',').map(g => cleanStr(g)) : []);
-        setAvailableGenres(Array.from(new Set(allGenres)).filter(g => g && g.length > 1).sort() as string[]);
-        setAvailableYears(Array.from(new Set(filters.map(f => f.ano))).filter(Boolean).sort((a: any, b: any) => b - a) as string[]);
-        setAvailableTypes(Array.from(new Set(filters.map(f => f.tipo))).filter(Boolean).sort() as string[]);
+        const allGenres = filters.flatMap((f: any) => f.genero ? String(f.genero).split(',').map((g: string) => cleanStr(g)) : []);
+        setAvailableGenres(Array.from(new Set(allGenres)).filter((g: string) => g && g.length > 1).sort() as string[]);
+        setAvailableYears(Array.from(new Set(filters.map((f: any) => f.ano))).filter(Boolean).sort((a: any, b: any) => Number(b) - Number(a)) as string[]);
+        setAvailableTypes(Array.from(new Set(filters.map((f: any) => f.tipo))).filter(Boolean).sort() as string[]);
       }
 
       // 1.2 Carregar buscas populares (Independente de usuário)
@@ -236,7 +236,6 @@ export default function SearchPage() {
                         {suggestion.type === 'history' && <History size={10} />}
                         {suggestion.type === 'popular' && <Flame size={10} className="text-orange-500" />}
                         {suggestion.type === 'prediction' && <Sparkles size={10} className="text-brand-cyan" />}
-                        <span className="ml-1 opacity-50">{suggestion.type}</span>
                       </p>
                     </div>
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity pr-2">
