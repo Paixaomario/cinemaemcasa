@@ -1,17 +1,27 @@
 'use client'
-import React, { Suspense } from 'react'
+import React, { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { useAuth } from './SupabaseProvider'
+import { useAuth } from '@/components/layout/SupabaseProvider'
+import { createClient } from '@/lib/supabase'
 import { Home, Film, Tv, Search, User } from 'lucide-react'
 
 function NavContent() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const currentTab = searchParams.get('tab')
-  const { user, profile } = useAuth() as any
-  const isChild = profile?.is_child || false
+  const { user } = useAuth()
+  const [isChild, setIsChild] = useState(false)
+
+  // Busca o perfil localmente para garantir o modo infantil no menu
+  useEffect(() => {
+    if (user) {
+      const sb = createClient()
+      sb.from('profiles').select('is_child').eq('id', user.id).maybeSingle()
+        .then(({ data }) => setIsChild(!!data?.is_child))
+    }
+  }, [user])
 
   // Visível em todas as páginas, o player usará Z-index superior para cobrir
   const navItems = [
@@ -28,11 +38,9 @@ function NavContent() {
         <div className="nav-wrapper">
           <div className="nav-group">
             {navItems.map((item) => (
-              <Link key={item.href} href={item.href} className={`nav-item ${pathname === item.href ? 'active' : ''}`}>
-                <div className="nav-item-inner">
-                  <item.icon className="icon" size={22} />
-                  <span className="legend">{item.label}</span>
-                </div>
+              <Link key={item.href} href={item.href} className={`nav-item ${pathname === item.href ? 'active' : ''}`} tabIndex={0}>
+                <item.icon className="icon" size={22} />
+                <span className="legend">{item.label}</span>
               </Link>
             ))}
           </div>
@@ -110,15 +118,18 @@ function NavContent() {
         }
 
         .nav-item {
-          flex: 1;
           display: flex !important;
           flex-direction: column !important;
-          align-items: center;
-          justify-content: center;
+          align-items: center !important;
+          justify-content: center !important;
+          flex: 1;
           text-decoration: none;
           color: #ffffff;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          gap: 2px;
+          gap: 4px;
+          pointer-events: auto !important;
+          min-width: 0;
+          width: 100%;
         }
 
         .nav-item.active {

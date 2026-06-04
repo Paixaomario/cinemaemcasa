@@ -733,7 +733,7 @@ function SeriesContent() {
         {showBannerTrailer && canAutoPlayTrailer && series.trailer ? (
           <div className="absolute inset-0 w-full h-full scale-125">
              <iframe
-               src={`https://www.youtube.com/embed/${series.trailer.split('v=')[1] || series.trailer.split('/').pop()}?autoplay=1&mute=1&controls=0&loop=1&playlist=${series.trailer.split('v=')[1] || series.trailer.split('/').pop()}&showinfo=0&modestbranding=1&iv_load_policy=3&rel=0`}
+               src={`https://www.youtube.com/embed/${series.trailer.split('v=')[1] || series.trailer.split('/').pop()}?autoplay=1&mute=1&controls=0&loop=1&playlist=${series.trailer.split('v=')[1] || series.trailer.split('/').pop()}&modestbranding=1&iv_load_policy=3&rel=0&disablekb=1&fs=0`}
                className="w-full h-full pointer-events-none opacity-50"
                allow="autoplay"
              />

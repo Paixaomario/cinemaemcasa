@@ -103,6 +103,7 @@ body {
 @media (max-width: 1023px) {
   header, .navbar-fixed, .top-nav { display: none !important; }
   main { padding-top: 0 !important; margin-top: 0 !important; }
+  .flex-col.gap-16 { gap: 2rem !important; } /* Mantém espaço entre categorias no mobile */
 }
 
 /* =========================================================
@@ -222,8 +223,8 @@ header, .mobile-nav-bar {
     opacity: 1 !important;
     /* Garante que ícones e textos da barra inferior escalem em celulares pequenos */
     font-size: clamp(0.7rem, 2vh, 1rem);
-    padding-bottom: max(10px, env(safe-area-inset-bottom));
-    z-index: 50 !important;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+    z-index: 9999 !important;
   }
 
   /* Adiciona espaço no fundo para o conteúdo não ficar escondido atrás do menu */
