@@ -18,7 +18,7 @@ export function Sidebar() {
   ]
 
   return (
-    <aside className="fixed left-0 top-0 h-screen z-[6000] hidden lg:flex flex-col bg-black/40 hover:bg-black/95 focus-within:bg-black/95 w-[100px] hover:w-[280px] focus-within:w-[280px] transition-all duration-500 group border-r border-white/10 backdrop-blur-3xl shadow-[15px_0_50px_rgba(0,0,0,0.95)]">
+    <aside className="fixed left-0 top-0 h-screen z-[6000] hidden lg:flex flex-col w-[100px] hover:w-[220px] focus-within:w-[220px] transition-all duration-500 group">
       {/* Container do Logotipo (Altura 121px) */}
       <div className="h-[121px] mt-8 flex items-center justify-center px-0 shrink-0">
         <div className="relative flex items-center justify-center transition-all duration-500">
@@ -27,7 +27,7 @@ export function Sidebar() {
             alt="Logo" 
             width={240} 
             height={121} 
-            className="object-contain transition-all duration-500 scale-[0.6] group-hover:scale-100 group-focus-within:scale-100 nav-logo" 
+            className="object-contain transition-all duration-500 scale-[1.3] group-hover:scale-100 group-focus-within:scale-100 nav-logo" 
           />
         </div>
       </div>
@@ -44,17 +44,17 @@ export function Sidebar() {
               href={item.href}
               tabIndex={0}
               className={`
-                flex items-center rounded-lg transition-all duration-200 outline-none h-[36px] lg:h-[51px] 2xl:h-[56px] w-full shrink-0
+                flex items-center transition-all duration-200 outline-none h-[56px] w-full shrink-0
                 ${isActive 
                   ? 'bg-brand-cyan/15 text-brand-cyan' 
-                  : 'text-white hover:bg-white/10 hover:text-white focus:bg-brand-cyan focus:text-black focus:scale-110'
+                  : 'text-white hover:bg-white/10 hover:text-white focus:bg-brand-cyan focus:text-black'
                 }
               `}
             >
               <div className="w-[100px] flex-none flex items-center justify-center">
-                <Icon className="w-[26px] h-[26px] transition-transform group-hover:scale-110" strokeWidth={isActive ? 2.5 : 1.5} />
+                <Icon className="w-[28px] h-[28px]" strokeWidth={isActive ? 2.5 : 1.5} />
               </div>
-              <span className="font-montserrat font-bold uppercase tracking-[0.1em] text-xs opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-500 whitespace-nowrap">
+              <span className="font-montserrat font-bold uppercase tracking-[0.1em] text-[10px] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-500 whitespace-nowrap pr-[7px]">
                 {item.label}
               </span>
             </Link>
