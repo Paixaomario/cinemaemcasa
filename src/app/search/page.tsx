@@ -1,6 +1,5 @@
 'use client'
 export const dynamic = 'force-dynamic'
-export const revalidate = 0
 import { createClient } from '@/lib/supabase'
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '@/components/layout/SupabaseProvider'
