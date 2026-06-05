@@ -281,57 +281,64 @@ export function HomeClient() {
 
       setSections(visibleSections)
 
-      // 3. Carrega os itens para cada seção visível
-      setPageLoading(false) // Mostra a estrutura da página imediatamente
+      // 3. Carrega os itens para cada seção visível em paralelo
+      const sectionPromises = visibleSections.map(async (sec) => {
+        try {
+          const displayedIds = getDisplayedCache()
+          let items: any[] = []
 
-      visibleSections.forEach(async (sec) => {
-        const displayedIds = getDisplayedCache()
-        let items: any[] = []
-
-        // Seção especial: Indicados por IA
-        if (sec.titulo.toLowerCase().includes('indicados por ia') || sec.titulo.toLowerCase().includes('ia')) {
-          if (user) {
-            const userIsNew = await isNewUser(user.id)
-            if (userIsNew) {
-              items = await getTrendingContent(sec.limite, isChild)
+          // Seção especial: Indicados por IA
+          if (sec.titulo.toLowerCase().includes('indicados por ia') || sec.titulo.toLowerCase().includes('ia')) {
+            if (user) {
+              const userIsNew = await isNewUser(user.id)
+              if (userIsNew) {
+                items = await getTrendingContent(sec.limite, isChild)
+              } else {
+                // Em 3G, buscamos recomendações em paralelo para não travar o resto
+                // Esta é uma promessa que será resolvida e atualizada no estado
+                // Não precisa ser awaited aqui para não bloquear o carregamento das outras seções
+                getPersonalizedRecommendations(user.id, sec.limite, displayedIds, isChild).then(recItems => {
+                  setSectionsData(prev => ({ ...prev, [sec.id]: recItems }))
+                })
+                return // Retorna para não adicionar ao `items` local
+              }
             } else {
-              // Em 3G, buscamos recomendações em paralelo para não travar o resto
-              getPersonalizedRecommendations(user.id, sec.limite, displayedIds, isChild).then(recItems => {
-                setSectionsData(prev => ({ ...prev, [sec.id]: recItems }))
-              })
-              return
+              items = await getTrendingContent(sec.limite, isChild)
             }
           } else {
-            items = await getTrendingContent(sec.limite, isChild)
-          }
-        } else {
-          // Seção normal: usa o gerenciador de conteúdo (independente da fonte)
-          // Converte categorias para array se necessário
-          let categories: string[] = []
-          if (sec.categorias) {
-            if (Array.isArray(sec.categorias)) {
-              categories = sec.categorias
-            } else if (typeof sec.categorias === 'string') {
-              categories = (sec.categorias as string).split(',').map((c: string) => c.trim())
+            // Seção normal: usa o gerenciador de conteúdo (independente da fonte)
+            // Converte categorias para array se necessário
+            let categories: string[] = []
+            if (sec.categorias) {
+              if (Array.isArray(sec.categorias)) {
+                categories = sec.categorias
+              } else if (typeof sec.categorias === 'string') {
+                categories = (sec.categorias as string).split(',').map((c: string) => c.trim())
+              }
             }
+
+            items = await getSectionContent(
+              sec.id,
+              categories,
+              sec.limite,
+              sec.ordenacao,
+              displayedIds,
+              isChild
+            )
           }
 
-          items = await getSectionContent(
-            sec.id,
-            categories,
-            sec.limite,
-            sec.ordenacao,
-            displayedIds,
-            isChild
-          )
+          // Adiciona IDs ao cache de exibidos
+          const newIds = items.map((item: any) => String(item.id)).filter(Boolean)
+          addBatchToDisplayedCache(newIds)
+
+          setSectionsData(prev => ({ ...prev, [sec.id]: items }))
+        } catch (sectionError) {
+          console.error(`[Home] Erro ao carregar seção ${sec.titulo}:`, sectionError);
         }
-
-        // Adiciona IDs ao cache de exibidos
-        const newIds = items.map((item: any) => String(item.id)).filter(Boolean)
-        addBatchToDisplayedCache(newIds)
-
-        setSectionsData(prev => ({ ...prev, [sec.id]: items }))
       })
+
+      await Promise.all(sectionPromises); // Espera todas as seções carregarem
+      setPageLoading(false); // Agora sim, a página está carregada
     }
 
     loadHome()
@@ -343,7 +350,7 @@ export function HomeClient() {
   return (
     <div className={`flex flex-col gap-16 pb-32 ${isTVLayout ? 'px-[6%] py-[4%]' : 'px-4 md:px-0'}`}>
       {/* Banner de Destaque */}
-      <HeroBanner />
+      <HeroBanner canAutoPlayTrailer={canAutoPlayTrailer} />
 
       {/* Popup de Continuar ou Reiniciar */}
       {resumeItem && (

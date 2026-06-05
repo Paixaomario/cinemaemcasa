@@ -7,9 +7,10 @@ import Link from 'next/link'
 
 interface HeroBannerProps {
   type?: 'movie' | 'series'
+  canAutoPlayTrailer?: boolean
 }
 
-export function HeroBanner({ type }: HeroBannerProps = {}) {
+export function HeroBanner({ type, canAutoPlayTrailer = true }: HeroBannerProps = {}) {
   const [currentBannerItem, setCurrentBannerItem] = useState<any>(null)
   const [contentPool, setContentPool] = useState<any[]>([])
   const [showTrailer, setShowTrailer] = useState(false)
@@ -140,15 +141,17 @@ export function HeroBanner({ type }: HeroBannerProps = {}) {
 
   // Lógica para ativar o trailer após 2 segundos de visualização (Padrão Disney+/HBO Max)
   useEffect(() => {
-    setShowTrailer(false);
+    setShowTrailer(false); // Reset trailer state on item change
     if (!currentBannerItem?.trailer) return;
 
-    const timer = setTimeout(() => {
-      setShowTrailer(true);
-    }, 2000);
+    if (canAutoPlayTrailer) {
+      const timer = setTimeout(() => {
+        setShowTrailer(true);
+      }, 2000);
 
-    return () => clearTimeout(timer);
-  }, [currentBannerItem]);
+      return () => clearTimeout(timer);
+    }
+  }, [currentBannerItem, canAutoPlayTrailer]);
 
   if (loading || !currentBannerItem) {
     return <div className="w-full h-[50vh] md:h-[80vh] bg-neutral-900 animate-pulse" />

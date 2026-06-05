@@ -53,13 +53,41 @@ export default function SearchPage() {
   const loadInitialData = useCallback(async () => {
     try {
       // 1.1 Carregar opções de filtro (Independente de usuário)
-      const { data: filters, error: filtersError } = await sb.from('search_catalog').select('genero, ano, tipo').limit(1000);
+      const [genresRes, yearsRes, typesRes] = await Promise.all([
+        sb.from('search_catalog').select('genero'),
+        sb.from('search_catalog').select('ano'),
+        sb.from('search_catalog').select('tipo'),
+      ]);
       
-      if (filtersError) {
-        console.error("Erro crítico: Tabela search_catalog não encontrada. Execute as migrações SQL.");
+      if (genresRes.error || yearsRes.error || typesRes.error) {
+        console.error("Erro crítico ao carregar filtros de busca: Tabela search_catalog não encontrada ou erro de RLS. Execute as migrações SQL.");
       }
 
-      if (filters && filters.length > 0) {
+      // Limpeza cinematográfica: Remove colchetes, aspas e limpa espaços
+      const cleanRegex = /[\[\]"']/g;
+      const cleanValue = (val: any) => String(val || '').replace(cleanRegex, '').trim();
+
+      if (genresRes.data) {
+        const genresSet = new Set<string>();
+        genresRes.data.forEach((f: any) => {
+          if (f.genero) cleanValue(f.genero).split(',').forEach(g => { const s = g.trim(); if(s.length > 1) genresSet.add(s); });
+        });
+        setAvailableGenres(Array.from(genresSet).sort());
+      }
+
+      if (yearsRes.data) {
+        const yearsSet = new Set<string>();
+        yearsRes.data.forEach((f: any) => { const y = cleanValue(f.ano); if (y.length === 4) yearsSet.add(y); });
+        setAvailableYears(Array.from(yearsSet).sort((a, b) => Number(b) - Number(a)));
+      }
+
+      if (typesRes.data) {
+        const typesSet = new Set<string>();
+        typesRes.data.forEach((f: any) => { const t = cleanValue(f.tipo); if (t.length > 2) typesSet.add(t); });
+        setAvailableTypes(Array.from(typesSet).sort());
+      }
+
+      /* Original logic, now replaced by distinct queries
         // Limpeza cinematográfica: Remove colchetes, aspas e limpa espaços
         const cleanRegex = /[\[\]"']/g;
         const cleanValue = (val: any) => String(val || '').replace(cleanRegex, '').trim();
@@ -77,7 +105,7 @@ export default function SearchPage() {
         setAvailableGenres(Array.from(genresSet).sort());
         setAvailableYears(Array.from(yearsSet).sort((a, b) => Number(b) - Number(a)));
         setAvailableTypes(Array.from(typesSet).sort());
-      }
+      */
 
       // 1.3 Recomendações e Histórico (Se logado)
       if (user) {
