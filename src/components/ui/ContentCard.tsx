@@ -5,8 +5,8 @@ import Link from 'next/link'
 export function ContentCard({ 
   item, 
   showProgress = false, 
-  progress 
-  onClick
+  progress,
+  onClick,
 }: { 
   item: any; 
   showProgress?: boolean; 
