@@ -6,10 +6,12 @@ export function ContentCard({
   item, 
   showProgress = false, 
   progress 
+  onClick
 }: { 
   item: any; 
   showProgress?: boolean; 
   progress?: { lastPosition: any; duration: any } 
+  onClick?: () => void;
 }) {
   // Mapeamento para lidar com as diferentes tabelas (cinema vs series)
   const title = item.titulo || item.title || 'Sem título'
@@ -41,10 +43,11 @@ export function ContentCard({
   return (
     <Link 
       href={detailHref}
+      onClick={onClick}
       className="group relative block aspect-[2/3] w-full transition-all duration-300 z-0 hover:z-50 focus:z-50 focus:outline-none focus:ring-4 focus:ring-brand-cyan rounded-xl shadow-2xl shadow-black/90 touch-pan-y"
     >
       <div className="absolute inset-0 overflow-hidden rounded-xl bg-neutral-900">
-        {poster && String(poster).length > 10 && !String(poster).includes('undefined') && String(poster) !== 'null' ? (
+        {poster && String(poster).length > 5 && !String(poster).includes('undefined') && String(poster) !== 'null' ? (
           <Image
             src={
               String(poster).startsWith('http') 

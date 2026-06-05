@@ -480,7 +480,7 @@ export async function getSectionContent(
  * NÃO remove duplicatas - cada item é único
  * Filmes com continuações são mantidos como itens distintos
  */
-function removeDuplicatesByTitle(items: ContentItem[]): ContentItem[] {
+export function removeDuplicatesByTitle(items: ContentItem[]): ContentItem[] {
   const seen = new Set();
   return items.filter(item => {
     const duplicate = seen.has(item.titulo.toLowerCase());

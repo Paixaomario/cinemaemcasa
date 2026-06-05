@@ -69,61 +69,74 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       e.preventDefault()
       const activeRect = active.getBoundingClientRect()
 
-      const getDistance = (a: DOMRect, b: DOMRect, dir: string) => {
-        const aC = { x: a.left + a.width / 2, y: a.top + a.height / 2 }
-        const bC = { x: b.left + b.width / 2, y: b.top + b.height / 2 }
-
-        // Para navegação vertical, prioriza distância vertical sobre horizontal
-        // Para navegação horizontal, prioriza distância horizontal sobre vertical
-        if (dir === 'ArrowRight') return (b.left - activeRect.right) + Math.abs(bC.y - aC.y) * 2
-        if (dir === 'ArrowLeft') return (activeRect.left - b.right) + Math.abs(bC.y - aC.y) * 2
-        if (dir === 'ArrowDown') return (b.top - activeRect.bottom) + Math.abs(bC.x - aC.x) * 0.5
-        if (dir === 'ArrowUp') return (activeRect.top - b.bottom) + Math.abs(bC.x - aC.x) * 0.5
-        return Infinity
-      }
-
       let nearest: HTMLElement | null = null
-      let minDist = Infinity
+      const isInSidebar = !!active.closest('aside')
 
-      focusable.forEach(el => {
-        if (el === active) return
-        const r = el.getBoundingClientRect()
-
-        // Filtra apenas elementos que estão na direção correta
-        if (key === 'ArrowRight' && r.left < activeRect.right - 1) return
-        if (key === 'ArrowLeft' && r.right > activeRect.left + 1) return
-        if (key === 'ArrowDown' && r.top < activeRect.bottom - 1) return
-        if (key === 'ArrowUp' && r.bottom > activeRect.top + 1) return
-
-        // Para navegação vertical, não exige alinhamento horizontal
-        // Apenas prioriza elementos mais próximos verticalmente
-        if (key === 'ArrowDown' || key === 'ArrowUp') {
-          // Não filtra por alinhamento horizontal
-          // Apenas usa a distância calculada com penalidade menor para desalinhamento
-        }
-
-        // Para navegação horizontal, prioriza elementos na mesma linha
-        if (key === 'ArrowRight' || key === 'ArrowLeft') {
-          const activeCenterY = activeRect.top + activeRect.height / 2
-          const elCenterY = r.top + r.height / 2
-          const verticalDiff = Math.abs(activeCenterY - elCenterY)
-          // Penaliza se estiver muito fora da linha, mas não ignora
-          if (verticalDiff > 100) {
-            const d = getDistance(activeRect, r, key) + verticalDiff * 5
-            if (d < minDist) {
-              minDist = d
-              nearest = el
-            }
-            return
+      if (key === 'ArrowRight') {
+        const toRight = focusable.filter(el => {
+          const r = el.getBoundingClientRect()
+          return r.left >= activeRect.right - 1 && Math.abs(r.top - activeRect.top) < 50
+        })
+        if (toRight.length > 0) {
+          nearest = toRight.reduce((prev, curr) => 
+            curr.getBoundingClientRect().left < prev.getBoundingClientRect().left ? curr : prev
+          )
+        } else if (!isInSidebar) {
+          // Wrap around: se chegou no fim da linha, volta para a primeira coluna da mesma linha
+          const rowElements = focusable.filter(el => !el.closest('aside') && Math.abs(el.getBoundingClientRect().top - activeRect.top) < 50)
+          if (rowElements.length > 0) {
+            nearest = rowElements.reduce((prev, curr) => 
+              curr.getBoundingClientRect().left < prev.getBoundingClientRect().left ? curr : prev
+            )
           }
         }
-
-        const d = getDistance(activeRect, r, key)
-        if (d < minDist) {
-          minDist = d
-          nearest = el
+      } else if (key === 'ArrowLeft') {
+        const toLeft = focusable.filter(el => {
+          const r = el.getBoundingClientRect()
+          return r.right <= activeRect.left + 1 && Math.abs(r.top - activeRect.top) < 50
+        })
+        if (toLeft.length > 0) {
+          nearest = toLeft.reduce((prev, curr) => 
+            curr.getBoundingClientRect().right > prev.getBoundingClientRect().right ? curr : prev
+          )
+        } else if (!isInSidebar) {
+          // Na borda esquerda, move o foco diretamente para o menu "Início" na Sidebar
+          nearest = focusable.find(el => {
+            const href = el.getAttribute('href')
+            return href === '/' && el.closest('aside')
+          }) as HTMLElement || null
         }
-      })
+      } else if (key === 'ArrowDown') {
+        const below = focusable.filter(el => el.getBoundingClientRect().top >= activeRect.bottom - 1)
+        if (below.length > 0) {
+          const minTop = Math.min(...below.map(el => el.getBoundingClientRect().top))
+          const nextRow = below.filter(el => Math.abs(el.getBoundingClientRect().top - minTop) < 50)
+          
+          if (isInSidebar) {
+            nearest = nextRow.find(el => el.closest('aside')) || nextRow[0]
+          } else {
+            // Sempre foca na primeira coluna (extrema esquerda) da próxima linha
+            nearest = nextRow.reduce((prev, curr) => 
+              curr.getBoundingClientRect().left < prev.getBoundingClientRect().left ? curr : prev
+            )
+          }
+        }
+      } else if (key === 'ArrowUp') {
+        const above = focusable.filter(el => el.getBoundingClientRect().bottom <= activeRect.top + 1)
+        if (above.length > 0) {
+          const maxBottom = Math.max(...above.map(el => el.getBoundingClientRect().bottom))
+          const prevRow = above.filter(el => Math.abs(el.getBoundingClientRect().bottom - maxBottom) < 50)
+          
+          if (isInSidebar) {
+            nearest = prevRow.find(el => el.closest('aside')) || prevRow[0]
+          } else {
+            // Sempre foca na primeira coluna (extrema esquerda) da linha acima
+            nearest = prevRow.reduce((prev, curr) => 
+              curr.getBoundingClientRect().left < prev.getBoundingClientRect().left ? curr : prev
+            )
+          }
+        }
+      }
 
       if (nearest) {
         const targetElement = nearest as HTMLElement

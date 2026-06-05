@@ -1,4 +1,6 @@
 'use client'
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 import { createClient } from '@/lib/supabase'
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '@/components/layout/SupabaseProvider'
@@ -7,6 +9,12 @@ import { Search, Mic, X, Trash2, History, Sparkles, ChevronDown, Flame } from 'l
 import { useVoiceSearch } from '@/hooks/useVoiceSearch'
 import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
 import Image from 'next/image'
+import { 
+  getPersonalizedRecommendations, 
+  getTrendingContent,
+  getDisplayedCache,
+  addBatchToDisplayedCache
+} from '@/lib/homeContentManager'
 import type { SuggestionItem } from '@/lib/searchSuggestions'
 
 export default function SearchPage() {
@@ -52,20 +60,30 @@ export default function SearchPage() {
   // 1. Carregar Sugestões Iniciais (6 itens relevantes) e Histórico
   const loadInitialData = useCallback(async () => {
     try {
-      // 1.1 Carregar opções de filtro (Independente de usuário)
+      // 1.1 Carregar opções de filtro
       const [genresRes, yearsRes, typesRes] = await Promise.all([
         sb.from('search_catalog').select('genero'),
         sb.from('search_catalog').select('ano'),
         sb.from('search_catalog').select('tipo'),
       ]);
-      
-      if (genresRes.error || yearsRes.error || typesRes.error) {
-        console.error("Erro crítico ao carregar filtros de busca: Tabela search_catalog não encontrada ou erro de RLS. Execute as migrações SQL.");
-      }
 
-      // Limpeza cinematográfica: Remove colchetes, aspas e limpa espaços
       const cleanRegex = /[\[\]"']/g;
       const cleanValue = (val: any) => String(val || '').replace(cleanRegex, '').trim();
+
+      // 1.2 Recomendações Inteligentes e Dinâmicas (Estilo Streaming Premium)
+      const displayedIds = getDisplayedCache();
+      let recs: any[] = [];
+      
+      if (user) {
+        recs = await getPersonalizedRecommendations(user.id, 10, displayedIds, false);
+      } else {
+        recs = await getTrendingContent(10, false);
+      }
+      
+      if (recs?.length) {
+        setSuggestions(recs);
+        addBatchToDisplayedCache(recs.map(r => String(r.id)));
+      }
 
       if (genresRes.data) {
         const genresSet = new Set<string>();
@@ -87,48 +105,6 @@ export default function SearchPage() {
         setAvailableTypes(Array.from(typesSet).sort());
       }
 
-      /* Original logic, now replaced by distinct queries
-        // Limpeza cinematográfica: Remove colchetes, aspas e limpa espaços
-        const cleanRegex = /[\[\]"']/g;
-        const cleanValue = (val: any) => String(val || '').replace(cleanRegex, '').trim();
-        
-        const genresSet = new Set<string>();
-        const yearsSet = new Set<string>();
-        const typesSet = new Set<string>();
-
-        filters.forEach((f: any) => {
-          if (f.genero) cleanValue(f.genero).split(',').forEach(g => { const s = g.trim(); if(s.length > 1) genresSet.add(s); });
-          const y = cleanValue(f.ano); if (y.length === 4) yearsSet.add(y);
-          const t = cleanValue(f.tipo); if (t.length > 2) typesSet.add(t);
-        });
-
-        setAvailableGenres(Array.from(genresSet).sort());
-        setAvailableYears(Array.from(yearsSet).sort((a, b) => Number(b) - Number(a)));
-        setAvailableTypes(Array.from(typesSet).sort());
-      */
-
-      // 1.3 Recomendações e Histórico (Se logado)
-      if (user) {
-        const { data: aiRecs } = await sb
-          .from('recommendations')
-          .select('content_id')
-          .eq('user_id', user.id)
-          .order('score', { ascending: false })
-          .limit(6);
-
-        if (aiRecs?.length) {
-          const ids = aiRecs.map(r => r.content_id);
-          const { data: catalogItems } = await sb.from('search_catalog').select('*').in('source_id', ids);
-          if (catalogItems) setSuggestions(catalogItems);
-        } else {
-          const { data: fallback } = await sb.from('search_catalog').select('*').limit(6).order('created_at', { ascending: false });
-          if (fallback) setSuggestions(fallback);
-        }
-      } else {
-        // Fallback para visitantes
-        const { data: fallback } = await sb.from('search_catalog').select('*').limit(6).order('created_at', { ascending: false });
-        if (fallback) setSuggestions(fallback);
-      }
     } catch (err) {
       console.error("Erro ao carregar dados iniciais:", err);
     }
@@ -254,6 +230,14 @@ export default function SearchPage() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowDown') {
+                // Permite que o foco saia para os filtros ou resultados
+                e.currentTarget.blur();
+              } else if (e.key === 'Enter') {
+                e.currentTarget.blur();
+              }
+            }}
             placeholder="Títulos, gêneros ou pessoas..."
             className="w-full bg-white/5 border-2 border-transparent focus:border-brand-cyan/50 rounded-2xl py-5 pl-14 pr-32 text-xl md:text-2xl font-medium outline-none transition-all placeholder:text-neutral-600 focus:bg-white/10"
             autoFocus
@@ -476,17 +460,19 @@ export default function SearchPage() {
               <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter mb-8 flex items-center gap-3">
                 <Sparkles className="text-brand-cyan w-6 h-6" /> Recomendados para você
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-10">
                 {suggestions.map((item) => (
-                  <div key={item.id} onClick={() => handleResultClick(item)}>
-                    <ContentCard item={{
-                      id: item.source_id,
-                      id_n: item.source_table === 'series' ? item.source_id : undefined,
-                      titulo: item.titulo,
-                      poster: item.poster || item.banner || item.backdrop || item.capa,
-                      type: item.tipo
-                    }} />
-                  </div>
+                  <ContentCard 
+                    key={item.id} 
+                    item={{
+                      id: item.source_id || item.id,
+                      id_n: (item.source_table === 'series' || item.type === 'series') ? (item.source_id || item.id_n || item.id) : undefined,
+                      titulo: item.titulo || item.title,
+                      poster: item.poster || item.banner || item.backdrop || item.capa || item.poster_path,
+                      type: item.tipo || item.type
+                    }} 
+                    onClick={() => handleResultClick(item)}
+                  />
                 ))}
               </div>
             </div>
@@ -504,18 +490,20 @@ export default function SearchPage() {
             </div>
 
             {results.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 md:gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 md:gap-10">
                 {results.map((item) => (
-                  <div key={item.id} onClick={() => handleResultClick(item)}>
-                    <ContentCard item={{
-                      id: item.source_id,
-                      id_n: item.source_table === 'series' ? item.source_id : undefined,
-                      titulo: item.titulo,
-                      poster: item.poster || item.banner || item.backdrop || item.capa,
-                      type: item.tipo,
-                      year: item.ano
-                    }} />
-                    {/* Nomes de Atores/Diretores Clicáveis */}
+                  <div key={item.id} className="flex flex-col">
+                    <ContentCard 
+                      item={{
+                        id: item.source_id,
+                        id_n: item.source_table === 'series' ? item.source_id : undefined,
+                        titulo: item.titulo,
+                        poster: item.poster || item.banner || item.backdrop || item.capa,
+                        type: item.tipo,
+                        year: item.ano
+                      }} 
+                      onClick={() => handleResultClick(item)}
+                    />
                     {(item.cast_names && item.cast_names.length > 0) && (
                       <div className="flex flex-wrap gap-1 mt-2">
                         {item.cast_names.slice(0, 2).map((name: string) => ( // Limita a 2 nomes para não poluir
