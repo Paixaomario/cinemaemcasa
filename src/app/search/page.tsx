@@ -37,7 +37,7 @@ export default function SearchPage() {
   const [isSearching, setIsSearching] = useState(false)
   const sb = createClient()
 
-  useSpatialNavigation()
+  // useSpatialNavigation() // Temporariamente desativado para depurar o congelamento
 
   // Detecção de Localização com Fallback
   useEffect(() => {
@@ -148,7 +148,7 @@ export default function SearchPage() {
         setIsSearching(true)
         let searchBuilder = sb
           .from('search_catalog')
-          .select('*')
+          .select('id, source_id, source_table, titulo, title, poster, banner, backdrop, capa, poster_path, type, tipo, year, ano, cast_names, director_names, genero, genre, category, rating, vote_average, release_date') // Selecione apenas as colunas necessárias
           .limit(24);
         
         if (query.trim().length >= 1) {
