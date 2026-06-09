@@ -143,22 +143,6 @@ export default function SearchPage() {
 
   // 2. Busca Global em Tempo Real
   useEffect(() => {
-    // Só executa a busca se os filtros iniciais já foram carregados
-    if (!initialFiltersLoaded) return;
-
-    if (user) {
-      const { data: hist } = await sb
-        .from('user_search_history')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(5)
-      if (hist) setHistory(hist)
-    }
-  }, [loadInitialData])
-
-  // 2. Busca Global em Tempo Real
-  useEffect(() => {
     // Feedback visual imediato ao começar a digitar ou filtrar
     if (query.trim().length >= 1 || selectedGenre || selectedYear || selectedType || selectedArtist) {
       setIsLoadingResults(true);
@@ -252,10 +236,11 @@ export default function SearchPage() {
   }
 
   return (
-    // Adiciona um overlay de carregamento se os filtros iniciais ainda não foram carregados
-    {!initialFiltersLoaded && (
-      <div className="fixed inset-0 z-[100001] flex items-center justify-center bg-black/90 backdrop-blur-sm"><p className="text-xl text-brand-cyan animate-pulse">Carregando...</p></div>
-    )}
+    <>
+      {/* Adiciona um overlay de carregamento se os filtros iniciais ainda não foram carregados */}
+      {!initialFiltersLoaded && (
+        <div className="fixed inset-0 z-[100001] flex items-center justify-center bg-black/90 backdrop-blur-sm"><p className="text-xl text-brand-cyan animate-pulse">Carregando...</p></div>
+      )}
     <div className="min-h-screen bg-[#0A0A0A] text-white">
       {/* Barra de Busca Fixa - Estilo Glassmorphism */}
       <div className="sticky top-0 z-50 bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-white/5 px-6 py-6 md:px-16">
@@ -603,5 +588,6 @@ export default function SearchPage() {
         </div>
       )}
     </div>
+    </>
   )
 }
