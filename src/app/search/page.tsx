@@ -37,7 +37,8 @@ export default function SearchPage() {
   const [isSearching, setIsSearching] = useState(false)
   const sb = createClient()
 
-  // useSpatialNavigation() // Temporariamente desativado para depurar o congelamento
+  // Re-ativando useSpatialNavigation para depurar o foco e navegação
+  useSpatialNavigation()
 
   // Detecção de Localização com Fallback
   useEffect(() => {
@@ -56,61 +57,94 @@ export default function SearchPage() {
     detectLocation()
   }, [])
 
-  // 1. Carregar Sugestões Iniciais (6 itens relevantes) e Histórico
-  const loadInitialData = useCallback(async () => {
-    try {
-      // 1.1 Carregar opções de filtro
-      const [genresRes, yearsRes, typesRes] = await Promise.all([
-        sb.from('search_catalog').select('genero'),
-        sb.from('search_catalog').select('ano'),
-        sb.from('search_catalog').select('tipo'),
-      ]);
+  const [initialFiltersLoaded, setInitialFiltersLoaded] = useState(false);
 
-      const cleanRegex = /[\[\]"']/g;
-      const cleanValue = (val: any) => String(val || '').replace(cleanRegex, '').trim();
-
-      // 1.2 Recomendações Inteligentes e Dinâmicas (Estilo Streaming Premium)
-      const displayedIds = getDisplayedCache();
-      let recs: any[] = [];
-      
-      if (user) {
-        recs = await getPersonalizedRecommendations(user.id, 10, displayedIds, false);
-      } else {
-        recs = await getTrendingContent(10, false);
+  // 1.1 Carregar opções de filtro (executa apenas uma vez)
+  useEffect(() => {
+    const loadFilterOptions = async () => {
+      try {
+        const [genresRes, yearsRes, typesRes] = await Promise.all([
+          sb.from('search_catalog').select('genero'),
+          sb.from('search_catalog').select('ano'),
+          sb.from('search_catalog').select('tipo'),
+        ]);
+  
+        const cleanRegex = /[\[\]"']/g;
+        const cleanValue = (val: any) => String(val || '').replace(cleanRegex, '').trim();
+  
+        if (genresRes.data) {
+          const genresSet = new Set<string>();
+          genresRes.data.forEach((f: any) => {
+            if (f.genero) cleanValue(f.genero).split(',').forEach(g => { const s = g.trim(); if(s.length > 1) genresSet.add(s); });
+          });
+          setAvailableGenres(Array.from(genresSet).sort());
+        }
+  
+        if (yearsRes.data) {
+          const yearsSet = new Set<string>();
+          yearsRes.data.forEach((f: any) => { const y = cleanValue(f.ano); if (y.length === 4) yearsSet.add(y); });
+          setAvailableYears(Array.from(yearsSet).sort((a, b) => Number(b) - Number(a)));
+        }
+  
+        if (typesRes.data) {
+          const typesSet = new Set<string>();
+          typesRes.data.forEach((f: any) => { const t = cleanValue(f.tipo); if (t.length > 2) typesSet.add(t); });
+          setAvailableTypes(Array.from(typesSet).sort());
+        }
+        setInitialFiltersLoaded(true);
+      } catch (err) {
+        console.error("Erro ao carregar opções de filtro:", err);
       }
-      
-      if (recs?.length) {
-        setSuggestions(recs);
-        addBatchToDisplayedCache(recs.map(r => String(r.id)));
+    };
+    loadFilterOptions();
+  }, [sb]); // Dependência apenas do Supabase client
+
+  // 1.2 Carregar Sugestões Iniciais (6 itens relevantes), Histórico e Buscas Populares (depende do user e userRegion)
+  useEffect(() => {
+    if (!initialFiltersLoaded) return; // Espera os filtros carregarem primeiro
+
+    const loadUserAndPopularData = async () => {
+      try {
+        // Recomendações Inteligentes e Dinâmicas (Estilo Streaming Premium)
+        const displayedIds = getDisplayedCache();
+        let recs: any[] = [];
+        
+        if (user) {
+          recs = await getPersonalizedRecommendations(user.id, 10, displayedIds, false);
+        } else {
+          recs = await getTrendingContent(10, false);
+        }
+        
+        if (recs?.length) {
+          setSuggestions(recs);
+          addBatchToDisplayedCache(recs.map(r => String(r.id)));
+        }
+
+        // Carregar buscas populares (Independente de usuário)
+        const { getPopularSearches } = await import('@/lib/searchSuggestions')
+        getPopularSearches(userRegion).then(setPopularSearches)
+
+        // Carregar histórico do usuário
+        if (user) {
+          const { data: hist } = await sb
+            .from('user_search_history')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(5)
+          if (hist) setHistory(hist)
+        }
+      } catch (err) {
+        console.error("Erro ao carregar dados iniciais do usuário/popular:", err);
       }
+    };
+    loadUserAndPopularData();
+  }, [user, sb, userRegion, initialFiltersLoaded]); // Dependências para dados do usuário e região
 
-      if (genresRes.data) {
-        const genresSet = new Set<string>();
-        genresRes.data.forEach((f: any) => {
-          if (f.genero) cleanValue(f.genero).split(',').forEach(g => { const s = g.trim(); if(s.length > 1) genresSet.add(s); });
-        });
-        setAvailableGenres(Array.from(genresSet).sort());
-      }
-
-      if (yearsRes.data) {
-        const yearsSet = new Set<string>();
-        yearsRes.data.forEach((f: any) => { const y = cleanValue(f.ano); if (y.length === 4) yearsSet.add(y); });
-        setAvailableYears(Array.from(yearsSet).sort((a, b) => Number(b) - Number(a)));
-      }
-
-      if (typesRes.data) {
-        const typesSet = new Set<string>();
-        typesRes.data.forEach((f: any) => { const t = cleanValue(f.tipo); if (t.length > 2) typesSet.add(t); });
-        setAvailableTypes(Array.from(typesSet).sort());
-      }
-
-    } catch (err) {
-      console.error("Erro ao carregar dados iniciais:", err);
-    }
-
-    // 1.2 Carregar buscas populares (Independente de usuário)
-    const { getPopularSearches } = await import('@/lib/searchSuggestions')
-    getPopularSearches(userRegion).then(setPopularSearches)
+  // 2. Busca Global em Tempo Real
+  useEffect(() => {
+    // Só executa a busca se os filtros iniciais já foram carregados
+    if (!initialFiltersLoaded) return;
 
     if (user) {
       const { data: hist } = await sb
@@ -121,10 +155,6 @@ export default function SearchPage() {
         .limit(5)
       if (hist) setHistory(hist)
     }
-  }, [user, sb, userRegion])
-
-  useEffect(() => {
-    loadInitialData()
   }, [loadInitialData])
 
   // 2. Busca Global em Tempo Real
@@ -132,6 +162,15 @@ export default function SearchPage() {
     // Feedback visual imediato ao começar a digitar ou filtrar
     if (query.trim().length >= 1 || selectedGenre || selectedYear || selectedType || selectedArtist) {
       setIsLoadingResults(true);
+    }
+
+    // Se não houver query e nenhum filtro selecionado, limpa os resultados e não faz a busca
+    if (!query.trim() && !selectedGenre && !selectedYear && !selectedType && !selectedArtist) {
+      setResults([]);
+      setIsSearching(false);
+      setIsLoadingResults(false);
+      setLiveSuggestions([]); // Limpa as sugestões ao limpar a busca
+      return; // Sai do useEffect
     }
 
     const delayDebounceFn = setTimeout(async () => {
@@ -176,10 +215,6 @@ export default function SearchPage() {
           setResults([]);
         }
         setIsLoadingResults(false);
-      } else if (!query && !selectedGenre && !selectedYear && !selectedType) {
-        setResults([]);
-        setIsSearching(false);
-        setIsLoadingResults(false);
       }
     }, 300); // Debounce para evitar muitas requisições
 
@@ -217,6 +252,10 @@ export default function SearchPage() {
   }
 
   return (
+    // Adiciona um overlay de carregamento se os filtros iniciais ainda não foram carregados
+    {!initialFiltersLoaded && (
+      <div className="fixed inset-0 z-[100001] flex items-center justify-center bg-black/90 backdrop-blur-sm"><p className="text-xl text-brand-cyan animate-pulse">Carregando...</p></div>
+    )}
     <div className="min-h-screen bg-[#0A0A0A] text-white">
       {/* Barra de Busca Fixa - Estilo Glassmorphism */}
       <div className="sticky top-0 z-50 bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-white/5 px-6 py-6 md:px-16">
