@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { ContentCard } from '@/components/ui/ContentCard'
 import { searchMulti } from '@/lib/tmdb'
+import type { SearchResultItem } from './page'
 
 export function SearchResults() {
   const params = useSearchParams()
   const q = params.get('q') || ''
-  const [results, setResults] = useState<any[]>([])
+  const [results, setResults] = useState<SearchResultItem[]>([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -16,7 +17,7 @@ export function SearchResults() {
     setLoading(true)
     searchMulti(q).then(data => {
       const filtered = (data.results || []).filter(
-        (item: any) => item.media_type === 'movie' || item.media_type === 'tv'
+        (item: SearchResultItem & { media_type?: string }) => item.media_type === 'movie' || item.media_type === 'tv'
       )
       setResults(filtered)
       setLoading(false)
@@ -46,7 +47,7 @@ export function SearchResults() {
       )}
       {!loading && results.length > 0 && (
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
-          {results.map((item: any) => (
+          {results.map((item) => (
             <ContentCard key={`${item.media_type}-${item.id}`} item={item} />
           ))}
         </div>

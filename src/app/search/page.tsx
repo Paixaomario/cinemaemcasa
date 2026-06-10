@@ -16,12 +16,35 @@ import {
 } from '@/lib/homeContentManager'
 import type { SuggestionItem } from '@/lib/searchSuggestions'
 
+// Interface para os itens de conteúdo (Filmes/Séries) do catálogo
+export interface SearchResultItem {
+  id: string | number;
+  source_id?: string;
+  source_table?: 'cinema' | 'series';
+  titulo?: string; // Supabase field
+  title?: string;  // TMDB fallback
+  poster?: string; // Supabase field
+  capa?: string;   // Alternative Supabase field
+  poster_path?: string; // TMDB field
+  type?: string;   // TMDB field
+  tipo?: string;   // Supabase field
+  year?: string | number; 
+  ano?: string | number;  
+  cast_names?: string[]; 
+  director_names?: string[];
+  genero?: string; 
+  category?: string;
+  rating?: number;
+  vote_average?: number;
+  release_date?: string;
+}
+
 export default function SearchPage() {
   const { user } = useAuth()
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<any[]>([])
-  const [suggestions, setSuggestions] = useState<any[]>([])
-  const [popularSearches, setPopularSearches] = useState<any[]>([])
+  const [results, setResults] = useState<SearchResultItem[]>([])
+  const [suggestions, setSuggestions] = useState<SearchResultItem[]>([])
+  const [popularSearches, setPopularSearches] = useState<SuggestionItem[]>([])
   const [liveSuggestions, setLiveSuggestions] = useState<SuggestionItem[]>([])
   const [history, setHistory] = useState<any[]>([])
   const [selectedGenre, setSelectedGenre] = useState('')
@@ -31,11 +54,23 @@ export default function SearchPage() {
   const [availableYears, setAvailableYears] = useState<string[]>([])
   const [availableTypes, setAvailableTypes] = useState<string[]>([])
   const [userRegion, setUserRegion] = useState('BR')
-  const [selectedArtist, setSelectedArtist] = useState<string>('') // Novo estado para artista selecionado
+  const [selectedArtist, setSelectedArtist] = useState<string>('')
   const [regionName, setRegionName] = useState('Brasil')
   const [isLoadingResults, setIsLoadingResults] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
   const sb = createClient()
+
+  // Padronização do objeto enviado para o ContentCard
+  const formatContentItem = (item: SearchResultItem) => ({
+    // Prioriza o ID da fonte original para navegação e histórico
+    id: item.source_id || String(item.id),
+    // Mantém compatibilidade com o player que espera id_n para séries
+    id_n: (item.source_table === 'series' || item.tipo === 'series') ? (item.source_id || String(item.id)) : undefined,
+    titulo: item.titulo || item.title || '',
+    poster: item.poster || item.capa || item.poster_path || '',
+    type: item.tipo || item.type || 'movie',
+    year: item.ano || item.year
+  });
 
   // Re-ativando useSpatialNavigation para depurar o foco e navegação
   useSpatialNavigation()
@@ -159,24 +194,10 @@ export default function SearchPage() {
 
     const delayDebounceFn = setTimeout(async () => {
       if (query.trim().length >= 1 || selectedGenre || selectedYear || selectedType || selectedArtist) {
-        // Busca sugestões visuais para o dropdown
-        if (query.trim().length >= 1) {
-          const { generateSuggestions } = await import('@/lib/searchSuggestions')
-          const live = await generateSuggestions(query)
-          setLiveSuggestions(live)
-        } else {
-          setLiveSuggestions([])
-        }
+        setIsSearching(true);
+        let searchBuilder = sb.from('search_catalog').select('id, source_id, source_table, titulo, title, poster, banner, backdrop, capa, poster_path, type, tipo, year, ano, cast_names, director_names, genero, genre, category, rating, vote_average, release_date').limit(24);
 
-        setIsSearching(true)
-        let searchBuilder = sb
-          .from('search_catalog')
-          .select('id, source_id, source_table, titulo, title, poster, banner, backdrop, capa, poster_path, type, tipo, year, ano, cast_names, director_names, genero, genre, category, rating, vote_average, release_date') // Selecione apenas as colunas necessárias
-          .limit(24);
-        
-        if (query.trim().length >= 1) {
-          searchBuilder = searchBuilder.ilike('titulo', `%${query}%`);
-        }
+        if (query.trim().length >= 1) { searchBuilder = searchBuilder.ilike('titulo', `%${query}%`); }
         if (selectedGenre) {
           searchBuilder = searchBuilder.eq('genero', selectedGenre);
         }
@@ -188,15 +209,16 @@ export default function SearchPage() {
         }
         // Novo: Filtrar por artista selecionado
         if (selectedArtist) {
-          searchBuilder = searchBuilder.or(`cast_names.cs.{${selectedArtist}},director_names.cs.{${selectedArtist}}`);
+          // Usa sintaxe de array containment do Postgres via PostgREST
+          const artistFilter = `{"${selectedArtist}"}`;
+          searchBuilder = searchBuilder.or(`cast_names.cs.${artistFilter},director_names.cs.${artistFilter}`);
         }
 
-        const { data, error } = await searchBuilder;
+        const { data } = await searchBuilder;
         
-        if (!error && data) {
+        if (data) {
+          setLiveSuggestions([]); // Garante que sugestões suspensas sejam limpas
           setResults(data);
-        } else {
-          setResults([]);
         }
         setIsLoadingResults(false);
       }
@@ -235,12 +257,17 @@ export default function SearchPage() {
     setSelectedArtist('') // Limpa também o artista selecionado
   }
 
+  const isShowResults = !!(query.trim().length >= 1 || selectedGenre || selectedYear || selectedType || selectedArtist);
+
   return (
     <>
       {/* Adiciona um overlay de carregamento se os filtros iniciais ainda não foram carregados */}
       {!initialFiltersLoaded && (
-        <div className="fixed inset-0 z-[100001] flex items-center justify-center bg-black/90 backdrop-blur-sm"><p className="text-xl text-brand-cyan animate-pulse">Carregando...</p></div>
+        <div className="fixed inset-0 z-[100001] flex items-center justify-center bg-black/90 backdrop-blur-sm">
+          <p className="text-xl text-brand-cyan animate-pulse">Carregando...</p>
+        </div>
       )}
+
     <div className="min-h-screen bg-[#0A0A0A] text-white">
       {/* Barra de Busca Fixa - Estilo Glassmorphism */}
       <div className="sticky top-0 z-50 bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-white/5 px-6 py-6 md:px-16">
@@ -251,12 +278,15 @@ export default function SearchPage() {
           
           <input
             type="text"
+            id="search-input"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'ArrowDown') {
-                // Permite que o foco saia para os filtros ou resultados
-                e.currentTarget.blur();
+                e.preventDefault();
+                // Foca no primeiro card de resultado ou filtro
+                const firstFocusable = document.querySelector('main [tabindex="0"]') as HTMLElement;
+                if (firstFocusable) firstFocusable.focus(); // Garante que o foco vá para o primeiro item do grid
               } else if (e.key === 'Enter') {
                 e.currentTarget.blur();
               }
@@ -265,61 +295,10 @@ export default function SearchPage() {
             className="w-full bg-white/5 border-2 border-transparent focus:border-brand-cyan/50 rounded-2xl py-5 pl-14 pr-32 text-xl md:text-2xl font-medium outline-none transition-all placeholder:text-neutral-600 focus:bg-white/10"
             autoFocus
           />
-
-          {/* Auto-complete Visual Profissional (Sugestões de Títulos) */}
-          {query.length >= 2 && liveSuggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-[#141414] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[60] animate-in fade-in zoom-in-95 duration-200">
-              <div className="p-2">
-                {liveSuggestions.map((suggestion) => (
-                  <button
-                    key={suggestion.id}
-                    onClick={() => {
-                      // Ao clicar na sugestão, preenche a busca e limpa o artista selecionado
-                      setQuery(suggestion.text)
-                      setLiveSuggestions([])
-                    }}
-                    className="w-full flex items-center gap-4 p-3 hover:bg-white/5 rounded-xl transition-all group text-left"
-                  >
-                    {suggestion.poster ? (
-                      <div className="relative w-12 h-16 rounded-md overflow-hidden flex-shrink-0 shadow-lg border border-white/5">
-                        <Image 
-                          src={suggestion.poster} 
-                          alt="" 
-                          fill 
-                          className="object-cover"
-                          sizes="48px"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-12 h-16 bg-neutral-800 rounded-md flex items-center justify-center text-xl">
-                        {suggestion.icon}
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-white group-hover:text-brand-cyan transition-colors truncate">
-                        {suggestion.text}
-                      </p>
-                      <p className="text-xs text-neutral-500 uppercase tracking-widest font-black flex items-center gap-1">
-                        {suggestion.type === 'history' && <History size={10} />}
-                        {suggestion.type === 'popular' && <Flame size={10} className="text-orange-500" />}
-                        {suggestion.type === 'prediction' && <Sparkles size={10} className="text-brand-cyan" />}
-                      </p>
-                    </div>
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity pr-2">
-                      <div className="w-8 h-8 rounded-full bg-brand-cyan flex items-center justify-center text-black">
-                        <Search size={16} strokeWidth={3} />
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
           <div className="absolute inset-y-0 right-3 flex items-center gap-2">
             {query && (
               <button 
-                onClick={() => setQuery('')}
+                onClick={() => { setQuery(''); setResults([]); setLiveSuggestions([]); }}
                 tabIndex={0}
                 className="p-2 hover:bg-white/10 rounded-full transition-colors text-neutral-400"
               >
@@ -422,9 +401,9 @@ export default function SearchPage() {
       </div>
 
       <main className="max-w-7xl mx-auto px-6 md:px-16 py-10 pb-32">
-        
-        {/* ESTADO 1: ANTES DE DIGITAR - SUGESTÕES INTELIGENTES */}
-        {!query && !isSearching && (
+
+        {/* ESTADO 1: ANTES DE DIGITAR/FILTRAR - RECOMENDAÇÕES */}
+        {!isShowResults && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Histórico Recente */}
             {history.length > 0 && (
@@ -483,17 +462,11 @@ export default function SearchPage() {
               <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter mb-8 flex items-center gap-3">
                 <Sparkles className="text-brand-cyan w-6 h-6" /> Recomendados para você
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-10">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
                 {suggestions.map((item) => (
                   <ContentCard 
                     key={item.id} 
-                    item={{
-                      id: item.source_id || item.id,
-                      id_n: (item.source_table === 'series' || item.type === 'series') ? (item.source_id || item.id_n || item.id) : undefined,
-                      titulo: item.titulo || item.title,
-                      poster: item.poster || item.banner || item.backdrop || item.capa || item.poster_path,
-                      type: item.tipo || item.type
-                    }} 
+                    item={formatContentItem(item)} 
                     onClick={() => handleResultClick(item)}
                   />
                 ))}
@@ -502,29 +475,30 @@ export default function SearchPage() {
           </div>
         )}
 
-        {/* ESTADO 2: DURANTE A BUSCA - RESULTADOS */}
-        {query && (
+        {/* ESTADO 2: DURANTE A BUSCA/FILTRO - RESULTADOS */}
+        {isShowResults && (
           <div className="animate-in fade-in duration-500">
             <div className="flex items-end justify-between mb-10">
               <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter">
-                Resultados para <span className="text-brand-cyan">"{query}"</span>
+                {query ? (
+                  <>Resultados para <span className="text-brand-cyan">"{query}"</span></>
+                ) : 'Resultados filtrados'}
               </h2>
-              <p className="text-neutral-500 font-bold mb-1">{results.length} encontrados</p>
+              <p className="text-neutral-500 font-bold mb-1">{isLoadingResults ? 'Buscando...' : `${results.length} encontrado${results.length === 1 ? '' : 's'}`}</p>
             </div>
 
-            {results.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 md:gap-10">
+            {isLoadingResults && results.length === 0 && (
+              <div className="flex items-center justify-center py-20">
+                <div className="w-12 h-12 border-4 border-brand-cyan border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+
+            {isLoadingResults || results.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
                 {results.map((item) => (
                   <div key={item.id} className="flex flex-col">
                     <ContentCard 
-                      item={{
-                        id: item.source_id,
-                        id_n: item.source_table === 'series' ? item.source_id : undefined,
-                        titulo: item.titulo,
-                        poster: item.poster || item.banner || item.backdrop || item.capa,
-                        type: item.tipo,
-                        year: item.ano
-                      }} 
+                      item={formatContentItem(item)}
                       onClick={() => handleResultClick(item)}
                     />
                     {(item.cast_names && item.cast_names.length > 0) && (
@@ -554,7 +528,7 @@ export default function SearchPage() {
                   </div>
                 ))}
               </div>
-            ) : (
+            ) : !isLoadingResults && (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6">
                   <Search className="w-10 h-10 text-neutral-700" />
