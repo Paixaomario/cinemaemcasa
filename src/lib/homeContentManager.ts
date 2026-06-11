@@ -4,13 +4,20 @@ interface ContentItem {
   id: string | number
   id_n?: number | string
   titulo: string
+  description?: string | null
   poster: string | null
   backdrop: string | null
+  banner?: string | null
   type: 'movie' | 'serie' | 'series' | 'tv' | null
   year?: number | string | null
   category?: string | null
   rating?: number | null
   genres?: string[] | null
+  url?: string | null
+  trailer?: string | null
+  duration?: string | null
+  duration_seconds?: number | null
+  created_at?: string | null
 }
 
 interface UserPreferences {
@@ -123,7 +130,7 @@ export async function getUserFavoriteGenres(userId: string): Promise<string[]> {
 
     // Busca gêneros de filmes e séries em paralelo (Otimização crítica)
     const [moviesRes, seriesRes] = await Promise.all([
-      sb.from('cinema').select('genres').in('id', contentIds),
+      sb.from('cinema').select('category').in('id', contentIds),
       sb.from('series').select('genero').in('id_n', contentIds)
     ])
 
@@ -131,23 +138,23 @@ export async function getUserFavoriteGenres(userId: string): Promise<string[]> {
     const genreCounts: Record<string, number> = {}
 
     // Processa gêneros de filmes
-    moviesRes.data?.forEach(item => {
-      if (item.genres) {
-        const genres = Array.isArray(item.genres) ? item.genres : []
-        genres.forEach(genre => {
-          const genreName = genre.toLowerCase().trim()
-          genreCounts[genreName] = (genreCounts[genreName] || 0) + 1
-        })
+    moviesRes.data?.forEach(movie => {
+      if (movie.category) { // Usar 'category' conforme seu schema
+        const categories = movie.category.split(',').map((c: string) => c.trim());
+        categories.forEach(cat => {
+          const categoryName = cat.toLowerCase().trim();
+          if (categoryName) genreCounts[categoryName] = (genreCounts[categoryName] || 0) + 1;
+        });
       }
-    })
+    });
 
     // Processa gêneros de séries
-    seriesRes.data?.forEach(item => {
-      if (item.genero) {
-        const genreName = item.genero.toLowerCase().trim()
-        genreCounts[genreName] = (genreCounts[genreName] || 0) + 1
+    seriesRes.data?.forEach(serie => {
+      if (serie.genero) { // Usar 'genero' conforme seu schema
+        const genreName = serie.genero.toLowerCase().trim();
+        if (genreName) genreCounts[genreName] = (genreCounts[genreName] || 0) + 1;
       }
-    })
+    });
 
     // Ordena por contagem e retorna os top 5
     const sortedGenres = Object.entries(genreCounts)
@@ -185,9 +192,9 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
 
     try {
       movies = await moviesQuery
-        .gte('rating', 7)
+        // DESBLOQUEADO: Exibe novos conteúdos imediatamente (mesmo rating 0)
+        .order('created_at', { ascending: false }) // Prioriza os conteúdos mais recentes
         .order('rating', { ascending: false })
-        .order('year', { ascending: false })
         .limit(searchLimit)
     } catch (movieError) {
       console.warn('Erro ao buscar trending movies:', movieError)
@@ -198,9 +205,9 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
       series = await sb
         .from('series')
         .select('*')
-        .gte('rating', 7)
+        // DESBLOQUEADO: Novas séries aparecem no topo
+        .order('created_at', { ascending: false })
         .order('rating', { ascending: false })
-        .order('ano', { ascending: false })
         .limit(searchLimit)
     } catch (seriesError) {
       console.warn('Erro ao buscar trending series:', seriesError)
@@ -215,13 +222,22 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
         items.push({
           id: movie.id,
           titulo: movie.titulo,
+          description: movie.description,
           poster: movie.poster || movie.backdrop,
+          banner: movie.banner,
           backdrop: movie.backdrop,
           type: 'movie',
           year: movie.year,
           category: movie.category,
           rating: movie.rating,
-          genres: movie.genres || []
+          genres: movie.category ? movie.category.split(',').map((c: string) => c.trim()) : [], // Usar category
+          url: movie.url,
+          trailer: movie.trailer,
+          duration: movie.duration,
+          duration_seconds: movie.duration_seconds,
+          created_at: movie.created_at,
+          subtitles: movie.subtitles,
+          audio_tracks: movie.audio_tracks
         })
       })
     }
@@ -232,15 +248,20 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
         if (isChild && (serie.genero?.includes('Adulto') || serie.classificacao?.includes('18'))) return;
 
         items.push({
-          id: serie.id_n,
+          id: serie.id_n || serie.id, // Fallback para serie.id
           titulo: serie.titulo,
+          description: serie.description || serie.descricao,
           poster: serie.poster,
-          backdrop: serie.banner,
+          banner: serie.banner,
+          backdrop: serie.backdrop || serie.banner, // Fallback para backdrop
           type: 'series',
           year: serie.ano,
           category: serie.classificacao || serie.genero,
           rating: serie.rating,
-          genres: serie.genero ? [serie.genero] : []
+          genres: serie.genero ? serie.genero.split(',').map((c: string) => c.trim()) : [], // Usar genero
+          url: serie.url || serie.arquivo,
+          trailer: serie.trailer,
+          created_at: serie.created_at
         })
       })
     }
@@ -281,8 +302,9 @@ export async function getPersonalizedRecommendations(
     const movieFilters = favoriteGenres.map(genre => `category.ilike.%${genre}%`).join(',')
     const seriesFilters = favoriteGenres.map(genre => `classificacao.ilike.%${genre}%`).join(',')
 
-    let moviesQuery = sb.from('cinema').select('*').or(movieFilters).gte('rating', 6);
-    let seriesQuery = sb.from('series').select('*').or(seriesFilters).gte('rating', 6);
+    // Removido filtro de rating em recomendações para não bloquear novos itens
+    let moviesQuery = sb.from('cinema').select('*').or(movieFilters);
+    let seriesQuery = sb.from('series').select('*').or(seriesFilters);
 
     if (isChild) {
       moviesQuery = moviesQuery.not('category', 'ilike', '%+18%').not('category', 'ilike', '%Terror%');
@@ -290,8 +312,8 @@ export async function getPersonalizedRecommendations(
 
     // Busca filmes e séries em paralelo
     const [moviesRes, seriesRes] = await Promise.all([
-      moviesQuery.order('rating', { ascending: false }).limit(searchLimit),
-      seriesQuery.order('rating', { ascending: false }).limit(searchLimit)
+      moviesQuery.order('created_at', { ascending: false }).order('rating', { ascending: false }).limit(searchLimit),
+      seriesQuery.order('created_at', { ascending: false }).order('rating', { ascending: false }).limit(searchLimit)
     ])
 
     const items: ContentItem[] = []
@@ -303,13 +325,20 @@ export async function getPersonalizedRecommendations(
           items.push({
             id: movie.id,
             titulo: movie.titulo,
+            description: movie.description,
             poster: movie.poster || movie.backdrop,
+            banner: movie.banner,
             backdrop: movie.backdrop,
             type: 'movie',
             year: movie.year,
             category: movie.category,
             rating: movie.rating,
-            genres: movie.genres || []
+            genres: movie.category ? movie.category.split(',').map((c: string) => c.trim()) : [], // Usar category
+            url: movie.url,
+            trailer: movie.trailer,
+            duration: movie.duration,
+            duration_seconds: movie.duration_seconds,
+            created_at: movie.created_at
           })
         }
       })
@@ -326,12 +355,12 @@ export async function getPersonalizedRecommendations(
             id: serie.id_n,
             titulo: serie.titulo,
             poster: serie.poster,
-            backdrop: serie.banner,
+            backdrop: serie.backdrop || serie.banner, // Fallback para backdrop
             type: 'series',
             year: serie.ano,
             category: serie.classificacao || serie.genero,
             rating: serie.rating,
-            genres: serie.genero ? [serie.genero] : []
+            genres: serie.genero ? serie.genero.split(',').map((c: string) => c.trim()) : [] // Usar genero
           })
         }
       });
@@ -408,7 +437,14 @@ export async function getSectionContent(
             year: movie.year,
             category: movie.category,
             rating: movie.rating,
-            genres: movie.genres || []
+            genres: movie.category ? movie.category.split(',').map((c: string) => c.trim()) : [], // Usar category
+            description: movie.description,
+            banner: movie.banner,
+            url: movie.url,
+            trailer: movie.trailer,
+            duration: movie.duration,
+            duration_seconds: movie.duration_seconds,
+            created_at: movie.created_at
           })
         }
       })
@@ -430,7 +466,7 @@ export async function getSectionContent(
       } else if (ordenacao === 'year_desc') {
         seriesQuery = seriesQuery.order('ano', { ascending: false })
       } else {
-        seriesQuery = seriesQuery.order('id_n', { ascending: false })
+      seriesQuery = seriesQuery.order('created_at', { ascending: false }) // Prioriza os conteúdos mais recentes
       }
 
       const series = await seriesQuery.limit(searchLimit)
@@ -443,15 +479,20 @@ export async function getSectionContent(
           const idStr = String(serie.id_n)
           if (!excludeIds.has(idStr)) {
             items.push({
-              id: serie.id_n,
+              id: serie.id_n || serie.id, // Fallback para serie.id
               titulo: serie.titulo,
               poster: serie.poster,
-              backdrop: serie.banner,
+              backdrop: serie.backdrop || serie.banner, // Fallback para backdrop
               type: 'series',
               year: serie.ano,
               category: serie.classificacao || serie.genero,
               rating: serie.rating,
-              genres: serie.genero ? [serie.genero] : []
+              genres: serie.genero ? serie.genero.split(',').map((c: string) => c.trim()) : [], // Usar genero
+              description: serie.description || serie.descricao,
+              banner: serie.banner,
+              url: serie.url || serie.arquivo,
+              trailer: serie.trailer,
+              created_at: serie.created_at
             })
           }
         });

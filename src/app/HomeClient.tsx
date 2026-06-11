@@ -126,58 +126,39 @@ export function HomeClient() {
             prog.map(async (p) => {
               const idStr = String(p.content_id)
 
-              // Tenta buscar por UUID primeiro, depois por título se for numérico
-              let contentData = null
-              const isNumeric = /^\d+$/.test(idStr)
-              const isEpisode = idStr.includes('-ep-')
+              // Busca no search_catalog que unifica cinema e series
+              const { data: contentData, error: contentError } = await sb
+                .from('search_catalog')
+                .select('*')
+                .or(`id.eq.${idStr},source_id.eq.${idStr}`) // Busca pelo ID original ou source_id
+                .maybeSingle()
 
-              if (isEpisode) {
-                // É episódio de série, extrai o UUID da série
-                const seriesUuid = idStr.split('-ep-')[0]
-                const { data: dataByUuid } = await sb.from('content').select('*').eq('id', seriesUuid).maybeSingle()
-                if (dataByUuid) {
-                  // Busca o ID numérico da série na tabela series
-                  const { data: seriesData } = await sb.from('series').select('id_n').ilike('titulo', dataByUuid.title.trim()).maybeSingle()
-                  contentData = {
-                    id: seriesUuid,
-                    id_n: seriesData?.id_n || null, // ID numérico para o link
-                    title: dataByUuid.title,
-                    type: 'series',
-                    poster: dataByUuid.poster
-                  }
-                }
-              } else if (!isNumeric) {
-                // É UUID, busca direto
-                const { data: dataByUuid } = await sb.from('content').select('*').eq('id', idStr).maybeSingle()
-                contentData = dataByUuid
-              } else {
-                // É numérico, busca por título nas tabelas cinema/series
-                // Primeiro tenta encontrar na tabela cinema
-                const { data: movieData } = await sb.from('cinema').select('*').eq('id', parseInt(idStr)).maybeSingle()
-                if (movieData) {
-                  contentData = {
-                    id: idStr, // Usa o ID numérico como fallback
-                    title: movieData.titulo,
-                    type: 'movie',
-                    poster: movieData.poster || movieData.capa || movieData.poster_path || movieData.banner
-                  }
-                } else {
-                  // Tenta na tabela series
-                  const { data: seriesData } = await sb.from('series').select('*').eq('id', parseInt(idStr)).maybeSingle()
-                  if (seriesData) {
-                    contentData = {
-                      id: idStr,
-                      title: seriesData.titulo,
-                      type: 'series',
-                      poster: seriesData.poster || seriesData.capa || seriesData.poster_path || seriesData.banner
-                    }
-                  }
-                }
+              if (contentError) {
+                console.error(`Erro ao buscar conteúdo para view_progress ID ${idStr}:`, contentError);
+                return null;
               }
 
               if (contentData) {
-                const table = contentData.type === 'movie' ? 'cinema' : 'series'
-                const { data: orig } = await sb.from(table).select('*').ilike('titulo', contentData.title.trim()).maybeSingle()
+                // Determina a tabela original e busca detalhes completos se necessário
+                let orig: any = contentData;
+                if (contentData.source_table === 'cinema' && contentData.id) {
+                  const { data: movieOrig } = await sb.from('cinema').select('*').eq('id', contentData.id).maybeSingle();
+                  if (movieOrig) orig = { ...contentData, ...movieOrig };
+                } else if (contentData.source_table === 'series' && contentData.id) {
+                  const { data: seriesOrig } = await sb.from('series').select('*').eq('id', contentData.id).maybeSingle();
+                  if (seriesOrig) orig = { ...contentData, ...seriesOrig };
+                }
+
+                // Garante que o ID para o link seja o id_n para séries ou o id para filmes
+                const finalId = contentData.source_table === 'series' ? (orig?.id_n || contentData.id) : contentData.id;
+
+                // Tenta obter o título de forma robusta
+                const finalTitulo = contentData.titulo || contentData.title || orig?.titulo || orig?.title;
+
+                // Tenta obter o poster de forma robusta
+                const finalPoster = contentData.poster || contentData.capa || contentData.poster_path || contentData.banner || orig?.poster || orig?.capa || orig?.poster_path || orig?.banner;
+
+                const finalType = contentData.tipo || contentData.type;
 
                 // Tenta obter duration de várias fontes
                 let duration = orig?.duration || orig?.runtime || contentData.duration || null
@@ -191,10 +172,10 @@ export function HomeClient() {
                     } else if (typeof duration === 'string') {
                       const cleaned = duration.toLowerCase().trim()
                       // Regex robusto para extrair apenas números de cada parte
-                      if (cleaned.includes('h')) {
-                        const [hPart, mPart] = cleaned.split('h')
-                        const hours = parseInt(hPart.replace(/[^0-9]/g, '')) || 0
-                        const mins = parseInt(mPart?.replace(/[^0-9]/g, '') || '0') || 0
+                      const match = cleaned.match(/(\d+)\s*h(?:\s*(\d+)\s*min)?/);
+                      if (match) {
+                        const hours = parseInt(match[1]) || 0;
+                        const mins = parseInt(match[2] || '0') || 0;
                         durationInSeconds = (hours * 3600) + (mins * 60)
                       } else {
                         const mins = parseInt(cleaned.replace(/[^0-9]/g, ''))
@@ -207,11 +188,11 @@ export function HomeClient() {
                 }
 
                 return {
-                  id: idStr,
-                  id_n: contentData.id_n || (contentData.type === 'series' ? idStr : undefined),
-                  titulo: contentData.title,
-                  poster: contentData.poster || (orig ? (orig.poster || orig.capa || orig.poster_path || orig.banner) : null),
-                  type: contentData.type,
+                  id: finalId,
+                  id_n: finalId, // Garante que id_n esteja presente para séries
+                  titulo: finalTitulo,
+                  poster: finalPoster,
+                  type: finalType,
                   last_position: p.last_position,
                   duration: durationInSeconds
                 }
@@ -226,7 +207,7 @@ export function HomeClient() {
             if (!item) return
             const key = item.titulo.toLowerCase().trim()
             // Se já existe, mantém o que tem UUID (prioridade)
-            if (!uniqueMap.has(key) || (item.id && !/^\d+$/.test(item.id))) {
+            if (!uniqueMap.has(key) || (item.id && !/^\d+$/.test(String(item.id)))) { // Converte id para string para o teste regex
               uniqueMap.set(key, item)
             }
           })

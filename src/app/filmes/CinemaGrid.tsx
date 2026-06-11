@@ -42,8 +42,8 @@ export function CinemaGrid({ contentType }: { contentType: 'movie' | 'series' })
     async function fetchData() {
       const sb = createClient()
       const table = contentType === 'movie' ? 'cinema' : 'series'
-      // Fallback para id_n caso a tabela de séries não tenha created_at ainda
-      const orderField = contentType === 'movie' ? 'created_at' : 'id_n'
+      // Prioriza 'created_at' para ambas as tabelas, com fallback para 'id_n' em séries se 'created_at' não existir
+      const orderField = 'created_at' // Assumindo que 'created_at' existe em ambas as tabelas
 
       const { data: items, error } = await sb
         .from(table)

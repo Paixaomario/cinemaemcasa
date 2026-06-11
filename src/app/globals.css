@@ -260,7 +260,7 @@ header, .mobile-nav-bar {
   main {
     margin-left: 80px !important;
     padding-top: 0 !important;
-    transition: none; /* Remove transição no main para evitar 'pulos' em CPUs lentas de TV */
+    transition: margin-left 0.3s ease; /* Mantém transição para suavidade ao abrir/fechar sidebar */
   }
 
   /* O conteúdo permanece estático enquanto a barra flutua por cima ao abrir */
@@ -278,7 +278,7 @@ header, .mobile-nav-bar {
     backdrop-filter: none !important;
     border-right: 1px solid transparent !important;
     pointer-events: none; /* Não bloqueia cliques no conteúdo quando invisível */
-    z-index: 40 !important;
+    z-index: 50 !important; /* Aumentado para garantir que sobreponha outros elementos */
     transition: opacity 0.3s ease;
   }
 

@@ -236,7 +236,7 @@ export async function getPopularSearches(region: string = 'BR'): Promise<Suggest
       .from('search_analytics')
       .select('query, count')
       .eq('region', region || 'BR')
-      .gte('date', dateStr)
+      .gte('created_at', dateStr) // Corrigido para usar 'created_at'
       .order('count', { ascending: false })
       .limit(5);
 

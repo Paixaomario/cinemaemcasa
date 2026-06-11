@@ -37,6 +37,10 @@ export interface SearchResultItem {
   rating?: number;
   vote_average?: number;
   release_date?: string;
+  url?: string;
+  trailer?: string;
+  duration?: string;
+  created_at?: string;
 }
 
 export default function SearchPage() {
@@ -178,24 +182,24 @@ export default function SearchPage() {
 
   // 2. Busca Global em Tempo Real
   useEffect(() => {
-    // Feedback visual imediato ao começar a digitar ou filtrar
-    if (query.trim().length >= 1 || selectedGenre || selectedYear || selectedType || selectedArtist) {
-      setIsLoadingResults(true);
-    }
-
     // Se não houver query e nenhum filtro selecionado, limpa os resultados e não faz a busca
     if (!query.trim() && !selectedGenre && !selectedYear && !selectedType && !selectedArtist) {
       setResults([]);
-      setIsSearching(false);
+      setIsSearching(false); // Reseta o estado de busca realizada
       setIsLoadingResults(false);
       setLiveSuggestions([]); // Limpa as sugestões ao limpar a busca
       return; // Sai do useEffect
     }
 
+    setIsLoadingResults(true);
+
     const delayDebounceFn = setTimeout(async () => {
       if (query.trim().length >= 1 || selectedGenre || selectedYear || selectedType || selectedArtist) {
-        setIsSearching(true);
-        let searchBuilder = sb.from('search_catalog').select('id, source_id, source_table, titulo, title, poster, banner, backdrop, capa, poster_path, type, tipo, year, ano, cast_names, director_names, genero, genre, category, rating, vote_average, release_date').limit(24);
+        // Leitura COMPLETA da tabela para garantir trailers e metadados
+        let searchBuilder = sb.from('search_catalog')
+          .select('*')
+          .order('created_at', { ascending: false }) // Novidades no topo
+          .limit(48);
 
         if (query.trim().length >= 1) { searchBuilder = searchBuilder.ilike('titulo', `%${query}%`); }
         if (selectedGenre) {
@@ -221,6 +225,7 @@ export default function SearchPage() {
           setResults(data);
         }
         setIsLoadingResults(false);
+        setIsSearching(true); // Define como busca concluída
       }
     }, 300); // Debounce para evitar muitas requisições
 
@@ -528,7 +533,7 @@ export default function SearchPage() {
                   </div>
                 ))}
               </div>
-            ) : !isLoadingResults && (
+            ) : !isLoadingResults && isSearching && (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6">
                   <Search className="w-10 h-10 text-neutral-700" />
