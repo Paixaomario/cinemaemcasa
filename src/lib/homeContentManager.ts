@@ -131,12 +131,15 @@ export async function getUserFavoriteGenres(userId: string): Promise<string[]> {
     // Extrai todos os content_ids
     const contentIds = historyData.map(item => String(item.content_id))
 
-    // Otimização: Busca gêneros via search_catalog que unifica cinema e series
-    // Resolve o erro 400 ao misturar UUIDs e IDs numéricos em tabelas separadas
+    const validIds = contentIds.filter(id => id && id !== 'null' && id !== 'undefined');
+    if (validIds.length === 0) return [];
+
+    const idList = validIds.map(id => `"${id}"`).join(',');
+
     const { data: catalogRes } = await sb
       .from('search_catalog')
       .select('genero, category')
-      .or(`id.in.(${contentIds.map(id => `"${id}"`).join(',')}),source_id.in.(${contentIds.map(id => `"${id}"`).join(',')})`)
+      .or(`id.in.(${idList}),source_id.in.(${idList})`)
 
     // Conta os gêneros
     const genreCounts: Record<string, number> = {}
@@ -529,7 +532,7 @@ export async function getSectionContent(
  * Remove duplicatas baseadas no título para polir a interface
  */
 export function removeDuplicatesByTitle(items: ContentItem[]): ContentItem[] {
-  const seen = new Set();
+  const seen = new Set<string>();
   return items.filter(item => {
     const duplicate = seen.has(item.titulo.toLowerCase());
     seen.add(item.titulo.toLowerCase());

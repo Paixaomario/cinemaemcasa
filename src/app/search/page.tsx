@@ -1,7 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
 import { useAuth } from '@/components/layout/SupabaseProvider'
 import { ContentCard } from '@/components/ui/ContentCard'
 import { Search, Mic, X, Trash2, History, Sparkles, ChevronDown, Flame } from 'lucide-react'
@@ -23,11 +23,13 @@ export interface SearchResultItem {
   source_table?: 'cinema' | 'series';
   titulo?: string; // Supabase field
   title?: string;  // TMDB fallback
+  name?: string;   // TMDB TV fallback
   poster?: string; // Supabase field
   capa?: string;   // Alternative Supabase field
   poster_path?: string; // TMDB field
   type?: string;   // TMDB field
   tipo?: string;   // Supabase field
+  media_type?: string; // TMDB mixed search result field
   year?: string | number; 
   ano?: string | number;  
   cast_names?: string[]; 
@@ -64,7 +66,8 @@ export default function SearchPage() {
   const [regionName, setRegionName] = useState('Brasil')
   const [isLoadingResults, setIsLoadingResults] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
-  const sb = createClient()
+  
+  const sb = useMemo(() => createClient(), [])
 
   // Padronização do objeto enviado para o ContentCard
   const formatContentItem = (item: SearchResultItem) => ({
@@ -216,7 +219,7 @@ export default function SearchPage() {
         // Novo: Filtrar por artista selecionado
         if (selectedArtist) {
           // Usa sintaxe de array containment do Postgres via PostgREST
-          const artistFilter = `{"${selectedArtist}"}`;
+          const artistFilter = `{"${selectedArtist.replace(/"/g, '\\"')}"}`;
           searchBuilder = searchBuilder.or(`cast_names.cs.${artistFilter},director_names.cs.${artistFilter}`);
         }
 

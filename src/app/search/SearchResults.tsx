@@ -17,7 +17,7 @@ export function SearchResults() {
     setLoading(true)
     searchMulti(q).then(data => {
       const filtered = (data.results || []).filter(
-        (item: { media_type?: string }) => item.media_type === 'movie' || item.media_type === 'tv'
+        (item: any) => item.media_type === 'movie' || item.media_type === 'tv'
       )
       setResults(filtered)
       setLoading(false)

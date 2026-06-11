@@ -119,7 +119,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
           
           if (isInSidebar) {
             nearest = nextRow.find(el => el.closest('aside')) || nextRow[0]
-          } else {
+          } else if (nextRow.length > 0) {
             // Tenta manter a coluna ou foca no mais próximo horizontalmente
             nearest = nextRow.reduce((prev, curr) => {
               const prevDiff = Math.abs(prev.getBoundingClientRect().left - activeRect.left);
@@ -140,7 +140,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
           
           if (isInSidebar) {
             nearest = prevRow.find(el => el.closest('aside')) || prevRow[0]
-          } else {
+          } else if (prevRow.length > 0) {
             // Tenta manter a coluna ou foca no mais próximo horizontalmente
             nearest = prevRow.reduce((prev, curr) => {
               const prevDiff = Math.abs(prev.getBoundingClientRect().left - activeRect.left);

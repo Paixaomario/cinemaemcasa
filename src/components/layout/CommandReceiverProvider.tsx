@@ -1,5 +1,5 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { useAuth } from './SupabaseProvider'
@@ -13,7 +13,7 @@ import { playContent } from '@/lib/navigationHelper'
 export function CommandReceiverProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     if (!user) return
