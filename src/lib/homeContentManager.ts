@@ -18,6 +18,9 @@ interface ContentItem {
   duration?: string | null
   duration_seconds?: number | null
   created_at?: string | null
+  subtitles?: any | null
+  audio_tracks?: any | null
+  last_position?: number | null
 }
 
 interface UserPreferences {
@@ -128,33 +131,26 @@ export async function getUserFavoriteGenres(userId: string): Promise<string[]> {
     // Extrai todos os content_ids
     const contentIds = historyData.map(item => String(item.content_id))
 
-    // Busca gêneros de filmes e séries em paralelo (Otimização crítica)
-    const [moviesRes, seriesRes] = await Promise.all([
-      sb.from('cinema').select('category').in('id', contentIds),
-      sb.from('series').select('genero').in('id_n', contentIds)
-    ])
+    // Otimização: Busca gêneros via search_catalog que unifica cinema e series
+    // Resolve o erro 400 ao misturar UUIDs e IDs numéricos em tabelas separadas
+    const { data: catalogRes } = await sb
+      .from('search_catalog')
+      .select('genero, category')
+      .or(`id.in.(${contentIds.map(id => `"${id}"`).join(',')}),source_id.in.(${contentIds.map(id => `"${id}"`).join(',')})`)
 
     // Conta os gêneros
     const genreCounts: Record<string, number> = {}
 
-    // Processa gêneros de filmes
-    moviesRes.data?.forEach(movie => {
-      if (movie.category) { // Usar 'category' conforme seu schema
-        const categories = movie.category.split(',').map((c: string) => c.trim());
-        categories.forEach(cat => {
-          const categoryName = cat.toLowerCase().trim();
-          if (categoryName) genreCounts[categoryName] = (genreCounts[categoryName] || 0) + 1;
-        });
+    // Processa resultados do catálogo unificado
+    catalogRes?.forEach(item => {
+      const rawGenres = (item.category || item.genero || '')
+      if (rawGenres) {
+        rawGenres.split(',').forEach((g: string) => {
+          const name = g.trim().toLowerCase()
+          if (name) genreCounts[name] = (genreCounts[name] || 0) + 1
+        })
       }
-    });
-
-    // Processa gêneros de séries
-    seriesRes.data?.forEach(serie => {
-      if (serie.genero) { // Usar 'genero' conforme seu schema
-        const genreName = serie.genero.toLowerCase().trim();
-        if (genreName) genreCounts[genreName] = (genreCounts[genreName] || 0) + 1;
-      }
-    });
+    })
 
     // Ordena por contagem e retorna os top 5
     const sortedGenres = Object.entries(genreCounts)
@@ -222,7 +218,7 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
         items.push({
           id: movie.id,
           titulo: movie.titulo,
-          description: movie.description,
+          description: movie.description || movie.descricao,
           poster: movie.poster || movie.backdrop,
           banner: movie.banner,
           backdrop: movie.backdrop,
@@ -261,7 +257,9 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
           genres: serie.genero ? serie.genero.split(',').map((c: string) => c.trim()) : [], // Usar genero
           url: serie.url || serie.arquivo,
           trailer: serie.trailer,
-          created_at: serie.created_at
+          created_at: serie.created_at,
+          subtitles: serie.subtitles,
+          audio_tracks: serie.audio_tracks
         })
       })
     }
@@ -338,7 +336,9 @@ export async function getPersonalizedRecommendations(
             trailer: movie.trailer,
             duration: movie.duration,
             duration_seconds: movie.duration_seconds,
-            created_at: movie.created_at
+            created_at: movie.created_at,
+            subtitles: movie.subtitles,
+            audio_tracks: movie.audio_tracks
           })
         }
       })
@@ -360,7 +360,14 @@ export async function getPersonalizedRecommendations(
             year: serie.ano,
             category: serie.classificacao || serie.genero,
             rating: serie.rating,
-            genres: serie.genero ? serie.genero.split(',').map((c: string) => c.trim()) : [] // Usar genero
+            genres: serie.genero ? serie.genero.split(',').map((c: string) => c.trim()) : [],
+            description: serie.description || serie.descricao,
+            banner: serie.banner,
+            url: serie.url || serie.arquivo,
+            trailer: serie.trailer,
+            created_at: serie.created_at,
+            subtitles: serie.subtitles,
+            audio_tracks: serie.audio_tracks
           })
         }
       });
@@ -519,7 +526,7 @@ export async function getSectionContent(
 
 /**
  * NÃO remove duplicatas - cada item é único
- * Filmes com continuações são mantidos como itens distintos
+ * Remove duplicatas baseadas no título para polir a interface
  */
 export function removeDuplicatesByTitle(items: ContentItem[]): ContentItem[] {
   const seen = new Set();

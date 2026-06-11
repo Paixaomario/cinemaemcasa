@@ -112,7 +112,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
           nearest = focusable.find(el => el.closest('aside') && (el.getAttribute('href') === '/' || el.innerText?.includes('Início'))) as HTMLElement || null;
         }
       } else if (key === 'ArrowDown') {
-        const below = focusable.filter(el => el.getBoundingClientRect().top >= activeRect.bottom - 5 && el !== active)
+        const below = focusable.filter(el => el.getBoundingClientRect().top >= activeRect.bottom - 5 && el !== active && !el.closest('aside') === !active.closest('aside'))
         if (below.length > 0) {
           const minTop = Math.min(...below.map(el => el.getBoundingClientRect().top))
           const nextRow = below.filter(el => Math.abs(el.getBoundingClientRect().top - minTop) < 60)

@@ -41,6 +41,8 @@ export interface SearchResultItem {
   trailer?: string;
   duration?: string;
   created_at?: string;
+  subtitles?: any;
+  audio_tracks?: any;
 }
 
 export default function SearchPage() {
