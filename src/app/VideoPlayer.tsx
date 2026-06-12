@@ -17,9 +17,23 @@ interface VideoPlayerProps {
   contentId: string
   userId?: string
   startOffset?: number
+  partyRoomId?: string
+  isGuest?: boolean
+  guestName?: string
+  backdrop?: string | null
 }
 
-export function VideoPlayer({ src, title, poster, onClose, onNext }: VideoPlayerProps) {
+export function VideoPlayer({ 
+  src, 
+  title, 
+  poster, 
+  onClose, 
+  onNext,
+  partyRoomId,
+  isGuest,
+  guestName,
+  backdrop 
+}: VideoPlayerProps) {
   const playerRef = useRef<MediaPlayerInstance>(null)
   
   // Acessa o estado do player de forma reativa usando o playerRef
