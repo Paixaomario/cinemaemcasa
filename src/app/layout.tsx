@@ -6,7 +6,7 @@ import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { CommandReceiverProvider } from '@/components/layout/CommandReceiverProvider'
 import { Inter, Montserrat } from 'next/font/google'
 import { VisualPreferencesProvider } from '@/components/layout/VisualPreferencesProvider'
-import { AppInitializer } from '@/components/layout/AppInitializer'
+import { AppInitializer } from '@/app/AppInitializer'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const montserrat = Montserrat({ 
