@@ -20,7 +20,7 @@ export function VideoPlayer({ src, title, poster, onClose, onNext }: VideoPlayer
   const playerRef = useRef<MediaPlayerInstance>(null)
   
   // Acessa o estado do player de forma reativa usando o playerRef
-  const audioTracks = useMediaState(playerRef, 'audioTracks') || []
+  const audioTracks = useMediaState('audioTracks', playerRef)
 
   useEffect(() => {
     // Aguarda até que as faixas de áudio sejam carregadas pelo provider
@@ -28,7 +28,7 @@ export function VideoPlayer({ src, title, poster, onClose, onNext }: VideoPlayer
 
     // Lógica de busca para áudio PT-BR (Português Brasil)
     // Verifica padrões comuns em metadados de filmes/séries
-    const audioPt = audioTracks.find(track => {
+    const audioPt = Array.from(audioTracks).find(track => {
       const lang = (track.language || '').toLowerCase()
       const label = (track.label || '').toLowerCase()
       
