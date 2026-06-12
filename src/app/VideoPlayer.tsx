@@ -14,6 +14,9 @@ interface VideoPlayerProps {
   poster?: string
   onClose?: () => void
   onNext?: () => void
+  contentId: string
+  userId?: string
+  startOffset?: number
 }
 
 export function VideoPlayer({ src, title, poster, onClose, onNext }: VideoPlayerProps) {
