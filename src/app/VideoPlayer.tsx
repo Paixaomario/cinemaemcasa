@@ -14,12 +14,12 @@ interface VideoPlayerProps {
   poster?: string
   onClose?: () => void
   onNext?: () => void
-  contentId?: string
-  userId?: string
+  contentId?: string | null
+  userId?: string | null
   startOffset?: number
-  partyRoomId?: string
+  partyRoomId?: string | null
   isGuest?: boolean
-  guestName?: string
+  guestName?: string | null
   backdrop?: string | null
 }
 
