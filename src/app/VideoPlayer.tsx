@@ -20,7 +20,7 @@ export function VideoPlayer({ src, title, poster, onClose, onNext }: VideoPlayer
   const playerRef = useRef<MediaPlayerInstance>(null)
   
   // Acessa o estado do player de forma reativa usando o playerRef
-  const { audioTracks } = useMediaState(playerRef)
+  const audioTracks = useMediaState(playerRef, 'audioTracks')
 
   useEffect(() => {
     // Aguarda até que as faixas de áudio sejam carregadas pelo provider
