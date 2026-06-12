@@ -14,7 +14,7 @@ interface VideoPlayerProps {
   poster?: string
   onClose?: () => void
   onNext?: () => void
-  contentId: string
+  contentId?: string
   userId?: string
   startOffset?: number
   partyRoomId?: string
@@ -29,6 +29,9 @@ export function VideoPlayer({
   poster, 
   onClose, 
   onNext,
+  contentId,
+  userId,
+  startOffset,
   partyRoomId,
   isGuest,
   guestName,
@@ -90,6 +93,7 @@ export function VideoPlayer({
         title={title}
         lang="pt-BR"
         autoPlay
+        currentTime={startOffset || 0}
         className="vds-cinema-player w-full h-full"
       >
         <MediaProvider />
