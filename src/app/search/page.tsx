@@ -527,8 +527,12 @@ export default function SearchPage() {
                     )}
                     {(item.director_names && item.director_names.length > 0) && (
                       <button
-                        key={`director-${item.id}-${item.director_names[0]}`}
-                        onClick={(e) => { e.stopPropagation(); setSelectedArtist(item.director_names[0]); setQuery(''); }}
+                        key={`director-${item.id}-${item.director_names?.[0]}`}
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          if (item.director_names?.[0]) setSelectedArtist(item.director_names[0]); 
+                          setQuery(''); 
+                        }}
                         tabIndex={0}
                         className="text-xs text-neutral-400 hover:text-brand-cyan transition-colors focus:outline-none focus:ring-1 focus:ring-brand-cyan rounded-md px-1 mt-1"
                       >
