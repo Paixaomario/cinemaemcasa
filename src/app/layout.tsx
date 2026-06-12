@@ -6,6 +6,7 @@ import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { CommandReceiverProvider } from '@/components/layout/CommandReceiverProvider'
 import { Inter, Montserrat } from 'next/font/google'
 import { VisualPreferencesProvider } from '@/components/layout/VisualPreferencesProvider'
+import { AppInitializer } from '@/components/layout/AppInitializer'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const montserrat = Montserrat({ 
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" className={`${inter.variable} ${montserrat.variable}`}>
       <body className="font-sans">
+        <AppInitializer />
         <SupabaseProvider>
           <VisualPreferencesProvider>
             <CommandReceiverProvider>

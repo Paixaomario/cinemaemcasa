@@ -51,7 +51,13 @@ function isSessionExpired(): boolean {
   const startTime = localStorage.getItem(SESSION_START_KEY)
   if (!startTime) return true
   const oneHour = 60 * 60 * 1000
-  return Date.now() - parseInt(startTime) > oneHour
+  
+  const expired = Date.now() - parseInt(startTime) > oneHour;
+  // Se estiver no browser, verifica se o usuário está interagindo antes de expirar
+  if (expired && typeof document !== 'undefined' && document.visibilityState === 'visible') {
+    return false; // Adia a expiração se o usuário estiver com a página aberta
+  }
+  return expired;
 }
 
 /**
