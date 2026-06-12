@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 import { 
   MediaPlayer, 
   MediaProvider, 
-  useAudioTracks, 
+  useMediaState, 
   type MediaPlayerInstance 
 } from '@vidstack/react'
 
@@ -19,8 +19,8 @@ interface VideoPlayerProps {
 export function VideoPlayer({ src, title, poster, onClose, onNext }: VideoPlayerProps) {
   const playerRef = useRef<MediaPlayerInstance>(null)
   
-  // Hook nativo do Vidstack para monitorar faixas de áudio de forma reativa
-  const audioTracks = useAudioTracks()
+  // Acessa o estado do player de forma reativa usando o playerRef
+  const { audioTracks } = useMediaState(playerRef)
 
   useEffect(() => {
     // Aguarda até que as faixas de áudio sejam carregadas pelo provider
