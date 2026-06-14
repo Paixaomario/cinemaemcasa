@@ -21,6 +21,7 @@ interface VideoPlayerProps {
   isGuest?: boolean
   guestName?: string | null
   backdrop?: string | null
+  nextEpisode?: any
 }
 
 export function VideoPlayer({ 
@@ -35,7 +36,8 @@ export function VideoPlayer({
   partyRoomId,
   isGuest,
   guestName,
-  backdrop 
+  backdrop,
+  nextEpisode
 }: VideoPlayerProps) {
   const playerRef = useRef<MediaPlayerInstance>(null)
   
