@@ -8,7 +8,6 @@ import { Navbar } from '@/components/layout/Navbar'
 import { VideoPlayer } from '@/app/VideoPlayer'
 import Image from 'next/image'
 import { ContentCard } from '@/components/ui/ContentCard'
-import { getYouTubeId } from '@/lib/utils' // Import the utility function
 import { TrailerModal } from '@/components/ui/TrailerModal'
 import { useAuth } from '@/components/layout/SupabaseProvider'
 import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
@@ -16,6 +15,16 @@ import { Heart } from 'lucide-react'
 
 // Note: generateStaticParams removed - dynamic rendering recommended
 // for content that updates frequently (series episodes)
+
+/**
+ * Extrai o ID do vídeo do YouTube a partir de uma URL.
+ */
+function getYouTubeId(url: string) {
+  if (!url) return '';
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : url;
+}
 
 export default function SeriesDetailsPage() {
   return (
