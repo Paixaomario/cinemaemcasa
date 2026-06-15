@@ -15,7 +15,7 @@
     "e2e:run-headless": "cypress run --headless",
     "build:webos": "next build && node scripts/build-webos.js",
     "build:tizen": "node scripts/build-tizen.js",
-    "build:roku": "cd roku && zip -r ../dist/roku-app.zip .",
+    "build:roku": "mkdir -p dist && cd roku && zip -r ../dist/roku-app.zip . -x '.*'",
     "build:all": "npm run build && npm run build:webos",
     "webos:setup": "npx --package=@webos-tools/cli ares-setup-device",
     "webos:auth": "npx --package=@webos-tools/cli ares-novicom tv",

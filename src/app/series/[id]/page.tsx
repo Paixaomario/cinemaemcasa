@@ -226,7 +226,8 @@ function SeriesContent() {
     }
 
     loadSeries()
-  }, [id, router, user, contentUuid]);
+    // Removido contentUuid das dependências: o loadSeries já resolve o UUID internamente e o define.
+  }, [id, router, user]);
 
   const startParty = useCallback(async () => {
     if (!user) {

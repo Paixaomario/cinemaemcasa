@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="VideoPlayer" extends="Video">
+  <script type="text/brightscript" uri="pkg:/components/VideoPlayer.brs" />
+  <children>
+    <!-- O player de vídeo do Roku já possui interface nativa básica -->
+  </children>
+</component>

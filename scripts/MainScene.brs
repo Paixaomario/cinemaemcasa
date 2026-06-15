@@ -8,7 +8,7 @@ sub init()
 end sub
 
 sub fetchFromSupabase()
-    url = "https://SEU_ID.supabase.co/rest/v1/search_catalog?select=*"
+    url = "https://ebbuobnltsrvqxayrulk.supabase.co/rest/v1/search_catalog?select=*"
     request = CreateObject("roUrlTransfer")
     request.SetUrl(url)
     request.AddHeader("apikey", "SUA_ANON_KEY")

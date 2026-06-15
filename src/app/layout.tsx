@@ -39,6 +39,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${inter.variable} ${montserrat.variable}`}>
+      <head>
+        <link rel="preconnect" href="https://image.tmdb.org" />
+        <link rel="preconnect" href="https://ebbuobnltsrvqxayrulk.supabase.co" />
+        <link rel="dns-prefetch" href="https://image.tmdb.org" />
+      </head>
       <body className="font-sans">
         <AppInitializer />
         <SupabaseProvider>

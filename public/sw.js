@@ -1,38 +1,48 @@
-const CACHE_NAME = 'cinema-em-casa-v2-cache';
-const OFFLINE_URL = '/';
-
+const CACHE_NAME = 'cinema-em-casa-v1';
 const ASSETS_TO_CACHE = [
   '/',
+  '/home',
   '/logo.png',
-  '/manifest.json',
-  '/globals.css'
+  '/manifest.json'
 ];
 
+// Estratégia Cache-First para Fontes e Ícones (Crítico para TVs)
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
-  self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name))
-      );
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Cache para imagens do TMDB (Stale-While-Revalidate)
+  if (url.hostname === 'image.tmdb.org') {
+    event.respondWith(
+      caches.open('tmdb-images').then((cache) => {
+        return cache.match(request).then((response) => {
+          const fetchPromise = fetch(request).then((networkResponse) => {
+            cache.put(request, networkResponse.clone());
+            return networkResponse;
+          });
+          return response || fetchPromise;
+        });
+      })
+    );
+    return;
+  }
+
+  // Cache-First para assets locais
+  event.respondWith(
+    caches.match(request).then((response) => {
+      return response || fetch(request);
     })
   );
 });
 
-self.addEventListener('fetch', (event) => {
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match(OFFLINE_URL);
-      })
-    );
-  }
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
 });
