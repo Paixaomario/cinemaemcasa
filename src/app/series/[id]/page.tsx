@@ -662,11 +662,13 @@ function SeriesContent() {
           <section className="mb-20">
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-8 border-l-4 border-brand-cyan pl-4">Elenco Principal</h2>
             <div className="flex gap-6 overflow-x-scroll pb-4 no-scrollbar">
-              {series.credits.cast.slice(0, 12).map((actor: any) => (
-                <div key={actor.id} className="min-w-[140px] text-center group">
+              {series.credits.cast.slice(0, 12).map((actor: any) => {
+                const profileUrl = TMDB_IMG.profile(actor.profile_path);
+                return (
+                  <div key={actor.id} className="min-w-[140px] text-center group">
                   <div className="relative w-28 h-28 mx-auto rounded-full overflow-hidden border-2 border-white/5 group-hover:border-brand-cyan transition-colors mb-3 bg-neutral-800 flex items-center justify-center">
-                    {actor.profile_path ? (
-                      <Image src={TMDB_IMG.profile(actor.profile_path)} alt={actor.name} fill className="object-cover" />
+                    {profileUrl ? (
+                      <Image src={profileUrl} alt={actor.name} fill className="object-cover" />
                     ) : (
                       <span className="text-4xl text-neutral-500">👤</span>
                     )}
@@ -674,7 +676,8 @@ function SeriesContent() {
                   <p className="text-xs font-bold text-white line-clamp-1">{actor.name}</p>
                   <p className="text-[10px] text-neutral-500 line-clamp-1">{actor.character}</p>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}
