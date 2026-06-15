@@ -8,6 +8,7 @@ import { Navbar } from '@/components/layout/Navbar'
 import { VideoPlayer } from '@/app/VideoPlayer'
 import Image from 'next/image'
 import { ContentCard } from '@/components/ui/ContentCard'
+import { getYouTubeId } from '@/lib/utils' // Import the utility function
 import { TrailerModal } from '@/components/ui/TrailerModal'
 import { useAuth } from '@/components/layout/SupabaseProvider'
 import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
@@ -49,6 +50,7 @@ function SeriesContent() {
   const [canAutoPlayTrailer, setCanAutoPlayTrailer] = useState(false)
   const [showBannerTrailer, setShowBannerTrailer] = useState(false)
 
+  
   useEffect(() => {
     const checkNetwork = () => {
       const conn = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
@@ -61,13 +63,14 @@ function SeriesContent() {
     };
     checkNetwork();
 
-    const timer = setTimeout(() => setShowBannerTrailer(true), 3000);
+    const timer = setTimeout(() => {
+      if (canAutoPlayTrailer) setShowBannerTrailer(true);
+    }, 3000);
     return () => clearTimeout(timer);
-  }, [id]);
+  }, [id, canAutoPlayTrailer]);
 
   // Função para carregar progresso salvo do episódio
   const handleEpisodeClick = useCallback(async (episode: any) => {
-    console.log('handleEpisodeClick chamado:', { user: user?.id, contentUuid, episodeId: episode.id_n || episode.id })
     if (!user || !contentUuid) {
       setActiveEpisode(episode)
       return
@@ -76,7 +79,6 @@ function SeriesContent() {
     const sb = createClient()
     // Para séries, usa o content_id da série + episode_id único
     const episodeContentId = `${contentUuid}-ep-${episode.id_n || episode.id}`
-    console.log('Buscando progresso para:', episodeContentId)
 
     const { data: progress } = await sb
       .from('view_progress')
@@ -85,9 +87,7 @@ function SeriesContent() {
       .eq('content_id', episodeContentId)
       .maybeSingle()
 
-    console.log('Progresso encontrado:', progress)
     const savedTime = progress?.last_position || 0
-    console.log('savedTime:', savedTime, 'setando savedProgress para:', savedTime)
     setSavedProgress(savedTime)
 
     // Se houver progresso salvo (mais de 10 segundos), mostra modal
@@ -110,11 +110,6 @@ function SeriesContent() {
     setShowPlayer(true)
   }
 
-  // Log para debug do savedProgress
-  useEffect(() => {
-    console.log('savedProgress mudou para:', savedProgress)
-  }, [savedProgress])
-
   // Estados da Sala (Assistir Juntos)
   const [activeRoomId, setActiveRoomId] = useState(searchParams.get('room'))
   const [isGuestMode] = useState(!!searchParams.get('room'))
@@ -130,7 +125,6 @@ function SeriesContent() {
       const rawId = String(id)
       const cleanId = rawId.replace('serie-', '')
       const isNumeric = /^\d+$/.test(cleanId)
-      console.log('Carregando série - ID raw:', rawId, 'clean:', cleanId, 'isNumeric:', isNumeric)
       
       // Garante que o ID seja tratado de forma resiliente para Smart TVs
       let localSeriesId: string | null = null
@@ -146,267 +140,60 @@ function SeriesContent() {
             .maybeSingle()
           
           if (contentData) {
-            console.log('Content encontrado:', contentData.id, contentData.title)
             const { data: sData } = await sb
               .from('series')
               .select('*')
               .ilike('titulo', contentData.title.trim())
               .maybeSingle()
             
-            console.log('Series encontrado por título:', sData?.titulo, 'id_n:', sData?.id_n)
             if (sData) {
               localData = sData
               localSeriesId = String(sData.id_n || sData.id)
               setContentUuid(contentData.id)
-            } else {
-              console.log('Série não encontrada na tabela series usando ilike com título:', contentData.title)
             }
-          } else {
-            console.log('Content não encontrado com ID:', rawId)
           }
         } else {
-          console.log('Buscando série por id_n numérico:', cleanId)
           const { data: sData } = await sb
             .from('series')
             .select('*')
             .eq('id_n', cleanId)
             .maybeSingle()
           
-          console.log('Série encontrada por id_n:', sData?.titulo, 'id_n:', sData?.id_n)
-          console.log('Todos os campos da série:', sData)
           if (sData) {
             localData = sData
             localSeriesId = cleanId
-          } else {
-            console.log('Série não encontrada com id_n:', cleanId)
           }
         }
 
         if (!localData || !localSeriesId) {
-          console.log('Série não encontrada no banco de dados')
           router.push('/')
           return
         }
 
-        console.log('Série encontrada:', localData.titulo, 'localSeriesId:', localSeriesId)
         setLegacyId(localSeriesId ? Number(localSeriesId) : null)
 
-        // 2. Busca metadados ricos no TMDB
-        let finalData = localData
-        if (localData.tmdb_id) {
-          try {
-            const tmdbData = await getShowDetails(localData.tmdb_id)
-            if (tmdbData) finalData = { ...tmdbData, ...localData }
-          } catch (e) {
-            console.warn("TMDB Series metadata not found, using local only");
-          }
-
-          // Só busca recomendações se o TMDB retornou dados com recomendações
-          if (finalData !== localData && finalData.recommendations?.results?.length > 0) {
-            const recIds = finalData.recommendations.results.map((r: any) => r.id)
-            const { data: existing } = await sb
-              .from('series')
-              .select('id_n, titulo, capa, poster, rating, ano, genero, tmdb_id')
-              .in('tmdb_id', recIds)
-            setFilteredRecommendations(existing || [])
-          }
-        }
-        setSeries(finalData)
-
-        // Sincronização UUID
-        let cid: string | null = null
-        if (!cid && localData?.titulo) {
-          const { data: contentData } = await sb.from('content').select('id').eq('title', localData.titulo).eq('type', 'series').maybeSingle()
-          if (contentData) cid = contentData.id
-        }
-        if (cid) {
-          setContentUuid(cid)
-        } else {
-          // Cria novo registro na tabela content se não existir
-          const { data: newContent, error: insertError } = await sb
-            .from('content')
-            .insert({
-              title: localData.titulo,
-              type: 'series',
-              is_published: true
-            })
+        // Sincronização UUID Content
+        let effectiveContentUuid = contentUuid;
+        if (!effectiveContentUuid && localData?.titulo) {
+          const { data: cData } = await sb.from('content')
             .select('id')
-            .maybeSingle()
-
-          if (!insertError && newContent) {
-            setContentUuid(newContent.id)
+            .eq('title', localData.titulo)
+            .eq('type', 'series')
+            .maybeSingle();
+          if (cData) {
+            effectiveContentUuid = cData.id;
+            setContentUuid(cData.id);
           }
         }
 
-        // 3. Busca Temporadas e Episódios (Tentativa Híbrida)
         let seasonsData: any[] = []
 
-        console.log('Buscando temporadas - localSeriesId:', localSeriesId, 'effectiveCid:', cid || contentUuid)
-        console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
-
-        // Verificação direta: contar temporadas na tabela legada
-        if (localSeriesId && /^\d+$/.test(localSeriesId)) {
-          // Primeiro, buscar TODAS as temporadas sem filtro para ver se há dados
-          try {
-            const { data: allTemporadas, count: allTempCount, error: tempError } = await sb
-              .from('temporadas')
-              .select('*', { count: 'exact' })
-            console.log('TOTAL de temporadas na tabela temporadas (sem filtro):', allTempCount)
-            if (tempError) {
-              console.error('Erro ao buscar temporadas (sem filtro):', tempError)
-            }
-          } catch (e) {
-            console.error('Exceção ao buscar temporadas (sem filtro):', e)
-          }
-
-          // Buscar uma amostra de temporadas sem filtro
-          try {
-            const { data: sampleTemporadas, error: sampleError } = await sb
-              .from('temporadas')
-              .select('*')
-              .limit(5)
-            console.log('Amostra de temporadas (sem filtro):', sampleTemporadas?.length, 'itens')
-            if (sampleTemporadas && sampleTemporadas.length > 0) {
-              console.log('Primeira temporada:', sampleTemporadas[0])
-            }
-            if (sampleError) {
-              console.error('Erro ao buscar amostra de temporadas:', sampleError)
-            }
-          } catch (e) {
-            console.error('Exceção ao buscar amostra de temporadas:', e)
-          }
-
-          // Agora buscar com filtro
-          try {
-            const { count, error: countError } = await sb
-              .from('temporadas')
-              .select('*', { count: 'exact', head: true })
-              .eq('serie_id', localSeriesId)
-            console.log('Total de temporadas na tabela legada com serie_id:', localSeriesId, '=', count)
-            if (countError) {
-              console.error('Erro ao contar temporadas com serie_id:', countError)
-            }
-          } catch (e) {
-            console.error('Exceção ao contar temporadas com serie_id:', e)
-          }
-
-          // Buscar algumas temporadas para ver a estrutura
-          try {
-            const { data: sampleTemporadas, error: sampleError } = await sb
-              .from('temporadas')
-              .select('*')
-              .limit(5)
-            console.log('Amostra de temporadas:', sampleTemporadas)
-            if (sampleError) {
-              console.error('Erro ao buscar amostra de temporadas:', sampleError)
-            }
-          } catch (e) {
-            console.error('Exceção ao buscar amostra de temporadas:', e)
-          }
-
-          // Verificar se há episódios na tabela episodios (precisa buscar via temporada_id)
-          // Primeiro precisamos buscar as temporadas para saber os IDs
-          const { data: tempForEpisodes, error: tempForEpError } = await sb
-            .from('temporadas')
-            .select('id_n')
-            .eq('serie_id', localSeriesId)
-
-          if (tempForEpError) {
-            console.error('Erro ao buscar temporadas para episódios:', tempForEpError)
-          }
-
-          if (tempForEpisodes && tempForEpisodes.length > 0) {
-            const tempIds = tempForEpisodes.map(t => t.id_n)
-            const { count: epCount, error: epCountError } = await sb
-              .from('episodios')
-              .select('*', { count: 'exact', head: true })
-              .in('temporada_id', tempIds)
-            console.log('Total de episódios na tabela episodios para estas temporadas:', epCount)
-            if (epCountError) {
-              console.error('Erro ao contar episódios:', epCountError)
-            }
-          } else {
-            console.log('Nenhuma temporada encontrada para buscar episódios')
-          }
-
-          // Buscar TOTAL de episódios sem filtro
-          try {
-            const { count: allEpCount, error: allEpError } = await sb
-              .from('episodios')
-              .select('*', { count: 'exact' })
-            console.log('TOTAL de episódios na tabela episodios (sem filtro):', allEpCount)
-            if (allEpError) {
-              console.error('Erro ao buscar total de episódios:', allEpError)
-            }
-          } catch (e) {
-            console.error('Exceção ao buscar total de episódios:', e)
-          }
-
-          // Buscar uma amostra de episódios sem filtro
-          try {
-            const { data: sampleEpisodes, error: sampleEpError } = await sb
-              .from('episodios')
-              .select('*')
-              .limit(5)
-            console.log('Amostra de episódios (sem filtro):', sampleEpisodes?.length, 'itens')
-            if (sampleEpisodes && sampleEpisodes.length > 0) {
-              console.log('Primeiro episódio:', sampleEpisodes[0])
-            }
-            if (sampleEpError) {
-              console.error('Erro ao buscar amostra de episódios:', sampleEpError)
-            }
-          } catch (e) {
-            console.error('Exceção ao buscar amostra de episódios:', e)
-          }
-        }
-
-        // Verificação direta: contar episódios na tabela content
-        if (cid || contentUuid) {
-          const effectiveCid = cid || contentUuid
-          const { count } = await sb
-            .from('content')
-            .select('*', { count: 'exact', head: true })
-            .eq('parent_id', effectiveCid)
-            .eq('type', 'episode')
-          console.log('Total de episódios na tabela content com parent_id:', effectiveCid, '=', count)
-
-          // Verificar se há episódios sem parent_id (diretamente vinculados)
-          const { count: directCount } = await sb
-            .from('content')
-            .select('*', { count: 'exact', head: true })
-            .eq('title', localData.titulo)
-            .eq('type', 'episode')
-          console.log('Total de episódios na tabela content com título (direto):', localData.titulo, '=', directCount)
-        }
-
-        // Primeiro tenta na tabela 'temporadas' (Legado)
-        if (localSeriesId && /^\d+$/.test(localSeriesId)) {
-          try {
-            const { data: sLegacy, error: sLegacyError } = await sb
-              .from('temporadas')
-              .select('*')
-              .eq('serie_id', localSeriesId)
-              .order('numero_temporada', { ascending: true })
-
-            if (sLegacyError) {
-              console.error('Erro ao buscar temporadas (serie_id):', sLegacyError)
-            }
-
-            seasonsData = sLegacy || []
-            console.log('Tabela legada (temporadas) - serie_id:', seasonsData.length, 'temporadas')
-          } catch (err) {
-            console.error('Exceção ao buscar temporadas:', err)
-          }
-        }
-
-        // Se não houver temporadas na legada, tenta extrair do 'content' (Unificado)
-        if (seasonsData.length === 0 && (cid || contentUuid)) {
-          const effectiveCid = cid || contentUuid
-          console.log('Tentando buscar temporadas/episódios na tabela content com parent_id:', effectiveCid)
+        // Prioriza a tabela 'content' para temporadas e episódios
+        if (effectiveContentUuid) {
           const { data: contentEpisodes } = await sb
             .from('content')
             .select('*')
-            .eq('parent_id', effectiveCid)
+            .eq('parent_id', effectiveContentUuid)
             .eq('type', 'episode')
 
           if (contentEpisodes && contentEpisodes.length > 0) {
@@ -416,70 +203,20 @@ function SeriesContent() {
               numero_temporada: num,
               titulo: `Temporada ${num}`
             }));
-            console.log('Temporadas extraídas da tabela content:', seasonsData.length, 'temporadas de', contentEpisodes.length, 'episódios')
-          } else {
-            console.log('Nenhum episódio encontrado na tabela content com parent_id:', effectiveCid)
           }
-        } else {
-          console.log('effectiveCid não disponível, não é possível buscar na tabela content')
+        } else if (localSeriesId && /^\d+$/.test(localSeriesId)) { // Fallback para tabela 'temporadas' (Legado)
+          const { data: sLegacy, error: sLegacyError } = await sb
+            .from('temporadas')
+            .select('*')
+            .eq('serie_id', localSeriesId)
+            .order('numero_temporada', { ascending: true });
+          
+          seasonsData = sLegacy || [];
         }
 
-        console.log('Temporadas encontradas:', seasonsData.length, seasonsData)
         setSeasons(seasonsData || [])
         if (seasonsData && seasonsData.length > 0) {
-          const firstSeason = seasonsData[0]
-          setSelectedSeason(firstSeason)
-
-          // Busca episódios da primeira temporada
-          const seasonId = String(firstSeason.id_n || firstSeason.id || '');
-          console.log('Buscando episódios da primeira temporada - seasonId:', seasonId, 'numero_temporada:', firstSeason.numero_temporada)
-          let episodesData: any[] = []
-
-          // Só tenta tabela legada se o ID for numérico
-          if (/^\d+$/.test(seasonId)) {
-            console.log('Tentando tabela legada (episodios) com temporada_id:', seasonId)
-            const { data: eLegacy } = await sb
-              .from('episodios')
-              .select('*')
-              .eq('temporada_id', seasonId)
-              .order('numero_episodio', { ascending: true })
-            episodesData = eLegacy || []
-            console.log('Tabela legada (episodios) - temporada_id:', episodesData.length, 'episódios')
-          } else {
-            console.log('seasonId não é numérico, pulando tabela legada')
-          }
-
-          // Fallback para content
-          if (episodesData.length === 0 && (cid || contentUuid)) {
-            const effectiveCid = cid || contentUuid
-            console.log('Tentando tabela content com parent_id:', effectiveCid, 'e season_number:', firstSeason.numero_temporada)
-             const { data: cEps } = await sb
-               .from('content')
-               .select('*')
-               .eq('parent_id', effectiveCid)
-               .eq('season_number', firstSeason.numero_temporada)
-               .eq('type', 'episode')
-               .order('episode_number', { ascending: true })
-
-             if (cEps) {
-               episodesData = cEps.map(e => ({
-                 ...e,
-                 id_n: e.id,
-                 numero_episodio: e.episode_number,
-                 titulo: e.title,
-                 arquivo: e.video_url
-               }))
-               console.log('Episódios encontrados na tabela content:', episodesData.length)
-             } else {
-               console.log('Nenhum episódio encontrado na tabela content')
-             }
-          } else {
-            console.log('effectiveCid não disponível ou episódios já encontrados na legada')
-          }
-          console.log('Episódios encontrados para temporada', firstSeason.numero_temporada, ':', episodesData.length)
-          setEpisodes(episodesData || [])
-        } else {
-          console.log('Nenhuma temporada encontrada para a série')
+          setSelectedSeason(seasonsData[0])
         }
       } catch (err) {
         console.error("Erro ao carregar série:", err)
@@ -489,7 +226,7 @@ function SeriesContent() {
     }
 
     loadSeries()
-  }, [id, router, user])
+  }, [id, router, user, contentUuid]);
 
   const startParty = useCallback(async () => {
     if (!user) {
@@ -499,8 +236,6 @@ function SeriesContent() {
 
     const newRoomId = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
     const sb = createClient()
-
-    console.log('Criando sala:', newRoomId, 'para conteúdo:', id, 'tipo: serie')
 
     // Criar sala na tabela party_rooms
     const { error, data } = await sb.from('party_rooms').insert({
@@ -515,8 +250,6 @@ function SeriesContent() {
       alert('Erro ao criar sala. Tente novamente.')
       return
     }
-
-    console.log('Sala criada com sucesso:', data)
 
     // Aguarda um momento para garantir que a sala foi criada no banco
     await new Promise(resolve => setTimeout(resolve, 500))
@@ -659,31 +392,24 @@ function SeriesContent() {
   // Busca episódios quando a temporada muda
   useEffect(() => {
     const seasonId = String(selectedSeason?.id_n || selectedSeason?.id || '');
-    console.log('Mudando para temporada:', selectedSeason?.numero_temporada, 'ID:', seasonId)
     if (!seasonId || loading) return
 
     async function loadEpisodes() {
       const sb = createClient()
-      console.log('loadEpisodes - seasonId:', seasonId, 'contentUuid:', contentUuid, 'selectedSeason.numero_temporada:', selectedSeason?.numero_temporada)
       let episodesData: any[] = []
 
       // Só tenta tabela legada se for numérico
       if (/^\d+$/.test(seasonId)) {
-        console.log('Tentando tabela legada (episodios) com temporada_id:', seasonId)
         const { data: eLegacy } = await sb
           .from('episodios')
           .select('*')
           .eq('temporada_id', seasonId)
           .order('numero_episodio', { ascending: true })
         episodesData = eLegacy || []
-        console.log('Tabela legada (episodios) - temporada_id:', episodesData.length, 'episódios')
-      } else {
-        console.log('seasonId não é numérico, pulando tabela legada')
       }
 
       // Fallback para content
       if ((!episodesData || episodesData.length === 0) && contentUuid) {
-        console.log('Tentando tabela content com parent_id:', contentUuid, 'e season_number:', selectedSeason?.numero_temporada)
         const { data: cEps } = await sb
           .from('content')
           .select('*')
@@ -700,14 +426,8 @@ function SeriesContent() {
             titulo: e.title,
             arquivo: e.video_url
           }))
-          console.log('Episódios encontrados na tabela content:', episodesData.length)
-        } else {
-          console.log('Nenhum episódio encontrado na tabela content')
         }
-      } else {
-        console.log('contentUuid não disponível ou episódios já encontrados na legada')
       }
-     console.log('Episódios carregados para temporada', selectedSeason?.numero_temporada, ':', episodesData.length)
      setEpisodes(episodesData || [])
     }
 
@@ -732,8 +452,10 @@ function SeriesContent() {
       <div className="absolute top-0 left-0 right-0 h-[80vh] sm:h-[90vh] md:h-[100vh] w-full overflow-hidden">
         {showBannerTrailer && canAutoPlayTrailer && series.trailer ? (
           <div className="absolute inset-0 w-full h-full scale-125">
+          <div className="absolute inset-0 w-full h-full scale-125 animate-in fade-in duration-1000">
              <iframe
                src={`https://www.youtube.com/embed/${series.trailer.split('v=')[1] || series.trailer.split('/').pop()}?autoplay=1&mute=1&controls=0&loop=1&playlist=${series.trailer.split('v=')[1] || series.trailer.split('/').pop()}&modestbranding=1&iv_load_policy=3&rel=0&disablekb=1&fs=0`}
+               src={`https://www.youtube.com/embed/${getYouTubeId(series.trailer)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${getYouTubeId(series.trailer)}&modestbranding=1&iv_load_policy=3&rel=0&disablekb=1&fs=0&autohide=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
                className="w-full h-full pointer-events-none opacity-50"
                allow="autoplay"
              />

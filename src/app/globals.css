@@ -53,16 +53,21 @@ body {
 
 .scroll-row {
   display: flex;
+  flex-wrap: nowrap; /* Garante que os itens fiquem em uma única linha */
   gap: 1.5rem; /* Espaço entre as capas */
-  overflow-x: auto;
-  overflow-y: visible;
+  overflow-x: auto; /* Ativa a rolagem horizontal */
+  overflow-y: hidden; /* IMPORTANTE: Alterado de visible para hidden para destravar o scroll-x */
   width: 100%;
-  padding: 60px 0;
-  margin: -60px 0;
+  padding: 40px 0; /* Ajustado para dar espaço ao efeito de escala sem cortar */
+  margin: -40px 0;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* Melhora a fluidez no iOS/Safari */
+  overscroll-behavior-x: contain;
 }
 
 .scroll-row > * {
   flex-shrink: 0;
+  scroll-snap-align: start; /* Ajuda no alinhamento ao navegar com controle remoto */
 }
 
 /* Configuração para Smart TV até 65 polegadas (5 capas por linha) */
