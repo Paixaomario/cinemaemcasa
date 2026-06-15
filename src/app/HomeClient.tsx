@@ -22,18 +22,20 @@ import {
 interface HomeSection {
   id: string
   titulo: string
-  categorias: string[]
+  categorias: string[] | string | null
   fonte: 'cinema' | 'tmdb'
   tmdb_endpoint: string | null
   layout: 'row' | 'grid' | 'featured'
   limite: number
-  ordenacao: string
+  ordenacao: 'created_at_desc' | 'rating_desc' | 'year_desc' | 'random'
   posicao: number
   ativo: boolean
   hora_inicio: string | null
   hora_fim: string | null
   data_inicio: string | null
   data_fim: string | null
+  created_at?: string
+  updated_at?: string
 }
 
 export interface CinemaItem {
@@ -275,27 +277,21 @@ export function HomeClient() {
               if (userIsNew) {
                 items = await getTrendingContent(sec.limite, isChild)
               } else {
-                // Em 3G, buscamos recomendações em paralelo para não travar o resto
-                // Esta é uma promessa que será resolvida e atualizada no estado
-                // Não precisa ser awaited aqui para não bloquear o carregamento das outras seções
-                getPersonalizedRecommendations(user.id, sec.limite, displayedIds, isChild).then(recItems => {
-                  setSectionsData(prev => ({ ...prev, [sec.id]: recItems }))
-                })
-                return // Retorna para não adicionar ao `items` local
+                // Aguarda as recomendações para garantir que o cache de IDs exibidos seja atualizado
+                items = await getPersonalizedRecommendations(user.id, sec.limite, displayedIds, isChild)
               }
             } else {
               items = await getTrendingContent(sec.limite, isChild)
             }
           } else {
             // Seção normal: usa o gerenciador de conteúdo (independente da fonte)
-            // Converte categorias para array se necessário
+            // Normalização robusta de categorias vindo do Supabase (text[] ou string separada por vírgula)
             let categories: string[] = []
-            if (sec.categorias) {
-              if (Array.isArray(sec.categorias)) {
-                categories = sec.categorias
-              } else if (typeof sec.categorias === 'string') {
-                categories = (sec.categorias as string).split(',').map((c: string) => c.trim())
-              }
+            const rawCats = sec.categorias
+            if (rawCats) {
+              categories = Array.isArray(rawCats) 
+                ? rawCats.map(c => String(c).trim()).filter(Boolean)
+                : String(rawCats).split(',').map(c => c.trim()).filter(Boolean)
             }
 
             items = await getSectionContent(

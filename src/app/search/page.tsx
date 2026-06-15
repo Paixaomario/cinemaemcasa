@@ -215,7 +215,8 @@ export default function SearchPage() {
       // Leitura COMPLETA da tabela para garantir trailers e metadados
       let searchBuilder = sb.from('search_catalog')
         .select('*')
-        .order('created_at', { ascending: false, nullsFirst: false }) // Garante novidades no topo sem travar
+        .order('created_at', { ascending: false, nullsFirst: false }) 
+        .order('id', { ascending: false }) // Fallback para ID garante que o último inserido venha primeiro
         .limit(48);
 
       if (debouncedQuery.trim().length >= 1) { 

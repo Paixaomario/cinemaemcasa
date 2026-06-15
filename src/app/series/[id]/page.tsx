@@ -175,7 +175,15 @@ function SeriesContent() {
         }
 
         if (!localData || !localSeriesId) {
-          router.push('/home')
+          // Se não encontrou na tabela 'series', tenta busca direta na 'content' por título como última tentativa
+          const { data: fallbackContent } = await sb.from('content').select('id, title').eq('id', rawId).maybeSingle();
+          if (fallbackContent) {
+            setContentUuid(fallbackContent.id);
+            // Tenta recarregar com o UUID resolvido
+            router.refresh();
+          } else {
+            router.push('/home')
+          }
           return
         }
 
