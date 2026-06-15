@@ -13,11 +13,9 @@ export function AppInitializer() {
   }, [])
 
   useEffect(() => {
-    // Requisito: Garantir que o sistema sempre inicie na Home ao carregar/recarregar
-    if (pathname === '/') {
-      router.replace('/home')
-    }
-  }, [pathname, router])
+    // Requisito: Garantir que o sistema sempre inicie na Home ao carregar/recarregar/reflash
+    router.replace('/home')
+  }, []) // Executa apenas uma vez no carregamento inicial/refresh
 
   return null
 }

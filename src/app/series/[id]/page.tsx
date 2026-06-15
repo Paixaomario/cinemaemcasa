@@ -593,9 +593,11 @@ function SeriesContent() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {episodes.map((ep) => {
-              const imgPath = ep.imagem_500 || ep.banner;
-              // Validação rigorosa para evitar 404: precisa ter mais de 5 caracteres e começar com '/'
-              const imageUrl = (imgPath && imgPath.length > 5 && imgPath.startsWith('/')) ? TMDB_IMG.backdrop(imgPath) : null;
+              const imgPath = ep.imagem_500 || ep.banner || ep.poster || ep.capa;
+              // Lógica de imagem aprimorada: Aceita URLs completas ou caminhos relativos do TMDB
+              const imageUrl = (imgPath && imgPath.length > 5) 
+                ? (imgPath.startsWith('http') ? imgPath : TMDB_IMG.backdrop(imgPath))
+                : null;
               return (
               <button
                 key={ep.id_n || ep.id}
@@ -659,11 +661,15 @@ function SeriesContent() {
         {series.credits?.cast && (
           <section className="mb-20">
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-8 border-l-4 border-brand-cyan pl-4">Elenco Principal</h2>
-            <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
+            <div className="flex gap-6 overflow-x-scroll pb-4 no-scrollbar">
               {series.credits.cast.slice(0, 12).map((actor: any) => (
                 <div key={actor.id} className="min-w-[140px] text-center group">
-                  <div className="relative w-28 h-28 mx-auto rounded-full overflow-hidden border-2 border-white/5 group-hover:border-brand-cyan transition-colors mb-3">
-                    <Image src={TMDB_IMG.profile(actor.profile_path) || 'https://via.placeholder.com/185x185?text=👤'} alt={actor.name} fill className="object-cover" />
+                  <div className="relative w-28 h-28 mx-auto rounded-full overflow-hidden border-2 border-white/5 group-hover:border-brand-cyan transition-colors mb-3 bg-neutral-800 flex items-center justify-center">
+                    {actor.profile_path ? (
+                      <Image src={TMDB_IMG.profile(actor.profile_path)} alt={actor.name} fill className="object-cover" />
+                    ) : (
+                      <span className="text-4xl text-neutral-500">👤</span>
+                    )}
                   </div>
                   <p className="text-xs font-bold text-white line-clamp-1">{actor.name}</p>
                   <p className="text-[10px] text-neutral-500 line-clamp-1">{actor.character}</p>

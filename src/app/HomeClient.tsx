@@ -377,22 +377,16 @@ export function HomeClient() {
       )}
 
       {/* Continuar Assistindo */}
-      {continueWatching.length > 0 && (
-        <div onClick={(e) => {
-          // Intercepta cliques para mostrar o modal em vez de ir para detalhes
-          const target = (e.target as HTMLElement).closest('a');
-          if (target) {
-            const href = target.getAttribute('href');
-            const itemId = href?.split('/').pop();
-            const item = continueWatching.find(i => String(i.id_n || i.id) === itemId);
-            if (item) {
-              e.preventDefault();
-              setResumeItem(item);
-            }
-          }
-        }}>
-          <ContentRow title="Continuar Assistindo" items={continueWatching} showProgress={true} />
-        </div>
+      {continueWatching.length > 0 && ( // Adicionado onItemClick para interceptar e mostrar o modal
+        <ContentRow 
+          title="Continuar Assistindo" 
+          items={continueWatching} 
+          showProgress={true} 
+          onItemClick={(item) => {
+            // Intercepta o clique para mostrar o modal de continuar/reiniciar
+            setResumeItem(item);
+          }}
+        />
       )}
 
       {sections.map(sec => {

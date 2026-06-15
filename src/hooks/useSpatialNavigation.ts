@@ -12,7 +12,7 @@ export function useSpatialNavigation() {
     const handleFocus = (e: FocusEvent) => {
       const target = e.target as HTMLElement;
       if (target && target.getAttribute('tabindex') === '0') {
-        target.scrollIntoView({
+        target.scrollIntoView({ // Garante que o elemento focado esteja visível
           behavior: 'smooth',
           block: 'nearest',
           inline: 'center'
