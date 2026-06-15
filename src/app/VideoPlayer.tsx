@@ -71,7 +71,7 @@ export function VideoPlayer({
     if (preferredAudioTrack && !preferredAudioTrack.selected) {
       // Timeout de segurança para evitar race conditions no carregamento do buffer
       const timer = setTimeout(() => {
-        playerRef.current?.audioTracks.setSelected(preferredAudioTrack.id)
+        preferredAudioTrack.selected = true
         console.log(`[AudioSystem] Selecionado automaticamente: ${preferredAudioTrack.label} (${preferredAudioTrack.language})`)
       }, 150)
       return () => clearTimeout(timer)
