@@ -34,7 +34,8 @@ export function useSpatialNavigation() {
       // O navegador lidará com o movimento do foco entre elementos com tabIndex="0".
       
       // Tratamento para o botão "Voltar" (Back) do controle remoto LG (461) ou Backspace
-      if (e.keyCode === 461 || e.key === 'Backspace') {
+      // Código 10009 é o padrão para o botão Return/Back nas TVs Samsung Tizen
+      if (e.keyCode === 461 || e.keyCode === 10009 || e.key === 'Backspace') {
         const activeElement = document.activeElement;
         const isInputActive = activeElement?.tagName === 'INPUT' ||
                              activeElement?.tagName === 'TEXTAREA' ||
@@ -67,7 +68,11 @@ export function useSpatialNavigation() {
           const isRoot = window.location.pathname === '/home' || window.location.pathname === '/'
           
           if (!isRoot) {
-            window.history.back();
+            if (window.history.length > 1) {
+              window.history.back();
+            } else {
+              window.location.replace('/home'); // Use replace para não sujar o histórico
+            }
           } else {
             // Prevenção de fechamento acidental em TVs - Só fecha se estiver na Home
             const webOS = (window as any).webOS;

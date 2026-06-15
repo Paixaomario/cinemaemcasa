@@ -14,10 +14,13 @@
     "e2e:open": "cypress open",
     "e2e:run-headless": "cypress run --headless",
     "build:webos": "next build && node scripts/build-webos.js",
+    "build:tizen": "node scripts/build-tizen.js",
+    "build:roku": "cd roku && zip -r ../dist/roku-app.zip .",
     "build:all": "npm run build && npm run build:webos",
     "webos:setup": "npx --package=@webos-tools/cli ares-setup-device",
     "webos:auth": "npx --package=@webos-tools/cli ares-novicom tv",
-    "webos:install": "npx --package=@webos-tools/cli ares-install dist/*.ipk -d tv"
+    "webos:install": "npx --package=@webos-tools/cli ares-install dist/*.ipk -d tv",
+    "sync": "git add . && git commit -m \"Configuração atualizada: $(date +'%d/%m/%Y %H:%M:%S')\" && git push"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

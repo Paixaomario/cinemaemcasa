@@ -7,6 +7,7 @@ import { ContentCard } from '@/components/ui/ContentCard'
 import { Search, Mic, X, Trash2, History, Sparkles, ChevronDown, Flame } from 'lucide-react'
 import { useVoiceSearch } from '@/hooks/useVoiceSearch'
 import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
+import { useDebounce } from '@/hooks/useDebounce'
 import Image from 'next/image'
 import { 
   getPersonalizedRecommendations, 
@@ -186,56 +187,66 @@ export default function SearchPage() {
   }, [user, sb, userRegion, initialFiltersLoaded]); // Dependências para dados do usuário e região
 
   // 2. Busca Global em Tempo Real
+  const debouncedQuery = useDebounce(query, 500);
+  const debouncedGenre = useDebounce(selectedGenre, 500);
+  const debouncedYear = useDebounce(selectedYear, 500);
+  const debouncedType = useDebounce(selectedType, 500);
+  const debouncedArtist = useDebounce(selectedArtist, 500);
+
+  // Sinaliza carregamento assim que o usuário começa a interagir para feedback imediato
   useEffect(() => {
-    // Se não houver query e nenhum filtro selecionado, limpa os resultados e não faz a busca
-    if (!query.trim() && !selectedGenre && !selectedYear && !selectedType && !selectedArtist) {
-      setResults([]);
-      setIsSearching(false); // Reseta o estado de busca realizada
-      setIsLoadingResults(false);
-      setLiveSuggestions([]); // Limpa as sugestões ao limpar a busca
-      return; // Sai do useEffect
+    if (query.trim() || selectedGenre || selectedYear || selectedType || selectedArtist) {
+      setIsLoadingResults(true);
     }
+  }, [query, selectedGenre, selectedYear, selectedType, selectedArtist]);
 
-    setIsLoadingResults(true);
-
-    const delayDebounceFn = setTimeout(async () => {
-      if (query.trim().length >= 1 || selectedGenre || selectedYear || selectedType || selectedArtist) {
-        // Leitura COMPLETA da tabela para garantir trailers e metadados
-        let searchBuilder = sb.from('search_catalog')
-          .select('*')
-          .order('created_at', { ascending: false }) // Novidades no topo
-          .limit(48);
-
-        if (query.trim().length >= 1) { searchBuilder = searchBuilder.ilike('titulo', `%${query}%`); }
-        if (selectedGenre) {
-          searchBuilder = searchBuilder.eq('genero', selectedGenre);
-        }
-        if (selectedYear) {
-          searchBuilder = searchBuilder.eq('ano', parseInt(selectedYear));
-        }
-        if (selectedType) {
-          searchBuilder = searchBuilder.eq('tipo', selectedType);
-        }
-        // Novo: Filtrar por artista selecionado
-        if (selectedArtist) {
-          // Usa sintaxe de array containment do Postgres via PostgREST
-          const artistFilter = `{"${selectedArtist.replace(/"/g, '\\"')}"}`;
-          searchBuilder = searchBuilder.or(`cast_names.cs.${artistFilter},director_names.cs.${artistFilter}`);
-        }
-
-        const { data } = await searchBuilder;
-        
-        if (data) {
-          setLiveSuggestions([]); // Garante que sugestões suspensas sejam limpas
-          setResults(data);
-        }
+  useEffect(() => {
+    const performSearch = async () => {
+      // Se não houver termos debouncados e nenhum filtro, limpa os resultados
+      if (!debouncedQuery.trim() && !debouncedGenre && !debouncedYear && !debouncedType && !debouncedArtist) {
+        setResults([]);
+        setIsSearching(false);
         setIsLoadingResults(false);
-        setIsSearching(true); // Define como busca concluída
+        setLiveSuggestions([]);
+        return;
       }
-    }, 300); // Debounce para evitar muitas requisições
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [query, sb, selectedGenre, selectedYear, selectedType, selectedArtist]);
+      // Leitura COMPLETA da tabela para garantir trailers e metadados
+      let searchBuilder = sb.from('search_catalog')
+        .select('*')
+        .order('created_at', { ascending: false }) // Novidades no topo
+        .limit(48);
+
+      if (debouncedQuery.trim().length >= 1) { 
+        searchBuilder = searchBuilder.ilike('titulo', `%${debouncedQuery}%`); 
+      }
+      if (debouncedGenre) {
+        searchBuilder = searchBuilder.eq('genero', debouncedGenre);
+      }
+      if (debouncedYear) {
+        searchBuilder = searchBuilder.eq('ano', parseInt(debouncedYear));
+      }
+      if (debouncedType) {
+        searchBuilder = searchBuilder.eq('tipo', debouncedType);
+      }
+      // Novo: Filtrar por artista selecionado
+      if (debouncedArtist) {
+        const artistFilter = `{"${debouncedArtist.replace(/"/g, '\\"')}"}`;
+        searchBuilder = searchBuilder.or(`cast_names.cs.${artistFilter},director_names.cs.${artistFilter}`);
+      }
+
+      const { data } = await searchBuilder;
+      
+      if (data) {
+        setLiveSuggestions([]); // Garante que sugestões suspensas sejam limpas
+        setResults(data);
+      }
+      setIsLoadingResults(false);
+      setIsSearching(true); // Define como busca concluída
+    };
+
+    performSearch();
+  }, [debouncedQuery, debouncedGenre, debouncedYear, debouncedType, debouncedArtist, sb]);
 
   // 3. Voz
   const { isListening, toggleListening, isSupported } = useVoiceSearch((text) => {
@@ -273,12 +284,12 @@ export default function SearchPage() {
     <>
       {/* Adiciona um overlay de carregamento se os filtros iniciais ainda não foram carregados */}
       {!initialFiltersLoaded && (
-        <div className="fixed inset-0 z-[100001] flex items-center justify-center bg-black/90 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100001] flex items-center justify-center bg-black">
           <p className="text-xl text-brand-cyan animate-pulse">Carregando...</p>
         </div>
       )}
 
-    <div className="min-h-screen bg-[#0A0A0A] text-white">
+    <div className="min-h-screen bg-[#0A0A0A] text-white overflow-x-hidden">
       {/* Barra de Busca Fixa - Estilo Glassmorphism */}
       <div className="sticky top-0 z-50 bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-white/5 px-6 py-6 md:px-16">
         <div className="max-w-7xl mx-auto relative group">

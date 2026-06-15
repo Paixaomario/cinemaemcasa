@@ -166,7 +166,7 @@ function SeriesContent() {
         }
 
         if (!localData || !localSeriesId) {
-          router.push('/')
+          router.push('/home')
           return
         }
 
@@ -451,12 +451,10 @@ function SeriesContent() {
       {/* Banner Imersivo (Hero Style) - Colado ao topo */}
       <div className="absolute top-0 left-0 right-0 h-[80vh] sm:h-[90vh] md:h-[100vh] w-full overflow-hidden">
         {showBannerTrailer && canAutoPlayTrailer && series.trailer ? (
-          <div className="absolute inset-0 w-full h-full scale-125">
-          <div className="absolute inset-0 w-full h-full scale-125 animate-in fade-in duration-1000">
+          <div className="absolute inset-0 w-full h-full scale-110 animate-in fade-in duration-1000">
              <iframe
-               src={`https://www.youtube.com/embed/${series.trailer.split('v=')[1] || series.trailer.split('/').pop()}?autoplay=1&mute=1&controls=0&loop=1&playlist=${series.trailer.split('v=')[1] || series.trailer.split('/').pop()}&modestbranding=1&iv_load_policy=3&rel=0&disablekb=1&fs=0`}
-               src={`https://www.youtube.com/embed/${getYouTubeId(series.trailer)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${getYouTubeId(series.trailer)}&modestbranding=1&iv_load_policy=3&rel=0&disablekb=1&fs=0&autohide=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
-               className="w-full h-full pointer-events-none opacity-50"
+               src={`https://www.youtube.com/embed/${getYouTubeId(series.trailer)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${getYouTubeId(series.trailer)}&modestbranding=1&iv_load_policy=3&rel=0&disablekb=1&fs=0`}
+               className="w-full h-full pointer-events-none opacity-40 transform-gpu"
                allow="autoplay"
              />
           </div>
@@ -591,7 +589,7 @@ function SeriesContent() {
                 key={ep.id_n || ep.id}
                 tabIndex={0}
                 onClick={() => handleEpisodeClick(ep)}
-                className="group flex flex-col gap-4 text-left p-4 rounded-2xl hover:bg-white/5 transition-all focus:ring-4 focus:ring-brand-cyan outline-none border border-transparent hover:border-white/10"
+                className="group flex flex-col gap-4 text-left p-4 rounded-2xl hover:bg-white/5 transition-all focus:ring-4 focus:ring-brand-cyan outline-none border border-transparent hover:border-white/10 transform-gpu"
               >
                 <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-neutral-800 border border-white/5">
                   {imageUrl ? (

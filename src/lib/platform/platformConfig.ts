@@ -4,7 +4,7 @@
  * Cloud-based: Fácil de atualizar sem redeploy
  */
 
-import { PlatformType, DeviceType } from './platformDetect'
+import { PlatformType, DeviceType } from './platformDetect' // Assumindo que Tizen será adicionado aqui
 
 export interface PlatformConfig {
   // UI/UX
@@ -99,6 +99,34 @@ const PLATFORM_CONFIGS: Record<PlatformType, Partial<PlatformConfig>> = {
     requireHTTPS: false, // Muitas TVs têm problemas com HTTPS
     enableCSP: true,
     enableSRI: false, // TVs antigas podem ter problemas
+  },
+
+  // Samsung Tizen - Otimizado para Smart TV
+  tizen: {
+    enableSpatialNavigation: true,
+    enableMagicRemote: false, // Samsung usa D-Pad padrão
+    enableVoiceSearch: true,
+    enableGamepad: true,
+
+    preloadThreshold: 800,
+    imageOptimization: 'aggressive',
+    networkQuality: 'medium',
+
+    notificationsEnabled: true,
+    pushNotificationsEnabled: false, // Tizen requer integração específica via Samsung Account
+    toastDuration: 4000,
+
+    videoBufferAhead: 45, // Tizen se beneficia de buffers maiores
+    videoAutoPlay: true,
+    videoDefaultQuality: '720p',
+
+    useLocalStorage: true,
+    useCacheAPI: true,
+    storageQuota: 15 * 1024 * 1024, // Tizen é mais restrito (15MB)
+
+    requireHTTPS: true,
+    enableCSP: true,
+    enableSRI: false,
   },
 
   // Web (browsers comuns)

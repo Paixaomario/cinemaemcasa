@@ -17,10 +17,10 @@ body {
 .using-keyboard *:focus {
   outline: none !important;
   box-shadow: 0 0 0 4px var(--brand-cyan, #00ADEF) !important;
-  z-index: 9999 !important;
-  /* TVs sofrem com sombras complexas; simplificamos para ganhar FPS */
+  /* Força aceleração de hardware no elemento focado */
+  transform: scale(1.02) translateZ(0);
   transition: box-shadow 0.1s ease-out;
-  will-change: transform;
+  backface-visibility: hidden;
 }
 
 /* Ajuste para elementos com escala nativa no hover/focus */
@@ -63,6 +63,9 @@ body {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch; /* Melhora a fluidez no iOS/Safari */
   overscroll-behavior-x: contain;
+  /* Melhora performance de rolagem em TVs */
+  transform: translateZ(0);
+  content-visibility: auto;
 }
 
 .scroll-row > * {
@@ -278,12 +281,16 @@ header, .mobile-nav-bar {
   aside, .sidebar-container {
     display: flex !important;
     visibility: visible !important;
+    position: fixed !important; /* Garante que não empurre o conteúdo da pesquisa */
+    left: 0;
+    top: 0;
+    height: 100vh;
     /* BARRA INVISÍVEL: Otimizada para não processar transparência sem necessidade */
     background-color: transparent !important;
     backdrop-filter: none !important;
     border-right: 1px solid transparent !important;
     pointer-events: none; /* Não bloqueia cliques no conteúdo quando invisível */
-    z-index: 50 !important; /* Aumentado para garantir que sobreponha outros elementos */
+    z-index: 100 !important; /* Aumentado para garantir que sobreponha a pesquisa */
     transition: opacity 0.3s ease;
   }
 
@@ -330,12 +337,28 @@ a[href*="/series"]:not(.group) {
   display: flex !important;
   flex-direction: column !important;
   gap: 2rem !important;
+  position: relative;
+  z-index: 10;
+  padding-top: 2rem;
+  /* Otimização para listas longas em TVs */
+  content-visibility: auto;
+  contain-intrinsic-size: 1000px;
+}
+
+.search-results-grid {
+  display: grid;
+  /* Força aceleração de hardware */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  will-change: transform;
 }
 
 /* Força a barra de digitação (search-bar) para o topo, acima das categorias */
 .search-bar-wrapper {
   order: -1 !important;
   margin-bottom: 1rem;
+  z-index: 20;
 }
 
 /* Animação Arco-Íris para Modo Infantil */
