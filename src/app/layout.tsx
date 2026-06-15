@@ -7,6 +7,8 @@ import { CommandReceiverProvider } from '@/components/layout/CommandReceiverProv
 import { Inter, Montserrat } from 'next/font/google'
 import { VisualPreferencesProvider } from '@/components/layout/VisualPreferencesProvider'
 import { AppInitializer } from '@/app/AppInitializer'
+import { useEffect } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const montserrat = Montserrat({ 
@@ -37,6 +39,16 @@ export const viewport: Viewport = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    // Garante que ao iniciar ou recarregar, o usuário seja levado para a Home
+    if (pathname === '/') {
+      router.replace('/home');
+    }
+  }, []);
+
   return (
     <html lang="pt-BR" className={`${inter.variable} ${montserrat.variable}`}>
       <head>

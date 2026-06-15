@@ -9,13 +9,40 @@ export function useSpatialNavigation() {
   useEffect(() => {
     const isWebOS = typeof window !== 'undefined' && !!(window as any).webOS;
 
+    const handleFocus = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && target.getAttribute('tabindex') === '0') {
+        target.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center'
+        });
+      }
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
+      const active = document.activeElement as HTMLElement;
+
       // Impede o scroll da página ao usar as setas (comum em TVs)
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        const isScrollable = document.activeElement?.tagName === 'TEXTAREA';
+        const isScrollable = active?.tagName === 'TEXTAREA';
         if (!isScrollable) e.preventDefault();
       }
       
+      // Lógica de transição solicitada: Esquerda -> Menu Home
+      if (e.key === 'ArrowLeft' && active) {
+        const rect = active.getBoundingClientRect();
+        if (rect.left < 100 && !active.closest('aside')) {
+          const homeBtn = document.querySelector('aside [href="/home"], aside [href="/"]') as HTMLElement;
+          homeBtn?.focus();
+        }
+      }
+
+      // Lógica de transição solicitada: Menu -> Conteúdo (Direita)
+      if (e.key === 'ArrowRight' && active?.closest('aside')) {
+        const firstContent = document.querySelector('main [tabindex="0"]') as HTMLElement;
+        firstContent?.focus();
+      }
 
       // Impedir que o cursor do Magic Remote suma em momentos indesejados
       if (isWebOS && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'].includes(e.key)) {
@@ -113,7 +140,11 @@ export function useSpatialNavigation() {
       }
     }
 
+    document.addEventListener('focusin', handleFocus);
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('focusin', handleFocus);
+    };
   }, [])
 }

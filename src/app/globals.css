@@ -55,8 +55,9 @@ body {
   display: flex;
   flex-wrap: nowrap; /* Garante que os itens fiquem em uma única linha */
   gap: 1.5rem; /* Espaço entre as capas */
-  overflow-x: auto; /* Ativa a rolagem horizontal */
+  overflow-x: scroll; /* Força scroll horizontal para TVs */
   overflow-y: hidden; /* IMPORTANTE: Alterado de visible para hidden para destravar o scroll-x */
+  scroll-snap-type: x mandatory;
   width: 100%;
   padding: 40px 0; /* Ajustado para dar espaço ao efeito de escala sem cortar */
   margin: -40px 0;
@@ -289,7 +290,7 @@ header, .mobile-nav-bar {
     background-color: transparent !important;
     backdrop-filter: none !important;
     border-right: 1px solid transparent !important;
-    pointer-events: none; /* Não bloqueia cliques no conteúdo quando invisível */
+    pointer-events: auto; /* Alterado: Sempre permitir foco e interação na sidebar */
     z-index: 100 !important; /* Aumentado para garantir que sobreponha a pesquisa */
     transition: opacity 0.3s ease;
   }
@@ -338,7 +339,7 @@ a[href*="/series"]:not(.group) {
   flex-direction: column !important;
   gap: 2rem !important;
   position: relative;
-  z-index: 10;
+  z-index: 5; /* Reduzido para não sobrepor a sidebar (z-100) */
   padding-top: 2rem;
   /* Otimização para listas longas em TVs */
   content-visibility: auto;

@@ -27,6 +27,7 @@ export interface PlatformConfig {
   videoBufferAhead: number // seconds
   videoAutoPlay: boolean
   videoDefaultQuality: 'auto' | '480p' | '720p' | '1080p' | '4k'
+  videoDefaultAudio: string // ex: 'pt-BR'
 
   // Armazenamento
   useLocalStorage: boolean
@@ -59,6 +60,7 @@ const BASE_CONFIG: PlatformConfig = {
   videoBufferAhead: 10,
   videoAutoPlay: true,
   videoDefaultQuality: '1080p',
+  videoDefaultAudio: 'pt-BR',
 
   useLocalStorage: true,
   useCacheAPI: true,
@@ -91,6 +93,7 @@ const PLATFORM_CONFIGS: Record<string, Partial<PlatformConfig>> = {
     videoBufferAhead: 30, // Mais buffering para conexões instáveis
     videoAutoPlay: true,
     videoDefaultQuality: '720p', // Padrão conservador
+    videoDefaultAudio: 'pt-BR',
 
     useLocalStorage: true,
     useCacheAPI: true,

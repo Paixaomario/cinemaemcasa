@@ -108,6 +108,7 @@ export default function SearchPage() {
   useEffect(() => {
     const loadFilterOptions = async () => {
       try {
+        // Removido 'category' que não existe na view e causava erro 400
         const [genresRes, yearsRes, typesRes] = await Promise.all([
           sb.from('search_catalog').select('genero'),
           sb.from('search_catalog').select('ano'),
@@ -214,7 +215,7 @@ export default function SearchPage() {
       // Leitura COMPLETA da tabela para garantir trailers e metadados
       let searchBuilder = sb.from('search_catalog')
         .select('*')
-        .order('created_at', { ascending: false }) // Novidades no topo
+        .order('created_at', { ascending: false, nullsFirst: false }) // Garante novidades no topo sem travar
         .limit(48);
 
       if (debouncedQuery.trim().length >= 1) { 

@@ -593,7 +593,9 @@ function SeriesContent() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {episodes.map((ep) => {
-              const imageUrl = ep.imagem_500 || ep.banner ? TMDB_IMG.backdrop(ep.imagem_500 || ep.banner) : null;
+              const imgPath = ep.imagem_500 || ep.banner;
+              // Validação rigorosa para evitar 404: precisa ter mais de 5 caracteres e começar com '/'
+              const imageUrl = (imgPath && imgPath.length > 5 && imgPath.startsWith('/')) ? TMDB_IMG.backdrop(imgPath) : null;
               return (
               <button
                 key={ep.id_n || ep.id}
@@ -743,6 +745,7 @@ function SeriesContent() {
           isGuest={isGuestMode}
           guestName={guestName}
           backdrop={series.backdrop_path || series.banner}
+          preferredLanguage="pt-BR" // Garante áudio PT-BR como padrão
           onNext={handleNextEpisode}
           nextEpisode={getNextEpisodeInfo()}
         />
