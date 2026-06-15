@@ -7,9 +7,10 @@ interface Props {
   items: Array<TMDBMovie | TMDBShow>
   variant?: 'poster' | 'wide'
   showProgress?: boolean
+  onItemClick?: (item: any) => void
 }
 
-export function ContentRow({ title, items, variant = 'poster', showProgress = false }: Props) {
+export function ContentRow({ title, items, variant = 'poster', showProgress = false, onItemClick }: Props) {
   if (items.length === 0) return null
 
   return (
@@ -23,6 +24,7 @@ export function ContentRow({ title, items, variant = 'poster', showProgress = fa
             key={`${(item as any).id_n || (item as any).id || (item as any).tmdb_id || index}-${index}`}
             item={item}
             showProgress={showProgress}
+            onClick={onItemClick ? () => onItemClick(item) : undefined}
             progress={showProgress && (item as any).last_position ? {
               lastPosition: (item as any).last_position,
               duration: (item as any).duration
