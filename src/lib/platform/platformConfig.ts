@@ -72,7 +72,7 @@ const BASE_CONFIG: PlatformConfig = {
 /**
  * Configurações específicas por plataforma
  */
-const PLATFORM_CONFIGS: Record<PlatformType, Partial<PlatformConfig>> = {
+const PLATFORM_CONFIGS: Record<string, Partial<PlatformConfig>> = {
   // LG WebOS - Otimizado para Smart TV
   webos: {
     enableSpatialNavigation: true,
