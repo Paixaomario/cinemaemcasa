@@ -6,8 +6,8 @@ export default function Page() {
   const router = useRouter()
 
   useEffect(() => {
-    // Sempre redirecionar para loading primeiro
-    router.replace('/loading')
+    // Redireciona para a Home conforme requisito de inicialização
+    router.replace('/home')
   }, [router])
 
   return (
