@@ -22,6 +22,7 @@ interface VideoPlayerProps {
   guestName?: string | null
   backdrop?: string | null
   nextEpisode?: any
+  preferredLanguage?: string // Adicionado para definir o idioma de áudio padrão
 }
 
 export function VideoPlayer({ 
@@ -37,7 +38,8 @@ export function VideoPlayer({
   isGuest,
   guestName,
   backdrop,
-  nextEpisode
+  nextEpisode,
+  preferredLanguage = 'pt-BR' // Padrão para pt-BR se não for especificado
 }: VideoPlayerProps) {
   const playerRef = useRef<MediaPlayerInstance>(null)
   
@@ -45,20 +47,20 @@ export function VideoPlayer({
   const audioTracks = useMediaState('audioTracks', playerRef)
 
   useEffect(() => {
-    // Aguarda até que as faixas de áudio sejam carregadas pelo provider
-    if (!audioTracks || audioTracks.length === 0) return
+    if (!audioTracks || audioTracks.length === 0 || !playerRef.current) return
 
-    // Lógica de busca para áudio PT-BR (Português Brasil)
-    // Verifica padrões comuns em metadados de filmes/séries
-    const audioPt = Array.from(audioTracks).find(track => {
+    const targetLang = preferredLanguage.toLowerCase()
+
+    const preferredAudioTrack = Array.from(audioTracks).find(track => {
       const lang = (track.language || '').toLowerCase()
       const label = (track.label || '').toLowerCase()
       
       return (
-        lang === 'por' || 
-        lang === 'pob' || 
-        lang === 'pt' || 
-        lang.includes('pt-br') ||
+        lang === targetLang ||
+        lang.includes(targetLang) ||
+        // Fallbacks comuns para pt-BR
+        (targetLang === 'pt-br' && (lang === 'por' || lang === 'pob' || lang === 'pt')) ||
+        // Verifica labels
         label.includes('portugues') || 
         label.includes('dublado') ||
         label.includes('brazil') ||
@@ -66,16 +68,15 @@ export function VideoPlayer({
       )
     })
 
-    // Força a seleção se encontrar a faixa e ela já não for a ativa
-    if (audioPt && !audioPt.selected) {
+    if (preferredAudioTrack && !preferredAudioTrack.selected) {
       // Timeout de segurança para evitar race conditions no carregamento do buffer
       const timer = setTimeout(() => {
-        audioPt.selected = true
-        console.log(`[AudioSystem] Selecionado automaticamente: ${audioPt.label}`)
+        playerRef.current?.audioTracks.setSelected(preferredAudioTrack.id)
+        console.log(`[AudioSystem] Selecionado automaticamente: ${preferredAudioTrack.label} (${preferredAudioTrack.language})`)
       }, 150)
       return () => clearTimeout(timer)
     }
-  }, [audioTracks])
+  }, [audioTracks, preferredLanguage])
 
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden">
