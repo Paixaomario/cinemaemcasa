@@ -8,7 +8,7 @@ export async function POST(req: Request) {
 
     if (!query) return NextResponse.json({ error: 'Query is required' }, { status: 400 })
 
-    // Upsert anônimo no analytics via RPC
+    // Upsert anônimo no analytics via RPC (definido na migração 018)
     const { error } = await supabase.rpc('track_search_analytics', {
       p_query: query.toLowerCase().trim(),
       p_result_count: result_count || 0,
