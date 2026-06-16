@@ -2,6 +2,7 @@
 export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase'
 import { useCallback, useEffect, useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation' // Importar useRouter
 import { useAuth } from '@/components/layout/SupabaseProvider'
 import { ContentCard } from '@/components/ui/ContentCard'
 import { Search, Mic, X, Trash2, History, Sparkles, ChevronDown, Flame } from 'lucide-react'
@@ -50,6 +51,7 @@ export interface SearchResultItem {
 
 export default function SearchPage() {
   const { user } = useAuth()
+  const router = useRouter() // Inicializar useRouter aqui
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResultItem[]>([])
   const [suggestions, setSuggestions] = useState<SearchResultItem[]>([])
