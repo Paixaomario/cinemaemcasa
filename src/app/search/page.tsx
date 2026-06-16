@@ -75,11 +75,15 @@ export default function SearchPage() {
     // Prioriza o ID da fonte original para navegação e histórico
     id: item.source_id || String(item.id),
     // Mantém compatibilidade com o player que espera id_n para séries
-    id_n: (item.source_table === 'series' || item.tipo === 'series') ? (item.source_id || String(item.id)) : undefined,
-    titulo: item.titulo || item.title || '',
+    id_n: (item.source_table === 'series' || item.tipo === 'series' || item.media_type === 'tv' || item.type === 'series') 
+      ? (item.source_id || String(item.id)) 
+      : undefined,
+    titulo: item.titulo || item.title || item.name || '',
     poster: item.poster || item.capa || item.poster_path || '',
-    type: item.tipo || item.type || 'movie',
-    year: item.ano || item.year
+    type: (item.source_table === 'series' || item.tipo === 'series' || item.media_type === 'tv' || item.type === 'tv' || item.type === 'series') 
+      ? 'series' 
+      : 'movie',
+    year: item.ano || item.year || item.release_date?.slice(0, 4)
   });
 
   // Detecção de Localização com Fallback
@@ -258,19 +262,27 @@ export default function SearchPage() {
 
   // 4. Salvar Histórico (Apenas se clicado, conforme regra de negócio)
   const handleResultClick = async (item: any) => {
-    if (!user) return
+    if (user) {
+      // Rastrear busca global para tendências (Popular Searches)
+      const { trackSearch } = await import('@/lib/searchSuggestions')
+      await trackSearch(query || item.titulo || item.title || item.name, results.length, userRegion)
 
-    // Rastrear busca global para tendências (Popular Searches)
-    const { trackSearch } = await import('@/lib/searchSuggestions')
-    await trackSearch(query || item.titulo, results.length, userRegion)
+      await sb.from('user_search_history').upsert({
+        user_id: user.id,
+        query: query || item.titulo || item.title || item.name,
+        clicked_result_id: `${item.source_table || 'catalog'}-${item.source_id || item.id}`,
+        clicked_at: new Date().toISOString(),
+        result_count: results.length
+      })
+    }
 
-    await sb.from('user_search_history').upsert({
-      user_id: user.id,
-      query: query || item.titulo,
-      clicked_result_id: `${item.source_table}-${item.source_id}`,
-      clicked_at: new Date().toISOString(),
-      result_count: results.length
-    })
+    // Executa a navegação programática
+    const formatted = formatContentItem(item);
+    const detailPath = formatted.type === 'series' 
+      ? `/series/${formatted.id}` 
+      : `/detalhes/${formatted.id}`;
+    
+    router.push(detailPath);
   }
 
   // 5. Limpar Histórico
