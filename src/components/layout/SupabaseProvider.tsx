@@ -43,16 +43,19 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const { key } = e
+      if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'].includes(key)) return
+
       const selectors = 'a, button, input, select, textarea, [tabindex="0"]'
+      
+      // Otimização de Performance para TVs: 
+      // Evita o uso excessivo de getComputedStyle() que trava o processador da TV
       const focusable = Array.from(document.querySelectorAll(selectors)).filter(el => {
-        const style = window.getComputedStyle(el)
-        return style.display !== 'none' && style.visibility !== 'hidden' && (el as HTMLElement).offsetWidth > 0
+        const htmlEl = el as HTMLElement;
+        // Verificação rápida de visibilidade física (offset) é muito mais rápida que CSS estendido
+        return htmlEl.offsetWidth > 0 || htmlEl.offsetHeight > 0 || htmlEl.getClientRects().length > 0;
       }) as HTMLElement[]
       
       const active = document.activeElement as HTMLElement
-
-      if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'].includes(key)) return
-
       // Se nada estiver focado, foca no primeiro elemento disponível
       if (!active || active === document.body) {
         if (focusable.length > 0) focusable[0].focus()

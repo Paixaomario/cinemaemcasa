@@ -82,9 +82,6 @@ export default function SearchPage() {
     year: item.ano || item.year
   });
 
-  // Re-ativando useSpatialNavigation para depurar o foco e navegação
-  useSpatialNavigation()
-
   // Detecção de Localização com Fallback
   useEffect(() => {
     async function detectLocation() {
@@ -108,6 +105,7 @@ export default function SearchPage() {
   useEffect(() => {
     const loadFilterOptions = async () => {
       try {
+        setIsLoadingResults(true);
         // Removido 'category' que não existe na view e causava erro 400
         const [genresRes, yearsRes, typesRes] = await Promise.all([
           sb.from('search_catalog').select('genero'),
@@ -137,9 +135,12 @@ export default function SearchPage() {
           typesRes.data.forEach((f: any) => { const t = cleanValue(f.tipo); if (t.length > 2) typesSet.add(t); });
           setAvailableTypes(Array.from(typesSet).sort());
         }
-        setInitialFiltersLoaded(true);
       } catch (err) {
         console.error("Erro ao carregar opções de filtro:", err);
+      } finally {
+        // GARANTIA: Remove o overlay de carregamento mesmo em caso de erro no banco
+        setInitialFiltersLoaded(true);
+        setIsLoadingResults(false);
       }
     };
     loadFilterOptions();
@@ -310,7 +311,8 @@ export default function SearchPage() {
                 // Foca no primeiro card de resultado ou filtro
                 const firstFocusable = document.querySelector('main [tabindex="0"]') as HTMLElement;
                 if (firstFocusable) firstFocusable.focus(); // Garante que o foco vá para o primeiro item do grid
-              } else if (e.key === 'Enter') {
+              } else if (e.key === 'Enter' || e.key === 'ArrowLeft') {
+                // ArrowLeft sobe para o provedor global lidar com a abertura da Sidebar
                 e.currentTarget.blur();
               }
             }}
