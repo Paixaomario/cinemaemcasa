@@ -48,12 +48,12 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       // Prioriza elementos com tabindex="0" para navegação espacial, depois elementos interativos padrão
       const selectors = '[tabindex="0"], a, button, input, select, textarea';
       
-      // Otimização Sênior: Mapeia elementos e seus retângulos uma única vez para evitar reflows (Layout Thrashing)
-      const rawFocusable = Array.from(document.querySelectorAll(selectors)) as HTMLElement[];
-      const focusableItems = rawFocusable
+      // Otimização: Filtra apenas elementos visíveis para reduzir o processamento em grids longos (TVs)
+      const focusableItems = (Array.from(document.querySelectorAll(selectors)) as HTMLElement[])
         .filter(el => {
-          if (el.hasAttribute('disabled') || el.style.display === 'none' || el.style.visibility === 'hidden') return false;
-          return el.offsetWidth > 0 || el.offsetHeight > 0;
+          if (el.hasAttribute('disabled')) return false;
+          const style = window.getComputedStyle(el);
+          return style.display !== 'none' && style.visibility !== 'hidden' && (el.offsetWidth > 0 || el.offsetHeight > 0);
         })
         .map(el => ({
           el,
@@ -72,7 +72,6 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
       if (key === 'Enter') return // Enter nativo funciona em links/botões
 
-      e.preventDefault()
       const activeRect = activeItem.rect
       const isInSidebar = activeItem.isInSidebar
 
@@ -182,6 +181,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (nearest) {
+        e.preventDefault() // Só impede o scroll padrão se houver um alvo válido
         const targetElement = nearest as HTMLElement
         targetElement.focus()
         // Algumas TVs antigas não suportam smooth behavior, adicionamos fallback

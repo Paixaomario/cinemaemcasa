@@ -340,7 +340,7 @@ a[href*="/series"]:not(.group) {
   flex-direction: column !important;
   gap: 2rem !important;
   position: relative;
-  z-index: 1; /* Reduzido ao mínimo para garantir que a Sidebar (z-100) sempre prevaleça */
+  z-index: 10; 
   padding-top: 2rem;
   /* Otimização para listas longas em TVs */
   content-visibility: auto;

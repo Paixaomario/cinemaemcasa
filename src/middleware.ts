@@ -6,7 +6,9 @@ const rateLimitMap = new Map<string, { count: number; lastReset: number }>()
 
 export function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/api/')) {
-    const ip = (request as any).ip || request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1'
+    // Acesso seguro ao IP via headers para evitar erros de tipo no build da Vercel
+    const forwarded = request.headers.get('x-forwarded-for')
+    const ip = forwarded ? forwarded.split(',')[0] : '127.0.0.1'
     const now = Date.now()
     const limit = 100 // 100 requisições
     const windowMs = 60 * 60 * 1000 // por hora
