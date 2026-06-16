@@ -5,6 +5,7 @@ import {
   MediaPlayer, 
   MediaProvider, 
   useMediaState, 
+  Track,
   type MediaPlayerInstance 
 } from '@vidstack/react'
 
@@ -23,6 +24,8 @@ interface VideoPlayerProps {
   backdrop?: string | null
   nextEpisode?: any
   preferredLanguage?: string // Adicionado para definir o idioma de áudio padrão
+  subtitles?: any[]
+  audioTracks?: any[]
 }
 
 export function VideoPlayer({ 
@@ -39,7 +42,9 @@ export function VideoPlayer({
   guestName,
   backdrop,
   nextEpisode,
-  preferredLanguage = 'pt-BR' // Padrão para pt-BR se não for especificado
+  preferredLanguage = 'pt-BR', // Padrão para pt-BR se não for especificado
+  subtitles = [],
+  audioTracks: remoteAudioTracks = []
 }: VideoPlayerProps) {
   const playerRef = useRef<MediaPlayerInstance>(null)
   
@@ -99,7 +104,18 @@ export function VideoPlayer({
         currentTime={startOffset || 0}
         className="vds-cinema-player w-full h-full"
       >
-        <MediaProvider />
+        <MediaProvider>
+          {subtitles?.map((track: any, index: number) => (
+            <Track
+              key={`sub-${index}`}
+              src={track.src}
+              label={track.label}
+              language={track.language || track.srclang}
+              kind={track.kind || 'subtitles'}
+              default={track.default}
+            />
+          ))}
+        </MediaProvider>
         {/* Os controles customizados do Vidstack entram aqui */}
       </MediaPlayer>
     </div>

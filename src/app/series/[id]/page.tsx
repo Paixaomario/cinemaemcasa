@@ -442,7 +442,9 @@ function SeriesContent() {
             id_n: e.id,
             numero_episodio: e.episode_number,
             titulo: e.title,
-            arquivo: e.video_url
+            arquivo: e.video_url,
+            subtitles: e.subtitles,
+            audio_tracks: e.audio_tracks
           }))
         }
       }
@@ -511,10 +513,18 @@ function SeriesContent() {
               title={countryCode}
             />
           )}
+          {series.classificacao && (
+            <span className="border border-white/40 px-1.5 py-0.5 rounded text-[10px] sm:text-xs uppercase">
+              {series.classificacao}
+            </span>
+          )}
           <span className="bg-brand-cyan text-black px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs">TMDB {series.vote_average?.toFixed(1) || series.rating}</span>
           <span className="text-neutral-400 text-xs sm:text-sm">{series.first_air_date?.slice(0, 4) || series.ano}</span>
           {series.number_of_seasons && (
             <span className="text-neutral-400 font-bold uppercase tracking-widest text-xs sm:text-sm">{series.number_of_seasons} Temporadas</span>
+          )}
+          {series.tmdb_runtime && (
+            <span className="text-neutral-400 text-xs sm:text-sm ml-2">{series.tmdb_runtime}</span>
           )}
         </div>
 
@@ -582,6 +592,9 @@ function SeriesContent() {
             
             {seasons.length > 0 && (
               <div className="flex items-center gap-4">
+                {selectedSeason?.ano && (
+                  <span className="text-xs text-neutral-500 font-bold mr-2">{selectedSeason.ano}</span>
+                )}
                 <span className="text-xs font-black uppercase text-neutral-500 tracking-widest">Temporada:</span>
                 <select 
                   value={selectedSeason?.id_n || selectedSeason?.id}
@@ -591,7 +604,7 @@ function SeriesContent() {
                 >
                   {seasons.map(s => (
                     <option key={s.id_n || s.id} value={s.id_n || s.id}>
-                      {s.numero_temporada === 0 ? 'Especiais' : `Temporada ${s.numero_temporada}`}
+                      {s.titulo || (s.numero_temporada === 0 ? 'Especiais' : `Temporada ${s.numero_temporada}`)}
                     </option>
                   ))}
                 </select>
@@ -633,7 +646,12 @@ function SeriesContent() {
                 </div>
                 <div>
                   <h3 className="font-black text-white group-hover:text-brand-cyan transition-colors line-clamp-1 uppercase text-sm tracking-tight">{ep.titulo}</h3>
-                  <p className="text-xs text-neutral-500 line-clamp-2 mt-2 font-medium leading-relaxed">{ep.descricao || 'Sem descrição disponível para este episódio.'}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    {ep.duracao && <span className="text-[10px] text-brand-cyan font-bold whitespace-nowrap">{ep.duracao}</span>}
+                    <p className="text-xs text-neutral-500 line-clamp-2 font-medium leading-relaxed flex-1">
+                      {ep.descricao || 'Sem descrição disponível para este episódio.'}
+                    </p>
+                  </div>
                 </div>
               </button>
             )})}
@@ -753,6 +771,8 @@ function SeriesContent() {
       {(showPlayer || activeEpisode || (guestName && activeRoomId)) && (activeEpisode?.arquivo || episodes[0]?.arquivo) && (
         <VideoPlayer
           src={activeEpisode?.arquivo || episodes[0]?.arquivo}
+          subtitles={activeEpisode?.subtitles}
+          audioTracks={activeEpisode?.audio_tracks}
           title={activeEpisode ? `${title} - ${activeEpisode.titulo}` : title}
           contentId={contentUuid ? `${contentUuid}-ep-${activeEpisode?.id_n || activeEpisode?.id || episodes[0]?.id_n || episodes[0]?.id}` : String(series.id_n || series.id)}
           userId={user?.id}
