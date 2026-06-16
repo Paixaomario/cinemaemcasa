@@ -112,9 +112,9 @@ export default function SearchPage() {
     const loadFilterOptions = async () => {
       try {
         setIsLoadingResults(true);
-        // Removido 'category' que não existe na view e causava erro 400
+        // Garantia de seleção apenas de colunas existentes
         const [genresRes, yearsRes, typesRes] = await Promise.all([
-          sb.from('search_catalog').select('genero'),
+          sb.from('search_catalog').select('genero').not('genero', 'is', null),
           sb.from('search_catalog').select('ano'),
           sb.from('search_catalog').select('tipo'),
         ]);

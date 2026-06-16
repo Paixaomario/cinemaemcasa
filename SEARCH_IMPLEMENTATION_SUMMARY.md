@@ -82,6 +82,7 @@ Transformar a página de busca em um sistema profissional com:
 - ✅ Input com voz integrado e indicador de confiança
 - ✅ Dropdown de sugestões (histórico + categorias + previsões + localização)
 - ✅ Histórico visual em grid (10 últimas buscas)
+- ✅ Rota de busca padronizada para `/search` (anteriormente `/buscar` em alguns componentes)
 - ✅ Filtros profissionais (tipo + gênero)
 - ✅ Indicador de resultados em tempo real
 - ✅ Mensagens de state (carregando, vazio, etc)

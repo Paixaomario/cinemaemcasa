@@ -10,7 +10,6 @@ import { Home, Film, Tv, Search, User } from 'lucide-react'
 function NavContent() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const currentTab = searchParams.get('tab')
   const { user } = useAuth()
   const [isChild, setIsChild] = useState(false)
 
@@ -25,7 +24,7 @@ function NavContent() {
 
   // Visível em todas as páginas, o player usará Z-index superior para cobrir
   const navItems = [
-    { href: '/', label: 'Home', icon: Home },
+    { href: '/home', label: 'Home', icon: Home },
     { href: '/filmes', label: 'Filmes', icon: Film },
     { href: '/series', label: 'Séries', icon: Tv },
     { href: '/search', label: 'Localizar', icon: Search },

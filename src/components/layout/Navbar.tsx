@@ -11,7 +11,7 @@ export function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-[4vw] py-0 bg-black/40 hover:bg-black/80 backdrop-blur-md border-b border-white/5 shadow-2xl transition-all duration-500 whitespace-nowrap h-[121px]">
       {/* Lado Esquerdo: Logo */}
       <div className="flex-shrink-0 relative z-20">
-        <Link href="/" tabIndex={0} className="focus:outline-none transition-transform hover:scale-105 block">
+        <Link href="/home" tabIndex={0} className="focus:outline-none transition-transform hover:scale-105 block">
           <Image 
             src="/logo.png" 
             alt="CINECASA" 
@@ -27,7 +27,7 @@ export function Navbar() {
       <div className="hidden lg:flex absolute inset-0 items-center justify-center pointer-events-none">
         <div className="flex items-center gap-[2.5vw] pointer-events-auto relative z-10">
           {[
-            { href: '/', label: 'Início' },
+            { href: '/home', label: 'Início' },
             { href: '/filmes', label: 'Filmes' },
             { href: '/series', label: 'Séries' },
             { href: '/favoritos', label: 'Favoritos' },

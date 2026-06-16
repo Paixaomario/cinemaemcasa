@@ -48,37 +48,41 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       // Prioriza elementos com tabindex="0" para navegação espacial, depois elementos interativos padrão
       const selectors = '[tabindex="0"], a, button, input, select, textarea';
       
-      // Otimização de Performance para TVs: 
-      // Evita o uso excessivo de getComputedStyle() que trava o processador da TV
-      const focusable = Array.from(document.querySelectorAll(selectors)).filter(el => {
-        const htmlEl = el as HTMLElement;
-        // Exclui elementos desabilitados ou com display: none / visibility: hidden (sem usar getComputedStyle)
-        if (htmlEl.hasAttribute('disabled') || htmlEl.style.display === 'none' || htmlEl.style.visibility === 'hidden') return false;
-
-        // Verificação rápida de visibilidade física (offset) é muito mais rápida que CSS estendido
-        return htmlEl.offsetWidth > 0 || htmlEl.offsetHeight > 0 || htmlEl.getClientRects().length > 0;
-      }) as HTMLElement[]
+      // Otimização Sênior: Mapeia elementos e seus retângulos uma única vez para evitar reflows (Layout Thrashing)
+      const rawFocusable = Array.from(document.querySelectorAll(selectors)) as HTMLElement[];
+      const focusableItems = rawFocusable
+        .filter(el => {
+          if (el.hasAttribute('disabled') || el.style.display === 'none' || el.style.visibility === 'hidden') return false;
+          return el.offsetWidth > 0 || el.offsetHeight > 0;
+        })
+        .map(el => ({
+          el,
+          rect: el.getBoundingClientRect(),
+          isInSidebar: !!el.closest('aside')
+        }));
       
       const active = document.activeElement as HTMLElement
+      const activeItem = focusableItems.find(item => item.el === active);
+
       // Se nada estiver focado, foca no primeiro elemento disponível
-      if (!active || active === document.body) {
-        if (focusable.length > 0) focusable[0].focus()
+      if (!activeItem || active === document.body) {
+        if (focusableItems.length > 0) focusableItems[0].el.focus()
         return
       }
 
       if (key === 'Enter') return // Enter nativo funciona em links/botões
 
       e.preventDefault()
-      const activeRect = active.getBoundingClientRect()
+      const activeRect = activeItem.rect
+      const isInSidebar = activeItem.isInSidebar
 
       let nearest: HTMLElement | null = null
-      const isInSidebar = !!active.closest('aside')
 
       if (key === 'ArrowRight') {
         if (isInSidebar) {
           // OBRIGATÓRIO: Se estiver no menu, vai para o primeiro elemento focável da página principal.
-          const mainContent = focusable.filter(el => !el.closest('aside'));
-          nearest = mainContent.length > 0 ? mainContent[0] : null;
+          const mainContent = focusableItems.filter(item => !item.isInSidebar);
+          nearest = mainContent.length > 0 ? mainContent[0].el : null;
           if (nearest) { 
             e.preventDefault(); 
             nearest.focus();
@@ -87,42 +91,44 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Busca elementos na mesma linha (ou próxima linha visualmente)
-        const sameRowElements = focusable.filter(el => 
-          !el.closest('aside') && 
-          Math.abs(el.getBoundingClientRect().top - activeRect.top) < 60 // Dentro da mesma "linha" vertical
+        const sameRowElements = focusableItems.filter(item => 
+          !item.isInSidebar && 
+          Math.abs(item.rect.top - activeRect.top) < 60
         );
 
         // Busca o próximo elemento à direita na mesma linha
-        const toRightInRow = sameRowElements.filter(el => el.getBoundingClientRect().left >= activeRect.right - 5);
+        const toRightInRow = sameRowElements.filter(item => item.rect.left >= activeRect.right - 5);
         if (toRightInRow.length > 0) {
-          nearest = toRightInRow.reduce((prev, curr) => 
-            curr.getBoundingClientRect().left < prev.getBoundingClientRect().left ? curr : prev // Pega o mais à esquerda entre os que estão à direita
+          const nextItem = toRightInRow.reduce((prev, curr) => 
+            curr.rect.left < prev.rect.left ? curr : prev
           );
+          nearest = nextItem.el;
         } else {
           // Se não há mais à direita na linha, tenta "wrap around" para o início da mesma linha
           const firstInRow = sameRowElements.reduce((prev, curr) => 
-            curr.getBoundingClientRect().left < prev.getBoundingClientRect().left ? curr : prev
+            curr.rect.left < prev.rect.left ? curr : prev
           );
-          if (firstInRow && firstInRow !== active) nearest = firstInRow;
+          if (firstInRow && firstInRow.el !== active) nearest = firstInRow.el;
         }
       } else if (key === 'ArrowLeft') {
-        const sameRowElements = focusable.filter(el => 
-          !el.closest('aside') && 
-          Math.abs(el.getBoundingClientRect().top - activeRect.top) < 60
+        const sameRowElements = focusableItems.filter(item => 
+          !item.isInSidebar && 
+          Math.abs(item.rect.top - activeRect.top) < 60
         );
 
         // Busca o próximo elemento à esquerda na mesma linha
-        const toLeftInRow = sameRowElements.filter(el => el.getBoundingClientRect().right <= activeRect.left + 5);
+        const toLeftInRow = sameRowElements.filter(item => item.rect.right <= activeRect.left + 5);
         if (toLeftInRow.length > 0) {
-          nearest = toLeftInRow.reduce((prev, curr) => 
-            curr.getBoundingClientRect().right > prev.getBoundingClientRect().right ? curr : prev // Pega o mais à direita entre os que estão à esquerda
+          const nextItem = toLeftInRow.reduce((prev, curr) => 
+            curr.rect.right > prev.rect.right ? curr : prev
           );
+          nearest = nextItem.el;
         } else {
           // Se não há mais à esquerda na linha, tenta "wrap around" para o final da mesma linha
           const lastInRow = sameRowElements.reduce((prev, curr) => 
-            curr.getBoundingClientRect().right > prev.getBoundingClientRect().right ? curr : prev
+            curr.rect.right > prev.rect.right ? curr : prev
           );
-          if (lastInRow && lastInRow !== active) nearest = lastInRow;
+          if (lastInRow && lastInRow.el !== active) nearest = lastInRow.el;
         }
 
         // OBRIGATÓRIO: Se não houver nada à esquerda no conteúdo, foca obrigatoriamente no ícone Home da Sidebar
@@ -130,20 +136,20 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
           nearest = document.getElementById('sidebar-home-link') as HTMLElement || null;
         }
       } else if (key === 'ArrowDown') {
-        const below = focusable.filter(el => el.getBoundingClientRect().top >= activeRect.bottom - 5 && el !== active && !el.closest('aside') === !active.closest('aside'))
+        const below = focusableItems.filter(item => item.rect.top >= activeRect.bottom - 5 && item.el !== active && item.isInSidebar === isInSidebar)
         if (below.length > 0) {
-          const minTop = Math.min(...below.map(el => el.getBoundingClientRect().top))
-          const nextRow = below.filter(el => Math.abs(el.getBoundingClientRect().top - minTop) < 60)
+          const minTop = Math.min(...below.map(item => item.rect.top))
+          const nextRow = below.filter(item => Math.abs(item.rect.top - minTop) < 60)
           
           if (isInSidebar) {
-            nearest = nextRow.find(el => el.closest('aside')) || nextRow[0]
+            nearest = nextRow[0].el
           } else if (nextRow.length > 0) {
-            // Tenta manter a coluna ou foca no mais próximo horizontalmente
-            nearest = nextRow.reduce((prev, curr) => {
-              const prevDiff = Math.abs(prev.getBoundingClientRect().left - activeRect.left);
-              const currDiff = Math.abs(curr.getBoundingClientRect().left - activeRect.left);
+            const nextItem = nextRow.reduce((prev, curr) => {
+              const prevDiff = Math.abs(prev.rect.left - activeRect.left);
+              const currDiff = Math.abs(curr.rect.left - activeRect.left);
               return currDiff < prevDiff ? curr : prev;
             });
+            nearest = nextItem.el;
           } // Tenta manter a coluna
         } else if (!isInSidebar && active.id === 'search-input') {
           // Se estiver no input de busca e acionar para baixo, foca no primeiro item do grid principal
@@ -151,20 +157,20 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
           if (firstMainItem) nearest = firstMainItem;
         }
       } else if (key === 'ArrowUp') {
-        const above = focusable.filter(el => el.getBoundingClientRect().bottom <= activeRect.top + 5 && el !== active) // Exclui o próprio elemento ativo
+        const above = focusableItems.filter(item => item.rect.bottom <= activeRect.top + 5 && item.el !== active && item.isInSidebar === isInSidebar)
         if (above.length > 0) {
-          const maxBottom = Math.max(...above.map(el => el.getBoundingClientRect().bottom))
-          const prevRow = above.filter(el => Math.abs(el.getBoundingClientRect().bottom - maxBottom) < 60)
+          const maxBottom = Math.max(...above.map(item => item.rect.bottom))
+          const prevRow = above.filter(item => Math.abs(item.rect.bottom - maxBottom) < 60)
           
           if (isInSidebar) {
-            nearest = prevRow.find(el => el.closest('aside')) || prevRow[0]
+            nearest = prevRow[0].el
           } else if (prevRow.length > 0) {
-            // Tenta manter a coluna ou foca no mais próximo horizontalmente
-            nearest = prevRow.reduce((prev, curr) => {
-              const prevDiff = Math.abs(prev.getBoundingClientRect().left - activeRect.left);
-              const currDiff = Math.abs(curr.getBoundingClientRect().left - activeRect.left);
+            const nextItem = prevRow.reduce((prev, curr) => {
+              const prevDiff = Math.abs(prev.rect.left - activeRect.left);
+              const currDiff = Math.abs(curr.rect.left - activeRect.left);
               return currDiff < prevDiff ? curr : prev;
-            }); // Tenta manter a coluna
+            });
+            nearest = nextItem.el;
           }
         }
 
@@ -183,8 +189,20 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    // Intercepta erros de "Loading chunk failed" (Página Inexistente após ociosidade)
+    const handleChunkError = (e: ErrorEvent) => {
+      if (e.message.toLowerCase().includes('loading chunk') || e.message.toLowerCase().includes('unexpected token <')) {
+        console.warn('Detectado erro de versão/chunk. Recarregando sistema...');
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener('error', handleChunkError);
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('error', handleChunkError);
+    };
   }, [])
 
   const signOut = async () => {

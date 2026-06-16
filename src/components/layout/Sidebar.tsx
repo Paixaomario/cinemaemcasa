@@ -9,7 +9,7 @@ export function Sidebar() {
 
   const menuItems = [
     { href: '/search', icon: Search, label: 'Busca' },
-    { href: '/', icon: Home, label: 'Início' },
+    { href: '/home', icon: Home, label: 'Início' },
     { href: '/filmes', icon: Film, label: 'Filmes' },
     { href: '/series', icon: Tv, label: 'Séries' },
     { href: '/favoritos', icon: Heart, label: 'Minha Lista' },

@@ -4,11 +4,11 @@ import { usePathname } from 'next/navigation'
 import { Home, Film, Tv, Heart, Search, User } from 'lucide-react'
 
 const navItems = [
-  { name: 'Home', href: '/', icon: Home },
+  { name: 'Home', href: '/home', icon: Home },
   { name: 'Filmes', href: '/filmes', icon: Film },
   { name: 'Séries', href: '/series', icon: Tv },
   { name: 'Favoritos', href: '/favoritos', icon: Heart },
-  { name: 'Localizar', href: '/buscar', icon: Search },
+  { name: 'Localizar', href: '/search', icon: Search },
   { name: 'Perfil', href: '/perfil', icon: User },
 ]
 

@@ -37,7 +37,8 @@ export function HeroBanner({ type, canAutoPlayTrailer = true }: HeroBannerProps 
       if (!type || type === 'series') {
         const { data: series, error: sError } = await sb.from('series')
           .select('*') // Seleciona todas as colunas para consistência
-          .order('created_at', { ascending: false }) // Prioriza os conteúdos mais recentes
+          // Correção: series não tem created_at, usamos id_n como fallback de novidade
+          .order('id_n', { ascending: false }) 
           .limit(40)
         if (sError) console.error("Erro ao buscar séries para o banner:", sError)
         seriesData = series || [];

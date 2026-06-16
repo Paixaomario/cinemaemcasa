@@ -133,8 +133,9 @@ Ajuste os valores de `duration` conforme necessário.
 
 ## Links Atualizados
 
-Todos os links que antes apontavam para `/` agora apontam para `/home`:
-- Logo no Navbar
-- Link "Início" no Navbar
-- Botão "Voltar" na página de assistir
-
+Todos os links de navegação interna que antes apontavam para `/` agora apontam para `/home`. Isso inclui:
+- Logo no `Navbar`
+- Link "Início" no `Navbar`
+- Links "Home" no `Sidebar` e `MobileBottomNav`
+- Links "Home" no `MobileNavBar`
+- Botão "Voltar" na página de assistir (se aplicável)

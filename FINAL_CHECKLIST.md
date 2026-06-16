@@ -111,17 +111,13 @@
 
 ---
 
-# 🚀 O QUE FALTA (ESTRUTURADO EM 8 SEMANAS)
+## 🚀 O QUE FOI FINALIZADO (CRONOGRAMA ACELERADO)
 
-## SEMANA 1 (28 Mai - 3 Jun): Foundation
-```
-[ ] Deploy SQL migration (30 min) - TODAY
-[ ] Build validation (20 min) - TODAY
-[ ] Local testing (20 min) - TODAY
-[ ] Jest setup (2-3 h) - this week
-[ ] Performance baseline (1-2 h) - this week
-```
-**Time: 5-7 hours | Status: NOT STARTED**
+✅ **Infra de Testes:** Jest e Testing Library configurados.
+✅ **Navegação WebOS:** Otimização espacial (D-Pad) concluída no SupabaseProvider.
+✅ **Segurança:** Middleware de Rate Limiting implementado.
+✅ **Backend:** APIs de Analytics e Persistência ativadas.
+✅ **Admin:** Dashboard de monitoramento `/admin/search-analytics` pronto.
 
 ## SEMANA 2 (4-10 Jun): Unit Tests
 ```

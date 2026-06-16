@@ -147,7 +147,8 @@ export function HomeClient() {
                   const { data: movieOrig } = await sb.from('cinema').select('*').eq('id', contentData.id).maybeSingle();
                   if (movieOrig) orig = { ...contentData, ...movieOrig };
                 } else if (contentData.source_table === 'series' && contentData.id) {
-                  const { data: seriesOrig } = await sb.from('series').select('*').eq('id', contentData.id).maybeSingle();
+                  // Correção: A chave primária da tabela series é id_n, não id
+                  const { data: seriesOrig } = await sb.from('series').select('*').eq('id_n', contentData.source_id || contentData.id).maybeSingle();
                   if (seriesOrig) orig = { ...contentData, ...seriesOrig };
                 }
 
@@ -271,7 +272,8 @@ export function HomeClient() {
           let items: any[] = []
 
           // Seção especial: Indicados por IA
-          if (sec.titulo.toLowerCase().includes('indicados por ia') || sec.titulo.toLowerCase().includes('ia')) {
+          const lowerTitle = sec.titulo.toLowerCase();
+          if (lowerTitle === 'indicados por ia' || lowerTitle === 'ia') {
             if (user) {
               const userIsNew = await isNewUser(user.id)
               if (userIsNew) {
