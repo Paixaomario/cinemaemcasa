@@ -42,6 +42,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              id={item.href === '/' || item.href === '/home' ? 'sidebar-home-link' : undefined} // Adiciona ID para o link da Home
               tabIndex={0}
               className={`
                 flex items-center transition-all duration-200 outline-none h-[54px] w-full shrink-0 relative z-20 pointer-events-auto
