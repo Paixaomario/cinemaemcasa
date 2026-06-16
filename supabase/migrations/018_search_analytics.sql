@@ -88,6 +88,19 @@ CREATE POLICY "Users can insert own search history"
   FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+-- Função para rastrear analytics de busca (RPC chamada pela API)
+CREATE OR REPLACE FUNCTION track_search_analytics(p_query TEXT, p_result_count INT, p_region TEXT)
+RETURNS void AS $$
+BEGIN
+  INSERT INTO search_analytics (query, result_count, date, region, count)
+  VALUES (p_query, p_result_count, CURRENT_DATE, p_region, 1)
+  ON CONFLICT (query, date, region) DO UPDATE SET
+    count = search_analytics.count + 1,
+    result_count = p_result_count,
+    updated_at = CURRENT_TIMESTAMP;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Função para popular search_analytics a partir de user_search_history
 -- (Agregação anônima)
 CREATE OR REPLACE FUNCTION aggregate_search_analytics()

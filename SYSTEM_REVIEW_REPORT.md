@@ -6,6 +6,7 @@
 ## Resumo Executivo
 
 Após revisão completa do código, foram identificados e **corrigidos 5 erros e inconsistências**. O sistema agora apresenta maior estabilidade e performance, especialmente em dispositivos de baixo processamento.
+Recentemente corrigido: **Falha de build na Vercel e inconsistência na rota/RPC de analytics.**
 
 ---
 
@@ -116,6 +117,23 @@ Mover o cache para um contexto React ou usar localStorage no cliente.
 
 **Localização:** `src/components/layout/MobileBottomNav.tsx`
 **Correção:** A variável `currentTab` foi removida, pois estava declarada mas não era utilizada.
+
+---
+
+### 4. ✅ **Correção de Build: Erro de Tipo no Middleware**
+
+**Localização:** `src/middleware.ts`
+**Correção:** O acesso à propriedade `request.ip` estava causando erro de compilação. Alterado para obter o IP via cabeçalhos `x-forwarded-for`, garantindo compatibilidade com o ambiente Edge da Vercel.
+
+---
+
+### 5. ✅ **Correção de Backend: RPC track_search_analytics Ausente**
+
+**Localização:** `src/app/api/search/analytics/route.ts` e `018_search_analytics.sql`
+**Correção:**
+- A API de analytics estava tentando chamar uma função RPC inexistente no Supabase.
+- Adicionada a função `track_search_analytics` ao esquema de banco de dados.
+- O arquivo de rota foi movido para o diretório correto do App Router (`app/api/search/analytics/route.ts`).
 
 ---
 
