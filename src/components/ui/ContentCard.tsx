@@ -36,22 +36,20 @@ export function ContentCard({
   const detailHref = isSeries ? `/series/${id}` : `/detalhes/${id}`
 
   // Cálculo do progresso em porcentagem
-  const progressPercent = showProgress && progress 
-    ? Math.min((Number(progress.lastPosition) / (Number(progress.duration) || 6000)) * 100, 100) 
+  const progressPercent = showProgress && progress
+    ? Math.min((Number(progress.lastPosition) / (Number(progress.duration) || 6000)) * 100, 100)
     : 0
 
-  return (
-    <Link 
-      href={detailHref}
-      onClick={onClick}
-      className="group relative block aspect-[2/3] w-full transition-all duration-300 z-0 hover:z-50 focus:z-50 focus:outline-none focus:ring-4 focus:ring-brand-cyan rounded-xl shadow-2xl shadow-black/90 touch-pan-y"
-    >
+  const cardClassName = "group relative block aspect-[2/3] w-full transition-all duration-300 z-0 hover:z-50 focus:z-50 focus:outline-none focus:ring-4 focus:ring-brand-cyan rounded-xl shadow-2xl shadow-black/90 touch-pan-y"
+
+  const cardContent = (
+    <>
       <div className="absolute inset-0 overflow-hidden rounded-xl bg-neutral-900">
         {poster && String(poster).length > 5 && !String(poster).includes('undefined') && String(poster) !== 'null' ? (
           <Image
             src={
-              String(poster).startsWith('http') 
-                ? String(poster) 
+              String(poster).startsWith('http')
+                ? String(poster)
                 : `https://image.tmdb.org/t/p/w500${String(poster).startsWith('/') ? '' : '/'}${String(poster).replace(/^\//, '')}`
             }
             alt={title}
@@ -73,7 +71,7 @@ export function ContentCard({
         {/* Barra de progresso opcional (ex: seção Continuar Assistindo) */}
         {showProgress && progressPercent > 0 && (
           <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/60 z-20">
-            <div 
+            <div
               className="h-full bg-brand-cyan shadow-[0_0_10px_rgba(0,173,239,0.8)] transition-all duration-500"
               style={{ width: `${progressPercent}%` }}
             />
@@ -91,6 +89,28 @@ export function ContentCard({
           {year && <span className="text-[10px] font-bold text-neutral-400">{year}</span>}
         </div>
       </div>
+    </>
+  )
+
+  // Se onClick for fornecido, usa div em vez de Link para evitar navegação para detalhes
+  if (onClick) {
+    return (
+      <div
+        onClick={onClick}
+        className={`${cardClassName} cursor-pointer`}
+      >
+        {cardContent}
+      </div>
+    )
+  }
+
+  // Caso normal, usa Link para navegar para detalhes
+  return (
+    <Link
+      href={detailHref}
+      className={cardClassName}
+    >
+      {cardContent}
     </Link>
   )
 }

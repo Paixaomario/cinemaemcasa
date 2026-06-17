@@ -5,7 +5,6 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { getMovieDetails, TMDB_IMG } from '@/lib/tmdb'
 import { Navbar } from '@/components/layout/Navbar'
-import { VideoPlayer } from '@/app/VideoPlayer'
 import Image from 'next/image'
 import { ContentCard } from '@/components/ui/ContentCard'
 import { TrailerModal } from '@/components/ui/TrailerModal'
@@ -31,47 +30,15 @@ function MovieContent() {
   const [isFavorite, setIsFavorite] = useState(false)
   const [contentUuid, setContentUuid] = useState<string | null>(null)
   const [legacyId, setLegacyId] = useState<number | null>(null)
-  const [showPlayer, setShowPlayer] = useState(false)
   const [showTrailerModal, setShowTrailerModal] = useState(false)
-  const [savedProgress, setSavedProgress] = useState<number>(0)
-  const [showResumeModal, setShowResumeModal] = useState(false)
 
-  // Função para carregar progresso salvo antes de abrir player
-  const handleWatchClick = useCallback(async () => {
-    if (!user || !contentUuid) {
-      setShowPlayer(true)
-      return
+  // Função para navegar para página de player dedicada
+  const handleWatchClick = useCallback(() => {
+    const watchId = contentUuid || legacyId || id
+    if (watchId) {
+      router.push(`/assistir/${watchId}`)
     }
-
-    const sb = createClient()
-    const { data: progress } = await sb
-      .from('view_progress')
-      .select('last_position')
-      .eq('user_id', user.id)
-      .eq('content_id', contentUuid)
-      .maybeSingle()
-
-    const savedTime = progress?.last_position || 0
-    setSavedProgress(savedTime)
-
-    // Se houver progresso salvo (mais de 10 segundos), mostra modal
-    if (savedTime > 10) {
-      setShowResumeModal(true)
-    } else {
-      setShowPlayer(true)
-    }
-  }, [user, contentUuid])
-
-  const handleResume = () => {
-    setShowResumeModal(false)
-    setShowPlayer(true)
-  }
-
-  const handleRestart = () => {
-    setSavedProgress(0)
-    setShowResumeModal(false)
-    setShowPlayer(true)
-  }
+  }, [contentUuid, legacyId, id, router])
 
   // Estados da Sala (Assistir Juntos)
   const [activeRoomId, setActiveRoomId] = useState(searchParams.get('room'))
@@ -488,18 +455,6 @@ function MovieContent() {
 
       <div className="pb-32" />
 
-      {/* Player de Vídeo em Fullscreen */}
-      {showPlayer && (
-        <VideoPlayer
-          src={movie.url}
-          title={title}
-          contentId={contentUuid || String(movie.id)}
-          userId={user?.id}
-          startOffset={savedProgress}
-          onClose={() => setShowPlayer(false)}
-        />
-      )}
-
       {/* Modal de Trailer */}
       {movie.trailer && (
         <TrailerModal
@@ -507,53 +462,6 @@ function MovieContent() {
           onClose={() => setShowTrailerModal(false)}
           trailerUrl={movie.trailer}
         />
-      )}
-
-      {/* Modal de Continuar/Reiniciar */}
-      {showResumeModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-neutral-900 rounded-2xl p-6 sm:p-8 max-w-md w-full border border-white/10 shadow-2xl">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-800">
-                {movie?.poster || movie?.backdrop_path || movie?.capa || movie?.banner ? (
-                  <img
-                    src={(movie.poster || movie.backdrop_path || movie.capa || movie.banner).startsWith('http') ? (movie.poster || movie.backdrop_path || movie.capa || movie.banner) : `https://image.tmdb.org/t/p/w500${movie.poster || movie.backdrop_path || movie.capa || movie.banner}`}
-                    alt={title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-3xl">🎬</div>
-                )}
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl sm:text-2xl font-black uppercase text-white mb-2">Continuar Assistindo?</h3>
-                <p className="text-neutral-300 text-sm">
-                  Você parou em {Math.floor(savedProgress / 60)}:{(savedProgress % 60).toString().padStart(2, '0')} do conteúdo.
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={handleRestart}
-                className="flex-1 px-4 py-3 bg-white/10 hover:bg-white/20 text-white font-bold uppercase rounded-xl transition-all border border-white/20"
-              >
-                Reiniciar
-              </button>
-              <button
-                onClick={handleResume}
-                className="flex-1 px-4 py-3 bg-brand-cyan hover:brightness-110 text-white font-bold uppercase rounded-xl transition-all"
-              >
-                Continuar
-              </button>
-            </div>
-            <button
-              onClick={() => setShowResumeModal(false)}
-              className="mt-4 w-full text-neutral-400 hover:text-white text-sm font-bold uppercase transition-all"
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
       )}
     </main>
   )

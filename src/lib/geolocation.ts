@@ -255,7 +255,6 @@ export async function getLocationBasedSuggestions(
       .select('id, titulo, category')
       .eq('region_featured', region)
       .order('created_at', { ascending: false })
-      .limit(3)
 
     const suggestions: LocationSuggestion[] = []
 

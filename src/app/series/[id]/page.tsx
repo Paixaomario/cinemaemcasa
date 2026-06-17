@@ -5,7 +5,6 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { getShowDetails, TMDB_IMG } from '@/lib/tmdb'
 import { Navbar } from '@/components/layout/Navbar'
-import { VideoPlayer } from '@/app/VideoPlayer'
 import Image from 'next/image'
 import { ContentCard } from '@/components/ui/ContentCard'
 import { TrailerModal } from '@/components/ui/TrailerModal'
@@ -49,11 +48,7 @@ function SeriesContent() {
   const [legacyId, setLegacyId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeEpisode, setActiveEpisode] = useState<any>(null)
-  const [showPlayer, setShowPlayer] = useState(false)
-  const [autoPlayNext, setAutoPlayNext] = useState(false)
   const [showTrailerModal, setShowTrailerModal] = useState(false)
-  const [savedProgress, setSavedProgress] = useState<number>(0)
-  const [showResumeModal, setShowResumeModal] = useState(false)
 
   // Lógica de Banner Imersivo e Trailer Auto-Play
   const [canAutoPlayTrailer, setCanAutoPlayTrailer] = useState(false)
@@ -78,46 +73,28 @@ function SeriesContent() {
     return () => clearTimeout(timer);
   }, [id, canAutoPlayTrailer]);
 
-  // Função para carregar progresso salvo do episódio
+  // Função para navegar para página de player dedicada
   const handleEpisodeClick = useCallback(async (episode: any) => {
-    if (!user || !contentUuid) {
-      setActiveEpisode(episode)
-      return
+    const episodeId = episode.id_n || episode.id
+    const watchId = contentUuid || legacyId || id
+    if (watchId && episodeId) {
+      router.push(`/assistir/${watchId}?episode=${episodeId}`)
     }
+  }, [contentUuid, legacyId, id, router])
 
-    const sb = createClient()
-    // Para séries, usa o content_id da série + episode_id único
-    const episodeContentId = `${contentUuid}-ep-${episode.id_n || episode.id}`
-
-    const { data: progress } = await sb
-      .from('view_progress')
-      .select('last_position')
-      .eq('user_id', user.id)
-      .eq('content_id', episodeContentId)
-      .maybeSingle()
-
-    const savedTime = progress?.last_position || 0
-    setSavedProgress(savedTime)
-
-    // Se houver progresso salvo (mais de 10 segundos), mostra modal
-    if (savedTime > 10) {
-      setShowResumeModal(true)
-      setActiveEpisode(episode)
-    } else {
-      setActiveEpisode(episode)
+  // Função para convidado entrar na sala
+  const handleGuestSubmit = useCallback(() => {
+    if (guestName.trim()) {
+      setGuestStep(null)
+      if (!activeEpisode && episodes.length > 0) {
+        const watchId = contentUuid || legacyId || id
+        const episodeId = episodes[0].id_n || episodes[0].id
+        if (watchId && episodeId) {
+          router.push(`/assistir/${watchId}?episode=${episodeId}`)
+        }
+      }
     }
-  }, [user, contentUuid])
-
-  const handleResume = () => {
-    setShowResumeModal(false)
-    setShowPlayer(true)
-  }
-
-  const handleRestart = () => {
-    setSavedProgress(0)
-    setShowResumeModal(false)
-    setShowPlayer(true)
-  }
+  }, [guestName, activeEpisode, episodes, contentUuid, legacyId, id, router])
 
   // Estados da Sala (Assistir Juntos)
   const [activeRoomId, setActiveRoomId] = useState(searchParams.get('room'))
@@ -724,70 +701,6 @@ function SeriesContent() {
         )}
       </div>
 
-      {/* Modal de Convidado (Assistir Juntos) */}
-      {guestStep && (
-        <div className="fixed inset-0 z-[10002] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6">
-          <div className="max-w-md w-full text-center space-y-8 animate-in fade-in zoom-in duration-500">
-            {guestStep === 'prompt' ? (
-              <>
-                <h2 className="text-4xl font-black uppercase tracking-tighter text-white">Vamos assistir comigo?</h2>
-                <p className="text-brand-cyan text-2xl font-bold uppercase">{series.titulo || series.name}</p>
-                <div className="flex gap-4 justify-center">
-                  <button 
-                    onClick={() => setGuestStep('name')}
-                    className="px-12 py-4 bg-brand-cyan text-black font-black uppercase rounded-[20px] hover:scale-110 transition-transform"
-                  >Sim</button>
-                  <button 
-                    onClick={() => { setGuestStep(null); router.push('/'); }}
-                    className="px-12 py-4 bg-white/10 text-white font-black uppercase rounded-[20px]"
-                  >Não</button>
-                </div>
-              </>
-            ) : (
-              <form onSubmit={(e) => { e.preventDefault(); if(guestName.trim()) { setGuestStep(null); setShowPlayer(true); if(!activeEpisode && episodes.length > 0) setActiveEpisode(episodes[0]); } }} className="space-y-6">
-                <h2 className="text-2xl font-black uppercase text-white">Como podemos te chamar?</h2>
-                <input 
-                  type="text" 
-                  value={guestName}
-                  onChange={(e) => setGuestName(e.target.value)}
-                  placeholder="Seu nome ou apelido"
-                  className="w-full bg-white/5 border-2 border-white/20 rounded-[20px] px-6 py-4 text-white text-xl text-center focus:border-brand-cyan outline-none transition-all"
-                  autoFocus
-                />
-                <button 
-                  type="submit"
-                  disabled={!guestName.trim()}
-                  className="w-full py-4 bg-brand-cyan text-black font-black uppercase rounded-[20px] disabled:opacity-30"
-                >
-                  Entrar na Sala
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Player de Vídeo - Condição corrigida para convidados */}
-      {(showPlayer || activeEpisode || (guestName && activeRoomId)) && (activeEpisode?.arquivo || episodes[0]?.arquivo) && (
-        <VideoPlayer
-          src={activeEpisode?.arquivo || episodes[0]?.arquivo}
-          subtitles={activeEpisode?.subtitles}
-          audioTracks={activeEpisode?.audio_tracks}
-          title={activeEpisode ? `${title} - ${activeEpisode.titulo}` : title}
-          contentId={contentUuid ? `${contentUuid}-ep-${activeEpisode?.id_n || activeEpisode?.id || episodes[0]?.id_n || episodes[0]?.id}` : String(series.id_n || series.id)}
-          userId={user?.id}
-          startOffset={savedProgress}
-          onClose={() => { setShowPlayer(false); setActiveEpisode(null); setActiveRoomId(null); setGuestName(''); setAutoPlayNext(false); setSavedProgress(0); }}
-          partyRoomId={activeRoomId}
-          isGuest={isGuestMode}
-          guestName={guestName}
-          backdrop={series.backdrop_path || series.banner}
-          preferredLanguage="pt-BR" // Garante áudio PT-BR como padrão
-          onNext={handleNextEpisode}
-          nextEpisode={getNextEpisodeInfo()}
-        />
-      )}
-
       {/* Modal de Trailer */}
       {series.trailer && (
         <TrailerModal
@@ -795,56 +708,6 @@ function SeriesContent() {
           onClose={() => setShowTrailerModal(false)}
           trailerUrl={series.trailer}
         />
-      )}
-
-      {/* Modal de Continuar/Reiniciar */}
-      {showResumeModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-neutral-900 rounded-2xl p-6 sm:p-8 max-w-md w-full border border-white/10 shadow-2xl">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-800">
-                {series?.poster || series?.capa ? (
-                  <img
-                    src={(series.poster || series.capa).startsWith('http') ? (series.poster || series.capa) : `https://image.tmdb.org/t/p/w500${series.poster || series.capa}`}
-                    alt={series.titulo}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-3xl">🎬</div>
-                )}
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl sm:text-2xl font-black uppercase text-white mb-2">Continuar Assistindo?</h3>
-                <p className="text-neutral-300 text-sm">
-                  Você parou em {Math.floor(savedProgress / 60)}:{(savedProgress % 60).toString().padStart(2, '0')} do episódio.
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={handleRestart}
-                tabIndex={0}
-                className="flex-1 px-4 py-3 bg-white/10 hover:bg-white/20 text-white font-bold uppercase rounded-xl transition-all border border-white/20"
-              >
-                Reiniciar
-              </button>
-              <button
-                onClick={handleResume}
-                tabIndex={0}
-                className="flex-1 px-4 py-3 bg-brand-cyan hover:brightness-110 text-white font-bold uppercase rounded-xl transition-all"
-              >
-                Continuar
-              </button>
-            </div>
-            <button
-              onClick={() => setShowResumeModal(false)}
-              tabIndex={0}
-              className="mt-4 w-full text-neutral-400 hover:text-white text-sm font-bold uppercase transition-all"
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
       )}
     </main>
   )

@@ -146,7 +146,6 @@ async function fetchPredictions(
       .from('search_catalog')
       .select('source_id, source_table, titulo, poster, banner, tipo')
       .ilike('titulo', `%${input}%`) // Busca em qualquer parte do título
-      .limit(limit)
 
     const predictions: SuggestionItem[] = []
 

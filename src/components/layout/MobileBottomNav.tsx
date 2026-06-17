@@ -125,12 +125,13 @@ function NavContent() {
           text-decoration: none;
           color: #ffffff;
           transition: transform 0.1s ease;
-          gap: 4px;
+          gap: 0px;
           pointer-events: auto !important; 
           touch-action: manipulation; /* Remove tap delay no mobile */
           min-width: 0;
           width: 100%;
           height: 100%;
+          padding: 4px 0;
         }
 
         .nav-item.active {
@@ -138,7 +139,12 @@ function NavContent() {
           transform: translateY(-3px);
         }
 
-        .icon { font-size: 22px; margin-bottom: 2px; }
+        .icon { 
+          font-size: 22px; 
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
         .legend { 
           font-size: 8px; 
           font-weight: 900; 
@@ -149,6 +155,8 @@ function NavContent() {
           width: 100%;
           white-space: nowrap;
           text-align: center;
+          line-height: 1.2;
+          margin-top: 2px;
         }
 
         @media (min-width: 1024px) { .mobile-bottom-nav { display: none !important; } }

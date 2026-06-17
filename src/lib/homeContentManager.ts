@@ -146,12 +146,16 @@ export async function getUserFavoriteGenres(userId: string): Promise<string[]> {
     let query = sb.from('search_catalog').select('genero, category');
     
     if (numericIds.length > 0 && stringIds.length > 0) {
-      // Para buscas mistas (BIGINT + UUID), usamos sintaxe bruta simplificada
-      query = query.or(`id.in.(${numericIds.join(',')}),source_id.in.(${stringIds.join(',')})`);
+      // Para buscas mistas (BIGINT + UUID), usamos or com condições individuais
+      const idConditions = numericIds.map(id => `id.eq.${id}`).join(',');
+      const sourceIdConditions = stringIds.map(id => `source_id.eq.${id}`).join(',');
+      query = query.or(`${idConditions},${sourceIdConditions}`);
     } else if (numericIds.length > 0) {
       query = query.in('id', numericIds);
     } else if (stringIds.length > 0) {
-      query = query.in('source_id', stringIds);
+      // Para UUIDs, usamos or com condições eq individuais
+      const conditions = stringIds.map(id => `source_id.eq.${id}`).join(',');
+      query = query.or(conditions);
     } else {
       return ['lançamentos'];
     }
@@ -192,10 +196,7 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
   const sb = createClient()
 
   try {
-    // Reduzindo limite para evitar erros 400
-    const searchLimit = 100
-
-    // Busca conteúdo com maior rating e mais recente
+    // Busca todos os conteúdos sem limite para permitir variedade completa
     let movies = null
     let moviesQuery = sb.from('cinema').select('*')
     
@@ -211,7 +212,6 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
         // DESBLOQUEADO: Exibe novos conteúdos imediatamente (mesmo rating 0)
         .order('created_at', { ascending: false }) // Prioriza os conteúdos mais recentes
         .order('rating', { ascending: false })
-        .limit(searchLimit)
     } catch (movieError) {
       console.warn('Erro ao buscar trending movies:', movieError)
     }
@@ -224,7 +224,6 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
         // DESBLOQUEADO: Novas séries aparecem no topo
         .order('created_at', { ascending: false })
         .order('rating', { ascending: false })
-        .limit(searchLimit)
     } catch (seriesError) {
       console.warn('Erro ao buscar trending series:', seriesError)
       console.warn('A tabela series pode não existir ou ter estrutura diferente')
@@ -312,7 +311,6 @@ export async function getPersonalizedRecommendations(
   }
 
   const sb = createClient()
-  const searchLimit = 100
 
   try {
     // Constrói filtros OR para todos os gêneros favoritos de uma vez
@@ -328,10 +326,10 @@ export async function getPersonalizedRecommendations(
       moviesQuery = moviesQuery.not('category', 'ilike', '%+18%').not('category', 'ilike', '%Terror%');
     }
 
-    // Busca filmes e séries em paralelo
+    // Busca filmes e séries em paralelo sem limite para permitir variedade completa
     const [moviesRes, seriesRes] = await Promise.all([
-      moviesQuery.order('created_at', { ascending: false }).order('rating', { ascending: false }).limit(searchLimit),
-      seriesQuery.order('created_at', { ascending: false }).order('rating', { ascending: false }).limit(searchLimit)
+      moviesQuery.order('created_at', { ascending: false }).order('rating', { ascending: false }),
+      seriesQuery.order('created_at', { ascending: false }).order('rating', { ascending: false })
     ])
 
     const items: ContentItem[] = []
@@ -417,9 +415,6 @@ export async function getSectionContent(
   try {
     const items: ContentItem[] = []
 
-    // Reduzindo limite para evitar erros 400
-    const searchLimit = 100
-
     // Busca filmes
     let movieQuery = sb.from('cinema').select('*')
 
@@ -434,7 +429,10 @@ export async function getSectionContent(
     }
 
     // Aplica ordenação conforme configurado no banco
-    if (ordenacao === 'rating_desc') {
+    if (ordenacao === 'random') {
+      // Para ordenação aleatória, busca todos e embaralha depois
+      movieQuery = movieQuery.order('created_at', { ascending: false })
+    } else if (ordenacao === 'rating_desc') {
       movieQuery = movieQuery.order('rating', { ascending: false })
     } else if (ordenacao === 'year_desc') {
       movieQuery = movieQuery.order('year', { ascending: false })
@@ -442,10 +440,10 @@ export async function getSectionContent(
       movieQuery = movieQuery.order('created_at', { ascending: false })
     }
 
-    // Busca sem offset para respeitar a ordenação configurada
+    // Busca sem limite para permitir variedade completa
     let movies = null
     try {
-      movies = await movieQuery.limit(searchLimit)
+      movies = await movieQuery
     } catch (error) {
       console.warn('Erro ao buscar filmes:', error)
     }
@@ -488,7 +486,10 @@ export async function getSectionContent(
       }
 
       // Aplica ordenação conforme configurado no banco
-      if (ordenacao === 'rating_desc') {
+      if (ordenacao === 'random') {
+        // Para ordenação aleatória, busca todos e embaralha depois
+        seriesQuery = seriesQuery.order('created_at', { ascending: false })
+      } else if (ordenacao === 'rating_desc') {
         seriesQuery = seriesQuery.order('rating', { ascending: false, nullsFirst: false })
       } else if (ordenacao === 'year_desc') {
         seriesQuery = seriesQuery.order('ano', { ascending: false })
@@ -496,11 +497,11 @@ export async function getSectionContent(
         seriesQuery = seriesQuery.order('created_at', { ascending: false })
       }
 
-      let series = await seriesQuery.limit(searchLimit)
+      let series = await seriesQuery
       
       // Fallback caso a coluna rating não exista ou cause erro 400
       if (series.error && ordenacao === 'rating_desc') {
-        series = await sb.from('series').select('*').order('created_at', { ascending: false }).limit(searchLimit);
+        series = await sb.from('series').select('*').order('created_at', { ascending: false });
       }
 
       if (series?.data) {
@@ -538,11 +539,14 @@ export async function getSectionContent(
     // NÃO remove duplicatas - cada item é único
     const uniqueItems = removeDuplicatesByTitle(items)
 
-    // Embaralha para variedade a cada carregamento
-    const shuffled = shuffleArray(uniqueItems)
+    // Se ordenação for aleatória, embaralha para variedade
+    let result = uniqueItems
+    if (ordenacao === 'random') {
+      result = shuffleArray(uniqueItems)
+    }
 
     // Limita ao número solicitado
-    return shuffled.slice(0, limit)
+    return result.slice(0, limit)
   } catch (error) {
     console.error('Erro ao buscar conteúdo da seção:', error)
     return []

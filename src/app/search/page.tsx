@@ -69,6 +69,7 @@ export default function SearchPage() {
   const [regionName, setRegionName] = useState('Brasil')
   const [isLoadingResults, setIsLoadingResults] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
+  const [trendingItems, setTrendingItems] = useState<any[]>([])
   
   const sb = useMemo(() => createClient(), [])
 
@@ -163,9 +164,9 @@ export default function SearchPage() {
         let recs: any[] = [];
         
         if (user) {
-          recs = await getPersonalizedRecommendations(user.id, 10, displayedIds, false);
+          recs = await getPersonalizedRecommendations(user.id, 4, displayedIds, false);
         } else {
-          recs = await getTrendingContent(10, false);
+          recs = await getTrendingContent(4, false);
         }
         
         if (recs?.length) {
@@ -176,6 +177,12 @@ export default function SearchPage() {
         // Carregar buscas populares (Independente de usuário)
         const { getPopularSearches } = await import('@/lib/searchSuggestions')
         getPopularSearches(userRegion).then(setPopularSearches)
+
+        // Carregar itens trending para a seção Bombando
+        const trending = await getTrendingContent(4, false)
+        if (trending?.length) {
+          setTrendingItems(trending)
+        }
 
         // Carregar histórico do usuário
         if (user) {
@@ -473,24 +480,17 @@ export default function SearchPage() {
             )}
 
             {/* 7. Buscas Populares (Bombando) */}
-            {popularSearches.length > 0 && (
+            {trendingItems.length > 0 && (
               <div className="mb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-150">
                 <h3 className="text-neutral-400 font-black uppercase tracking-widest text-xs flex items-center gap-2 mb-6">
                   <Flame className="w-4 h-4 text-orange-500" /> Bombando em {regionName}
                 </h3>
-                <div className="flex flex-wrap gap-4">
-                  {popularSearches.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => setQuery(item.text)}
-                      tabIndex={0}
-                      className="group flex items-center gap-3 px-6 py-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/5 transition-all active:scale-95 focus:ring-2 focus:ring-brand-cyan outline-none"
-                    >
-                      <span className="text-xl">{item.icon || '🔥'}</span>
-                      <span className="font-bold text-lg group-hover:text-brand-cyan transition-colors">
-                        {item.text}
-                      </span>
-                    </button>
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
+                  {trendingItems.slice(0, 4).map((item) => (
+                    <ContentCard 
+                      key={item.id} 
+                      item={formatContentItem(item)} 
+                    />
                   ))}
                 </div>
               </div>
@@ -506,7 +506,6 @@ export default function SearchPage() {
                   <ContentCard 
                     key={item.id} 
                     item={formatContentItem(item)} 
-                    onClick={() => handleResultClick(item)}
                   />
                 ))}
               </div>
@@ -538,7 +537,6 @@ export default function SearchPage() {
                   <div key={item.id} className="flex flex-col">
                     <ContentCard 
                       item={formatContentItem(item)}
-                      onClick={() => handleResultClick(item)}
                     />
                     {(item.cast_names && item.cast_names.length > 0) && (
                       <div className="flex flex-wrap gap-1 mt-2">

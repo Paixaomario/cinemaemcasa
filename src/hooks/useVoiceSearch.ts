@@ -24,7 +24,7 @@ export function useVoiceSearch(onResult: (text: string) => void) {
 
       setRecognition(recog)
     }
-  }, [onResult])
+  }, [])
 
   const toggleListening = useCallback(() => {
     if (isListening) {

@@ -123,6 +123,8 @@ export function HomeClient() {
           .order('updated_at', { ascending: false })
           .limit(4)
 
+        console.log('[Home] Progresso carregado:', prog?.length, 'itens', progError ? 'Erro:' + progError.message : '')
+
         if (prog) {
           const hydrated = await Promise.all(
             prog.map(async (p) => {
@@ -134,14 +136,14 @@ export function HomeClient() {
               if (isNumeric) {
                 query = query.or(`id.eq.${idStr},source_id.eq.${idStr}`);
               } else {
-                // Se não for numérico, busca apenas pelo source_id (que aceita UUID/Texto)
-                query = query.eq('source_id', idStr);
+                // Se não for numérico (UUID), busca pelo source_id usando filtro
+                query = query.filter('source_id', 'eq', idStr);
               }
               
               const { data: contentData, error: contentError } = await query.maybeSingle();
 
               if (contentError) {
-                console.error(`Erro ao buscar conteúdo para view_progress ID ${idStr}:`, contentError);
+                console.warn(`Aviso: Conteúdo não encontrado para view_progress ID ${idStr}`);
                 return null;
               }
 
@@ -214,6 +216,8 @@ export function HomeClient() {
             })
           )
           const filtered = hydrated.filter(Boolean)
+          console.log('[Home] Itens hidratados:', filtered.length, 'de', prog.length)
+
           // Remove duplicatas baseadas no título (mantém o mais recente com UUID)
           const uniqueMap = new Map()
           filtered.forEach(item => {
@@ -225,6 +229,7 @@ export function HomeClient() {
             }
           })
           cwItems = Array.from(uniqueMap.values())
+          console.log('[Home] Itens únicos após filtro:', cwItems.length)
           setContinueWatching(cwItems)
         }
       }

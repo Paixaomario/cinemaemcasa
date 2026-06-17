@@ -29,7 +29,6 @@ export function HeroBanner({ type, canAutoPlayTrailer = true }: HeroBannerProps 
         const { data: movies, error: mError } = await sb.from('cinema')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(40)
         if (mError) console.error("Erro ao buscar filmes para o banner:", mError)
         moviesData = movies || [];
       }
@@ -38,8 +37,7 @@ export function HeroBanner({ type, canAutoPlayTrailer = true }: HeroBannerProps 
         const { data: series, error: sError } = await sb.from('series')
           .select('*') // Seleciona todas as colunas para consistência
           // Correção: series não tem created_at, usamos id_n como fallback de novidade
-          .order('id_n', { ascending: false }) 
-          .limit(40)
+          .order('id_n', { ascending: false })
         if (sError) console.error("Erro ao buscar séries para o banner:", sError)
         seriesData = series || [];
       }

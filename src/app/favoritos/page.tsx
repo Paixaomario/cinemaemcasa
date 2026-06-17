@@ -101,7 +101,7 @@ export default function FavoritosPage() {
           <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-brand-cyan drop-shadow-[0_0_10px_rgba(0,173,239,0.3)]">
             ❤️ Meus Favoritos
           </h1>
-          <p className="text-neutral-500 font-bold uppercase tracking-widest text-xs mt-2">Sua coleção pessoal de sucessos</p>
+          <p className="text-neutral-500 font-bold uppercase tracking-widest text-xs mt-2">Seus favoritos</p>
         </header>
 
         {items.length === 0 ? (
