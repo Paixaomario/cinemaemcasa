@@ -14,8 +14,10 @@ export function AppInitializer() {
 
   useEffect(() => {
     // Requisito: Garantir que o sistema sempre inicie na Home ao carregar/recarregar/reflash
-    console.log('[AppInitializer] Forçando redirecionamento para /home no mount.');
-    router.replace('/home')
+    if (window.location.pathname === '/') {
+      console.log('[AppInitializer] Redirecionando para /home.');
+      router.replace('/home')
+    }
   }, []) // Executa apenas uma vez no carregamento inicial/refresh
 
   return null
