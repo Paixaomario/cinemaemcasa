@@ -1,16 +1,16 @@
 # 🎬 CINEMA EM CASA v2.0 - START HERE ⭐
 
 **Versão:** 2.0 (Advanced Search with Voice + Geolocation)  
-**Status:** 🟢 READY TO START  
+**Status:** 🔴 DEBUGGING CRITICAL ISSUES  
 **Data Início:** 28 Maio 2026  
 **Data Conclusão:** 23 Julho 2026 (8 semanas)  
 **Objetivo:** Sistema profissional em 8+ plataformas (Android, iOS, WebOS, Samsung, Roku, FireStick, Windows, Linux)
 
 ---
 
-# 🚦 STATUS DO PROJETO: 100% CONCLUÍDO 🏆
+# 🚦 STATUS DO PROJETO: EM DEBUGGING 🐞
 
-```
+```diff
 ✅ Busca por Voz         - 420 linhas (advancedVoiceSearch.ts)
 ✅ Geolocalização        - 390 linhas (geolocation.ts)
 ✅ Sugestões Inteligentes - 380 linhas (searchSuggestions.ts)
@@ -18,7 +18,9 @@
 ✅ Database Schema       - 110 linhas (018_search_analytics.sql)
 ✅ TypeScript Type-safe  - 100% (0 errors)
 ✅ Otimização de Navegação Espacial (D-Pad) para TVs
-✅ Documentação Inicial  - 4 arquivos de guia
+✅ Documentação Inicial  - 4 arquivos de guia (atualizada)
+
+🔴 Erros 400 no Supabase (search_catalog, search_analytics)
 
 🔴 FALTA: Tests, Plataformas, APIs, Deploy
 ```

@@ -138,24 +138,20 @@ export async function getUserFavoriteGenres(userId: string): Promise<string[]> {
     const contentIds = historyData.map(item => String(item.content_id))
 
     const validIds = contentIds.filter(id => id && id !== 'null' && id !== 'undefined');
-    if (validIds.length === 0) return ['lançamentos', 'ação']; // Fallback padrão
+    if (validIds.length === 0) return ['lançamentos', 'ação'];
 
-    // Separa IDs numéricos de UUIDs para evitar erro de sintaxe bigint no Postgres
     const numericIds = validIds.filter(id => /^\d+$/.test(id));
     const stringIds = validIds.filter(id => !/^\d+$/.test(id));
     
-    let query = sb.from('search_catalog').select('genero, category', { count: 'exact' });
+    let query = sb.from('search_catalog').select('genero, category');
     
-    const filters = [];
-    if (numericIds.length > 0) filters.push(`id.in.(${numericIds.join(',')})`);
-    if (stringIds.length > 0) filters.push(`source_id.in.(${stringIds.map(id => `"${id}"`).join(',')})`);
-
-    if (filters.length > 1) {
-      query = query.or(filters.join(','));
-    } else if (filters.length === 1) {
-      // Se houver apenas um filtro, aplica diretamente para evitar erro 400 no .or()
-      if (numericIds.length > 0) query = query.in('id', numericIds.map(n => parseInt(n)));
-      else query = query.in('source_id', stringIds);
+    if (numericIds.length > 0 && stringIds.length > 0) {
+      // Para buscas mistas (BIGINT + UUID), usamos sintaxe bruta simplificada
+      query = query.or(`id.in.(${numericIds.join(',')}),source_id.in.(${stringIds.join(',')})`);
+    } else if (numericIds.length > 0) {
+      query = query.in('id', numericIds);
+    } else if (stringIds.length > 0) {
+      query = query.in('source_id', stringIds);
     } else {
       return ['lançamentos'];
     }

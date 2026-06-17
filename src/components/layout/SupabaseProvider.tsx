@@ -48,18 +48,21 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       // Prioriza elementos com tabindex="0" para navegação espacial, depois elementos interativos padrão
       const selectors = '[tabindex="0"], a, button, input, select, textarea';
       
-      // Otimização Sênior: Evita layout thrashing e uso excessivo de getComputedStyle
-      // Filtra elementos visíveis usando propriedades físicas rápidas e evita chamadas redundantes ao DOM
+      // Otimização Avançada: Cache de elementos e verificação de visibilidade inteligente
       const rawElements = Array.from(document.querySelectorAll(selectors)) as HTMLElement[];
       const focusableItems: { el: HTMLElement; rect: DOMRect; isInSidebar: boolean }[] = [];
       
+      // Identifica a sidebar fora do loop para economizar CPU
+      const sidebar = document.querySelector('aside');
+
       for (let i = 0; i < rawElements.length; i++) {
         const el = rawElements[i];
+        // offsetWidth/Height é muito mais rápido que getComputedStyle
         if (!el.hasAttribute('disabled') && (el.offsetWidth > 0 || el.offsetHeight > 0)) {
           focusableItems.push({
             el,
             rect: el.getBoundingClientRect(),
-            isInSidebar: el.closest('aside') !== null
+            isInSidebar: sidebar ? sidebar.contains(el) : false
           });
         }
       }

@@ -174,40 +174,14 @@ async function fetchPredictions(
  */
 export async function trackSearch(query: string, resultCount: number, region: string = 'BR') {
   try {
-    const sb = createClient()
-    const date = new Date().toISOString().split('T')[0]
-
-    const { data: existing } = await sb
-      .from('search_analytics')
-      .select('count')
-      .eq('query', query.toLowerCase().trim())
-      .eq('date', date)
-      .eq('region', region)
-      .maybeSingle()
-
-    if (existing) {
-      await sb
-        .from('search_analytics')
-        .update({
-          count: existing.count + 1,
-          result_count: resultCount,
-          updated_at: new Date().toISOString()
-        })
-        .eq('query', query.toLowerCase().trim())
-        .eq('date', date)
-        .eq('region', region)
-    } else {
-      await sb
-        .from('search_analytics')
-        .insert({
-          query: query.toLowerCase().trim(),
-          count: 1,
-          result_count: resultCount,
-          date,
-          region,
-          created_at: new Date().toISOString()
-        })
-    }
+    // Chama a API Next.js para rastrear a busca, que por sua vez chama a RPC do Supabase
+    await fetch('/api/search/analytics', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query, result_count: resultCount, region }),
+    });
   } catch (error) {
     // Falha silenciosa em analytics
     console.debug('Analytics tracking failed:', error)

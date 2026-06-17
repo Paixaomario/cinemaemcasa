@@ -1,8 +1,8 @@
 # ✅ CINEMA EM CASA v2.0 - FINAL CHECKLIST
 
 **Data:** 28 Maio 2026  
-**Status:** 🏆 PROJETO CONCLUÍDO (ESTADO GOLD)
-**Timeline:** Concluído em Tempo Recorde (Ecossistema Finalizado)
+**Status:** 🔴 EM DEBUGGING CRÍTICO
+**Timeline:** Atrasado (Problemas persistentes)
 
 ---
 
@@ -113,10 +113,10 @@
 
 ## 🏁 MILESTONES ALCANÇADOS
 
-✅ **Database:** Todas as migrações (018, 022) aplicadas e validadas.
-✅ **Performance:** Navegação espacial destravada e otimizada para Smart TVs.
-✅ **Ecossistema:** Workflow de CI/CD configurado para deploy contínuo.
-✅ **Admin:** Dashboard de Analytics funcional em `/admin/search-analytics`.
+✅ **Database:** Migrações aplicadas, mas com erros 400 persistentes.
+🔴 **Performance:** Navegação espacial ainda travando na página de pesquisa.
+✅ **Ecossistema:** Workflow de CI/CD configurado (mas build falhando).
+🔴 **Admin:** Dashboard de Analytics funcional, mas com erros 400 nas queries.
 ✅ **Qualidade:** 100% Type-safe e pronto para auditoria.
 
 ## SEMANA 2 (4-10 Jun): Unit Tests

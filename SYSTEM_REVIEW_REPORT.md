@@ -7,7 +7,7 @@
 
 Após revisão completa do código, foram identificados e **corrigidos 8 erros críticos**. O sistema agora é 100% buildable na Vercel, possui navegação fluida em Smart TVs e um ecossistema de analytics funcional.
 Recentemente corrigido: **Falha de build na Vercel e inconsistência na rota/RPC de analytics.**
-
+🔴 **NOVO ERRO CRÍTICO:** Erros 400 (Bad Request) persistentes nas queries do Supabase (`search_catalog` e `search_analytics`) e travamento da navegação na página de pesquisa.
 ---
 
 ## Erros Encontrados
