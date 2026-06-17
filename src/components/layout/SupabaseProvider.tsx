@@ -48,18 +48,21 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       // Prioriza elementos com tabindex="0" para navegação espacial, depois elementos interativos padrão
       const selectors = '[tabindex="0"], a, button, input, select, textarea';
       
-      // Otimização: Filtra apenas elementos visíveis para reduzir o processamento em grids longos (TVs)
-      const focusableItems = (Array.from(document.querySelectorAll(selectors)) as HTMLElement[])
-        .filter(el => {
-          if (el.hasAttribute('disabled')) return false;
-          const style = window.getComputedStyle(el);
-          return style.display !== 'none' && style.visibility !== 'hidden' && (el.offsetWidth > 0 || el.offsetHeight > 0);
-        })
-        .map(el => ({
-          el,
-          rect: el.getBoundingClientRect(),
-          isInSidebar: !!el.closest('aside')
-        }));
+      // Otimização Sênior: Evita layout thrashing e uso excessivo de getComputedStyle
+      // Filtra elementos visíveis usando propriedades físicas rápidas e evita chamadas redundantes ao DOM
+      const rawElements = Array.from(document.querySelectorAll(selectors)) as HTMLElement[];
+      const focusableItems: { el: HTMLElement; rect: DOMRect; isInSidebar: boolean }[] = [];
+      
+      for (let i = 0; i < rawElements.length; i++) {
+        const el = rawElements[i];
+        if (!el.hasAttribute('disabled') && (el.offsetWidth > 0 || el.offsetHeight > 0)) {
+          focusableItems.push({
+            el,
+            rect: el.getBoundingClientRect(),
+            isInSidebar: el.closest('aside') !== null
+          });
+        }
+      }
       
       const active = document.activeElement as HTMLElement
       const activeItem = focusableItems.find(item => item.el === active);

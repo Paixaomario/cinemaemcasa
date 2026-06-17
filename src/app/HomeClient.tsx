@@ -276,6 +276,7 @@ export function HomeClient() {
       setSections(visibleSections)
 
       // 3. Carrega os itens para cada seção visível em paralelo
+      const newSectionsData: Record<string, any[]> = {}
       const sectionPromises = visibleSections.map(async (sec) => {
         try {
           const displayedIds = getDisplayedCache()
@@ -319,14 +320,14 @@ export function HomeClient() {
           // Adiciona IDs ao cache de exibidos
           const newIds = items.map((item: any) => String(item.id)).filter(Boolean)
           addBatchToDisplayedCache(newIds)
-
-          setSectionsData(prev => ({ ...prev, [sec.id]: items }))
+          newSectionsData[sec.id] = items
         } catch (sectionError) {
           console.error(`[Home] Erro ao carregar seção ${sec.titulo}:`, sectionError);
         }
       })
 
-      await Promise.all(sectionPromises); // Espera todas as seções carregarem
+      await Promise.all(sectionPromises);
+      setSectionsData(newSectionsData);
       setPageLoading(false); // Agora sim, a página está carregada
     }
 
