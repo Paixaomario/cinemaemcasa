@@ -127,13 +127,18 @@ export function HomeClient() {
           const hydrated = await Promise.all(
             prog.map(async (p) => {
               const idStr = String(p.content_id)
+              const isNumeric = /^\d+$/.test(idStr);
 
               // Busca no search_catalog que unifica cinema e series
-              const { data: contentData, error: contentError } = await sb
-                .from('search_catalog')
-                .select('*')
-                .or(`id.eq.${idStr},source_id.eq.${idStr}`) // Busca pelo ID original ou source_id
-                .maybeSingle()
+              let query = sb.from('search_catalog').select('*');
+              if (isNumeric) {
+                query = query.or(`id.eq.${idStr},source_id.eq.${idStr}`);
+              } else {
+                // Se não for numérico, busca apenas pelo source_id (que aceita UUID/Texto)
+                query = query.eq('source_id', idStr);
+              }
+              
+              const { data: contentData, error: contentError } = await query.maybeSingle();
 
               if (contentError) {
                 console.error(`Erro ao buscar conteúdo para view_progress ID ${idStr}:`, contentError);
@@ -159,7 +164,12 @@ export function HomeClient() {
                 const finalTitulo = contentData.titulo || contentData.title || orig?.titulo || orig?.title;
 
                 // Tenta obter o poster de forma robusta
-                const finalPoster = contentData.poster || contentData.capa || contentData.poster_path || contentData.banner || orig?.poster || orig?.capa || orig?.poster_path || orig?.banner;
+                let finalPoster = contentData.poster || contentData.capa || contentData.poster_path || contentData.banner || orig?.poster || orig?.capa || orig?.poster_path || orig?.banner;
+
+                // Proteção contra URLs incompletas do TMDB que causam 404
+                if (finalPoster === 'https://image.tmdb.org/t/p/w500' || finalPoster === 'https://image.tmdb.org/t/p/original') {
+                  finalPoster = null;
+                }
 
                 const finalType = contentData.tipo || contentData.type;
 

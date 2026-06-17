@@ -140,12 +140,18 @@ export async function getUserFavoriteGenres(userId: string): Promise<string[]> {
     const validIds = contentIds.filter(id => id && id !== 'null' && id !== 'undefined');
     if (validIds.length === 0) return [];
 
-    const idList = validIds.map(id => `"${id}"`).join(',');
+    // Separa IDs numéricos de UUIDs para evitar erro de sintaxe bigint no Postgres
+    const numericIds = validIds.filter(id => /^\d+$/.test(id));
+    const stringIds = validIds.filter(id => !/^\d+$/.test(id));
+    
+    let query = sb.from('search_catalog').select('genero, category');
+    
+    const filters = [];
+    if (numericIds.length > 0) filters.push(`id.in.(${numericIds.join(',')})`);
+    if (stringIds.length > 0) filters.push(`source_id.in.(${stringIds.map(id => `"${id}"`).join(',')})`);
+    if (validIds.length > 0 && filters.length === 0) filters.push(`source_id.in.(${validIds.map(id => `"${id}"`).join(',')})`);
 
-    const { data: catalogRes } = await sb
-      .from('search_catalog')
-      .select('genero, category')
-      .or(`id.in.(${idList}),source_id.in.(${idList})`)
+    const { data: catalogRes } = await query.or(filters.join(','));
 
     // Conta os gêneros
     const genreCounts: Record<string, number> = {}
@@ -307,7 +313,7 @@ export async function getPersonalizedRecommendations(
     // Constrói filtros OR para todos os gêneros favoritos de uma vez
     // Isso evita o loop de requisições sequenciais (Otimização crítica para TVs)
     const movieFilters = favoriteGenres.map(genre => `category.ilike.%${genre}%`).join(',')
-    const seriesFilters = favoriteGenres.map(genre => `classificacao.ilike.%${genre}%`).join(',')
+    const seriesFilters = favoriteGenres.map(genre => `genero.ilike.%${genre}%`).join(',')
 
     // Removido filtro de rating em recomendações para não bloquear novos itens
     let moviesQuery = sb.from('cinema').select('*').or(movieFilters);
@@ -472,20 +478,25 @@ export async function getSectionContent(
 
       if (categories && categories.length > 0) {
         // Usando classificacao ou genero em vez de category
-        const catFilters = categories.map(c => `classificacao.ilike.%${c}%`).join(',')
+        const catFilters = categories.map(c => `genero.ilike.%${c}%`).join(',')
         seriesQuery = seriesQuery.or(catFilters)
       }
 
       // Aplica ordenação conforme configurado no banco
       if (ordenacao === 'rating_desc') {
-        seriesQuery = seriesQuery.order('rating', { ascending: false })
+        seriesQuery = seriesQuery.order('rating', { ascending: false, nullsFirst: false })
       } else if (ordenacao === 'year_desc') {
         seriesQuery = seriesQuery.order('ano', { ascending: false })
       } else {
-      seriesQuery = seriesQuery.order('created_at', { ascending: false }) // Prioriza os conteúdos mais recentes
+        seriesQuery = seriesQuery.order('created_at', { ascending: false })
       }
 
-      const series = await seriesQuery.limit(searchLimit)
+      let series = await seriesQuery.limit(searchLimit)
+      
+      // Fallback caso a coluna rating não exista ou cause erro 400
+      if (series.error && ordenacao === 'rating_desc') {
+        series = await sb.from('series').select('*').order('created_at', { ascending: false }).limit(searchLimit);
+      }
 
       if (series?.data) {
         series.data.forEach(serie => {
