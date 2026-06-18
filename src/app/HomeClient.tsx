@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { useAuth } from '@/components/layout/SupabaseProvider'
@@ -93,251 +93,307 @@ export function HomeClient() {
     }
   }, [user, loading, router])
 
-  useEffect(() => {
-    async function loadHome() {
-      // Se não estiver autenticado, não carrega conteúdo
-      if (!user) return
+  // Função loadHome usando useCallback para poder ser chamada nas subscriptions
+  const loadHome = useCallback(async () => {
+    if (!user) return
 
-      const sb = createClient()
+    const sb = createClient()
 
-      // Busca se o usuário está no Modo Infantil
-      let cwItems: any[] = []
-      const { data: profile } = await sb
-        .from('profiles')
-        .select('is_child')
-        .eq('id', user.id)
-        .maybeSingle()
-      
-      const isChild = profile?.is_child || false
+    // Busca se o usuário está no Modo Infantil
+    let cwItems: any[] = []
+    const { data: profile } = await sb
+      .from('profiles')
+      .select('is_child')
+      .eq('id', user.id)
+      .maybeSingle()
+    
+    const isChild = profile?.is_child || false
 
-      // Inicializa nova sessão de conteúdo (reseta cache a cada carregamento)
-      initializeContentSession()
+    // Inicializa nova sessão de conteúdo (reseta cache a cada carregamento)
+    initializeContentSession()
 
-      // 0. Carregar Continuar Assistindo se houver usuário
-      if (user) {
-        const { data: prog, error: progError } = await sb
-          .from('view_progress')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('is_finished', false)
-          .order('updated_at', { ascending: false })
-          .limit(4)
+    // 0. Carregar Continuar Assistindo se houver usuário
+    if (user) {
+      const { data: prog, error: progError } = await sb
+        .from('view_progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_finished', false)
+        .order('updated_at', { ascending: false })
+        .limit(4)
 
-        console.log('[Home] Progresso carregado:', prog?.length, 'itens', progError ? 'Erro:' + progError.message : '')
+      console.log('[Home] Progresso carregado:', prog?.length, 'itens', progError ? 'Erro:' + progError.message : '')
 
-        if (prog) {
-          const hydrated = await Promise.all(
-            prog.map(async (p) => {
-              const idStr = String(p.content_id)
-              const isNumeric = /^\d+$/.test(idStr);
+      if (prog) {
+        const hydrated = await Promise.all(
+          prog.map(async (p) => {
+            const idStr = String(p.content_id)
+            const isNumeric = /^\d+$/.test(idStr);
 
-              // Busca no search_catalog que unifica cinema e series
-              let query = sb.from('search_catalog').select('*');
-              if (isNumeric) {
-                query = query.or(`id.eq.${idStr},source_id.eq.${idStr}`);
-              } else {
-                // Se não for numérico (UUID), busca pelo source_id usando filtro
-                query = query.filter('source_id', 'eq', idStr);
+            // Busca no search_catalog que unifica cinema e series
+            let query = sb.from('search_catalog').select('*');
+            if (isNumeric) {
+              query = query.or(`id.eq.${idStr},source_id.eq.${idStr}`);
+            } else {
+              // Se não for numérico (UUID), busca pelo source_id usando filtro
+              query = query.filter('source_id', 'eq', idStr);
+            }
+            
+            const { data: contentData, error: contentError } = await query.maybeSingle();
+
+            if (contentError) {
+              console.warn(`Aviso: Conteúdo não encontrado para view_progress ID ${idStr}`);
+              return null;
+            }
+
+            if (contentData) {
+              // Determina a tabela original e busca detalhes completos se necessário
+              let orig: any = contentData;
+              if (contentData.source_table === 'cinema' && contentData.id) {
+                const { data: movieOrig } = await sb.from('cinema').select('*').eq('id', contentData.id).maybeSingle();
+                if (movieOrig) orig = { ...contentData, ...movieOrig };
+              } else if (contentData.source_table === 'series' && contentData.id) {
+                // Correção: A chave primária da tabela series é id_n, não id
+                const { data: seriesOrig } = await sb.from('series').select('*').eq('id_n', contentData.source_id || contentData.id).maybeSingle();
+                if (seriesOrig) orig = { ...contentData, ...seriesOrig };
               }
-              
-              const { data: contentData, error: contentError } = await query.maybeSingle();
 
-              if (contentError) {
-                console.warn(`Aviso: Conteúdo não encontrado para view_progress ID ${idStr}`);
-                return null;
+              // Garante que o ID para o link seja o id_n para séries ou o id para filmes
+              const finalId = contentData.source_table === 'series' ? (orig?.id_n || contentData.id) : contentData.id;
+
+              // Tenta obter o título de forma robusta
+              const finalTitulo = contentData.titulo || contentData.title || orig?.titulo || orig?.title;
+
+              // Tenta obter o poster de forma robusta
+              let finalPoster = contentData.poster || contentData.capa || contentData.poster_path || contentData.banner || orig?.poster || orig?.capa || orig?.poster_path || orig?.banner;
+
+              // Proteção contra URLs incompletas do TMDB que causam 404
+              if (finalPoster === 'https://image.tmdb.org/t/p/w500' || finalPoster === 'https://image.tmdb.org/t/p/original') {
+                finalPoster = null;
               }
 
-              if (contentData) {
-                // Determina a tabela original e busca detalhes completos se necessário
-                let orig: any = contentData;
-                if (contentData.source_table === 'cinema' && contentData.id) {
-                  const { data: movieOrig } = await sb.from('cinema').select('*').eq('id', contentData.id).maybeSingle();
-                  if (movieOrig) orig = { ...contentData, ...movieOrig };
-                } else if (contentData.source_table === 'series' && contentData.id) {
-                  // Correção: A chave primária da tabela series é id_n, não id
-                  const { data: seriesOrig } = await sb.from('series').select('*').eq('id_n', contentData.source_id || contentData.id).maybeSingle();
-                  if (seriesOrig) orig = { ...contentData, ...seriesOrig };
-                }
+              const finalType = contentData.tipo || contentData.type;
 
-                // Garante que o ID para o link seja o id_n para séries ou o id para filmes
-                const finalId = contentData.source_table === 'series' ? (orig?.id_n || contentData.id) : contentData.id;
+              // Tenta obter duration de várias fontes
+              let duration = orig?.duration || orig?.runtime || contentData.duration || null
 
-                // Tenta obter o título de forma robusta
-                const finalTitulo = contentData.titulo || contentData.title || orig?.titulo || orig?.title;
-
-                // Tenta obter o poster de forma robusta
-                let finalPoster = contentData.poster || contentData.capa || contentData.poster_path || contentData.banner || orig?.poster || orig?.capa || orig?.poster_path || orig?.banner;
-
-                // Proteção contra URLs incompletas do TMDB que causam 404
-                if (finalPoster === 'https://image.tmdb.org/t/p/w500' || finalPoster === 'https://image.tmdb.org/t/p/original') {
-                  finalPoster = null;
-                }
-
-                const finalType = contentData.tipo || contentData.type;
-
-                // Tenta obter duration de várias fontes
-                let duration = orig?.duration || orig?.runtime || contentData.duration || null
-
-                // Converte duration de string para segundos
-                let durationInSeconds = null
-                try {
-                  if (duration) {
-                    if (typeof duration === 'number') {
-                      durationInSeconds = duration
-                    } else if (typeof duration === 'string') {
-                      const cleaned = duration.toLowerCase().trim()
-                      // Regex robusto para extrair apenas números de cada parte
-                      const match = cleaned.match(/(\d+)\s*h(?:\s*(\d+)\s*min)?/);
-                      if (match) {
-                        const hours = parseInt(match[1]) || 0;
-                        const mins = parseInt(match[2] || '0') || 0;
-                        durationInSeconds = (hours * 3600) + (mins * 60)
-                      } else {
-                        const mins = parseInt(cleaned.replace(/[^0-9]/g, ''))
-                        if (!isNaN(mins)) durationInSeconds = mins * 60
-                      }
+              // Converte duration de string para segundos
+              let durationInSeconds = null
+              try {
+                if (duration) {
+                  if (typeof duration === 'number') {
+                    durationInSeconds = duration
+                  } else if (typeof duration === 'string') {
+                    const cleaned = duration.toLowerCase().trim()
+                    // Regex robusto para extrair apenas números de cada parte
+                    const match = cleaned.match(/(\d+)\s*h(?:\s*(\d+)\s*min)?/);
+                    if (match) {
+                      const hours = parseInt(match[1]) || 0;
+                      const mins = parseInt(match[2] || '0') || 0;
+                      durationInSeconds = (hours * 3600) + (mins * 60)
+                    } else {
+                      const mins = parseInt(cleaned.replace(/[^0-9]/g, ''))
+                      if (!isNaN(mins)) durationInSeconds = mins * 60
                     }
                   }
-                } catch (err) {
-                  console.warn('Falha silenciosa no parsing de duração:', err)
                 }
-
-                return {
-                  id: finalId,
-                  id_n: finalId, // Garante que id_n esteja presente para séries
-                  titulo: finalTitulo,
-                  poster: finalPoster,
-                  type: finalType,
-                  last_position: p.last_position,
-                  duration: durationInSeconds
-                }
+              } catch (err) {
+                console.warn('Falha silenciosa no parsing de duração:', err)
               }
-              return null
-            })
-          )
-          const filtered = hydrated.filter(Boolean)
-          console.log('[Home] Itens hidratados:', filtered.length, 'de', prog.length)
 
-          // Remove duplicatas baseadas no título (mantém o mais recente com UUID)
-          const uniqueMap = new Map()
-          filtered.forEach(item => {
-            if (!item) return
-            const key = item.titulo.toLowerCase().trim()
-            // Se já existe, mantém o que tem UUID (prioridade)
-            if (!uniqueMap.has(key) || (item.id && !/^\d+$/.test(String(item.id)))) { // Converte id para string para o teste regex
-              uniqueMap.set(key, item)
+              return {
+                id: finalId,
+                id_n: finalId, // Garante que id_n esteja presente para séries
+                titulo: finalTitulo,
+                poster: finalPoster,
+                type: finalType,
+                last_position: p.last_position,
+                duration: durationInSeconds
+              }
             }
+            return null
           })
-          cwItems = Array.from(uniqueMap.values())
-          console.log('[Home] Itens únicos após filtro:', cwItems.length)
-          setContinueWatching(cwItems)
-        }
-      }
+        )
+        const filtered = hydrated.filter(Boolean)
+        console.log('[Home] Itens hidratados:', filtered.length, 'de', prog.length)
 
-      // Adiciona ao cache de exibidos em lote (Otimizado)
-      const cwIds = cwItems.map(item => String(item.id)).filter(Boolean)
-      addBatchToDisplayedCache(cwIds)
-
-      // 1. Busca seções ativas ordenadas por posição
-      const { data: secs, error } = await sb
-        .from('home_sections')
-        .select('*')
-        .eq('ativo', true)
-        .order('posicao', { ascending: true })
-
-      console.log(`[Home] ${secs?.length || 0} seções encontradas.`);
-
-      if (error || !secs) {
-        console.error("[Home] Erro ao buscar seções:", error);
-        setPageLoading(false)
-        return
-      }
-
-      // 2. Filtra por agendamento (Datas e Horários)
-      const now = new Date()
-      const currentIsoDate = now.toISOString()
-      const currentHms = now.toTimeString().split(' ')[0] // Formato "HH:MM:SS"
-
-      const visibleSections = (secs as HomeSection[]).filter(sec => {
-        // Validação de intervalo de datas
-        try {
-          if (sec.data_inicio && currentIsoDate < sec.data_inicio) return false
-          if (sec.data_fim && currentIsoDate > sec.data_fim) return false
-        } catch (e) {
-          console.warn(`[Home] Erro ao validar datas da seção ${sec.titulo}:`, e);
-        }
-        
-        // Validação de intervalo de horários
-        if (sec.hora_inicio && sec.hora_fim) {
-           if (sec.hora_inicio > sec.hora_fim) { // Caso a seção atravesse a meia-noite
-              if (currentHms < sec.hora_inicio && currentHms > sec.hora_fim) return false
-           } else {
-              if (currentHms < sec.hora_inicio || currentHms > sec.hora_fim) return false
-           }
-        }
-        return true
-      })
-
-      setSections(visibleSections)
-
-      // 3. Carrega os itens para cada seção visível em paralelo
-      const newSectionsData: Record<string, any[]> = {}
-      const sectionPromises = visibleSections.map(async (sec) => {
-        try {
-          const displayedIds = getDisplayedCache()
-          let items: any[] = []
-
-          // Seção especial: Indicados por IA
-          const lowerTitle = sec.titulo.toLowerCase();
-          if (lowerTitle === 'indicados por ia' || lowerTitle === 'ia') {
-            if (user) {
-              const userIsNew = await isNewUser(user.id)
-              if (userIsNew) {
-                items = await getTrendingContent(sec.limite, isChild)
-              } else {
-                // Aguarda as recomendações para garantir que o cache de IDs exibidos seja atualizado
-                items = await getPersonalizedRecommendations(user.id, sec.limite, displayedIds, isChild)
-              }
-            } else {
-              items = await getTrendingContent(sec.limite, isChild)
-            }
-          } else {
-            // Seção normal: usa o gerenciador de conteúdo (independente da fonte)
-            // Normalização robusta de categorias vindo do Supabase (text[] ou string separada por vírgula)
-            let categories: string[] = []
-            const rawCats = sec.categorias
-            if (rawCats) {
-              categories = Array.isArray(rawCats) 
-                ? rawCats.map(c => String(c).trim()).filter(Boolean)
-                : String(rawCats).split(',').map(c => c.trim()).filter(Boolean)
-            }
-
-            items = await getSectionContent(
-              sec.id,
-              categories,
-              sec.limite,
-              sec.ordenacao,
-              displayedIds,
-              isChild
-            )
+        // Remove duplicatas baseadas no título (mantém o mais recente com UUID)
+        const uniqueMap = new Map()
+        filtered.forEach(item => {
+          if (!item) return
+          const key = item.titulo.toLowerCase().trim()
+          // Se já existe, mantém o que tem UUID (prioridade)
+          if (!uniqueMap.has(key) || (item.id && !/^\d+$/.test(String(item.id)))) { // Converte id para string para o teste regex
+            uniqueMap.set(key, item)
           }
-
-          // Adiciona IDs ao cache de exibidos
-          const newIds = items.map((item: any) => String(item.id)).filter(Boolean)
-          addBatchToDisplayedCache(newIds)
-          newSectionsData[sec.id] = items
-        } catch (sectionError) {
-          console.error(`[Home] Erro ao carregar seção ${sec.titulo}:`, sectionError);
-        }
-      })
-
-      await Promise.all(sectionPromises);
-      setSectionsData(newSectionsData);
-      setPageLoading(false); // Agora sim, a página está carregada
+        })
+        cwItems = Array.from(uniqueMap.values())
+        console.log('[Home] Itens únicos após filtro:', cwItems.length)
+        setContinueWatching(cwItems)
+      }
     }
 
-    loadHome()
+    // Adiciona ao cache de exibidos em lote (Otimizado)
+    const cwIds = cwItems.map(item => String(item.id)).filter(Boolean)
+    addBatchToDisplayedCache(cwIds)
+
+    // 1. Busca seções ativas ordenadas por posição
+    const { data: secs, error } = await sb
+      .from('home_sections')
+      .select('*')
+      .eq('ativo', true)
+      .order('posicao', { ascending: true })
+
+    console.log(`[Home] ${secs?.length || 0} seções encontradas.`);
+
+    if (error || !secs) {
+      console.error("[Home] Erro ao buscar seções:", error);
+      setPageLoading(false)
+      return
+    }
+
+    // 2. Filtra por agendamento (Datas e Horários)
+    const now = new Date()
+    const currentIsoDate = now.toISOString()
+    const currentHms = now.toTimeString().split(' ')[0] // Formato "HH:MM:SS"
+
+    const visibleSections = (secs as HomeSection[]).filter(sec => {
+      // Validação de intervalo de datas
+      try {
+        if (sec.data_inicio && currentIsoDate < sec.data_inicio) return false
+        if (sec.data_fim && currentIsoDate > sec.data_fim) return false
+      } catch (e) {
+        console.warn(`[Home] Erro ao validar datas da seção ${sec.titulo}:`, e);
+      }
+      
+      // Validação de intervalo de horários
+      if (sec.hora_inicio && sec.hora_fim) {
+         if (sec.hora_inicio > sec.hora_fim) { // Caso a seção atravesse a meia-noite
+            if (currentHms < sec.hora_inicio && currentHms > sec.hora_fim) return false
+         } else {
+            if (currentHms < sec.hora_inicio || currentHms > sec.hora_fim) return false
+         }
+      }
+      return true
+    })
+
+    setSections(visibleSections)
+
+    // 3. Carrega os itens para cada seção visível em paralelo
+    const newSectionsData: Record<string, any[]> = {}
+    const sectionPromises = visibleSections.map(async (sec) => {
+      try {
+        const displayedIds = getDisplayedCache()
+        let items: any[] = []
+
+        // Seção especial: Indicados por IA
+        const lowerTitle = sec.titulo.toLowerCase();
+        if (lowerTitle === 'indicados por ia' || lowerTitle === 'ia') {
+          if (user) {
+            const userIsNew = await isNewUser(user.id)
+            if (userIsNew) {
+              items = await getTrendingContent(sec.limite, isChild)
+            } else {
+              // Aguarda as recomendações para garantir que o cache de IDs exibidos seja atualizado
+              items = await getPersonalizedRecommendations(user.id, sec.limite, displayedIds, isChild)
+            }
+          } else {
+            items = await getTrendingContent(sec.limite, isChild)
+          }
+        } else {
+          // Seção normal: usa o gerenciador de conteúdo (independente da fonte)
+          // Normalização robusta de categorias vindo do Supabase (text[] ou string separada por vírgula)
+          let categories: string[] = []
+          const rawCats = sec.categorias
+          if (rawCats) {
+            categories = Array.isArray(rawCats) 
+              ? rawCats.map(c => String(c).trim()).filter(Boolean)
+              : String(rawCats).split(',').map(c => c.trim()).filter(Boolean)
+          }
+
+          items = await getSectionContent(
+            sec.id,
+            categories,
+            sec.limite,
+            sec.ordenacao,
+            displayedIds,
+            isChild
+          )
+        }
+
+        // Adiciona IDs ao cache de exibidos
+        const newIds = items.map((item: any) => String(item.id)).filter(Boolean)
+        addBatchToDisplayedCache(newIds)
+        newSectionsData[sec.id] = items
+      } catch (sectionError) {
+        console.error(`[Home] Erro ao carregar seção ${sec.titulo}:`, sectionError);
+      }
+    })
+
+    await Promise.all(sectionPromises);
+    setSectionsData(newSectionsData);
+    setPageLoading(false); // Agora sim, a página está carregada
   }, [user])
+
+  // Carrega dados iniciais e configura polling periódico
+  useEffect(() => {
+    if (!user) return
+
+    loadHome()
+
+    // Polling periódico para atualizar dados a cada 5 minutos
+    const pollingInterval = setInterval(() => {
+      if (user && document.visibilityState === 'visible') {
+        loadHome()
+      }
+    }, 5 * 60 * 1000) // 5 minutos
+
+    // Limpa o intervalo quando o componente é desmontado
+    return () => {
+      clearInterval(pollingInterval)
+    }
+  }, [user, loadHome])
+
+  // Configura Supabase Realtime subscriptions para atualização em tempo real
+  useEffect(() => {
+    if (!user) return
+
+    const sb = createClient()
+
+    // Subscription para tabela cinema
+    const cinemaSubscription = sb
+      .channel('cinema-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cinema' }, () => {
+        console.log('[Home] Mudança detectada na tabela cinema, recarregando...')
+        loadHome()
+      })
+      .subscribe()
+
+    // Subscription para tabela series
+    const seriesSubscription = sb
+      .channel('series-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'series' }, () => {
+        console.log('[Home] Mudança detectada na tabela series, recarregando...')
+        loadHome()
+      })
+      .subscribe()
+
+    // Subscription para tabela home_sections
+    const homeSectionsSubscription = sb
+      .channel('home-sections-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'home_sections' }, () => {
+        console.log('[Home] Mudança detectada na tabela home_sections, recarregando...')
+        loadHome()
+      })
+      .subscribe()
+
+    // Limpa as subscriptions quando o componente é desmontado
+    return () => {
+      cinemaSubscription.unsubscribe()
+      seriesSubscription.unsubscribe()
+      homeSectionsSubscription.unsubscribe()
+    }
+  }, [user, loadHome])
 
   // Mostra skeleton real em vez de um pulso vazio
   if (loading) return <div className="min-h-screen bg-black" />

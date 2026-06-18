@@ -1,6 +1,7 @@
 'use client'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
+import { startCatalogSync } from '@/lib/catalogSync'
 import type { User, Session } from '@supabase/supabase-js'
 
 interface Ctx {
@@ -39,6 +40,11 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Inicia sincronização automática do catálogo globalmente
+  useEffect(() => {
+    startCatalogSync()
+  }, [])
+
   // Lógica de Navegação Espacial para Smart TVs e Teclado
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -46,7 +52,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'].includes(key)) return
 
       // Prioriza elementos com tabindex="0" para navegação espacial, depois elementos interativos padrão
-      const selectors = '[tabindex="0"], a, button, input, select, textarea';
+      const selectors = '[tabindex="0"]:not([disabled]), a:not([disabled]), button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])';
       
       // Otimização Avançada: Cache de elementos e verificação de visibilidade inteligente
       const rawElements = Array.from(document.querySelectorAll(selectors)) as HTMLElement[];
