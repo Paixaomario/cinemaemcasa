@@ -53,6 +53,8 @@ function SeriesContent() {
   // Lógica de Banner Imersivo e Trailer Auto-Play
   const [canAutoPlayTrailer, setCanAutoPlayTrailer] = useState(false)
   const [showBannerTrailer, setShowBannerTrailer] = useState(false)
+  const [autoPlayNext, setAutoPlayNext] = useState(false)
+  const [showPlayer, setShowPlayer] = useState(false)
 
   
   useEffect(() => {
