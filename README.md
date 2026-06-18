@@ -21,6 +21,10 @@
 ✅ 📊 Analytics Profissional (GDPR compliant)
 ✅ ⚡ Performance otimizada (LCP < 2.5s)
 ✅ 🔐 Segurança enterprise (RLS + rate limiting)
+✅ 🔄 Sincronização Automática de Catálogo (100K+ conteúdos)
+✅ 📡 Supabase Realtime Subscriptions (atualização em tempo real)
+✅ ⏱️ Polling Periódico (atualização a cada 5 minutos)
+✅ 🎬 Continuar Assistindo com Popup (escolha: continuar ou reiniciar)
 ```
 
 ---
@@ -45,11 +49,14 @@ npm run dev
 open http://localhost:3000
 ```
 
-## 2. Deploy SQL (2 min)
+## 2. Deploy SQL (3 min)
 ```bash
 # Supabase Dashboard → SQL Editor → New Query
-# Cole conteúdo de: supabase/migrations/018_search_analytics.sql
-# Click: Run
+# Execute migrations em ordem:
+# 1. supabase/migrations/018_search_analytics.sql
+# 2. supabase/migrations/021_automate_search_catalog.sql
+# 3. supabase/migrations/023_sync_search_catalog_function.sql
+# Click: Run para cada migration
 ```
 
 ## 3. Teste Localmente (2 min)
@@ -114,8 +121,10 @@ open http://localhost:3000
 ```sql
 - search_analytics (público, anônimo)
 - user_search_history (privado, RLS)
+- search_catalog (unificado cinema + series)
 - Índices para performance
-- Triggers para timestamp
+- Triggers para timestamp e sincronização automática
+- Função RPC sync_search_catalog() para sincronização manual
 ```
 
 ---
@@ -138,22 +147,31 @@ src/
 ├── app/                    # Next.js pages
 │   ├── search/            # Search page principale
 │   ├── admin/             # Admin dashboard
-│   └── api/               # Backend routes
+│   ├── api/               # Backend routes
+│   │   ├── sync-catalog/ # Sincronização de catálogo
+│   │   └── sync-search/  # Sincronização de busca
+│   └── HomeClient.tsx    # Home com polling e Realtime
 ├── lib/                   # Business logic
 │   ├── searchSuggestions.ts   # 🔍
 │   ├── geolocation.ts         # 📍
 │   ├── advancedVoiceSearch.ts # 🎤
+│   ├── catalogSync.ts         # 🔄 Sincronização automática
+│   ├── homeContentManager.ts  # 📦 Gerenciador de conteúdo
 │   └── supabase.ts            # DB client
 ├── components/            # React components
 │   ├── SearchSuggestions.tsx  # Dropdown
-│   └── VoiceSearchButton.tsx   # Voice button
+│   ├── VoiceSearchButton.tsx   # Voice button
+│   └── layout/                 # Layout components
+│       └── SupabaseProvider.tsx # Auth + sync global
 └── __tests__/             # Tests
     ├── lib/
     └── components/
 
 supabase/
 └── migrations/
-    └── 018_search_analytics.sql  # Database schema
+    ├── 018_search_analytics.sql           # Analytics schema
+    ├── 021_automate_search_catalog.sql    # Triggers automáticos
+    └── 023_sync_search_catalog_function.sql # Função RPC de sync
 
 docs/
 └── Various guides (START_HERE, cronogramas, etc)
@@ -321,6 +339,11 @@ git push origin main
 ✅ Sugestões smart
 ✅ Multi-plataforma básico
 ✅ Analytics GDPR
+✅ Sincronização automática de catálogo (100K+ conteúdos)
+✅ Supabase Realtime subscriptions
+✅ Polling periódico (5 minutos)
+✅ Continuar Assistindo com popup
+✅ Navegação espacial otimizada
 ```
 
 ## v2.1 (Próximo Mês)
