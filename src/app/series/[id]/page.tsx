@@ -82,6 +82,12 @@ function SeriesContent() {
     }
   }, [contentUuid, legacyId, id, router])
 
+  // Estados da Sala (Assistir Juntos)
+  const [activeRoomId, setActiveRoomId] = useState(searchParams.get('room'))
+  const [isGuestMode] = useState(!!searchParams.get('room'))
+  const [guestStep, setGuestStep] = useState<'prompt' | 'name' | 'ready' | null>(searchParams.get('room') ? 'prompt' : null)
+  const [guestName, setGuestName] = useState('')
+
   // Função para convidado entrar na sala
   const handleGuestSubmit = useCallback(() => {
     if (guestName.trim()) {
@@ -95,12 +101,6 @@ function SeriesContent() {
       }
     }
   }, [guestName, activeEpisode, episodes, contentUuid, legacyId, id, router])
-
-  // Estados da Sala (Assistir Juntos)
-  const [activeRoomId, setActiveRoomId] = useState(searchParams.get('room'))
-  const [isGuestMode] = useState(!!searchParams.get('room'))
-  const [guestStep, setGuestStep] = useState<'prompt' | 'name' | 'ready' | null>(searchParams.get('room') ? 'prompt' : null)
-  const [guestName, setGuestName] = useState('')
 
   useEffect(() => {
     if (!id) return
