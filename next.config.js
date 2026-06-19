@@ -19,6 +19,15 @@ const nextConfig = {
       },
     ],
   },
+  // Otimizações para Vercel
+  swcMinify: true,
+  compress: true,
+  // Aumentar timeout para builds lentos
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
+  },
 };
 
 module.exports = nextConfig;
