@@ -144,7 +144,7 @@ export function HeroBanner({ type, canAutoPlayTrailer = true }: HeroBannerProps 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Lógica para ativar o trailer após 2 segundos de visualização (Padrão Disney+/HBO Max)
+  // Lógica para ativar o trailer imediatamente após carregar (LG WebOS otimizado)
   useEffect(() => {
     setShowTrailer(false); // Reset trailer state on item change
     if (!currentBannerItem?.trailer) return;
@@ -152,7 +152,7 @@ export function HeroBanner({ type, canAutoPlayTrailer = true }: HeroBannerProps 
     if (canAutoPlayTrailer) {
       const timer = setTimeout(() => {
         setShowTrailer(true);
-      }, 2000);
+      }, 500); // Reduzido de 2000ms para 500ms para transição mais rápida
 
       return () => clearTimeout(timer);
     }
