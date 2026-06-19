@@ -202,11 +202,11 @@ export default function SearchPage() {
   }, [user, sb, userRegion, initialFiltersLoaded]); // Dependências para dados do usuário e região
 
   // 2. Busca Global em Tempo Real
-  const debouncedQuery = useDebounce(query, 500);
-  const debouncedGenre = useDebounce(selectedGenre, 500);
-  const debouncedYear = useDebounce(selectedYear, 500);
-  const debouncedType = useDebounce(selectedType, 500);
-  const debouncedArtist = useDebounce(selectedArtist, 500);
+  const debouncedQuery = useDebounce(query, 300); // Reduzido de 500ms para 300ms para resposta mais rápida
+  const debouncedGenre = useDebounce(selectedGenre, 300);
+  const debouncedYear = useDebounce(selectedYear, 300);
+  const debouncedType = useDebounce(selectedType, 300);
+  const debouncedArtist = useDebounce(selectedArtist, 300);
 
   // Sinaliza carregamento assim que o usuário começa a interagir para feedback imediato
   useEffect(() => {
@@ -234,10 +234,11 @@ export default function SearchPage() {
         .limit(48);
 
       if (debouncedQuery.trim().length >= 1) { 
-        searchBuilder = searchBuilder.ilike('titulo', `%${debouncedQuery}%`); 
+        // Busca em múltiplos campos para melhorar resultados
+        searchBuilder = searchBuilder.or(`titulo.ilike.%${debouncedQuery}%,title.ilike.%${debouncedQuery}%,name.ilike.%${debouncedQuery}%`);
       }
       if (debouncedGenre) {
-        searchBuilder = searchBuilder.eq('genero', debouncedGenre);
+        searchBuilder = searchBuilder.ilike('genero', `%${debouncedGenre}%`);
       }
       if (debouncedYear) {
         searchBuilder = searchBuilder.eq('ano', parseInt(debouncedYear));
