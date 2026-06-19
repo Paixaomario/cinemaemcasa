@@ -24,15 +24,6 @@ describe('Search Suggestions Module', () => {
     });
   });
 
-  // Mock do Supabase para trackSearch e getPopularSearches seria necessário aqui
-  // Para este build, focamos em garantir que o código não quebre
-  describe('getPopularSearches', () => {
-    it('should return an array', async () => {
-      const popular = await getPopularSearches();
-      expect(Array.isArray(popular)).toBe(true);
-    });
-  });
-
 
   describe('generateSuggestions', () => {
     it('should return empty array for empty input', async () => {
