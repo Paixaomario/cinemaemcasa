@@ -112,11 +112,11 @@ export function HomeClient() {
     // Inicializa nova sessão de conteúdo (reseta cache a cada carregamento)
     initializeContentSession()
 
-    // 0. Carregar Continuar Assistindo se houver usuário
+    // 0. Carregar Continuar Assistindo se houver usuário - OTIMIZADO
     if (user) {
       const { data: prog, error: progError } = await sb
         .from('view_progress')
-        .select('*')
+        .select('content_id,last_position,duration')
         .eq('user_id', user.id)
         .eq('is_finished', false)
         .order('updated_at', { ascending: false })
@@ -130,105 +130,80 @@ export function HomeClient() {
             const idStr = String(p.content_id)
             const isNumeric = /^\d+$/.test(idStr);
 
-            // Busca no search_catalog que unifica cinema e series
-            let query = sb.from('search_catalog').select('*');
+            // Busca direta nas tabelas originais para evitar joins complexos
+            let contentData: any = null;
+            
             if (isNumeric) {
-              query = query.or(`id.eq.${idStr},source_id.eq.${idStr}`);
-            } else {
-              // Se não for numérico (UUID), busca pelo source_id usando filtro
-              query = query.filter('source_id', 'eq', idStr);
+              // Busca na tabela cinema primeiro
+              const { data: cinemaData } = await sb.from('cinema').select('id,titulo,poster,backdrop,category,duration').eq('id', parseInt(idStr)).maybeSingle();
+              if (cinemaData) {
+                contentData = { ...cinemaData, source_table: 'cinema', tipo: 'movie' };
+              }
             }
             
-            const { data: contentData, error: contentError } = await query.maybeSingle();
+            // Se não encontrou em cinema, busca em series
+            if (!contentData) {
+              const { data: seriesData } = await sb.from('series').select('id_n,titulo,capa,banner,genero').eq('id_n', idStr).maybeSingle();
+              if (seriesData) {
+                contentData = { ...seriesData, source_table: 'series', tipo: 'series', poster: seriesData.capa };
+              }
+            }
 
-            if (contentError) {
+            if (!contentData) {
               console.warn(`Aviso: Conteúdo não encontrado para view_progress ID ${idStr}`);
               return null;
             }
 
-            if (contentData) {
-              // Determina a tabela original e busca detalhes completos se necessário
-              let orig: any = contentData;
-              if (contentData.source_table === 'cinema' && contentData.id) {
-                const { data: movieOrig } = await sb.from('cinema').select('*').eq('id', contentData.id).maybeSingle();
-                if (movieOrig) orig = { ...contentData, ...movieOrig };
-              } else if (contentData.source_table === 'series' && contentData.id) {
-                // Correção: A chave primária da tabela series é id_n, não id
-                const { data: seriesOrig } = await sb.from('series').select('*').eq('id_n', contentData.source_id || contentData.id).maybeSingle();
-                if (seriesOrig) orig = { ...contentData, ...seriesOrig };
-              }
+            const finalId = contentData.source_table === 'series' ? contentData.id_n : contentData.id;
+            const finalTitulo = contentData.titulo || contentData.title;
+            let finalPoster = contentData.poster || contentData.capa || contentData.banner;
 
-              // Garante que o ID para o link seja o id_n para séries ou o id para filmes
-              const finalId = contentData.source_table === 'series' ? (orig?.id_n || contentData.id) : contentData.id;
+            // Proteção contra URLs incompletas do TMDB
+            if (finalPoster === 'https://image.tmdb.org/t/p/w500' || finalPoster === 'https://image.tmdb.org/t/p/original') {
+              finalPoster = null;
+            }
 
-              // Tenta obter o título de forma robusta
-              const finalTitulo = contentData.titulo || contentData.title || orig?.titulo || orig?.title;
+            const finalType = contentData.tipo || contentData.type;
 
-              // Tenta obter o poster de forma robusta
-              let finalPoster = contentData.poster || contentData.capa || contentData.poster_path || contentData.banner || orig?.poster || orig?.capa || orig?.poster_path || orig?.banner;
-
-              // Proteção contra URLs incompletas do TMDB que causam 404
-              if (finalPoster === 'https://image.tmdb.org/t/p/w500' || finalPoster === 'https://image.tmdb.org/t/p/original') {
-                finalPoster = null;
-              }
-
-              const finalType = contentData.tipo || contentData.type;
-
-              // Tenta obter duration de várias fontes
-              let duration = orig?.duration || orig?.runtime || contentData.duration || null
-
-              // Converte duration de string para segundos
-              let durationInSeconds = null
-              try {
-                if (duration) {
-                  if (typeof duration === 'number') {
-                    durationInSeconds = duration
-                  } else if (typeof duration === 'string') {
-                    const cleaned = duration.toLowerCase().trim()
-                    // Regex robusto para extrair apenas números de cada parte
-                    const match = cleaned.match(/(\d+)\s*h(?:\s*(\d+)\s*min)?/);
-                    if (match) {
-                      const hours = parseInt(match[1]) || 0;
-                      const mins = parseInt(match[2] || '0') || 0;
-                      durationInSeconds = (hours * 3600) + (mins * 60)
-                    } else {
-                      const mins = parseInt(cleaned.replace(/[^0-9]/g, ''))
-                      if (!isNaN(mins)) durationInSeconds = mins * 60
-                    }
+            // Converte duration de string para segundos
+            let durationInSeconds = null
+            try {
+              let duration = contentData.duration || null
+              if (duration) {
+                if (typeof duration === 'number') {
+                  durationInSeconds = duration
+                } else if (typeof duration === 'string') {
+                  const cleaned = duration.toLowerCase().trim()
+                  const match = cleaned.match(/(\d+)\s*h(?:\s*(\d+)\s*min)?/);
+                  if (match) {
+                    const hours = parseInt(match[1]) || 0;
+                    const mins = parseInt(match[2] || '0') || 0;
+                    durationInSeconds = (hours * 3600) + (mins * 60)
+                  } else {
+                    const mins = parseInt(cleaned.replace(/[^0-9]/g, ''))
+                    if (!isNaN(mins)) durationInSeconds = mins * 60
                   }
                 }
-              } catch (err) {
-                console.warn('Falha silenciosa no parsing de duração:', err)
               }
-
-              return {
-                id: finalId,
-                id_n: finalId, // Garante que id_n esteja presente para séries
-                titulo: finalTitulo,
-                poster: finalPoster,
-                type: finalType,
-                last_position: p.last_position,
-                duration: durationInSeconds
-              }
+            } catch (e) {
+              console.warn('[Home] Erro ao converter duration:', e)
             }
-            return null
+
+            return {
+              id: finalId,
+              id_n: contentData.source_table === 'series' ? finalId : undefined,
+              titulo: finalTitulo,
+              poster: finalPoster,
+              type: finalType,
+              progress: {
+                lastPosition: p.last_position,
+                duration: p.duration || durationInSeconds
+              }
+            };
           })
         )
-        const filtered = hydrated.filter(Boolean)
-        console.log('[Home] Itens hidratados:', filtered.length, 'de', prog.length)
 
-        // Remove duplicatas baseadas no título (mantém o mais recente com UUID)
-        const uniqueMap = new Map()
-        filtered.forEach(item => {
-          if (!item) return
-          const key = item.titulo.toLowerCase().trim()
-          // Se já existe, mantém o que tem UUID (prioridade)
-          if (!uniqueMap.has(key) || (item.id && !/^\d+$/.test(String(item.id)))) { // Converte id para string para o teste regex
-            uniqueMap.set(key, item)
-          }
-        })
-        cwItems = Array.from(uniqueMap.values())
-        console.log('[Home] Itens únicos após filtro:', cwItems.length)
+        cwItems = hydrated.filter((item): item is NonNullable<typeof item> => item !== null)
         setContinueWatching(cwItems)
       }
     }

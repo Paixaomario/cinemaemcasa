@@ -98,7 +98,7 @@ export default function WatchPage() {
 
   return (
     <div
-      style={{ position:'relative', height:'100vh', background:'#000', display:'flex', alignItems:'center', justifyContent:'center', cursor:'none' }}
+      style={{ position:'fixed', inset:0, background:'#000', display:'flex', alignItems:'center', justifyContent:'center', cursor:'none', zIndex:9999 }}
       onMouseMove={showControls}
       onClick={togglePlay}
     >
