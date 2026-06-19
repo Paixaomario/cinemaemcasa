@@ -59,6 +59,11 @@ export function ContentCard({
   const id = isSeries ? (item.id_n || item.source_id || item.id) : (item.source_id || item.id)
   const detailHref = isSeries ? `/series/${id}` : `/detalhes/${id}`
 
+  // Debug log para verificar navegação
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[ContentCard] isSeries:', isSeries, 'id:', id, 'detailHref:', detailHref)
+  }
+
   // Cálculo do progresso em porcentagem
   const progressPercent = showProgress && progress
     ? Math.min((Number(progress.lastPosition) / (Number(progress.duration) || 6000)) * 100, 100)

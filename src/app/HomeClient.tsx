@@ -54,7 +54,7 @@ export function HomeClient() {
   const [sections, setSections] = useState<HomeSection[]>([])
   const [sectionsData, setSectionsData] = useState<Record<string, any[]>>({})
   const [continueWatching, setContinueWatching] = useState<any[]>([])
-  const [pageLoading, setPageLoading] = useState(true)
+  const [pageLoading, setPageLoading] = useState(false) // Removido delay inicial
   const [resumeItem, setResumeItem] = useState<any>(null)
   const [canAutoPlayTrailer, setCanAutoPlayTrailer] = useState(false)
   const [isTVLayout, setIsTVLayout] = useState(false)

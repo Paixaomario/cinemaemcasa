@@ -44,7 +44,7 @@ export default function WatchPage() {
     
     if (!isNaN(movieIdNum)) {
       // É um ID numérico, busca na tabela cinema
-      sb.from('cinema').select('titulo,url').eq('id', movieIdNum).maybeSingle().then(({ data: cinemaData, error: cinemaError }) => {
+      sb.from('cinema').select('*').eq('id', movieIdNum).maybeSingle().then(({ data: cinemaData, error: cinemaError }) => {
         if (cinemaError) {
           console.error('[Watch] Erro ao buscar filme:', cinemaError)
         }
@@ -59,7 +59,7 @@ export default function WatchPage() {
       })
     } else {
       // É um UUID, busca na tabela content
-      sb.from('content').select('title,video_url').eq('id', id).maybeSingle().then(({ data: contentData, error: contentError }) => {
+      sb.from('content').select('*').eq('id', id).maybeSingle().then(({ data: contentData, error: contentError }) => {
         if (contentError) {
           console.error('[Watch] Erro ao buscar content:', contentError)
         }
