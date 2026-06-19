@@ -186,7 +186,7 @@ export function HeroBanner({ type, canAutoPlayTrailer = true }: HeroBannerProps 
   const youtubeId = currentBannerItem.trailer ? getYouTubeId(currentBannerItem.trailer) : null;
 
   return (
-    <section className="relative w-full lg:w-[calc(100%+80px)] lg:-ml-[80px] h-[65vh] sm:h-[85vh] md:h-screen overflow-hidden bg-black z-0 border-none -mt-[121px] border-l-0">
+    <section className="relative w-full lg:w-[calc(100%+80px)] lg:-ml-[80px] h-[65vh] sm:h-[85vh] md:h-screen overflow-hidden bg-black z-0 border-none border-l-0">
       {/* Trailer em Segundo Plano */}
       {showTrailer && youtubeId && (
         <div className="absolute inset-0 z-0 scale-[1.15] animate-in fade-in duration-1000">
