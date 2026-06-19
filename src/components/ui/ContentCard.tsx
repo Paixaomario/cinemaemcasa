@@ -46,9 +46,17 @@ export function ContentCard({
                          (item.genre_ids?.includes(9648) || item.genre_ids?.includes(878))
 
   // Detecta se é uma série (tabela 'series' usa id_n conforme sua migration)
-  // Também verifica o campo 'type' para determinar se é série
-  const isSeries = !!item.id_n || item.type === 'serie' || item.type === 'series' || item.type === 'tv'
-  const id = isSeries ? (item.id_n || item.id) : item.id
+  // Verifica múltiplos campos para determinar se é série
+  const isSeries = !!item.id_n || 
+                  item.type === 'serie' || 
+                  item.type === 'series' || 
+                  item.type === 'tv' ||
+                  item.tipo === 'series' ||
+                  item.source_table === 'series' ||
+                  item.media_type === 'tv'
+  
+  // Para séries, usa id_n; para filmes, usa id ou source_id
+  const id = isSeries ? (item.id_n || item.source_id || item.id) : (item.source_id || item.id)
   const detailHref = isSeries ? `/series/${id}` : `/detalhes/${id}`
 
   // Cálculo do progresso em porcentagem

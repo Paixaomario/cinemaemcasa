@@ -86,7 +86,8 @@ export default function SearchPage() {
     type: (item.source_table === 'series' || item.tipo === 'series' || item.media_type === 'tv' || item.type === 'tv' || item.type === 'series') 
       ? 'series' 
       : 'movie',
-    year: item.ano || item.year || item.release_date?.slice(0, 4)
+    year: item.ano || item.year || item.release_date?.slice(0, 4),
+    source_table: item.source_table // Adiciona source_table para debugging
   });
 
   // Detecção de Localização com Fallback
@@ -226,17 +227,17 @@ export default function SearchPage() {
         return;
       }
 
-      // Leitura COMPLETA da tabela para garantir trailers e metadados
+      // Busca otimizada usando search_catalog com índices GIN
       let searchBuilder = sb.from('search_catalog')
         .select('*')
-        .order('created_at', { ascending: false, nullsFirst: false }) 
-        .order('id', { ascending: false }) // Fallback para ID garante que o último inserido venha primeiro
-        .limit(48);
+        .limit(100); // Aumentado para mais resultados
 
-      if (debouncedQuery.trim().length >= 1) { 
-        // Busca em múltiplos campos para melhorar resultados
-        searchBuilder = searchBuilder.or(`titulo.ilike.%${debouncedQuery}%,title.ilike.%${debouncedQuery}%,name.ilike.%${debouncedQuery}%`);
+      // Busca por texto usando ilike (case-insensitive like)
+      if (debouncedQuery.trim().length >= 1) {
+        searchBuilder = searchBuilder.ilike('titulo', `%${debouncedQuery}%`);
       }
+      
+      // Filtros adicionais
       if (debouncedGenre) {
         searchBuilder = searchBuilder.ilike('genero', `%${debouncedGenre}%`);
       }
@@ -246,24 +247,97 @@ export default function SearchPage() {
       if (debouncedType) {
         searchBuilder = searchBuilder.eq('tipo', debouncedType);
       }
-      // Novo: Filtrar por artista selecionado
-      if (debouncedArtist) {
-        const artistFilter = `{"${debouncedArtist.replace(/"/g, '\\"')}"}`;
-        searchBuilder = searchBuilder.or(`cast_names.cs.${artistFilter},director_names.cs.${artistFilter}`);
-      }
 
-      const { data } = await searchBuilder;
+      const { data, error } = await searchBuilder;
       
-      if (data) {
-        setLiveSuggestions([]); // Garante que sugestões suspensas sejam limpas
+      if (error) {
+        console.error('[Search] Erro na busca:', error);
+      }
+      
+      if (data && data.length > 0) {
+        setLiveSuggestions([]);
         setResults(data);
+        console.log(`[Search] ${data.length} resultados encontrados para "${debouncedQuery}"`);
+      } else {
+        console.log(`[Search] Nenhum resultado encontrado para "${debouncedQuery}"`);
+        // Fallback: busca direta nas tabelas cinema e series se search_catalog estiver vazio
+        console.log('[Search] Tentando fallback para busca direta...');
+        const fallbackResults = await performFallbackSearch(debouncedQuery, debouncedGenre, debouncedYear, debouncedType);
+        if (fallbackResults.length > 0) {
+          setResults(fallbackResults);
+          console.log(`[Search] ${fallbackResults.length} resultados encontrados via fallback`);
+        } else {
+          setResults([]);
+        }
       }
       setIsLoadingResults(false);
-      setIsSearching(true); // Define como busca concluída
+      setIsSearching(true);
     };
 
     performSearch();
   }, [debouncedQuery, debouncedGenre, debouncedYear, debouncedType, debouncedArtist, sb]);
+
+  // Função de fallback para busca direta nas tabelas originais
+  const performFallbackSearch = async (query: string, genre: string, year: string, type: string) => {
+    const results: any[] = [];
+    
+    // Busca em cinema
+    let cinemaQuery = sb.from('cinema').select('*').limit(50);
+    if (query.trim().length >= 1) {
+      cinemaQuery = cinemaQuery.ilike('titulo', `%${query}%`);
+    }
+    if (genre) {
+      cinemaQuery = cinemaQuery.ilike('category', `%${genre}%`);
+    }
+    if (year) {
+      cinemaQuery = cinemaQuery.eq('ano', parseInt(year));
+    }
+    if (type === 'movie') {
+      cinemaQuery = cinemaQuery.eq('type', 'movie');
+    }
+    
+    const { data: cinemaData } = await cinemaQuery;
+    if (cinemaData) {
+      cinemaData.forEach((item: any) => {
+        results.push({
+          ...item,
+          source_table: 'cinema',
+          source_id: String(item.id),
+          tipo: 'movie'
+        });
+      });
+    }
+    
+    // Busca em series
+    let seriesQuery = sb.from('series').select('*').limit(50);
+    if (query.trim().length >= 1) {
+      seriesQuery = seriesQuery.ilike('titulo', `%${query}%`);
+    }
+    if (genre) {
+      seriesQuery = seriesQuery.ilike('genero', `%${genre}%`);
+    }
+    if (year) {
+      seriesQuery = seriesQuery.eq('ano', parseInt(year));
+    }
+    if (type === 'series') {
+      seriesQuery = seriesQuery.ilike('titulo', `%${query}%`);
+    }
+    
+    const { data: seriesData } = await seriesQuery;
+    if (seriesData) {
+      seriesData.forEach((item: any) => {
+        results.push({
+          ...item,
+          source_table: 'series',
+          source_id: String(item.id_n),
+          tipo: 'series',
+          poster: item.capa || item.poster
+        });
+      });
+    }
+    
+    return results;
+  };
 
   // 3. Voz
   const { isListening, toggleListening, isSupported } = useVoiceSearch((text) => {
