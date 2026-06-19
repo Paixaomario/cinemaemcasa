@@ -18,7 +18,7 @@ export function Sidebar() {
   ]
 
   return (
-    <aside className="fixed left-0 top-0 h-screen hidden lg:flex flex-col w-[80px] z-[9999] group overflow-visible bg-black/20 backdrop-blur-sm">
+    <aside className="fixed left-0 top-0 h-screen hidden lg:flex flex-col w-[80px] z-[9999] group overflow-visible bg-black/80 backdrop-blur-md border-r border-white/5">
       {/* Container do Logotipo (Altura 121px) */}
       <div className="h-[121px] mt-4 flex items-center justify-center w-[80px] shrink-0 overflow-hidden pointer-events-none">
         <div className="relative w-[80px] flex items-center justify-center flex-none scale-125">
