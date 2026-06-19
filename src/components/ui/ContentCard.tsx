@@ -15,7 +15,22 @@ export function ContentCard({
 }) {
   // Mapeamento para lidar com as diferentes tabelas (cinema vs series)
   const title = item.titulo || item.title || 'Sem título'
-  const poster = item.poster || item.banner || item.capa || item.backdrop || item.poster_path || item.backdrop_path
+  
+  // Melhorar lógica de fallback para poster com verificação mais robusta
+  let poster = item.poster || item.banner || item.capa || item.backdrop || item.poster_path || item.backdrop_path || ''
+  
+  // Se poster estiver vazio ou for null/undefined, tenta construir URL do TMDB
+  if (!poster || poster === 'null' || poster === 'undefined' || poster.length < 5) {
+    if (item.poster_path && item.poster_path.startsWith('/')) {
+      poster = `https://image.tmdb.org/t/p/w500${item.poster_path}`
+    } else if (item.backdrop_path && item.backdrop_path.startsWith('/')) {
+      poster = `https://image.tmdb.org/t/p/w780${item.backdrop_path}`
+    }
+  }
+  
+  // Se ainda não tiver poster, usa placeholder
+  const hasValidPoster = poster && poster.length > 5 && poster !== 'https://image.tmdb.org/t/p/w500' && poster !== 'https://image.tmdb.org/t/p/original'
+  
   const rating = item.rating || item.vote_average
   const year = item.ano || item.year || (item.release_date ? item.release_date.slice(0, 4) : '')
   
@@ -46,7 +61,7 @@ export function ContentCard({
   const cardContent = (
     <>
       <div className="absolute inset-0 overflow-hidden rounded-xl bg-neutral-900">
-        {poster && String(poster).length > 5 && !String(poster).includes('undefined') && String(poster) !== 'null' ? (
+        {hasValidPoster ? (
           <Image
             src={
               String(poster).startsWith('http')
@@ -58,6 +73,18 @@ export function ContentCard({
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 15vw"
             className="object-cover transition-transform duration-500"
             priority={false}
+            onError={(e) => {
+              // Fallback se a imagem falhar ao carregar
+              const target = e.target as HTMLImageElement
+              target.style.display = 'none'
+              const parent = target.parentElement
+              if (parent) {
+                const fallback = document.createElement('div')
+                fallback.className = 'flex h-full items-center justify-center text-4xl bg-neutral-800'
+                fallback.textContent = '🎬'
+                parent.appendChild(fallback)
+              }
+            }}
           />
         ) : (
           <div className="flex h-full items-center justify-center text-4xl bg-neutral-800">🎬</div>
