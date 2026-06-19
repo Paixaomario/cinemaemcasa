@@ -399,6 +399,18 @@ export function HomeClient() {
   // Mostra skeleton real em vez de um pulso vazio
   if (loading) return <div className="min-h-screen bg-black" />
 
+  // Fallback de segurança: se pageLoading estiver true por muito tempo, libera a UI
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (pageLoading) {
+        console.warn('[Home] Timeout de carregamento, forçando renderização')
+        setPageLoading(false)
+      }
+    }, 5000) // 5 segundos de timeout
+
+    return () => clearTimeout(timeout)
+  }, [pageLoading])
+
   return (
     <div className={`flex flex-col gap-16 pb-32 ${isTVLayout ? 'px-[6%] py-[4%]' : 'px-4 md:px-0'}`}>
       {/* Banner de Destaque */}
