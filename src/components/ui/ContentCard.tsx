@@ -31,8 +31,9 @@ export function ContentCard({
                          (item.genre_ids?.includes(9648) || item.genre_ids?.includes(878))
 
   // Detecta se é uma série (tabela 'series' usa id_n conforme sua migration)
-  const isSeries = !!item.id_n
-  const id = isSeries ? item.id_n : item.id
+  // Também verifica o campo 'type' para determinar se é série
+  const isSeries = !!item.id_n || item.type === 'serie' || item.type === 'series' || item.type === 'tv'
+  const id = isSeries ? (item.id_n || item.id) : item.id
   const detailHref = isSeries ? `/series/${id}` : `/detalhes/${id}`
 
   // Cálculo do progresso em porcentagem
