@@ -38,10 +38,26 @@ export default function WatchPage() {
   useEffect(() => {
     if (!user || !id) return
     const sb = createClient()
-    sb.from('content').select('title,video_url').eq('id', id).single().then(({ data }) => {
-      setTitle(data?.title || '')
-      setVideoUrl(data?.video_url || '')
-      setFetching(false)
+    
+    // Tenta buscar da tabela 'content' primeiro (sistema unificado)
+    sb.from('content').select('title,video_url').eq('id', id).maybeSingle().then(({ data: contentData }) => {
+      if (contentData && contentData.video_url) {
+        setTitle(contentData.title || '')
+        setVideoUrl(contentData.video_url || '')
+        setFetching(false)
+      } else {
+        // Fallback: busca da tabela 'cinema' (sistema legado)
+        const movieIdNum = Number(id)
+        if (!isNaN(movieIdNum)) {
+          sb.from('cinema').select('titulo,url').eq('id', movieIdNum).maybeSingle().then(({ data: cinemaData }) => {
+            setTitle(cinemaData?.titulo || '')
+            setVideoUrl(cinemaData?.url || '')
+            setFetching(false)
+          })
+        } else {
+          setFetching(false)
+        }
+      }
     })
   }, [user, id])
 
