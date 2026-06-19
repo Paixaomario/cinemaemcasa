@@ -39,26 +39,40 @@ export default function WatchPage() {
     if (!user || !id) return
     const sb = createClient()
     
-    // Tenta buscar da tabela 'content' primeiro (sistema unificado)
-    sb.from('content').select('title,video_url').eq('id', id).maybeSingle().then(({ data: contentData }) => {
-      if (contentData && contentData.video_url) {
-        setTitle(contentData.title || '')
-        setVideoUrl(contentData.video_url || '')
-        setFetching(false)
-      } else {
-        // Fallback: busca da tabela 'cinema' (sistema legado)
-        const movieIdNum = Number(id)
-        if (!isNaN(movieIdNum)) {
-          sb.from('cinema').select('titulo,url').eq('id', movieIdNum).maybeSingle().then(({ data: cinemaData }) => {
-            setTitle(cinemaData?.titulo || '')
-            setVideoUrl(cinemaData?.url || '')
-            setFetching(false)
-          })
-        } else {
-          setFetching(false)
+    // Busca direta da tabela 'cinema' primeiro (sistema principal)
+    const movieIdNum = Number(id)
+    
+    if (!isNaN(movieIdNum)) {
+      // É um ID numérico, busca na tabela cinema
+      sb.from('cinema').select('titulo,url').eq('id', movieIdNum).maybeSingle().then(({ data: cinemaData, error: cinemaError }) => {
+        if (cinemaError) {
+          console.error('[Watch] Erro ao buscar filme:', cinemaError)
         }
-      }
-    })
+        if (cinemaData) {
+          setTitle(cinemaData.titulo || '')
+          setVideoUrl(cinemaData.url || '')
+          console.log(`[Watch] Filme encontrado: ${cinemaData.titulo}, URL: ${cinemaData.url ? 'configurada' : 'não configurada'}`)
+        } else {
+          console.log(`[Watch] Filme não encontrado na tabela cinema com ID ${movieIdNum}`)
+        }
+        setFetching(false)
+      })
+    } else {
+      // É um UUID, busca na tabela content
+      sb.from('content').select('title,video_url').eq('id', id).maybeSingle().then(({ data: contentData, error: contentError }) => {
+        if (contentError) {
+          console.error('[Watch] Erro ao buscar content:', contentError)
+        }
+        if (contentData) {
+          setTitle(contentData.title || '')
+          setVideoUrl(contentData.video_url || '')
+          console.log(`[Watch] Content encontrado: ${contentData.title}, URL: ${contentData.video_url ? 'configurada' : 'não configurada'}`)
+        } else {
+          console.log(`[Watch] Content não encontrado com ID ${id}`)
+        }
+        setFetching(false)
+      })
+    }
   }, [user, id])
 
   const showControls = useCallback(() => {
