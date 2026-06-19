@@ -32,16 +32,30 @@ export function useSpatialNavigation() {
       // Lógica de transição solicitada: Esquerda -> Menu Home
       if (e.key === 'ArrowLeft' && active) {
         const rect = active.getBoundingClientRect();
-        if (rect.left < 100 && !active.closest('aside')) {
-          const homeBtn = document.querySelector('aside [href="/home"], aside [href="/"]') as HTMLElement;
-          homeBtn?.focus();
+        // Se estiver na primeira coluna (left < 150) e não estiver no aside, vai para o menu
+        if (rect.left < 150 && !active.closest('aside')) {
+          const asideElement = document.querySelector('aside') as HTMLElement;
+          if (asideElement) {
+            // Foca no primeiro elemento focável do aside
+            const firstAsideItem = asideElement.querySelector('[tabindex="0"]') as HTMLElement;
+            firstAsideItem?.focus();
+          }
         }
       }
 
       // Lógica de transição solicitada: Menu -> Conteúdo (Direita)
       if (e.key === 'ArrowRight' && active?.closest('aside')) {
-        const firstContent = document.querySelector('main [tabindex="0"]') as HTMLElement;
-        firstContent?.focus();
+        // Foca no primeiro elemento da primeira linha da primeira coluna do main
+        const mainElement = document.querySelector('main') as HTMLElement;
+        if (mainElement) {
+          // Busca o primeiro elemento focável no main
+          const firstContent = mainElement.querySelector('[tabindex="0"]') as HTMLElement;
+          if (firstContent) {
+            firstContent.focus();
+            // Garante que o elemento esteja visível
+            firstContent.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'start' });
+          }
+        }
       }
 
       // Impedir que o cursor do Magic Remote suma em momentos indesejados

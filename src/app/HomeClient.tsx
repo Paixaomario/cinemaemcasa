@@ -278,6 +278,7 @@ export function HomeClient() {
     })
 
     setSections(visibleSections)
+    setPageLoading(false) // Libera a UI imediatamente após carregar seções
 
     // 3. Carrega os itens para cada seção visível em paralelo
     const newSectionsData: Record<string, any[]> = {}
