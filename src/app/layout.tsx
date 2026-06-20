@@ -7,6 +7,7 @@ import { CommandReceiverProvider } from '@/components/layout/CommandReceiverProv
 import { Inter, Montserrat } from 'next/font/google'
 import { VisualPreferencesProvider } from '@/components/layout/VisualPreferencesProvider'
 import { AppInitializer } from '@/app/AppInitializer'
+import { InitialLoadingScreen } from '@/components/InitialLoadingScreen'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const montserrat = Montserrat({ 
@@ -56,6 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="prefetch" href="/series" />
       </head>
       <body className="font-sans">
+        <InitialLoadingScreen />
         <AppInitializer />
         <SupabaseProvider>
           <VisualPreferencesProvider>
