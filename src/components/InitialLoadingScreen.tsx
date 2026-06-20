@@ -5,10 +5,16 @@ import Image from 'next/image'
 export function InitialLoadingScreen() {
   const [progress, setProgress] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
-  const [isReady, setIsReady] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    let mounted = true
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+
+    let isCancelled = false
 
     // Simula carregamento do sistema em segundo plano
     const loadSystem = async () => {
@@ -23,18 +29,17 @@ export function InitialLoadingScreen() {
       ]
 
       for (const step of steps) {
-        if (!mounted) return
+        if (isCancelled) return
         await new Promise(resolve => setTimeout(resolve, step.delay))
-        if (mounted) {
+        if (!isCancelled) {
           setProgress(step.progress)
         }
       }
 
-      if (mounted) {
-        setIsReady(true)
+      if (!isCancelled) {
         // Pequeno delay para transição suave
         await new Promise(resolve => setTimeout(resolve, 300))
-        if (mounted) {
+        if (!isCancelled) {
           setIsLoading(false)
         }
       }
@@ -43,9 +48,12 @@ export function InitialLoadingScreen() {
     loadSystem()
 
     return () => {
-      mounted = false
+      isCancelled = true
     }
-  }, [])
+  }, [mounted])
+
+  // Evita erro de hidratação
+  if (!mounted) return null
 
   if (!isLoading) return null
 
@@ -60,6 +68,7 @@ export function InitialLoadingScreen() {
             fill
             className="object-contain"
             priority
+            sizes="(max-width: 640px) 300px, (max-width: 768px) 400px, (max-width: 1024px) 500px, (max-width: 1280px) 600px, (max-width: 1536px) 700px, 800px"
           />
         </div>
       </div>
