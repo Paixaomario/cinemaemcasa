@@ -2,7 +2,7 @@
 CREATE OR REPLACE FUNCTION sync_movie_to_catalog()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.search_catalog (source_table, source_id, tipo, titulo, descricao, genero, ano, poster, banner)
+  INSERT INTO public.search_catalog (source_table, source_id, tipo, titulo, descricao, genero, ano, poster, banner, url)
   VALUES (
     'cinema',
     NEW.id,
@@ -12,7 +12,8 @@ BEGIN
     NEW.category,
     NEW.ano,
     NEW.poster,
-    NEW.backdrop
+    NEW.backdrop,
+    NEW.url
   )
   ON CONFLICT (source_table, source_id) DO UPDATE SET
     titulo = EXCLUDED.titulo,
@@ -20,7 +21,8 @@ BEGIN
     genero = EXCLUDED.genero,
     ano = EXCLUDED.ano,
     poster = EXCLUDED.poster,
-    banner = EXCLUDED.banner;
+    banner = EXCLUDED.banner,
+    url = EXCLUDED.url;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -29,7 +31,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION sync_series_to_catalog()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.search_catalog (source_table, source_id, tipo, titulo, descricao, genero, ano, poster, banner)
+  INSERT INTO public.search_catalog (source_table, source_id, tipo, titulo, descricao, genero, ano, poster, banner, url)
   VALUES (
     'series',
     NEW.id_n,
@@ -39,7 +41,8 @@ BEGIN
     NEW.genero,
     NEW.ano,
     NEW.capa,
-    NEW.banner
+    NEW.banner,
+    NEW.url
   )
   ON CONFLICT (source_table, source_id) DO UPDATE SET
     titulo = EXCLUDED.titulo,
@@ -47,7 +50,8 @@ BEGIN
     genero = EXCLUDED.genero,
     ano = EXCLUDED.ano,
     poster = EXCLUDED.poster,
-    banner = EXCLUDED.banner;
+    banner = EXCLUDED.banner,
+    url = EXCLUDED.url;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

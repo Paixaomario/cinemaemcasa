@@ -14,7 +14,7 @@ DECLARE
   series_count INT;
 BEGIN
   -- Sincroniza filmes
-  INSERT INTO public.search_catalog (source_table, source_id, tipo, titulo, descricao, genero, ano, poster, banner)
+  INSERT INTO public.search_catalog (source_table, source_id, tipo, titulo, descricao, genero, ano, poster, banner, url)
   SELECT 
     'cinema' as source_table,
     id::TEXT as source_id,
@@ -24,7 +24,8 @@ BEGIN
     category as genero,
     ano,
     poster,
-    backdrop as banner
+    backdrop as banner,
+    url
   FROM public.cinema
   ON CONFLICT (source_table, source_id) DO UPDATE SET
     titulo = EXCLUDED.titulo,
@@ -32,12 +33,13 @@ BEGIN
     genero = EXCLUDED.genero,
     ano = EXCLUDED.ano,
     poster = EXCLUDED.poster,
-    banner = EXCLUDED.banner;
+    banner = EXCLUDED.banner,
+    url = EXCLUDED.url;
   
   GET DIAGNOSTICS cinema_count = ROW_COUNT;
   
   -- Sincroniza séries
-  INSERT INTO public.search_catalog (source_table, source_id, tipo, titulo, descricao, genero, ano, poster, banner)
+  INSERT INTO public.search_catalog (source_table, source_id, tipo, titulo, descricao, genero, ano, poster, banner, url)
   SELECT 
     'series' as source_table,
     id_n::TEXT as source_id,
@@ -47,7 +49,8 @@ BEGIN
     genero,
     ano,
     capa as poster,
-    banner
+    banner,
+    url
   FROM public.series
   ON CONFLICT (source_table, source_id) DO UPDATE SET
     titulo = EXCLUDED.titulo,
@@ -55,7 +58,8 @@ BEGIN
     genero = EXCLUDED.genero,
     ano = EXCLUDED.ano,
     poster = EXCLUDED.poster,
-    banner = EXCLUDED.banner;
+    banner = EXCLUDED.banner,
+    url = EXCLUDED.url;
   
   GET DIAGNOSTICS series_count = ROW_COUNT;
   
