@@ -114,6 +114,8 @@ function SeriesContent() {
       const cleanId = rawId.replace('serie-', '')
       const isNumeric = /^\d+$/.test(cleanId)
       
+      console.log('[Series] Carregando série:', { rawId, cleanId, isNumeric })
+      
       // Garante que o ID seja tratado de forma resiliente para Smart TVs
       let localSeriesId: string | null = null
       let localData = null
@@ -121,11 +123,14 @@ function SeriesContent() {
       try {
         // 1. Resolver ID Real (UUID da content ou id_n da series)
         if (!isNumeric) {
+          console.log('[Series] Buscando por UUID na tabela content')
           const { data: contentData } = await sb
             .from('content')
             .select('id, title')
             .eq('id', rawId)
             .maybeSingle()
+          
+          console.log('[Series] Content data:', contentData)
           
           if (contentData) {
             const { data: sData } = await sb
@@ -134,6 +139,8 @@ function SeriesContent() {
               .ilike('titulo', contentData.title.trim())
               .maybeSingle()
             
+            console.log('[Series] Series data por título:', sData)
+            
             if (sData) {
               localData = sData
               localSeriesId = String(sData.id_n || sData.id)
@@ -141,11 +148,14 @@ function SeriesContent() {
             }
           }
         } else {
+          console.log('[Series] Buscando por ID numérico na tabela series')
           const { data: sData } = await sb
             .from('series')
             .select('*')
             .eq('id_n', cleanId)
             .maybeSingle()
+          
+          console.log('[Series] Series data por id_n:', sData)
           
           if (sData) {
             localData = sData
@@ -154,6 +164,7 @@ function SeriesContent() {
         }
 
         if (!localData || !localSeriesId) {
+          console.log('[Series] Não encontrou série, tentando fallback')
           // Se não encontrou na tabela 'series', tenta busca direta na 'content' por título como última tentativa
           const { data: fallbackContent } = await sb.from('content').select('id, title').eq('id', rawId).maybeSingle();
           if (fallbackContent) {
@@ -167,6 +178,8 @@ function SeriesContent() {
         }
 
         setLegacyId(localSeriesId ? Number(localSeriesId) : null)
+        setSeries(localData)
+        console.log('[Series] Série carregada:', localData)
 
         // Sincronização UUID Content
         let effectiveContentUuid = contentUuid;
@@ -182,15 +195,20 @@ function SeriesContent() {
           }
         }
 
+        console.log('[Series] Content UUID:', effectiveContentUuid)
+
         let seasonsData: any[] = []
 
         // Prioriza a tabela 'content' para temporadas e episódios
         if (effectiveContentUuid) {
+          console.log('[Series] Buscando temporadas na tabela content')
           const { data: contentEpisodes } = await sb
             .from('content')
             .select('*')
             .eq('parent_id', effectiveContentUuid)
             .eq('type', 'episode')
+
+          console.log('[Series] Content episodes:', contentEpisodes?.length)
 
           if (contentEpisodes && contentEpisodes.length > 0) {
             const uniqueSeasons = Array.from(new Set(contentEpisodes.map((e: any) => e.season_number))).sort();
@@ -201,15 +219,18 @@ function SeriesContent() {
             }));
           }
         } else if (localSeriesId && /^\d+$/.test(localSeriesId)) { // Fallback para tabela 'temporadas' (Legado)
+          console.log('[Series] Buscando temporadas na tabela temporadas (legado)')
           const { data: sLegacy, error: sLegacyError } = await sb
             .from('temporadas')
             .select('*')
             .eq('serie_id', localSeriesId)
             .order('numero_temporada', { ascending: true });
           
+          console.log('[Series] Temporadas legado:', sLegacy, sLegacyError)
           seasonsData = sLegacy || [];
         }
 
+        console.log('[Series] Temporadas carregadas:', seasonsData?.length)
         setSeasons(seasonsData || [])
         if (seasonsData && seasonsData.length > 0) {
           setSelectedSeason(seasonsData[0])
