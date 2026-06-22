@@ -197,12 +197,12 @@ export function HeroBanner({ type, canAutoPlayTrailer = true }: HeroBannerProps 
   }
 
   return (
-    <section className="relative w-full lg:w-[calc(100%+100px)] lg:-ml-[100px] h-[65vh] sm:h-[85vh] md:h-screen overflow-hidden bg-black z-0 border-none border-l-0">
+    <section className="relative w-full lg:w-[calc(100%+80px)] lg:-ml-[80px] h-[65vh] sm:h-[85vh] md:h-screen overflow-hidden bg-black z-0 border-none border-l-0">
       {/* Trailer em Segundo Plano */}
       {showTrailer && youtubeId && (
         <div className="absolute inset-0 z-0 scale-[1.15] animate-in fade-in duration-1000">
           <iframe
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=${isMutedByScroll ? 1 : 0}&controls=0&loop=1&playlist=${youtubeId}&rel=0&modestbranding=1&enablejsapi=1&iv_load_policy=3&disablekb=1&fs=0&autohide=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=0&controls=0&loop=1&playlist=${youtubeId}&rel=0&modestbranding=1&enablejsapi=1&iv_load_policy=3&disablekb=1&fs=0&autohide=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
             className="w-full h-full pointer-events-none"
             allow="autoplay; encrypted-media"
             style={{ border: 'none' }}
@@ -226,8 +226,8 @@ export function HeroBanner({ type, canAutoPlayTrailer = true }: HeroBannerProps 
         </div>
       )}
 
-      {/* Conteúdo do Banner - 100px da borda (sidebar) */}
-      <div className="relative h-full flex flex-col justify-end px-6 lg:pl-[100px] pb-24 md:pb-32 max-w-7xl z-10">
+      {/* Conteúdo do Banner - 80px da borda (sidebar) */}
+      <div className="relative h-full flex flex-col justify-end px-6 lg:pl-[80px] pb-24 md:pb-32 max-w-7xl z-10">
         <h1 className="text-4xl md:text-7xl font-black uppercase tracking-tighter text-white mb-4 drop-shadow-2xl">
           {title}
         </h1>

@@ -18,10 +18,10 @@ export function Sidebar() {
   ]
 
   return (
-    <aside className="fixed left-0 top-0 h-screen hidden lg:flex flex-col w-[100px] z-[9999] group overflow-visible bg-black/90 backdrop-blur-md border-r border-white/10">
+    <aside className="fixed left-0 top-0 h-screen hidden lg:flex flex-col w-[80px] z-[9999] group overflow-visible bg-black/20 backdrop-blur-sm">
       {/* Container do Logotipo (Altura 121px) */}
-      <div className="h-[121px] mt-4 flex items-center justify-center w-[100px] shrink-0 overflow-hidden pointer-events-none">
-        <div className="relative w-[100px] flex items-center justify-center flex-none scale-125">
+      <div className="h-[121px] mt-4 flex items-center justify-center w-[80px] shrink-0 overflow-hidden pointer-events-none">
+        <div className="relative w-[80px] flex items-center justify-center flex-none scale-125">
           <Image 
             src="/logo.png" 
             alt="Logo" 
@@ -33,7 +33,7 @@ export function Sidebar() {
       </div>
 
       {/* Navegação: Colada ao logo para eliminar rolagem em TVs */}
-      <nav className="mt-2 flex flex-col gap-3 px-0 overflow-y-auto no-scrollbar relative z-10">
+      <nav className="mt-2 flex flex-col gap-2 px-0 overflow-y-auto no-scrollbar relative z-10">
         {menuItems.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href
@@ -45,15 +45,15 @@ export function Sidebar() {
               id={item.href === '/' || item.href === '/home' ? 'sidebar-home-link' : undefined}
               tabIndex={0}
               className={`
-                flex items-center transition-all duration-200 outline-none h-[64px] w-full shrink-0 relative z-20 pointer-events-auto
+                flex items-center transition-all duration-200 outline-none h-[54px] w-full shrink-0 relative z-20 pointer-events-auto
                 ${isActive 
-                  ? 'bg-brand-cyan text-black' 
-                  : 'text-white hover:bg-white/20 hover:text-white focus:bg-brand-cyan focus:text-black'
+                  ? 'bg-brand-cyan/15 text-brand-cyan' 
+                  : 'text-white/70 hover:bg-white/10 hover:text-white focus:bg-brand-cyan focus:text-black'
                 }
               `}
             >
-              <div className="w-[100px] flex-none flex items-center justify-center">
-                <Icon className="w-[36px] h-[36px]" strokeWidth={isActive ? 3 : 2} />
+              <div className="w-[80px] flex-none flex items-center justify-center">
+                <Icon className="w-[28px] h-[28px]" strokeWidth={isActive ? 2.5 : 1.5} />
               </div>
             </Link>
           )
@@ -63,7 +63,7 @@ export function Sidebar() {
       {/* Estilos de Foco para Smart TV */}
       <style jsx global>{`
         .using-keyboard aside a:focus {
-          transform: scale(1.1) translateX(8px);
+          transform: scale(1.05) translateX(5px);
         }
       `}</style>
     </aside>

@@ -44,14 +44,14 @@ export default function WatchPage() {
     
     if (!isNaN(movieIdNum)) {
       // É um ID numérico, busca na tabela cinema
-      sb.from('cinema').select('*').eq('id', movieIdNum).maybeSingle().then(({ data: cinemaData, error: cinemaError }) => {
+      sb.from('cinema').select('titulo,url').eq('id', movieIdNum).maybeSingle().then(({ data: cinemaData, error: cinemaError }) => {
         if (cinemaError) {
           console.error('[Watch] Erro ao buscar filme:', cinemaError)
         }
         if (cinemaData) {
           setTitle(cinemaData.titulo || '')
           setVideoUrl(cinemaData.url || '')
-          console.log(`[Watch] Filme encontrado: ${cinemaData.titulo}, URL: ${cinemaData.url ? 'configurada' : 'não configurada'}`)
+          console.log(`[Watch] Filme encontrado: ${cinemaData.titulo}, URL: ${cinemaData.url ? 'configurada' : 'não configurada'}`, cinemaData)
         } else {
           console.log(`[Watch] Filme não encontrado na tabela cinema com ID ${movieIdNum}`)
         }
@@ -59,14 +59,14 @@ export default function WatchPage() {
       })
     } else {
       // É um UUID, busca na tabela content
-      sb.from('content').select('*').eq('id', id).maybeSingle().then(({ data: contentData, error: contentError }) => {
+      sb.from('content').select('title,video_url').eq('id', id).maybeSingle().then(({ data: contentData, error: contentError }) => {
         if (contentError) {
           console.error('[Watch] Erro ao buscar content:', contentError)
         }
         if (contentData) {
           setTitle(contentData.title || '')
           setVideoUrl(contentData.video_url || '')
-          console.log(`[Watch] Content encontrado: ${contentData.title}, URL: ${contentData.video_url ? 'configurada' : 'não configurada'}`)
+          console.log(`[Watch] Content encontrado: ${contentData.title}, URL: ${contentData.video_url ? 'configurada' : 'não configurada'}`, contentData)
         } else {
           console.log(`[Watch] Content não encontrado com ID ${id}`)
         }
