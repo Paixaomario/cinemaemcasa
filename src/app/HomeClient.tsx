@@ -393,8 +393,8 @@ export function HomeClient() {
 
   return (
     <div className={`flex flex-col gap-16 pb-32 ${isTVLayout ? 'px-[6%] py-[4%]' : 'px-4 md:px-0'}`}>
-      {/* Banner de Destaque */}
-      <HeroBanner canAutoPlayTrailer={canAutoPlayTrailer} />
+      {/* Banner de Destaque - Temporariamente desabilitado para corrigir erro React #310 */}
+      {/* <HeroBanner canAutoPlayTrailer={canAutoPlayTrailer} /> */}
 
       {/* Popup de Continuar ou Reiniciar */}
       {resumeItem && (
