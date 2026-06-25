@@ -33,7 +33,7 @@ export default function WatchPage() {
 
   // Função auxiliar para buscar por título quando tmdb_id não funciona
   const fallbackByTitle = (title: string, sb: any) => {
-    sb.from('cinema').select('titulo,url').ilike('titulo', `%${title}%`).maybeSingle().then(({ data: cinemaFallback }) => {
+    sb.from('cinema').select('titulo,url').ilike('titulo', `%${title}%`).maybeSingle().then(({ data: cinemaFallback }: { data: { titulo: string; url: string } | null }) => {
       if (cinemaFallback && cinemaFallback.url) {
         setTitle(cinemaFallback.titulo || '')
         setVideoUrl(cinemaFallback.url || '')
