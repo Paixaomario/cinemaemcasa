@@ -65,7 +65,7 @@ function MovieContent() {
         if (contentData) {
           const { data: mData } = await sb
             .from('cinema')
-            .select('*')
+            .select('id,titulo,poster,backdrop,banner,year,category,rating,duration,duration_seconds,created_at,tmdb_id')
             .eq('titulo', contentData.title)
             .maybeSingle()
           localData = mData
@@ -75,7 +75,7 @@ function MovieContent() {
       } else {
         const { data: mData } = await sb
           .from('cinema')
-          .select('*')
+          .select('id,titulo,poster,backdrop,banner,year,category,rating,duration,duration_seconds,created_at,tmdb_id')
           .eq('id', movieIdNum)
           .maybeSingle()
         localData = mData
@@ -133,7 +133,7 @@ function MovieContent() {
               const recIds = tmdbData.recommendations.results.map((r: any) => r.id)
               const { data: existing } = await sb
                 .from('cinema')
-                .select('*')
+                .select('id,titulo,poster,backdrop,banner,year,category,rating,duration,duration_seconds,created_at,tmdb_id')
                 .in('tmdb_id', recIds)
               setFilteredRecommendations(existing || [])
             }
@@ -165,7 +165,7 @@ function MovieContent() {
             .insert({ 
               title: localData.titulo, 
               type: 'movie', 
-              poster: localData.poster || localData.poster_path || localData.banner || localData.backdrop || localData.backdrop_path,
+              poster: localData.poster || localData.banner || localData.backdrop,
               is_published: true 
             }).select('id').maybeSingle()
           if (newContent) cid = newContent.id

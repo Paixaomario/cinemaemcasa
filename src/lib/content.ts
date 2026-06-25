@@ -12,7 +12,7 @@ export async function hydrateCinemaItem(sb: any, contentId: string, contentType?
   let itemType: 'movie' | 'serie' = 'movie';
 
   // 1. Tenta buscar na tabela unificada 'content' (UUID)
-  const { data: contentData } = await sb.from('content').select('*').eq('id', idStr).maybeSingle();
+  const { data: contentData } = await sb.from('content').select('id,title,type,tmdb_id,thumbnail_url,backdrop_url,trailer_url,duration_seconds,year,rating,cast_names,director,parent_id,season_number,episode_number,is_published,is_featured,views_count,created_at,updated_at').eq('id', idStr).maybeSingle();
   
   if (contentData) {
     itemType = contentData.type === 'series' ? 'serie' : 'movie';
@@ -43,7 +43,7 @@ export async function hydrateCinemaItem(sb: any, contentId: string, contentType?
   else {
     // Se contentType foi fornecido, busca diretamente na tabela correta
     if (contentType === 'movie') {
-      const { data: cinemaData } = await sb.from('cinema').select('*').eq('id', idStr).maybeSingle();
+      const { data: cinemaData } = await sb.from('cinema').select('id,titulo,poster,backdrop,banner,year,category,rating,duration,duration_seconds,created_at,tmdb_id').eq('id', idStr).maybeSingle();
       if (cinemaData) {
         itemType = 'movie';
         if (cinemaData.tmdb_id) {
@@ -52,7 +52,7 @@ export async function hydrateCinemaItem(sb: any, contentId: string, contentType?
         if (!hydratedItem) hydratedItem = { ...cinemaData, id: idStr, type: 'movie' };
       }
     } else if (contentType === 'serie') {
-      const { data: seriesData } = await sb.from('series').select('*').eq('id_n', idStr).maybeSingle();
+      const { data: seriesData } = await sb.from('series').select('id,id_n,titulo,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id').eq('id_n', idStr).maybeSingle();
       if (seriesData) {
         itemType = 'serie';
         if (seriesData.tmdb_id) {
@@ -62,7 +62,7 @@ export async function hydrateCinemaItem(sb: any, contentId: string, contentType?
       }
     } else {
       // Fallback original: tenta cinema primeiro, depois series
-      const { data: cinemaData } = await sb.from('cinema').select('*').eq('id', idStr).maybeSingle();
+      const { data: cinemaData } = await sb.from('cinema').select('id,titulo,poster,backdrop,banner,year,category,rating,duration,duration_seconds,created_at,tmdb_id').eq('id', idStr).maybeSingle();
       if (cinemaData) {
         itemType = 'movie';
         if (cinemaData.tmdb_id) {
@@ -70,7 +70,7 @@ export async function hydrateCinemaItem(sb: any, contentId: string, contentType?
         }
         if (!hydratedItem) hydratedItem = { ...cinemaData, id: idStr, type: 'movie' };
       } else {
-        const { data: seriesData } = await sb.from('series').select('*').eq('id_n', idStr).maybeSingle();
+        const { data: seriesData } = await sb.from('series').select('id,id_n,titulo,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id').eq('id_n', idStr).maybeSingle();
         if (seriesData) {
           itemType = 'serie';
           if (seriesData.tmdb_id) {

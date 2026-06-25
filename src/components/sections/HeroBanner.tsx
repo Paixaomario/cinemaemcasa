@@ -27,7 +27,7 @@ export function HeroBanner({ type, canAutoPlayTrailer = true }: HeroBannerProps 
       // Busca condicional baseada na prop 'type'
       if (!type || type === 'movie') {
         const { data: movies, error: mError } = await sb.from('cinema')
-          .select('*')
+          .select('id,titulo,poster,backdrop,banner,category,trailer,tmdb_id,created_at')
           .order('created_at', { ascending: false })
         if (mError) console.error("Erro ao buscar filmes para o banner:", mError)
         moviesData = movies || [];
@@ -35,7 +35,7 @@ export function HeroBanner({ type, canAutoPlayTrailer = true }: HeroBannerProps 
 
       if (!type || type === 'series') {
         const { data: series, error: sError } = await sb.from('series')
-          .select('*') // Seleciona todas as colunas para consistência
+          .select('id,id_n,titulo,poster,backdrop,banner,genero,trailer,tmdb_id')
           // Correção: series não tem created_at, usamos id_n como fallback de novidade
           .order('id_n', { ascending: false })
         if (sError) console.error("Erro ao buscar séries para o banner:", sError)
