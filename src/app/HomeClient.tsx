@@ -331,6 +331,8 @@ export function HomeClient() {
   }, [user, loadHome])
 
   // Configura Supabase Realtime subscriptions para atualização em tempo real
+  // Temporariamente desabilitado para corrigir erro React #310
+  /*
   useEffect(() => {
     if (!user) return
 
@@ -370,6 +372,7 @@ export function HomeClient() {
       homeSectionsSubscription.unsubscribe()
     }
   }, [user, loadHome])
+  */
 
   // Mostra skeleton real em vez de um pulso vazio
   if (loading) return <div className="min-h-screen bg-black" />
