@@ -314,6 +314,8 @@ export function HomeClient() {
   }, [user])
 
   // Carrega dados iniciais e configura polling periódico
+  // Temporariamente desabilitado para corrigir erro React #310
+  /*
   useEffect(() => {
     if (!user) return
 
@@ -331,6 +333,13 @@ export function HomeClient() {
       clearInterval(pollingInterval)
     }
   }, [user, loadHome])
+  */
+
+  // Carrega dados iniciais sem polling
+  useEffect(() => {
+    if (!user) return
+    loadHome()
+  }, [user])
 
   // Configura Supabase Realtime subscriptions para atualização em tempo real
   // Temporariamente desabilitado para corrigir erro React #310
