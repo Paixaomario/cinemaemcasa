@@ -31,95 +31,101 @@ export default function WatchPage() {
   const [volume, setVolume]         = useState(1)
   const [showCtrl, setShowCtrl]     = useState(true)
 
-  // Função auxiliar para buscar por título quando tmdb_id não funciona
-  const fallbackByTitle = (title: string, sb: any) => {
-    sb.from('cinema').select('titulo,url').ilike('titulo', `%${title}%`).maybeSingle().then(({ data: cinemaFallback, error }: { data: { titulo: string; url: string } | null; error: any }) => {
-      if (error) {
-        console.error('[Watch] Erro ao buscar por título:', error)
-      }
-      if (cinemaFallback && cinemaFallback.url) {
-        setTitle(cinemaFallback.titulo || '')
-        setVideoUrl(cinemaFallback.url || '')
-        console.log(`[Watch] Encontrado em cinema por título: ${cinemaFallback.titulo}`, cinemaFallback)
-      } else {
-        setTitle(title || '')
-        setVideoUrl('')
-        console.log(`[Watch] Content sem URL e não encontrado em cinema por título`)
-      }
-      setFetching(false)
-    }).catch((err: any) => {
-      console.error('[Watch] Erro no fallbackByTitle:', err)
-      setTitle(title || '')
-      setVideoUrl('')
-      setFetching(false)
-    })
-  }
-
   useEffect(() => {
     if (!loading && !user) router.push('/login')
   }, [user, loading])
 
   useEffect(() => {
     if (!user || !id) return
-    const sb = createClient()
     
-    const movieIdNum = Number(id)
-    
-    if (!isNaN(movieIdNum)) {
-      // É um ID numérico, busca na tabela cinema
-      sb.from('cinema').select('titulo,url').eq('id', movieIdNum).maybeSingle().then(({ data: cinemaData, error: cinemaError }) => {
-        if (cinemaError) {
-          console.error('[Watch] Erro ao buscar filme:', cinemaError)
-        }
-        if (cinemaData) {
-          setTitle(cinemaData.titulo || '')
-          setVideoUrl(cinemaData.url || '')
-          console.log(`[Watch] Filme encontrado: ${cinemaData.titulo}, URL: ${cinemaData.url ? 'configurada' : 'não configurada'}`, cinemaData)
+    async function loadVideo() {
+      const sb = createClient()
+      const movieIdNum = Number(id)
+      
+      try {
+        if (!isNaN(movieIdNum)) {
+          // É um ID numérico, busca na tabela cinema
+          const { data: cinemaData, error: cinemaError } = await sb.from('cinema').select('titulo,url').eq('id', movieIdNum).maybeSingle()
+          if (cinemaError) {
+            console.error('[Watch] Erro ao buscar filme:', cinemaError)
+          }
+          if (cinemaData) {
+            setTitle(cinemaData.titulo || '')
+            setVideoUrl(cinemaData.url || '')
+            console.log(`[Watch] Filme encontrado: ${cinemaData.titulo}, URL: ${cinemaData.url ? 'configurada' : 'não configurada'}`, cinemaData)
+          } else {
+            console.log(`[Watch] Filme não encontrado na tabela cinema com ID ${movieIdNum}`)
+          }
         } else {
-          console.log(`[Watch] Filme não encontrado na tabela cinema com ID ${movieIdNum}`)
-        }
-        setFetching(false)
-      })
-    } else {
-      // É um UUID, busca na tabela content
-      sb.from('content').select('title,video_url,tmdb_id').eq('id', id).maybeSingle().then(({ data: contentData, error: contentError }) => {
-        if (contentError) {
-          console.error('[Watch] Erro ao buscar content:', contentError)
-        }
-        
-        if (contentData && contentData.video_url) {
-          // Content encontrado com URL
-          setTitle(contentData.title || '')
-          setVideoUrl(contentData.video_url || '')
-          console.log(`[Watch] Content encontrado: ${contentData.title}, URL: ${contentData.video_url ? 'configurada' : 'não configurada'}`, contentData)
-          setFetching(false)
-        } else if (contentData) {
-          // Content encontrado mas SEM URL - tentar buscar em cinema
-          console.log(`[Watch] Content encontrado mas sem URL: ${contentData.title}, buscando em cinema...`)
+          // É um UUID, busca na tabela content
+          const { data: contentData, error: contentError } = await sb.from('content').select('title,video_url,tmdb_id').eq('id', id).maybeSingle()
+          if (contentError) {
+            console.error('[Watch] Erro ao buscar content:', contentError)
+          }
           
-          // Tenta buscar por tmdb_id primeiro (mais preciso)
-          if (contentData.tmdb_id) {
-            sb.from('cinema').select('titulo,url').eq('tmdb_id', contentData.tmdb_id).maybeSingle().then(({ data: cinemaByTmdb }) => {
+          if (contentData && contentData.video_url) {
+            // Content encontrado com URL
+            setTitle(contentData.title || '')
+            setVideoUrl(contentData.video_url || '')
+            console.log(`[Watch] Content encontrado: ${contentData.title}, URL: ${contentData.video_url ? 'configurada' : 'não configurada'}`, contentData)
+          } else if (contentData) {
+            // Content encontrado mas SEM URL - tentar buscar em cinema
+            console.log(`[Watch] Content encontrado mas sem URL: ${contentData.title}, buscando em cinema...`)
+            
+            // Tenta buscar por tmdb_id primeiro (mais preciso)
+            if (contentData.tmdb_id) {
+              const { data: cinemaByTmdb, error: tmdbError } = await sb.from('cinema').select('titulo,url').eq('tmdb_id', contentData.tmdb_id).maybeSingle()
+              if (tmdbError) {
+                console.error('[Watch] Erro ao buscar por tmdb_id:', tmdbError)
+              }
               if (cinemaByTmdb && cinemaByTmdb.url) {
                 setTitle(cinemaByTmdb.titulo || '')
                 setVideoUrl(cinemaByTmdb.url || '')
                 console.log(`[Watch] Encontrado em cinema por tmdb_id: ${cinemaByTmdb.titulo}`, cinemaByTmdb)
               } else {
                 // Fallback por título se tmdb_id não funcionou
-                fallbackByTitle(contentData.title, sb)
+                const { data: cinemaFallback, error: fallbackError } = await sb.from('cinema').select('titulo,url').ilike('titulo', `%${contentData.title}%`).maybeSingle()
+                if (fallbackError) {
+                  console.error('[Watch] Erro ao buscar por título:', fallbackError)
+                }
+                if (cinemaFallback && cinemaFallback.url) {
+                  setTitle(cinemaFallback.titulo || '')
+                  setVideoUrl(cinemaFallback.url || '')
+                  console.log(`[Watch] Encontrado em cinema por título: ${cinemaFallback.titulo}`, cinemaFallback)
+                } else {
+                  setTitle(contentData.title || '')
+                  setVideoUrl('')
+                  console.log(`[Watch] Content sem URL e não encontrado em cinema por título`)
+                }
               }
-              setFetching(false)
-            })
+            } else {
+              // Fallback direto por título
+              const { data: cinemaFallback, error: fallbackError } = await sb.from('cinema').select('titulo,url').ilike('titulo', `%${contentData.title}%`).maybeSingle()
+              if (fallbackError) {
+                console.error('[Watch] Erro ao buscar por título:', fallbackError)
+              }
+              if (cinemaFallback && cinemaFallback.url) {
+                setTitle(cinemaFallback.titulo || '')
+                setVideoUrl(cinemaFallback.url || '')
+                console.log(`[Watch] Encontrado em cinema por título: ${cinemaFallback.titulo}`, cinemaFallback)
+              } else {
+                setTitle(contentData.title || '')
+                setVideoUrl('')
+                console.log(`[Watch] Content sem URL e não encontrado em cinema por título`)
+              }
+            }
           } else {
-            // Fallback direto por título
-            fallbackByTitle(contentData.title, sb)
+            console.log(`[Watch] Content não encontrado com ID ${id}`)
           }
-        } else {
-          console.log(`[Watch] Content não encontrado com ID ${id}`)
-          setFetching(false)
         }
-      })
+      } catch (err) {
+        console.error('[Watch] Erro ao carregar vídeo:', err)
+      } finally {
+        setFetching(false)
+      }
     }
+    
+    loadVideo()
   }, [user, id])
 
   const showControls = useCallback(() => {
