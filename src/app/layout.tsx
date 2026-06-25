@@ -57,16 +57,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="prefetch" href="/series" />
       </head>
       <body className="font-sans">
-        <InitialLoadingScreen />
-        <AppInitializer />
+        {/* Temporariamente desabilitado para corrigir erro React #310 */}
+        {/* <InitialLoadingScreen /> */}
+        {/* <AppInitializer /> */}
         <SupabaseProvider>
-          <VisualPreferencesProvider>
-            <CommandReceiverProvider>
-              <Sidebar />
+          {/* Temporariamente desabilitado para corrigir erro React #310 */}
+          {/* <VisualPreferencesProvider> */}
+            {/* <CommandReceiverProvider> */}
+              {/* <Sidebar /> */}
               <main className="min-h-screen">{children}</main>
-              <MobileBottomNav />
-            </CommandReceiverProvider>
-          </VisualPreferencesProvider>
+              {/* <MobileBottomNav /> */}
+            {/* </CommandReceiverProvider> */}
+          {/* </VisualPreferencesProvider> */}
         </SupabaseProvider>
         <script
           dangerouslySetInnerHTML={{
