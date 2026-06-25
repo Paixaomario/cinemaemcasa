@@ -198,7 +198,7 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
   try {
     // Busca todos os conteúdos sem limite para permitir variedade completa
     let movies = null
-    let moviesQuery = sb.from('cinema').select('id,titulo,description,descricao,poster,backdrop,banner,year,category,rating,duration,duration_seconds,created_at,subtitles,audio_tracks,tmdb_id')
+    let moviesQuery = sb.from('cinema').select('id,titulo,description,descricao,poster,backdrop,banner,year,category,rating,trailer,duration,duration_seconds,created_at,subtitles,audio_tracks,tmdb_id')
     
     if (isChild) {
       moviesQuery = moviesQuery
@@ -246,7 +246,6 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
           category: movie.category,
           rating: movie.rating,
           genres: movie.category ? movie.category.split(',').map((c: string) => c.trim()) : [], // Usar category
-          url: movie.url,
           trailer: movie.trailer,
           duration: movie.duration,
           duration_seconds: movie.duration_seconds,
@@ -274,7 +273,6 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
           category: serie.classificacao || serie.genero,
           rating: serie.rating,
           genres: serie.genero ? serie.genero.split(',').map((c: string) => c.trim()) : [], // Usar genero
-          url: serie.url || serie.arquivo,
           trailer: serie.trailer,
           created_at: serie.created_at,
           subtitles: serie.subtitles,
@@ -319,8 +317,8 @@ export async function getPersonalizedRecommendations(
     const seriesFilters = favoriteGenres.map(genre => `genero.ilike.%${genre}%`).join(',')
 
     // Removido filtro de rating em recomendações para não bloquear novos itens
-    let moviesQuery = sb.from('cinema').select('id,titulo,description,poster,backdrop,banner,year,category,rating,duration,duration_seconds,created_at,subtitles,audio_tracks').or(movieFilters);
-    let seriesQuery = sb.from('series').select('id,id_n,titulo,description,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,subtitles,audio_tracks').or(seriesFilters);
+    let moviesQuery = sb.from('cinema').select('id,titulo,description,poster,backdrop,banner,year,category,rating,trailer,duration,duration_seconds,created_at,subtitles,audio_tracks').or(movieFilters);
+    let seriesQuery = sb.from('series').select('id,id_n,titulo,description,descricao,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,subtitles,audio_tracks').or(seriesFilters);
 
     if (isChild) {
       moviesQuery = moviesQuery.not('category', 'ilike', '%+18%').not('category', 'ilike', '%Terror%');
@@ -350,7 +348,6 @@ export async function getPersonalizedRecommendations(
             category: movie.category,
             rating: movie.rating,
             genres: movie.category ? movie.category.split(',').map((c: string) => c.trim()) : [], // Usar category
-            url: movie.url,
             trailer: movie.trailer,
             duration: movie.duration,
             duration_seconds: movie.duration_seconds,
@@ -381,7 +378,6 @@ export async function getPersonalizedRecommendations(
             genres: serie.genero ? serie.genero.split(',').map((c: string) => c.trim()) : [],
             description: serie.description || serie.descricao,
             banner: serie.banner,
-            url: serie.url || serie.arquivo,
             trailer: serie.trailer,
             created_at: serie.created_at,
             subtitles: serie.subtitles,
@@ -416,7 +412,7 @@ export async function getSectionContent(
     const items: ContentItem[] = []
 
     // Busca filmes
-    let movieQuery = sb.from('cinema').select('id,titulo,description,poster,backdrop,banner,year,category,rating,duration,duration_seconds,created_at')
+    let movieQuery = sb.from('cinema').select('id,titulo,description,poster,backdrop,banner,year,category,rating,trailer,duration,duration_seconds,created_at')
 
     if (categories && categories.length > 0) {
       const catFilters = categories.map(c => `category.ilike.%${c}%`).join(',')
@@ -465,7 +461,6 @@ export async function getSectionContent(
             genres: movie.category ? movie.category.split(',').map((c: string) => c.trim()) : [], // Usar category
             description: movie.description,
             banner: movie.banner,
-            url: movie.url,
             trailer: movie.trailer,
             duration: movie.duration,
             duration_seconds: movie.duration_seconds,
@@ -477,7 +472,7 @@ export async function getSectionContent(
 
     // Busca séries com tratamento de erro detalhado
     try {
-      let seriesQuery = sb.from('series').select('id,id_n,titulo,description,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at')
+      let seriesQuery = sb.from('series').select('id,id_n,titulo,description,descricao,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at')
 
       if (categories && categories.length > 0) {
         // Usando classificacao ou genero em vez de category
@@ -501,7 +496,7 @@ export async function getSectionContent(
       
       // Fallback caso a coluna rating não exista ou cause erro 400
       if (series.error && ordenacao === 'rating_desc') {
-        series = await sb.from('series').select('id,id_n,titulo,description,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at').order('created_at', { ascending: false });
+        series = await sb.from('series').select('id,id_n,titulo,description,descricao,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at').order('created_at', { ascending: false });
       }
 
       if (series?.data) {
@@ -523,7 +518,6 @@ export async function getSectionContent(
               genres: serie.genero ? serie.genero.split(',').map((c: string) => c.trim()) : [], // Usar genero
               description: serie.description || serie.descricao,
               banner: serie.banner,
-              url: serie.url || serie.arquivo,
               trailer: serie.trailer,
               created_at: serie.created_at
             })
