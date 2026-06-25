@@ -33,7 +33,10 @@ export default function WatchPage() {
 
   // Função auxiliar para buscar por título quando tmdb_id não funciona
   const fallbackByTitle = (title: string, sb: any) => {
-    sb.from('cinema').select('titulo,url').ilike('titulo', `%${title}%`).maybeSingle().then(({ data: cinemaFallback }: { data: { titulo: string; url: string } | null }) => {
+    sb.from('cinema').select('titulo,url').ilike('titulo', `%${title}%`).maybeSingle().then(({ data: cinemaFallback, error }: { data: { titulo: string; url: string } | null; error: any }) => {
+      if (error) {
+        console.error('[Watch] Erro ao buscar por título:', error)
+      }
       if (cinemaFallback && cinemaFallback.url) {
         setTitle(cinemaFallback.titulo || '')
         setVideoUrl(cinemaFallback.url || '')
@@ -43,6 +46,11 @@ export default function WatchPage() {
         setVideoUrl('')
         console.log(`[Watch] Content sem URL e não encontrado em cinema por título`)
       }
+      setFetching(false)
+    }).catch((err: any) => {
+      console.error('[Watch] Erro no fallbackByTitle:', err)
+      setTitle(title || '')
+      setVideoUrl('')
       setFetching(false)
     })
   }
