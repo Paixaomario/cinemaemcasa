@@ -41,10 +41,13 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   // Inicia sincronização automática do catálogo globalmente
+  // Temporariamente desabilitado para corrigir erro React #310
+  /*
   useEffect(() => {
     startCatalogSync()
     return () => stopCatalogSync()
   }, [])
+  */
 
   // Lógica de Navegação Espacial para Smart TVs e Teclado
   useEffect(() => {
