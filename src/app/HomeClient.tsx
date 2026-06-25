@@ -124,7 +124,7 @@ export function HomeClient() {
     if (user) {
       const { data: prog, error: progError } = await sb
         .from('view_progress')
-        .select('content_id,last_position,duration')
+        .select('content_id,last_position')
         .eq('user_id', user.id)
         .eq('is_finished', false)
         .order('updated_at', { ascending: false })
@@ -205,7 +205,7 @@ export function HomeClient() {
               type: finalType,
               progress: {
                 lastPosition: p.last_position,
-                duration: p.duration || durationInSeconds
+                duration: durationInSeconds
               }
             };
           })
@@ -411,8 +411,8 @@ export function HomeClient() {
 
   return (
     <div className={`flex flex-col gap-16 pb-32 ${isTVLayout ? 'px-[6%] py-[4%]' : 'px-4 md:px-0'}`}>
-      {/* Banner de Destaque - Temporariamente desabilitado para corrigir erro React #310 */}
-      {/* <HeroBanner canAutoPlayTrailer={canAutoPlayTrailer} /> */}
+      {/* Banner de Destaque */}
+      <HeroBanner canAutoPlayTrailer={canAutoPlayTrailer} />
 
       {/* Popup de Continuar ou Reiniciar */}
       {resumeItem && (

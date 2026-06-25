@@ -61,15 +61,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* <InitialLoadingScreen /> */}
         {/* <AppInitializer /> */}
         <SupabaseProvider>
-          {/* Temporariamente desabilitado para corrigir erro React #310 */}
-          {/* <VisualPreferencesProvider> */}
+          <VisualPreferencesProvider>
             {/* Temporariamente desabilitado para corrigir erro React #310 */}
             {/* <CommandReceiverProvider> */}
-              {/* <Sidebar /> */}
+              <Sidebar />
               <main className="min-h-screen">{children}</main>
               {/* <MobileBottomNav /> */}
             {/* </CommandReceiverProvider> */}
-          {/* </VisualPreferencesProvider> */}
+          </VisualPreferencesProvider>
         </SupabaseProvider>
         <script
           dangerouslySetInnerHTML={{

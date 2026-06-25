@@ -40,8 +40,7 @@ interface ContinueWatchingItem extends CinemaItem {
 
 export default function PerfilPage() {
   const { user, loading: authLoading } = useAuth()
-  // Temporariamente desabilitado para corrigir erro React #310
-  // const { setPrefs } = useVisualPreferences()
+  const { setPrefs } = useVisualPreferences()
   const [profile, setProfile] = useState<any>(null)
   const [favorites, setFavorites] = useState<ProfileItem[]>([])
   const [history, setHistory] = useState<ProfileItem[]>([])
@@ -297,8 +296,7 @@ export default function PerfilPage() {
       const { saveVisualPreferences } = await import('@/lib/visualPreferences')
       await saveVisualPreferences(user.id, newPrefs)
       setVisualPreferences(newPrefs)
-      // Temporariamente desabilitado para corrigir erro React #310
-      // setPrefs(newPrefs) // Atualiza o estado global imediatamente
+      setPrefs(newPrefs) // Atualiza o estado global imediatamente
     } catch (error) {
       console.error('Erro ao salvar preferências visuais:', error)
     }
