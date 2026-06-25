@@ -95,14 +95,11 @@ export function HomeClient() {
   */
 
   // Redireciona para login se não estiver autenticado
-  // Temporariamente desabilitado para corrigir erro React #310
-  /*
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login')
     }
   }, [user, loading, router])
-  */
 
   // Função loadHome usando useCallback para poder ser chamada nas subscriptions
   const loadHome = useCallback(async () => {
@@ -345,13 +342,10 @@ export function HomeClient() {
   */
 
   // Carrega dados iniciais sem polling
-  // Temporariamente desabilitado para corrigir erro React #310
-  /*
   useEffect(() => {
     if (!user) return
     loadHome()
   }, [user])
-  */
 
   // Configura Supabase Realtime subscriptions para atualização em tempo real
   // Temporariamente desabilitado para corrigir erro React #310
