@@ -1,7 +1,7 @@
 'use client'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { startCatalogSync } from '@/lib/catalogSync'
+import { startCatalogSync, stopCatalogSync } from '@/lib/catalogSync'
 import type { User, Session } from '@supabase/supabase-js'
 
 interface Ctx {
@@ -43,6 +43,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   // Inicia sincronização automática do catálogo globalmente
   useEffect(() => {
     startCatalogSync()
+    return () => stopCatalogSync()
   }, [])
 
   // Lógica de Navegação Espacial para Smart TVs e Teclado

@@ -79,16 +79,3 @@ export async function syncCatalog(): Promise<boolean> {
     isSyncing = false
   }
 }
-
-/**
- * Hook React para sincronização automática do catálogo
- */
-export function useCatalogSync() {
-  if (typeof window !== 'undefined') {
-    // Inicia sincronização quando o componente monta
-    startCatalogSync()
-
-    // Para sincronização quando o componente desmonta
-    return () => stopCatalogSync()
-  }
-}
