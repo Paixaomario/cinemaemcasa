@@ -60,10 +60,12 @@ export function HomeClient() {
   const [isTVLayout, setIsTVLayout] = useState(false)
 
   // Ativa navegação por controle remoto na Home
-  useSpatialNavigation()
+  // Temporariamente desabilitado para corrigir erro React #310
+  // useSpatialNavigation()
 
   // Ativa proteção contra Burn-in para TVs OLED
-  useBurnInProtection(5)
+  // Temporariamente desabilitado para corrigir erro React #310
+  // useBurnInProtection(5)
 
   // Ajuste de Layout para TV (Safe Area)
   useEffect(() => {
