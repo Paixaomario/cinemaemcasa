@@ -50,6 +50,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   */
 
   // Lógica de Navegação Espacial para Smart TVs e Teclado
+  // Temporariamente desabilitado para corrigir erro React #310
+  /*
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const { key } = e
@@ -220,6 +222,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener('error', handleChunkError);
     };
   }, [])
+  */
 
   const signOut = async () => {
     const sb = createClient()
