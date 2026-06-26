@@ -218,7 +218,7 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
     try {
       series = await sb
         .from('series')
-        .select('id,id_n,titulo,description,descricao,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id')
+        .select('id_n,titulo,descricao,capa,banner,poster,trailer,ano,genero,classificacao,rating,tmdb_id,created_at')
         // DESBLOQUEADO: Novas séries aparecem no topo
         .order('created_at', { ascending: false })
         .order('rating', { ascending: false })
@@ -258,12 +258,12 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
         if (isChild && (serie.genero?.includes('Adulto') || serie.classificacao?.includes('18'))) return;
 
         items.push({
-          id: serie.id_n || serie.id, // Fallback para serie.id
+          id: serie.id_n,
           titulo: serie.titulo,
-          description: serie.description || serie.descricao,
-          poster: serie.poster,
+          description: serie.descricao,
+          poster: serie.poster || serie.capa,
           banner: serie.banner,
-          backdrop: serie.backdrop || serie.banner, // Fallback para backdrop
+          backdrop: serie.banner, // Usar banner como backdrop
           type: 'series',
           year: serie.ano,
           category: serie.classificacao || serie.genero,
@@ -311,8 +311,8 @@ export async function getPersonalizedRecommendations(
     const seriesFilters = favoriteGenres.map(genre => `genero.ilike.%${genre}%`).join(',')
 
     // Removido filtro de rating em recomendações para não bloquear novos itens
-    let moviesQuery = sb.from('cinema').select('id,titulo,description,poster,backdrop,banner,year,category,rating,trailer,duration,duration_seconds,created_at').or(movieFilters);
-    let seriesQuery = sb.from('series').select('id,id_n,titulo,description,descricao,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at').or(seriesFilters);
+    let moviesQuery = sb.from('cinema').select('id,titulo,descricao,poster,backdrop,banner,year,category,rating,trailer,duration,duration_seconds,created_at').or(movieFilters);
+    let seriesQuery = sb.from('series').select('id_n,titulo,descricao,capa,banner,poster,trailer,ano,genero,classificacao,rating,tmdb_id,created_at').or(seriesFilters);
 
     if (isChild) {
       moviesQuery = moviesQuery.not('category', 'ilike', '%+18%').not('category', 'ilike', '%Terror%');
@@ -333,7 +333,7 @@ export async function getPersonalizedRecommendations(
           items.push({
             id: movie.id,
             titulo: movie.titulo,
-            description: movie.description,
+            description: movie.descricao,
             poster: movie.poster || movie.backdrop,
             banner: movie.banner,
             backdrop: movie.backdrop,
@@ -361,14 +361,14 @@ export async function getPersonalizedRecommendations(
           items.push({
             id: serie.id_n,
             titulo: serie.titulo,
-            poster: serie.poster,
-            backdrop: serie.backdrop || serie.banner, // Fallback para backdrop
+            poster: serie.poster || serie.capa,
+            backdrop: serie.banner, // Usar banner como backdrop
             type: 'series',
             year: serie.ano,
             category: serie.classificacao || serie.genero,
             rating: serie.rating,
             genres: serie.genero ? serie.genero.split(',').map((c: string) => c.trim()) : [],
-            description: serie.description || serie.descricao,
+            description: serie.descricao,
             banner: serie.banner,
             trailer: serie.trailer,
             created_at: serie.created_at
@@ -402,7 +402,7 @@ export async function getSectionContent(
     const items: ContentItem[] = []
 
     // Busca filmes
-    let movieQuery = sb.from('cinema').select('id,titulo,description,poster,backdrop,banner,year,category,rating,trailer,duration,duration_seconds,created_at')
+    let movieQuery = sb.from('cinema').select('id,titulo,descricao,poster,backdrop,banner,year,category,rating,trailer,duration,duration_seconds,created_at')
 
     if (categories && categories.length > 0) {
       const catFilters = categories.map(c => `category.ilike.%${c}%`).join(',')
@@ -449,7 +449,7 @@ export async function getSectionContent(
             category: movie.category,
             rating: movie.rating,
             genres: movie.category ? movie.category.split(',').map((c: string) => c.trim()) : [], // Usar category
-            description: movie.description,
+            description: movie.descricao,
             banner: movie.banner,
             trailer: movie.trailer,
             duration: movie.duration,
@@ -462,7 +462,7 @@ export async function getSectionContent(
 
     // Busca séries com tratamento de erro detalhado
     try {
-      let seriesQuery = sb.from('series').select('id,id_n,titulo,description,descricao,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at')
+      let seriesQuery = sb.from('series').select('id_n,titulo,descricao,capa,banner,poster,trailer,ano,genero,classificacao,rating,tmdb_id,created_at')
 
       if (categories && categories.length > 0) {
         // Usando classificacao ou genero em vez de category
@@ -486,7 +486,7 @@ export async function getSectionContent(
       
       // Fallback caso a coluna rating não exista ou cause erro 400
       if (series.error && ordenacao === 'rating_desc') {
-        series = await sb.from('series').select('id,id_n,titulo,description,descricao,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at').order('created_at', { ascending: false });
+        series = await sb.from('series').select('id_n,titulo,descricao,capa,banner,poster,trailer,ano,genero,classificacao,rating,tmdb_id,created_at').order('created_at', { ascending: false });
       }
 
       if (series?.data) {
@@ -497,16 +497,16 @@ export async function getSectionContent(
           const idStr = String(serie.id_n)
           if (!excludeIds.has(idStr)) {
             items.push({
-              id: serie.id_n || serie.id, // Fallback para serie.id
+              id: serie.id_n,
               titulo: serie.titulo,
-              poster: serie.poster,
-              backdrop: serie.backdrop || serie.banner, // Fallback para backdrop
+              poster: serie.poster || serie.capa,
+              backdrop: serie.banner, // Usar banner como backdrop
               type: 'series',
               year: serie.ano,
               category: serie.classificacao || serie.genero,
               rating: serie.rating,
               genres: serie.genero ? serie.genero.split(',').map((c: string) => c.trim()) : [], // Usar genero
-              description: serie.description || serie.descricao,
+              description: serie.descricao,
               banner: serie.banner,
               trailer: serie.trailer,
               created_at: serie.created_at
