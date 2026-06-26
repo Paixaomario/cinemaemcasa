@@ -18,8 +18,6 @@ interface ContentItem {
   duration?: string | null
   duration_seconds?: number | null
   created_at?: string | null
-  subtitles?: any | null
-  audio_tracks?: any | null
   last_position?: number | null
 }
 
@@ -198,7 +196,7 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
   try {
     // Busca todos os conteúdos sem limite para permitir variedade completa
     let movies = null
-    let moviesQuery = sb.from('cinema').select('id,titulo,description,descricao,poster,backdrop,banner,year,category,rating,trailer,duration,duration_seconds,created_at,subtitles,audio_tracks,tmdb_id')
+    let moviesQuery = sb.from('cinema').select('id,titulo,description,descricao,poster,backdrop,banner,year,category,rating,trailer,duration,duration_seconds,created_at,tmdb_id')
     
     if (isChild) {
       moviesQuery = moviesQuery
@@ -220,7 +218,7 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
     try {
       series = await sb
         .from('series')
-        .select('id,id_n,titulo,description,descricao,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,subtitles,audio_tracks,tmdb_id')
+        .select('id,id_n,titulo,description,descricao,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id')
         // DESBLOQUEADO: Novas séries aparecem no topo
         .order('created_at', { ascending: false })
         .order('rating', { ascending: false })
@@ -249,9 +247,7 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
           trailer: movie.trailer,
           duration: movie.duration,
           duration_seconds: movie.duration_seconds,
-          created_at: movie.created_at,
-          subtitles: movie.subtitles,
-          audio_tracks: movie.audio_tracks
+          created_at: movie.created_at
         })
       })
     }
@@ -274,9 +270,7 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
           rating: serie.rating,
           genres: serie.genero ? serie.genero.split(',').map((c: string) => c.trim()) : [], // Usar genero
           trailer: serie.trailer,
-          created_at: serie.created_at,
-          subtitles: serie.subtitles,
-          audio_tracks: serie.audio_tracks
+          created_at: serie.created_at
         })
       })
     }
@@ -317,8 +311,8 @@ export async function getPersonalizedRecommendations(
     const seriesFilters = favoriteGenres.map(genre => `genero.ilike.%${genre}%`).join(',')
 
     // Removido filtro de rating em recomendações para não bloquear novos itens
-    let moviesQuery = sb.from('cinema').select('id,titulo,description,poster,backdrop,banner,year,category,rating,trailer,duration,duration_seconds,created_at,subtitles,audio_tracks').or(movieFilters);
-    let seriesQuery = sb.from('series').select('id,id_n,titulo,description,descricao,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,subtitles,audio_tracks').or(seriesFilters);
+    let moviesQuery = sb.from('cinema').select('id,titulo,description,poster,backdrop,banner,year,category,rating,trailer,duration,duration_seconds,created_at').or(movieFilters);
+    let seriesQuery = sb.from('series').select('id,id_n,titulo,description,descricao,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at').or(seriesFilters);
 
     if (isChild) {
       moviesQuery = moviesQuery.not('category', 'ilike', '%+18%').not('category', 'ilike', '%Terror%');
@@ -351,9 +345,7 @@ export async function getPersonalizedRecommendations(
             trailer: movie.trailer,
             duration: movie.duration,
             duration_seconds: movie.duration_seconds,
-            created_at: movie.created_at,
-            subtitles: movie.subtitles,
-            audio_tracks: movie.audio_tracks
+            created_at: movie.created_at
           })
         }
       })
@@ -379,9 +371,7 @@ export async function getPersonalizedRecommendations(
             description: serie.description || serie.descricao,
             banner: serie.banner,
             trailer: serie.trailer,
-            created_at: serie.created_at,
-            subtitles: serie.subtitles,
-            audio_tracks: serie.audio_tracks
+            created_at: serie.created_at
           })
         }
       });
