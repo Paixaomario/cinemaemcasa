@@ -531,7 +531,7 @@ function SeriesContent() {
               src={backdrop}
               alt={title}
               fill
-              className="object-cover object-top sm:object-center opacity-60 sm:opacity-40 transition-opacity duration-1000"
+              className="object-cover object-top sm:object-center opacity-60 sm:opacity-50 transition-opacity duration-1000"
               priority
               sizes="100vw"
             />

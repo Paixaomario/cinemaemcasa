@@ -305,7 +305,7 @@ function MovieContent() {
             src={backdrop}
             alt={title}
             fill
-            className="object-cover object-center opacity-40"
+            className="object-cover object-center opacity-60"
             priority
             sizes="100vw"
             unoptimized
