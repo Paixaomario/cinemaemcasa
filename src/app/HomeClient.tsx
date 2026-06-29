@@ -68,13 +68,15 @@ export function HomeClient() {
   // useBurnInProtection(5)
 
   // Ajuste de Layout para TV (Safe Area)
-  useEffect(() => {
+  // Temporariamente desabilitado para corrigir erro React #310
+  /* useEffect(() => {
     const { isBigScreen } = getViewportMetadata()
     setIsTVLayout(isBigScreen)
-  }, [])
+  }, []) */
 
   // Detecta qualidade da rede para Auto-Play de trailers
-  useEffect(() => {
+  // Temporariamente desabilitado para corrigir erro React #310
+  /* useEffect(() => {
     const checkNetwork = () => {
       const conn = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
       if (conn) {
@@ -86,14 +88,15 @@ export function HomeClient() {
       }
     };
     checkNetwork();
-  }, []);
+  }, []); */
 
   // Redireciona para login se não estiver autenticado
-  useEffect(() => {
+  // Temporariamente desabilitado para corrigir erro React #310
+  /* useEffect(() => {
     if (!loading && !user) {
       router.push('/login')
     }
-  }, [user, loading, router])
+  }, [user, loading, router]) */
 
   // Função loadHome usando useCallback para poder ser chamada nas subscriptions
   const loadHome = useCallback(async () => {
