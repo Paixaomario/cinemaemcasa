@@ -218,7 +218,8 @@ function SeriesContent() {
               titulo: `Temporada ${num}`
             }));
           }
-        } else if (localSeriesId && /^\d+$/.test(localSeriesId)) { // Fallback para tabela 'temporadas' (Legado)
+        } else {
+          // Se não tem UUID, busca temporadas na tabela 'temporadas' usando id_n da série
           console.log('[Series] Buscando temporadas na tabela temporadas (legado)')
           const { data: sLegacy, error: sLegacyError } = await sb
             .from('temporadas')
@@ -227,7 +228,27 @@ function SeriesContent() {
             .order('numero_temporada', { ascending: true });
           
           console.log('[Series] Temporadas legado:', sLegacy, sLegacyError)
-          seasonsData = sLegacy || [];
+          
+          if (sLegacy && sLegacy.length > 0) {
+            seasonsData = sLegacy;
+          } else {
+            // Se não encontrou temporadas, tenta buscar episódios diretamente
+            console.log('[Series] Buscando episódios diretamente na tabela episodios')
+            const { data: allEpisodes } = await sb
+              .from('episodios')
+              .select('temporada_id')
+              .eq('temporada_id', localSeriesId)
+              .limit(1);
+            
+            if (allEpisodes && allEpisodes.length > 0) {
+              // Cria temporada única se encontrou episódios
+              seasonsData = [{
+                id_n: localSeriesId,
+                numero_temporada: 1,
+                titulo: 'Temporada 1'
+              }];
+            }
+          }
         }
 
         console.log('[Series] Temporadas carregadas:', seasonsData?.length)
@@ -410,31 +431,38 @@ function SeriesContent() {
   // Busca episódios quando a temporada muda
   useEffect(() => {
     const seasonId = String(selectedSeason?.id_n || selectedSeason?.id || '');
-    if (!seasonId || loading) return
+    const seasonNumber = selectedSeason?.numero_temporada;
+    if (!seasonId || loading) return;
 
     async function loadEpisodes() {
       const sb = createClient()
       let episodesData: any[] = []
 
-      // Só tenta tabela legada se for numérico
+      // Tenta buscar na tabela episodios (legado)
       if (/^\d+$/.test(seasonId)) {
+        console.log('[Series] Buscando episódios na tabela episodios com temporada_id:', seasonId)
         const { data: eLegacy } = await sb
           .from('episodios')
           .select('*')
           .eq('temporada_id', seasonId)
           .order('numero_episodio', { ascending: true })
+        
+        console.log('[Series] Episódios legado encontrados:', eLegacy?.length)
         episodesData = eLegacy || []
       }
 
-      // Fallback para content
-      if ((!episodesData || episodesData.length === 0) && contentUuid) {
+      // Se não encontrou na tabela episodios, tenta na tabela content
+      if ((!episodesData || episodesData.length === 0) && contentUuid && seasonNumber !== undefined) {
+        console.log('[Series] Buscando episódios na tabela content com parent_id e season_number')
         const { data: cEps } = await sb
           .from('content')
           .select('*')
           .eq('parent_id', contentUuid)
-          .eq('season_number', selectedSeason.numero_temporada)
+          .eq('season_number', seasonNumber)
           .eq('type', 'episode')
           .order('episode_number', { ascending: true })
+        
+        console.log('[Series] Episódios content encontrados:', cEps?.length)
         
         if (cEps) {
           episodesData = cEps.map(e => ({
@@ -443,16 +471,35 @@ function SeriesContent() {
             numero_episodio: e.episode_number,
             titulo: e.title,
             arquivo: e.video_url,
-            subtitles: e.subtitles,
-            audio_tracks: e.audio_tracks
+            descricao: e.description,
+            duracao: e.duration_seconds ? `${Math.floor(e.duration_seconds / 60)}m` : null,
+            imagem_500: e.thumbnail_url,
+            banner: e.backdrop_url,
+            poster: e.thumbnail_url,
+            capa: e.thumbnail_url
           }))
         }
       }
-     setEpisodes(episodesData || [])
+
+      // Se ainda não encontrou, tenta buscar episódios usando o id_n da série diretamente
+      if ((!episodesData || episodesData.length === 0) && legacyId) {
+        console.log('[Series] Buscando episódios usando serie_id:', legacyId)
+        const { data: directEps } = await sb
+          .from('episodios')
+          .select('*')
+          .eq('temporada_id', legacyId)
+          .order('numero_episodio', { ascending: true })
+        
+        console.log('[Series] Episódios diretos encontrados:', directEps?.length)
+        episodesData = directEps || []
+      }
+      
+      console.log('[Series] Total de episódios carregados:', episodesData?.length)
+      setEpisodes(episodesData || [])
     }
 
     loadEpisodes()
-  }, [selectedSeason, loading, contentUuid])
+  }, [selectedSeason, loading, contentUuid, legacyId])
 
   if (loading || !series) {
     return <div className="min-h-screen bg-black animate-pulse" />
