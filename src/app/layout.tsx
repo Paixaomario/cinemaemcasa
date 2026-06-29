@@ -66,7 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {/* <CommandReceiverProvider> */}
               <Sidebar />
               <main className="min-h-screen">{children}</main>
-              <MobileBottomNav />
+              {/* <MobileBottomNav /> */}
             {/* </CommandReceiverProvider> */}
           </VisualPreferencesProvider>
         </SupabaseProvider>
