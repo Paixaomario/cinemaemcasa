@@ -35,7 +35,7 @@ export function HeroBanner({ type, canAutoPlayTrailer = true }: HeroBannerProps 
 
       if (!type || type === 'series') {
         const { data: series, error: sError } = await sb.from('series')
-          .select('id,id_n,titulo,poster,backdrop,banner,genero,trailer,tmdb_id')
+          .select('id,id_n,titulo,poster,capa,banner,genero,trailer,tmdb_id')
           // Correção: series não tem created_at, usamos id_n como fallback de novidade
           .order('id_n', { ascending: false })
         if (sError) console.error("Erro ao buscar séries para o banner:", sError)
@@ -44,7 +44,7 @@ export function HeroBanner({ type, canAutoPlayTrailer = true }: HeroBannerProps 
 
       const combinedPool = [
         ...moviesData.map(m => ({ ...m, type: 'movie', poster: m.poster || m.backdrop, backdrop: m.backdrop || m.poster, category: m.category, trailer: m.trailer })),
-        ...seriesData.map(s => ({ ...s, id: s.id_n || s.id, type: 'series', poster: s.poster || s.banner, backdrop: s.backdrop || s.banner || s.poster, category: s.genero, trailer: s.trailer })) // Fallback para id e backdrop
+        ...seriesData.map(s => ({ ...s, id: s.id_n || s.id, type: 'series', poster: s.poster || s.capa || s.banner, backdrop: s.banner || s.capa || s.poster, category: s.genero, trailer: s.trailer })) // Fallback para id e backdrop
       ].filter(item => item.tmdb_id && (item.poster || item.backdrop)); // Filtra itens sem imagem
 
       // Embaralha o pool combinado
