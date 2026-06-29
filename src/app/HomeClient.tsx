@@ -68,12 +68,17 @@ export function HomeClient() {
   // useBurnInProtection(5)
 
   // Ajuste de Layout para TV (Safe Area)
+  // Temporariamente desabilitado para corrigir erro React #310
+  /*
   useEffect(() => {
     const { isBigScreen } = getViewportMetadata()
     setIsTVLayout(isBigScreen)
   }, [])
+  */
 
   // Detecta qualidade da rede para Auto-Play de trailers
+  // Temporariamente desabilitado para corrigir erro React #310
+  /*
   useEffect(() => {
     const checkNetwork = () => {
       const conn = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
@@ -86,14 +91,18 @@ export function HomeClient() {
       }
     };
     checkNetwork();
-  }, []);
+  }, [])
+  */;
 
   // Redireciona para login se não estiver autenticado
+  // Temporariamente desabilitado para corrigir erro React #310
+  /*
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login')
     }
   }, [user, loading, router])
+  */
 
   // Função loadHome usando useCallback para poder ser chamada nas subscriptions
   const loadHome = useCallback(async () => {
@@ -336,10 +345,13 @@ export function HomeClient() {
   */
 
   // Carrega dados iniciais sem polling
+  // Temporariamente desabilitado para corrigir erro React #310
+  /*
   useEffect(() => {
     if (!user) return
     loadHome()
   }, [user])
+  */
 
   // Configura Supabase Realtime subscriptions para atualização em tempo real
   // Temporariamente desabilitado para corrigir erro React #310
@@ -389,6 +401,8 @@ export function HomeClient() {
   if (loading) return <div className="min-h-screen bg-black" />
 
   // Fallback de segurança: se pageLoading estiver true por muito tempo, libera a UI
+  // Temporariamente desabilitado para corrigir erro React #310
+  /*
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (pageLoading) {
@@ -399,6 +413,7 @@ export function HomeClient() {
 
     return () => clearTimeout(timeout)
   }, [pageLoading])
+  */
 
   return (
     <div className={`flex flex-col gap-16 pb-32 ${isTVLayout ? 'px-[6%] py-[4%]' : 'px-4 md:px-0'}`}>
