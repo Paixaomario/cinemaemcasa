@@ -25,8 +25,6 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Temporariamente desabilitado para corrigir erro React #310
-  /*
   useEffect(() => {
     const sb = createClient()
     sb.auth.getSession().then(({ data: { session } }) => {
@@ -41,7 +39,6 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     })
     return () => subscription.unsubscribe()
   }, [])
-  */
 
   // Inicia sincronização automática do catálogo globalmente
   // Temporariamente desabilitado para corrigir erro React #310
