@@ -2,14 +2,13 @@
 import React, { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useAuth } from '@/components/layout/SupabaseProvider'
 import { createClient } from '@/lib/supabase'
 import { Home, Film, Tv, Search, User } from 'lucide-react'
 
 function NavContent() {
   const pathname = usePathname()
-  const searchParams = useSearchParams()
   const { user } = useAuth()
   const [isChild, setIsChild] = useState(false)
 
