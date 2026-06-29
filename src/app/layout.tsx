@@ -60,7 +60,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Temporariamente desabilitado para corrigir erro React #310 */}
         {/* <InitialLoadingScreen /> */}
         {/* <AppInitializer /> */}
-        <SupabaseProvider>
+        {/* Temporariamente desabilitado para corrigir erro React #310 */}
+        {/* <SupabaseProvider> */}
           {/* Temporariamente desabilitado para corrigir erro React #310 */}
           {/* <VisualPreferencesProvider> */}
             {/* Temporariamente desabilitado para corrigir erro React #310 */}
@@ -70,7 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {/* <MobileBottomNav /> */}
             {/* </CommandReceiverProvider> */}
           {/* </VisualPreferencesProvider> */}
-        </SupabaseProvider>
+        {/* </SupabaseProvider> */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
