@@ -202,7 +202,7 @@ export function HeroBanner({ type, canAutoPlayTrailer = true }: HeroBannerProps 
       {showTrailer && youtubeId && (
         <div className="absolute inset-0 z-0 scale-[1.15] animate-in fade-in duration-1000">
           <iframe
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=0&controls=0&loop=1&playlist=${youtubeId}&rel=0&modestbranding=1&enablejsapi=1&iv_load_policy=3&disablekb=1&fs=0&autohide=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&rel=0&modestbranding=1&enablejsapi=1&iv_load_policy=3&disablekb=1&fs=0&autohide=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
             className="w-full h-full pointer-events-none"
             allow="autoplay; encrypted-media"
             style={{ border: 'none' }}
