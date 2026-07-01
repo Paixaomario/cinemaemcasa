@@ -339,11 +339,10 @@ export function HomeClient() {
   */
 
   // Carrega dados iniciais sem polling
-  // Temporariamente desabilitado para corrigir erro React #310
-  /* useEffect(() => {
+  useEffect(() => {
     if (!user) return
     loadHome()
-  }, [user]) */
+  }, [user])
 
   // Configura Supabase Realtime subscriptions para atualização em tempo real
   // Temporariamente desabilitado para corrigir erro React #310
