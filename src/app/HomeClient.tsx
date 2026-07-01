@@ -91,12 +91,11 @@ export function HomeClient() {
   }, []); */
 
   // Redireciona para login se não estiver autenticado
-  // Temporariamente desabilitado para corrigir erro React #310
-  /* useEffect(() => {
+  useEffect(() => {
     if (!loading && !user) {
       router.push('/login')
     }
-  }, [user, loading, router]) */
+  }, [user, loading, router])
 
   // Função loadHome usando useCallback para poder ser chamada nas subscriptions
   const loadHome = useCallback(async () => {
@@ -392,8 +391,7 @@ export function HomeClient() {
   if (loading) return <div className="min-h-screen bg-black" />
 
   // Fallback de segurança: se pageLoading estiver true por muito tempo, libera a UI
-  // Temporariamente desabilitado para corrigir erro React #310
-  /* useEffect(() => {
+  useEffect(() => {
     const timeout = setTimeout(() => {
       if (pageLoading) {
         console.warn('[Home] Timeout de carregamento, forçando renderização')
@@ -402,7 +400,7 @@ export function HomeClient() {
     }, 5000) // 5 segundos de timeout
 
     return () => clearTimeout(timeout)
-  }, [pageLoading]) */
+  }, [pageLoading])
 
   return (
     <div className={`flex flex-col gap-16 pb-32 ${isTVLayout ? 'px-[6%] py-[4%]' : 'px-4 md:px-0'}`}>
