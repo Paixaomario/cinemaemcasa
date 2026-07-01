@@ -196,7 +196,7 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
   try {
     // Busca todos os conteúdos sem limite para permitir variedade completa
     let movies = null
-    let moviesQuery = sb.from('cinema').select('id,titulo,description,descricao,poster,backdrop,banner,year,category,rating,trailer,duration,duration_seconds,created_at,tmdb_id')
+    let moviesQuery = sb.from('cinema').select('id,titulo,category,rating,created_at')
     
     if (isChild) {
       moviesQuery = moviesQuery
@@ -218,7 +218,7 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
     try {
       series = await sb
         .from('series')
-        .select('id_n,titulo,descricao,capa,banner,poster,trailer,ano,genero,classificacao,rating,tmdb_id,created_at')
+        .select('id_n,titulo,ano,rating,created_at')
         // DESBLOQUEADO: Novas séries aparecem no topo
         .order('created_at', { ascending: false })
         .order('rating', { ascending: false })
@@ -311,8 +311,8 @@ export async function getPersonalizedRecommendations(
     const seriesFilters = favoriteGenres.map(genre => `genero.ilike.%${genre}%`).join(',')
 
     // Removido filtro de rating em recomendações para não bloquear novos itens
-    let moviesQuery = sb.from('cinema').select('id,titulo,descricao,poster,backdrop,banner,year,category,rating,trailer,duration,duration_seconds,created_at').or(movieFilters);
-    let seriesQuery = sb.from('series').select('id_n,titulo,descricao,capa,banner,poster,trailer,ano,genero,classificacao,rating,tmdb_id,created_at').or(seriesFilters);
+    let moviesQuery = sb.from('cinema').select('id,titulo,category,rating,created_at').or(movieFilters);
+    let seriesQuery = sb.from('series').select('id_n,titulo,ano,rating,created_at').or(seriesFilters);
 
     if (isChild) {
       moviesQuery = moviesQuery.not('category', 'ilike', '%+18%').not('category', 'ilike', '%Terror%');
@@ -402,7 +402,7 @@ export async function getSectionContent(
     const items: ContentItem[] = []
 
     // Busca filmes
-    let movieQuery = sb.from('cinema').select('id,titulo,descricao,poster,backdrop,banner,year,category,rating,trailer,duration,duration_seconds,created_at')
+    let movieQuery = sb.from('cinema').select('id,titulo,category,rating,created_at')
 
     if (categories && categories.length > 0) {
       const catFilters = categories.map(c => `category.ilike.%${c}%`).join(',')
@@ -462,7 +462,7 @@ export async function getSectionContent(
 
     // Busca séries com tratamento de erro detalhado
     try {
-      let seriesQuery = sb.from('series').select('id_n,titulo,descricao,capa,banner,poster,trailer,ano,genero,classificacao,rating,tmdb_id,created_at')
+      let seriesQuery = sb.from('series').select('id_n,titulo,ano,rating,created_at')
 
       if (categories && categories.length > 0) {
         // Usando classificacao ou genero em vez de category
@@ -486,7 +486,7 @@ export async function getSectionContent(
       
       // Fallback caso a coluna rating não exista ou cause erro 400
       if (series.error && ordenacao === 'rating_desc') {
-        series = await sb.from('series').select('id_n,titulo,descricao,capa,banner,poster,trailer,ano,genero,classificacao,rating,tmdb_id,created_at').order('created_at', { ascending: false });
+        series = await sb.from('series').select('id_n,titulo,ano,rating,created_at').order('created_at', { ascending: false });
       }
 
       if (series?.data) {
