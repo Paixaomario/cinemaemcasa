@@ -5,8 +5,8 @@ interface ContentItem {
   id_n?: number | string
   titulo: string
   description?: string | null
-  poster: string | null
-  backdrop: string | null
+  poster?: string | null
+  backdrop?: string | null
   banner?: string | null
   type: 'movie' | 'serie' | 'series' | 'tv' | null
   year?: number | string | null
@@ -235,18 +235,10 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
         items.push({
           id: movie.id,
           titulo: movie.titulo,
-          description: movie.description || movie.descricao,
-          poster: movie.poster || movie.backdrop,
-          banner: movie.banner,
-          backdrop: movie.backdrop,
           type: 'movie',
-          year: movie.year,
           category: movie.category,
           rating: movie.rating,
-          genres: movie.category ? movie.category.split(',').map((c: string) => c.trim()) : [], // Usar category
-          trailer: movie.trailer,
-          duration: movie.duration,
-          duration_seconds: movie.duration_seconds,
+          genres: movie.category ? movie.category.split(',').map((c: string) => c.trim()) : [],
           created_at: movie.created_at
         })
       })
@@ -254,22 +246,12 @@ export async function getTrendingContent(limit: number = 20, isChild: boolean = 
 
     if (series?.data) {
       series.data.forEach(serie => {
-        // Filtro manual adicional para garantir segurança em séries
-        if (isChild && (serie.genero?.includes('Adulto') || serie.classificacao?.includes('18'))) return;
-
         items.push({
           id: serie.id_n,
           titulo: serie.titulo,
-          description: serie.descricao,
-          poster: serie.poster || serie.capa,
-          banner: serie.banner,
-          backdrop: serie.banner, // Usar banner como backdrop
           type: 'series',
           year: serie.ano,
-          category: serie.classificacao || serie.genero,
           rating: serie.rating,
-          genres: serie.genero ? serie.genero.split(',').map((c: string) => c.trim()) : [], // Usar genero
-          trailer: serie.trailer,
           created_at: serie.created_at
         })
       })
@@ -333,18 +315,10 @@ export async function getPersonalizedRecommendations(
           items.push({
             id: movie.id,
             titulo: movie.titulo,
-            description: movie.descricao,
-            poster: movie.poster || movie.backdrop,
-            banner: movie.banner,
-            backdrop: movie.backdrop,
             type: 'movie',
-            year: movie.year,
             category: movie.category,
             rating: movie.rating,
-            genres: movie.category ? movie.category.split(',').map((c: string) => c.trim()) : [], // Usar category
-            trailer: movie.trailer,
-            duration: movie.duration,
-            duration_seconds: movie.duration_seconds,
+            genres: movie.category ? movie.category.split(',').map((c: string) => c.trim()) : [],
             created_at: movie.created_at
           })
         }
@@ -353,24 +327,14 @@ export async function getPersonalizedRecommendations(
 
     if (seriesRes.data) {
       seriesRes.data.forEach(serie => {
-        // Filtro manual adicional para segurança
-        if (isChild && (serie.genero?.includes('Adulto') || serie.classificacao?.includes('18'))) return;
-
         const idStr = String(serie.id_n)
         if (!excludeIds.has(idStr)) {
           items.push({
             id: serie.id_n,
             titulo: serie.titulo,
-            poster: serie.poster || serie.capa,
-            backdrop: serie.banner, // Usar banner como backdrop
             type: 'series',
             year: serie.ano,
-            category: serie.classificacao || serie.genero,
             rating: serie.rating,
-            genres: serie.genero ? serie.genero.split(',').map((c: string) => c.trim()) : [],
-            description: serie.descricao,
-            banner: serie.banner,
-            trailer: serie.trailer,
             created_at: serie.created_at
           })
         }
@@ -438,22 +402,13 @@ export async function getSectionContent(
       movies.data.forEach(movie => {
         const idStr = String(movie.id)
         if (!excludeIds.has(idStr)) {
-          const poster = movie.poster || movie.backdrop
           items.push({
             id: movie.id,
             titulo: movie.titulo,
-            poster: poster,
-            backdrop: movie.backdrop,
             type: 'movie',
-            year: movie.year,
             category: movie.category,
             rating: movie.rating,
-            genres: movie.category ? movie.category.split(',').map((c: string) => c.trim()) : [], // Usar category
-            description: movie.descricao,
-            banner: movie.banner,
-            trailer: movie.trailer,
-            duration: movie.duration,
-            duration_seconds: movie.duration_seconds,
+            genres: movie.category ? movie.category.split(',').map((c: string) => c.trim()) : [],
             created_at: movie.created_at
           })
         }
@@ -491,24 +446,14 @@ export async function getSectionContent(
 
       if (series?.data) {
         series.data.forEach(serie => {
-          // Filtro manual adicional para segurança
-          if (isChild && (serie.genero?.includes('Adulto') || serie.classificacao?.includes('18'))) return;
-
           const idStr = String(serie.id_n)
           if (!excludeIds.has(idStr)) {
             items.push({
               id: serie.id_n,
               titulo: serie.titulo,
-              poster: serie.poster || serie.capa,
-              backdrop: serie.banner, // Usar banner como backdrop
               type: 'series',
               year: serie.ano,
-              category: serie.classificacao || serie.genero,
               rating: serie.rating,
-              genres: serie.genero ? serie.genero.split(',').map((c: string) => c.trim()) : [], // Usar genero
-              description: serie.descricao,
-              banner: serie.banner,
-              trailer: serie.trailer,
               created_at: serie.created_at
             })
           }

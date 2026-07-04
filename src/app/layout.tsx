@@ -4,13 +4,13 @@ import { SupabaseProvider } from '@/components/layout/SupabaseProvider'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { CommandReceiverProvider } from '@/components/layout/CommandReceiverProvider'
-import { Inter, Montserrat } from 'next/font/google'
+// Removido: Google Fonts
 import { VisualPreferencesProvider } from '@/components/layout/VisualPreferencesProvider'
 import { AppInitializer } from '@/app/AppInitializer'
 import { InitialLoadingScreen } from '@/components/InitialLoadingScreen'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
-const montserrat = Montserrat({ 
+// const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+// const montserrat = Montserrat({ 
   subsets: ['latin'], 
   variable: '--font-montserrat',
   weight: ['400', '700', '900'] 
