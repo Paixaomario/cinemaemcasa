@@ -9,14 +9,7 @@ import { VisualPreferencesProvider } from '@/components/layout/VisualPreferences
 import { AppInitializer } from '@/app/AppInitializer'
 import { InitialLoadingScreen } from '@/components/InitialLoadingScreen'
 
-// const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
-// const montserrat = Montserrat({ 
-  subsets: ['latin'], 
-  variable: '--font-montserrat',
-  weight: ['400', '700', '900'] 
-})
-
-export const metadata: Metadata = {
+// // // // export const metadata: Metadata = {
   title: 'Cinema em Casa',
   icons: {
     icon: '/logo.png',
@@ -45,7 +38,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} ${montserrat.variable}`}>
+    <html lang="pt-BR" >
       <head>
         <link rel="preconnect" href="https://image.tmdb.org" />
         <link rel="preconnect" href="https://ebbuobnltsrvqxayrulk.supabase.co" />
@@ -78,8 +71,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 window.addEventListener('load', function() {
                   navigator.serviceWorker.register('/sw.js').catch(function(err) {
                     console.log('ServiceWorker registration failed: ', err);
-                  });
-                });
+;
+;
               }
             `,
           }}
