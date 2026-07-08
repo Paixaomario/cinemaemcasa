@@ -1,12 +1,10 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { 
   MediaPlayer, 
   MediaProvider, 
-  useMediaState, 
   Track,
-  useMediaPlayer,
   type MediaPlayerInstance 
 } from '@vidstack/react'
 
@@ -24,48 +22,9 @@ interface VideoPlayerProps {
   guestName?: string | null
   backdrop?: string | null
   nextEpisode?: any
-  preferredLanguage?: string // Adicionado para definir o idioma de áudio padrão
+  preferredLanguage?: string
   subtitles?: any[]
   audioTracks?: any[]
-}
-
-function AudioTrackSelector({ preferredLanguage }: { preferredLanguage: string }) {
-  const player = useMediaPlayer()
-  const audioTracks = useMediaState('audioTracks')
-
-  useEffect(() => {
-    if (!audioTracks || audioTracks.length === 0 || !player) return
-
-    const targetLang = preferredLanguage.toLowerCase()
-
-    const preferredAudioTrack = Array.from(audioTracks).find(track => {
-      const lang = (track.language || '').toLowerCase()
-      const label = (track.label || '').toLowerCase()
-      
-      return (
-        lang === targetLang ||
-        lang.includes(targetLang) ||
-        // Fallbacks comuns para pt-BR
-        (targetLang === 'pt-br' && (lang === 'por' || lang === 'pob' || lang === 'pt')) ||
-        // Verifica labels
-        label.includes('portugues') || 
-        label.includes('dublado') ||
-        label.includes('brazil') ||
-        label.includes('pob')
-      )
-    })
-
-    if (preferredAudioTrack && !preferredAudioTrack.selected) {
-      // Timeout de segurança para evitar race conditions no carregamento do buffer
-      const timer = setTimeout(() => {
-        preferredAudioTrack.selected = true
-        console.log(`[AudioSystem] Selecionado automaticamente: ${preferredAudioTrack.label} (${preferredAudioTrack.language})`)
-      }, 150)
-      return () => clearTimeout(timer)
-    }
-  }, [audioTracks, preferredLanguage, player])
-
-  return null
 }
 
 export function VideoPlayer({ 
@@ -82,7 +41,7 @@ export function VideoPlayer({
   guestName,
   backdrop,
   nextEpisode,
-  preferredLanguage = 'pt-BR', // Padrão para pt-BR se não for especificado
+  preferredLanguage = 'pt-BR',
   subtitles = [],
   audioTracks: remoteAudioTracks = []
 }: VideoPlayerProps) {
@@ -121,7 +80,6 @@ export function VideoPlayer({
             />
           ))}
         </MediaProvider>
-        <AudioTrackSelector preferredLanguage={preferredLanguage} />
         {/* Os controles customizados do Vidstack entram aqui */}
       </MediaPlayer>
     </div>

@@ -139,7 +139,7 @@ export function HomeClient() {
             
             if (isNumeric) {
               // Busca na tabela cinema primeiro
-              const { data: cinemaData } = await sb.from('cinema').select('id,titulo,category').eq('id', parseInt(idStr)).maybeSingle();
+              const { data: cinemaData } = await sb.from('cinema').select('id,titulo,category,poster,backdrop,banner').eq('id', parseInt(idStr)).maybeSingle();
               if (cinemaData) {
                 contentData = { ...cinemaData, source_table: 'cinema', tipo: 'movie' };
               }
@@ -147,7 +147,7 @@ export function HomeClient() {
             
             // Se não encontrou em cinema, busca em series
             if (!contentData) {
-              const { data: seriesData } = await sb.from('series').select('id_n,titulo,ano').eq('id_n', idStr).maybeSingle();
+              const { data: seriesData } = await sb.from('series').select('id_n,titulo,ano,poster,capa,banner,backdrop').eq('id_n', idStr).maybeSingle();
               if (seriesData) {
                 contentData = { ...seriesData, source_table: 'series', tipo: 'series' };
               }
