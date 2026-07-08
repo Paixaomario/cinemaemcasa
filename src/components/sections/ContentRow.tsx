@@ -21,15 +21,7 @@ export function ContentRow({ title, items, variant = 'poster', showProgress = fa
       <div className={`scroll-row no-scrollbar ${showProgress ? 'continue-watching' : ''}`}>
         {items.filter(Boolean).map((item, index) => (
           <ContentCard
-            key={`${(item as any).id_n || (item as any).id || (item as any).tmdb_id || index}-${index}`}
-            item={item}
-            showProgress={showProgress}
-            onClick={onItemClick ? () => onItemClick(item) : undefined}
-            progress={showProgress && (item as any).last_position ? {
-              lastPosition: (item as any).last_position,
-              duration: (item as any).duration
-            } : undefined}
-          />
+            key={`${(item as any).id_n || (item as any).id || (item as any).tmdb_id || index}-${index}`}/>
         ))}
       </div>
     </section>

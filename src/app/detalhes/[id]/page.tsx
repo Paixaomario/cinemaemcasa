@@ -443,9 +443,17 @@ function MovieContent() {
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-8 border-l-4 border-brand-cyan pl-4">Títulos Semelhantes</h2>
             <div className="grid grid-cols-2 md:grid-cols-6 gap-6">
               {filteredRecommendations.slice(0, 6).map((item: any) => (
-                <ContentCard 
-                  key={item.id} 
-                  item={{ ...item, type: 'movie' }} 
+                <ContentCard
+                  key={item.id}
+                  id={item.id}
+                  titulo={item.titulo || item.title || 'Sem título'}
+                  type={(item.type === 'movie' ? 'movie' : 'series') as 'movie' | 'series'}
+                  poster={item.poster || ''}
+                  capa={item.capa || ''}
+                  backdrop={item.backdrop || ''}
+                  banner={item.banner || ''}
+                  rating={item.rating || 0}
+                  year={item.year || item.ano || new Date().getFullYear()}
                 />
               ))}
             </div>

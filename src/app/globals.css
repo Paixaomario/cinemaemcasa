@@ -439,3 +439,51 @@ a[href*="/series"]:not(.group) {
   pointer-events: auto !important;
   touch-action: manipulation;
 }
+/* COPIE ISTO E COLE NO FINAL DE: src/app/globals.css */
+
+/* Estilo de foco para WebOS */
+*:focus {
+  outline: 3px solid #FFD700;
+  outline-offset: 2px;
+}
+
+.focused {
+  outline: 3px solid #FFD700;
+  outline-offset: 2px;
+  transform: scale(1.05);
+  transition: all 200ms ease-in-out;
+}
+
+/* Cartões focáveis */
+[role="button"],
+button,
+a {
+  cursor: pointer;
+  transition: all 200ms ease-in-out;
+}
+
+[role="button"]:focus,
+button:focus,
+a:focus {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+}
+
+/* Grid responsivo */
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1025px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

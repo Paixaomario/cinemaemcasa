@@ -73,9 +73,17 @@ export default function BuscarPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {results.map((item) => (
               <ContentCard
-                key={item.id}
-                item={item}
-              />
+                  key={item.id}
+                  id={item.id}
+                  titulo={item.titulo || item.title || 'Sem título'}
+                  type={(item.type === 'movie' ? 'movie' : 'series') as 'movie' | 'series'}
+                  poster={item.poster || ''}
+                  capa={item.capa || ''}
+                  backdrop={item.backdrop || ''}
+                  banner={item.banner || ''}
+                  rating={item.rating || 0}
+                  year={item.year || item.ano || new Date().getFullYear()}
+                />
             ))}
           </div>
         )}

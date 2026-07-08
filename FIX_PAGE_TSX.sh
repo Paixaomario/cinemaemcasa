@@ -1,8 +1,35 @@
+#!/bin/bash
+
+set -e
+
+echo "╔════════════════════════════════════════════════════════════════╗"
+echo "║     🔧 CORRIGIR page.tsx — Adicionar WebOS + ContentCard      ║"
+echo "╚════════════════════════════════════════════════════════════════╝"
+echo ""
+
+if [ ! -f "package.json" ]; then
+  echo "❌ Erro: Você não está na pasta correta!"
+  exit 1
+fi
+
+echo "✓ Diretório correto"
+echo ""
+
+# Backup do arquivo original
+echo "1️⃣  Fazendo backup de src/app/page.tsx..."
+cp src/app/page.tsx src/app/page.tsx.backup
+echo "   ✅ Backup em: src/app/page.tsx.backup"
+echo ""
+
+# Criar novo page.tsx com suporte WebOS
+echo "2️⃣  Criando novo page.tsx com WebOS support..."
+
+cat > src/app/page.tsx << 'EOF'
 'use client'
 
 import { useEffect, useState } from 'react'
 import { useWebOSFocus } from '@/hooks/useWebOSFocus'
-import { ContentCard } from '@/components/ui/ContentCard'
+import { ContentCard } from '@/components/ContentCard'
 import { getMovies, getSeries } from '@/lib/queries'
 
 export default function Home() {
@@ -101,3 +128,45 @@ export default function Home() {
     </div>
   )
 }
+EOF
+
+echo "   ✅ page.tsx atualizado com sucesso!"
+echo ""
+
+# Verificar se arquivo foi criado corretamente
+echo "3️⃣  Verificando arquivo..."
+if grep -q "useWebOSFocus" src/app/page.tsx; then
+  echo "   ✅ useWebOSFocus importado e ativado"
+else
+  echo "   ❌ Erro: useWebOSFocus não encontrado"
+  exit 1
+fi
+
+if grep -q "ContentCard" src/app/page.tsx; then
+  echo "   ✅ ContentCard importado e usado"
+else
+  echo "   ❌ Erro: ContentCard não encontrado"
+  exit 1
+fi
+
+if grep -q "getMovies\|getSeries" src/app/page.tsx; then
+  echo "   ✅ Queries importadas"
+else
+  echo "   ❌ Erro: Queries não encontradas"
+  exit 1
+fi
+
+echo ""
+echo "╔════════════════════════════════════════════════════════════════╗"
+echo "║                  ✅ PRONTO PARA DEPLOY!                       ║"
+echo "╚════════════════════════════════════════════════════════════════╝"
+echo ""
+echo "Próximo passo:"
+echo "  npm run dev  (testar localmente)"
+echo ""
+echo "Ou faça deploy direto:"
+echo "  git add ."
+echo "  git commit -m \"feat: update page.tsx with webos support\""
+echo "  git push origin main"
+echo ""
+

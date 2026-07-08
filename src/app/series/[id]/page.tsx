@@ -761,9 +761,17 @@ function SeriesContent() {
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-8 border-l-4 border-brand-cyan pl-4">Você também pode gostar</h2>
             <div className="grid grid-cols-2 tv-grid-layout gap-4 sm:gap-6">
               {filteredRecommendations.slice(0, 6).map((item: any) => (
-                <ContentCard 
-                  key={item.id} 
-                  item={item} 
+                <ContentCard
+                  key={item.id}
+                  id={item.id}
+                  titulo={item.titulo || item.title || 'Sem título'}
+                  type={(item.type === 'movie' ? 'movie' : 'series') as 'movie' | 'series'}
+                  poster={item.poster || ''}
+                  capa={item.capa || ''}
+                  backdrop={item.backdrop || ''}
+                  banner={item.banner || ''}
+                  rating={item.rating || 0}
+                  year={item.year || item.ano || new Date().getFullYear()}
                 />
               ))}
             </div>

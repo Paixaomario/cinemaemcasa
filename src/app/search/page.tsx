@@ -564,8 +564,18 @@ export default function SearchPage() {
                   {trendingItems.slice(0, 4).map((item) => (
                     <ContentCard 
                       key={item.id} 
-                      item={formatContentItem(item)} 
-                    />
+                    
+                  id={item.id}
+                  titulo={item.titulo || item.title || 'Sem título'}
+                  type={(item.type === 'movie' ? 'movie' : 'series') as 'movie' | 'series'}
+                  poster={item.poster || ''}
+                  capa={item.capa || ''}
+                  
+                  
+                  rating={item.rating || 0}
+                  year={Number(item.year || item.ano || new Date().getFullYear())}
+                
+                />
                   ))}
                 </div>
               </div>
@@ -580,8 +590,18 @@ export default function SearchPage() {
                 {suggestions.map((item) => (
                   <ContentCard 
                     key={item.id} 
-                    item={formatContentItem(item)} 
-                  />
+                  
+                  id={item.id}
+                  titulo={item.titulo || item.title || 'Sem título'}
+                  type={(item.type === 'movie' ? 'movie' : 'series') as 'movie' | 'series'}
+                  poster={item.poster || ''}
+                  capa={item.capa || ''}
+                  
+                  
+                  rating={item.rating || 0}
+                  year={Number(item.year || item.ano || new Date().getFullYear())}
+                
+                />
                 ))}
               </div>
             </div>
@@ -610,8 +630,7 @@ export default function SearchPage() {
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
                 {results.map((item) => (
                   <div key={item.id} className="flex flex-col">
-                    <ContentCard 
-                      item={formatContentItem(item)}
+                    <ContentCard
                     />
                     {(item.cast_names && item.cast_names.length > 0) && (
                       <div className="flex flex-wrap gap-1 mt-2">

@@ -492,18 +492,7 @@ export function HomeClient() {
                 className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 tv-grid-layout gap-4 md:gap-8 focus-within:ring-2 focus-within:ring-brand-cyan/20 rounded-xl p-2"
                 tabIndex={-1}
               >
-                {items.map(item => <ContentCard
-                  key={item.id}
-                  id={item.id}
-                  titulo={item.titulo || item.title || 'Sem título'}
-                  type={(item.type === 'movie' ? 'movie' : 'series') as 'movie' | 'series'}
-                  poster={item.poster || ''}
-                  capa={item.capa || ''}
-                  backdrop={item.backdrop || ''}
-                  banner={item.banner || ''}
-                  rating={item.rating || 0}
-                  year={item.year || item.ano || new Date().getFullYear()}
-                />)}
+                {items.map(item => <ContentCard key={item.id} item={item} />)}
               </div>
             </section>
           )
