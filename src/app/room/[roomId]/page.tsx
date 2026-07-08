@@ -300,6 +300,7 @@ export default function PartyRoomPage() {
 
   return (
     <VideoPlayer
+      key={`player-${roomId}`}
       src={videoUrl}
       title={title}
       contentId={roomData?.content_id}
