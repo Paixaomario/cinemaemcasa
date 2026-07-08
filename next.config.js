@@ -20,7 +20,6 @@ const nextConfig = {
     ],
   },
   // Otimizações para Vercel
-  swcMinify: true,
   compress: true,
   // Aumentar timeout para builds lentos
   experimental: {

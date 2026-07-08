@@ -6,6 +6,7 @@ import {
   MediaProvider, 
   useMediaState, 
   Track,
+  useMediaPlayer,
   type MediaPlayerInstance 
 } from '@vidstack/react'
 
@@ -28,31 +29,12 @@ interface VideoPlayerProps {
   audioTracks?: any[]
 }
 
-export function VideoPlayer({ 
-  src, 
-  title, 
-  poster, 
-  onClose, 
-  onNext,
-  contentId,
-  userId,
-  startOffset,
-  partyRoomId,
-  isGuest,
-  guestName,
-  backdrop,
-  nextEpisode,
-  preferredLanguage = 'pt-BR', // Padrão para pt-BR se não for especificado
-  subtitles = [],
-  audioTracks: remoteAudioTracks = []
-}: VideoPlayerProps) {
-  const playerRef = useRef<MediaPlayerInstance>(null)
-  
-  // Acessa o estado do player de forma reativa usando o playerRef
-  const audioTracks = useMediaState('audioTracks', playerRef)
+function AudioTrackSelector({ preferredLanguage }: { preferredLanguage: string }) {
+  const player = useMediaPlayer()
+  const audioTracks = useMediaState('audioTracks')
 
   useEffect(() => {
-    if (!audioTracks || audioTracks.length === 0 || !playerRef.current) return
+    if (!audioTracks || audioTracks.length === 0 || !player) return
 
     const targetLang = preferredLanguage.toLowerCase()
 
@@ -81,7 +63,30 @@ export function VideoPlayer({
       }, 150)
       return () => clearTimeout(timer)
     }
-  }, [audioTracks, preferredLanguage])
+  }, [audioTracks, preferredLanguage, player])
+
+  return null
+}
+
+export function VideoPlayer({ 
+  src, 
+  title, 
+  poster, 
+  onClose, 
+  onNext,
+  contentId,
+  userId,
+  startOffset,
+  partyRoomId,
+  isGuest,
+  guestName,
+  backdrop,
+  nextEpisode,
+  preferredLanguage = 'pt-BR', // Padrão para pt-BR se não for especificado
+  subtitles = [],
+  audioTracks: remoteAudioTracks = []
+}: VideoPlayerProps) {
+  const playerRef = useRef<MediaPlayerInstance>(null)
 
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden">
@@ -116,6 +121,7 @@ export function VideoPlayer({
             />
           ))}
         </MediaProvider>
+        <AudioTrackSelector preferredLanguage={preferredLanguage} />
         {/* Os controles customizados do Vidstack entram aqui */}
       </MediaPlayer>
     </div>
