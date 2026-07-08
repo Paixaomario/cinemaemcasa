@@ -35,7 +35,7 @@ export function HeroBanner({ type, canAutoPlayTrailer = true }: HeroBannerProps 
 
       if (!type || type === 'series') {
         const { data: series, error: sError } = await sb.from('series')
-          .select('id,id_n,titulo,poster,capa,banner,genero,trailer,tmdb_id')
+          .select('id_n,titulo,poster,capa,banner,genero,trailer,tmdb_id')
           // Correção: series não tem created_at, usamos id_n como fallback de novidade
           .order('id_n', { ascending: false })
         if (sError) console.error("Erro ao buscar séries para o banner:", sError)

@@ -52,7 +52,7 @@ export async function hydrateCinemaItem(sb: any, contentId: string, contentType?
         if (!hydratedItem) hydratedItem = { ...cinemaData, id: idStr, type: 'movie' };
       }
     } else if (contentType === 'serie') {
-      const { data: seriesData } = await sb.from('series').select('id,id_n,titulo,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id').eq('id_n', idStr).maybeSingle();
+      const { data: seriesData } = await sb.from('series').select('id_n,titulo,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id').eq('id_n', idStr).maybeSingle();
       if (seriesData) {
         itemType = 'serie';
         if (seriesData.tmdb_id) {
@@ -70,7 +70,7 @@ export async function hydrateCinemaItem(sb: any, contentId: string, contentType?
         }
         if (!hydratedItem) hydratedItem = { ...cinemaData, id: idStr, type: 'movie' };
       } else {
-        const { data: seriesData } = await sb.from('series').select('id,id_n,titulo,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id').eq('id_n', idStr).maybeSingle();
+        const { data: seriesData } = await sb.from('series').select('id_n,titulo,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id').eq('id_n', idStr).maybeSingle();
         if (seriesData) {
           itemType = 'serie';
           if (seriesData.tmdb_id) {

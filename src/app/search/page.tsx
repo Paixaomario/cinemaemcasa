@@ -309,7 +309,7 @@ export default function SearchPage() {
     }
     
     // Busca em series
-    let seriesQuery = sb.from('series').select('id,id_n,titulo,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id').limit(50);
+    let seriesQuery = sb.from('series').select('id_n,titulo,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id').limit(50);
     if (query.trim().length >= 1) {
       seriesQuery = seriesQuery.ilike('titulo', `%${query}%`);
     }

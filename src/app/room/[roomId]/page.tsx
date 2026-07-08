@@ -68,7 +68,7 @@ export default function PartyRoomPage() {
         const { data: movie } = await sb.from('cinema').select('id,titulo,poster,backdrop,banner,year,category,rating,duration,duration_seconds,created_at,tmdb_id').eq('id', room.content_id).maybeSingle()
         setContentData(movie)
       } else {
-        const { data: series } = await sb.from('series').select('id,id_n,titulo,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id').eq('id_n', room.content_id).maybeSingle()
+        const { data: series } = await sb.from('series').select('id_n,titulo,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id').eq('id_n', room.content_id).maybeSingle()
         setContentData(series)
       }
 
