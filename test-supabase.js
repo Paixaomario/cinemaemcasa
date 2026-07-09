@@ -9,19 +9,27 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 async function testConnection() {
   console.log('=== Testando conexão com Supabase ===\n');
   
-  // Testa tabela cinema - buscar todas as colunas
-  console.log('1. Verificando colunas da tabela cinema...');
+  // Testa tabela cinema - verificar se tem imagens
+  console.log('1. Verificando dados de imagem na tabela cinema...');
   try {
     const { data: cinemaData, error: cinemaError } = await supabase
       .from('cinema')
-      .select('*')
-      .limit(1);
+      .select('id,titulo,poster,banner,backdrop')
+      .limit(5);
     
     if (cinemaError) {
       console.error('ERRO na tabela cinema:', cinemaError);
     } else if (cinemaData && cinemaData.length > 0) {
-      console.log(`✓ Colunas disponíveis em cinema:`, Object.keys(cinemaData[0]));
-      console.log('Exemplo de registro:', cinemaData[0]);
+      console.log(`✓ Encontrados ${cinemaData.length} registros em cinema`);
+      cinemaData.forEach((item, i) => {
+        console.log(`\n--- Cinema ${i + 1} ---`);
+        console.log(`ID: ${item.id}`);
+        console.log(`Título: ${item.titulo}`);
+        console.log(`Poster: ${item.poster ? 'SIM' : 'NÃO'}`);
+        console.log(`Banner: ${item.banner ? 'SIM' : 'NÃO'}`);
+        console.log(`Backdrop: ${item.backdrop ? 'SIM' : 'NÃO'}`);
+        if (item.poster) console.log(`Poster URL: ${item.poster.substring(0, 50)}...`);
+      });
     } else {
       console.log('Tabela cinema vazia');
     }
@@ -31,19 +39,27 @@ async function testConnection() {
   
   console.log('\n');
   
-  // Testa tabela series - buscar todas as colunas
-  console.log('2. Verificando colunas da tabela series...');
+  // Testa tabela series - verificar se tem imagens
+  console.log('2. Verificando dados de imagem na tabela series...');
   try {
     const { data: seriesData, error: seriesError } = await supabase
       .from('series')
-      .select('*')
-      .limit(1);
+      .select('id_n,titulo,poster,capa,banner')
+      .limit(5);
     
     if (seriesError) {
       console.error('ERRO na tabela series:', seriesError);
     } else if (seriesData && seriesData.length > 0) {
-      console.log(`✓ Colunas disponíveis em series:`, Object.keys(seriesData[0]));
-      console.log('Exemplo de registro:', seriesData[0]);
+      console.log(`✓ Encontrados ${seriesData.length} registros em series`);
+      seriesData.forEach((item, i) => {
+        console.log(`\n--- Série ${i + 1} ---`);
+        console.log(`ID: ${item.id_n}`);
+        console.log(`Título: ${item.titulo}`);
+        console.log(`Poster: ${item.poster ? 'SIM' : 'NÃO'}`);
+        console.log(`Capa: ${item.capa ? 'SIM' : 'NÃO'}`);
+        console.log(`Banner: ${item.banner ? 'SIM' : 'NÃO'}`);
+        if (item.poster) console.log(`Poster URL: ${item.poster.substring(0, 50)}...`);
+      });
     } else {
       console.log('Tabela series vazia');
     }
@@ -53,15 +69,23 @@ async function testConnection() {
   
   console.log('\n');
   
-  // Conta total de registros
-  console.log('3. Contando registros...');
+  // Conta quantos registros têm imagens
+  console.log('3. Contando registros com imagens...');
   try {
-    const { count: cinemaCount } = await supabase.from('cinema').select('*', { count: 'exact', head: true });
-    const { count: seriesCount } = await supabase.from('series').select('*', { count: 'exact', head: true });
-    console.log(`✓ Cinema: ${cinemaCount} registros`);
-    console.log(`✓ Series: ${seriesCount} registros`);
+    const { count: cinemaWithPoster } = await supabase
+      .from('cinema')
+      .select('*', { count: 'exact', head: true })
+      .not('poster', 'is', null);
+    
+    const { count: seriesWithPoster } = await supabase
+      .from('series')
+      .select('*', { count: 'exact', head: true })
+      .not('poster', 'is', null);
+    
+    console.log(`✓ Cinema com poster: ${cinemaWithPoster}`);
+    console.log(`✓ Series com poster: ${seriesWithPoster}`);
   } catch (e) {
-    console.error('Erro ao contar:', e.message);
+    console.error('Erro ao contar imagens:', e.message);
   }
   
   console.log('\n=== Teste concluído ===');

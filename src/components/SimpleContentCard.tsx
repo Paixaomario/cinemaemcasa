@@ -1,7 +1,5 @@
 'use client'
 
-import Image from 'next/image'
-
 interface SimpleContentCardProps {
   id: string | number
   title: string
@@ -36,12 +34,11 @@ export function SimpleContentCard({
     >
       <div className="aspect-[2/3] rounded-lg overflow-hidden bg-gray-800">
         {imageUrl ? (
-          <Image
+          <img
             src={imageUrl}
             alt={title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+            className="w-full h-full object-cover"
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-500">
