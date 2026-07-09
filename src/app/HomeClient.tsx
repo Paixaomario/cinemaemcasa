@@ -136,21 +136,27 @@ export function HomeClient() {
 
             // Busca direta nas tabelas originais para evitar joins complexos
             let contentData: any = null;
-            
+
+            // Tenta buscar em cinema primeiro (id é integer)
             if (isNumeric) {
-              // Busca na tabela cinema primeiro
               const { data: cinemaData } = await sb.from('cinema').select('id,titulo,category,poster,backdrop,banner').eq('id', parseInt(idStr)).maybeSingle();
               if (cinemaData) {
                 contentData = { ...cinemaData, source_table: 'cinema', tipo: 'movie' };
               }
             }
-            
-            // Se não encontrou em cinema, busca em series
-            if (!contentData) {
-              const { data: seriesData } = await sb.from('series').select('id_n,titulo,ano,poster,capa,banner,backdrop').eq('id_n', idStr).maybeSingle();
+
+            // Se não encontrou em cinema e é numérico, tenta buscar em series (id_n é integer)
+            if (!contentData && isNumeric) {
+              const { data: seriesData } = await sb.from('series').select('id_n,titulo,ano,poster,capa,banner,backdrop').eq('id_n', parseInt(idStr)).maybeSingle();
               if (seriesData) {
                 contentData = { ...seriesData, source_table: 'series', tipo: 'series' };
               }
+            }
+
+            // Se o ID não é numérico (UUID), ignora - conteúdo provavelmente foi deletado
+            if (!contentData && !isNumeric) {
+              console.warn(`Aviso: Conteúdo com UUID não encontrado (provavelmente deletado): ${idStr}`);
+              return null;
             }
 
             if (!contentData) {
