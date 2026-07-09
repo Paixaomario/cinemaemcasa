@@ -129,7 +129,7 @@ export function HomeClient() {
             if (!contentData && isNumeric) {
               const numericId = parseInt(idStr);
               if (!isNaN(numericId)) {
-                const { data: seriesData } = await sb.from('series').select('id_n,titulo,ano,poster,capa,banner,backdrop').eq('id_n', numericId).maybeSingle();
+                const { data: seriesData } = await sb.from('series').select('id_n,titulo,ano,poster,capa,banner').eq('id_n', numericId).maybeSingle();
                 if (seriesData) {
                   contentData = { ...seriesData, source_table: 'series', tipo: 'series' };
                 }

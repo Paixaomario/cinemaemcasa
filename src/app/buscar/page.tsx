@@ -20,7 +20,7 @@ export default function BuscarPage() {
       // Buscar em todas as tabelas
       const [cinemaRes, seriesRes, contentRes] = await Promise.all([
         sb.from('cinema').select('id,titulo,poster,backdrop,banner,year,category,rating,duration,duration_seconds,created_at').ilike('titulo', `%${query}%`).limit(20),
-        sb.from('series').select('id_n,titulo,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at').ilike('titulo', `%${query}%`).limit(20),
+        sb.from('series').select('id_n,titulo,poster,capa,banner,ano,classificacao,genero,rating,trailer,created_at').ilike('titulo', `%${query}%`).limit(20),
         sb.from('content').select('id,title,type,thumbnail_url,backdrop_url,trailer_url,duration_seconds,year,rating,cast_names,director,parent_id,season_number,episode_number,is_published,is_featured,views_count,created_at,updated_at').ilike('title', `%${query}%`).limit(20)
       ])
 

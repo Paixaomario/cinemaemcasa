@@ -1,5 +1,25 @@
 import { getMovieDetails, getShowDetails } from './tmdb';
-import { CinemaItem } from '@/app/HomeClient';
+
+export interface CinemaItem {
+  id: string | number
+  titulo?: string
+  title?: string
+  poster?: string
+  backdrop?: string
+  banner?: string
+  capa?: string
+  type?: 'movie' | 'serie' | 'series'
+  year?: number | string
+  ano?: number
+  category?: string
+  genero?: string
+  rating?: number
+  duration?: string
+  duration_seconds?: number
+  trailer?: string
+  created_at?: string
+  tmdb_id?: number
+}
 
 /**
  * Função centralizada para hidratar um item de conteúdo a partir de IDs diversos.
@@ -54,7 +74,7 @@ export async function hydrateCinemaItem(sb: any, contentId: string, contentType?
     } else if (contentType === 'serie') {
       const numericId = /^\d+$/.test(idStr) ? parseInt(idStr) : null;
       if (numericId !== null) {
-        const { data: seriesData } = await sb.from('series').select('id_n,titulo,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id').eq('id_n', numericId).maybeSingle();
+        const { data: seriesData } = await sb.from('series').select('id_n,titulo,poster,capa,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id').eq('id_n', numericId).maybeSingle();
         if (seriesData) {
           itemType = 'serie';
           if (seriesData.tmdb_id) {
@@ -75,7 +95,7 @@ export async function hydrateCinemaItem(sb: any, contentId: string, contentType?
       } else {
         const numericId = /^\d+$/.test(idStr) ? parseInt(idStr) : null;
         if (numericId !== null) {
-          const { data: seriesData } = await sb.from('series').select('id_n,titulo,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id').eq('id_n', numericId).maybeSingle();
+          const { data: seriesData } = await sb.from('series').select('id_n,titulo,poster,capa,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id').eq('id_n', numericId).maybeSingle();
           if (seriesData) {
             itemType = 'serie';
             if (seriesData.tmdb_id) {
