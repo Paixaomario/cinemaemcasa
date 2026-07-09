@@ -1,16 +1,20 @@
 'use client'
 
+console.log('[IMMEDIATE] 🚀 Page.tsx carregado!')
+
 import { useEffect } from 'react'
 
 export default function Home() {
+  console.log('[RENDER] Page renderizando...')
+  
   useEffect(() => {
-    console.log('[Home] 🚀 Teste básico - useEffect executou!')
+    console.log('[HOME] 🚀 useEffect executou!')
   }, [])
 
   return (
-    <div style={{ padding: '20px', color: '#fff', background: '#000', minHeight: '100vh' }}>
-      <h1>Cinema em Casa - Teste</h1>
-      <p>Abra F12 Console e procure por: [Home] 🚀</p>
+    <div style={{ padding: '20px', color: '#fff', background: '#000' }}>
+      <h1>Cinema em Casa</h1>
+      <p>Verifique console por [IMMEDIATE], [RENDER], ou [HOME]</p>
     </div>
   )
 }
