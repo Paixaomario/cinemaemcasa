@@ -52,13 +52,16 @@ export async function hydrateCinemaItem(sb: any, contentId: string, contentType?
         if (!hydratedItem) hydratedItem = { ...cinemaData, id: idStr, type: 'movie' };
       }
     } else if (contentType === 'serie') {
-      const { data: seriesData } = await sb.from('series').select('id_n,titulo,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id').eq('id_n', idStr).maybeSingle();
-      if (seriesData) {
-        itemType = 'serie';
-        if (seriesData.tmdb_id) {
-          try { hydratedItem = await getShowDetails(seriesData.tmdb_id); } catch (e) {}
+      const numericId = /^\d+$/.test(idStr) ? parseInt(idStr) : null;
+      if (numericId !== null) {
+        const { data: seriesData } = await sb.from('series').select('id_n,titulo,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id').eq('id_n', numericId).maybeSingle();
+        if (seriesData) {
+          itemType = 'serie';
+          if (seriesData.tmdb_id) {
+            try { hydratedItem = await getShowDetails(seriesData.tmdb_id); } catch (e) {}
+          }
+          if (!hydratedItem) hydratedItem = { ...seriesData, id: idStr, type: 'serie' };
         }
-        if (!hydratedItem) hydratedItem = { ...seriesData, id: idStr, type: 'serie' };
       }
     } else {
       // Fallback original: tenta cinema primeiro, depois series
@@ -70,13 +73,16 @@ export async function hydrateCinemaItem(sb: any, contentId: string, contentType?
         }
         if (!hydratedItem) hydratedItem = { ...cinemaData, id: idStr, type: 'movie' };
       } else {
-        const { data: seriesData } = await sb.from('series').select('id_n,titulo,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id').eq('id_n', idStr).maybeSingle();
-        if (seriesData) {
-          itemType = 'serie';
-          if (seriesData.tmdb_id) {
-            try { hydratedItem = await getShowDetails(seriesData.tmdb_id); } catch (e) {}
+        const numericId = /^\d+$/.test(idStr) ? parseInt(idStr) : null;
+        if (numericId !== null) {
+          const { data: seriesData } = await sb.from('series').select('id_n,titulo,poster,backdrop,banner,ano,classificacao,genero,rating,trailer,created_at,tmdb_id').eq('id_n', numericId).maybeSingle();
+          if (seriesData) {
+            itemType = 'serie';
+            if (seriesData.tmdb_id) {
+              try { hydratedItem = await getShowDetails(seriesData.tmdb_id); } catch (e) {}
+            }
+            if (!hydratedItem) hydratedItem = { ...seriesData, id: idStr, type: 'serie' };
           }
-          if (!hydratedItem) hydratedItem = { ...seriesData, id: idStr, type: 'serie' };
         }
       }
     }
