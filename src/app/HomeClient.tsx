@@ -6,9 +6,6 @@ import { useAuth } from '@/components/layout/SupabaseProvider'
 import { HeroBanner } from '@/components/sections/HeroBanner'
 import { ContentRow } from '@/components/sections/ContentRow'
 import { ContentCard } from '@/components/ui/ContentCard'
-import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
-import { useBurnInProtection } from '@/hooks/useBurnInProtection'
-import { getViewportMetadata } from '@/lib/deviceManager'
 import {
   initializeContentSession,
   addBatchToDisplayedCache,
@@ -54,41 +51,10 @@ export function HomeClient() {
   const [sections, setSections] = useState<HomeSection[]>([])
   const [sectionsData, setSectionsData] = useState<Record<string, any[]>>({})
   const [continueWatching, setContinueWatching] = useState<any[]>([])
-  const [pageLoading, setPageLoading] = useState(false) // Removido delay inicial
+  const [pageLoading, setPageLoading] = useState(true)
   const [resumeItem, setResumeItem] = useState<any>(null)
   const [canAutoPlayTrailer, setCanAutoPlayTrailer] = useState(false)
   const [isTVLayout, setIsTVLayout] = useState(false)
-
-  // Ativa navegação por controle remoto na Home
-  // Temporariamente desabilitado para corrigir erro React #310
-  // useSpatialNavigation()
-
-  // Ativa proteção contra Burn-in para TVs OLED
-  // Temporariamente desabilitado para corrigir erro React #310
-  // useBurnInProtection(5)
-
-  // Ajuste de Layout para TV (Safe Area)
-  // Temporariamente desabilitado para corrigir erro React #310
-  /* useEffect(() => {
-    const { isBigScreen } = getViewportMetadata()
-    setIsTVLayout(isBigScreen)
-  }, []) */
-
-  // Detecta qualidade da rede para Auto-Play de trailers
-  // Temporariamente desabilitado para corrigir erro React #310
-  /* useEffect(() => {
-    const checkNetwork = () => {
-      const conn = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
-      if (conn) {
-        // Só permite se não for modo economia de dados e se for wifi ou 4g/5g forte
-        const isGoodConnection = !conn.saveData && (conn.type === 'wifi' || ['4g', '5g'].includes(conn.effectiveType));
-        setCanAutoPlayTrailer(isGoodConnection);
-      } else {
-        setCanAutoPlayTrailer(true); // Fallback para navegadores sem API (TVs)
-      }
-    };
-    checkNetwork();
-  }, []); */
 
   // Redireciona para login se não estiver autenticado
   useEffect(() => {
@@ -97,7 +63,27 @@ export function HomeClient() {
     }
   }, [user, loading, router])
 
-  // Função loadHome usando useCallback para poder ser chamada nas subscriptions
+  // Detecta qualidade da rede
+  useEffect(() => {
+    const checkNetwork = () => {
+      const conn = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+      if (conn) {
+        const isGoodConnection = !conn.saveData && (conn.type === 'wifi' || ['4g', '5g'].includes(conn.effectiveType));
+        setCanAutoPlayTrailer(isGoodConnection);
+      } else {
+        setCanAutoPlayTrailer(true);
+      }
+    };
+    checkNetwork();
+  }, [])
+
+  // Ajuste de Layout para TV
+  useEffect(() => {
+    const { isBigScreen } = (window as any).getViewportMetadata?.() || { isBigScreen: false }
+    setIsTVLayout(isBigScreen)
+  }, [])
+
+  // Função loadHome
   const loadHome = useCallback(async () => {
     if (!user) return
 
@@ -113,10 +99,10 @@ export function HomeClient() {
     
     const isChild = profile?.is_child || false
 
-    // Inicializa nova sessão de conteúdo (reseta cache a cada carregamento)
+    // Inicializa nova sessão de conteúdo
     initializeContentSession()
 
-    // 0. Carregar Continuar Assistindo se houver usuário - OTIMIZADO
+    // Carregar Continuar Assistindo
     if (user) {
       const { data: prog, error: progError } = await sb
         .from('view_progress')
@@ -126,18 +112,13 @@ export function HomeClient() {
         .order('updated_at', { ascending: false })
         .limit(4)
 
-      console.log('[Home] Progresso carregado:', prog?.length, 'itens', progError ? 'Erro:' + progError.message : '')
-
       if (prog) {
         const hydrated = await Promise.all(
           prog.map(async (p) => {
             const idStr = String(p.content_id)
             const isNumeric = /^\d+$/.test(idStr);
-
-            // Busca direta nas tabelas originais para evitar joins complexos
             let contentData: any = null;
 
-            // Tenta buscar em cinema primeiro (id é integer)
             if (isNumeric) {
               const { data: cinemaData } = await sb.from('cinema').select('id,titulo,category,poster,backdrop,banner').eq('id', parseInt(idStr)).maybeSingle();
               if (cinemaData) {
@@ -145,7 +126,6 @@ export function HomeClient() {
               }
             }
 
-            // Se não encontrou em cinema e é numérico, tenta buscar em series (id_n é integer)
             if (!contentData && isNumeric) {
               const numericId = parseInt(idStr);
               if (!isNaN(numericId)) {
@@ -156,14 +136,11 @@ export function HomeClient() {
               }
             }
 
-            // Se o ID não é numérico (UUID), ignora - conteúdo provavelmente foi deletado
             if (!contentData && !isNumeric) {
-              console.warn(`Aviso: Conteúdo com UUID não encontrado (provavelmente deletado): ${idStr}`);
               return null;
             }
 
             if (!contentData) {
-              console.warn(`Aviso: Conteúdo não encontrado para view_progress ID ${idStr}`);
               return null;
             }
 
@@ -171,14 +148,12 @@ export function HomeClient() {
             const finalTitulo = contentData.titulo || contentData.title;
             let finalPoster = contentData.poster || contentData.capa || contentData.banner;
 
-            // Proteção contra URLs incompletas do TMDB
             if (finalPoster === 'https://image.tmdb.org/t/p/w500' || finalPoster === 'https://image.tmdb.org/t/p/original') {
               finalPoster = null;
             }
 
             const finalType = contentData.tipo || contentData.type;
 
-            // Converte duration de string para segundos
             let durationInSeconds = null
             try {
               let duration = contentData.duration || null
@@ -221,18 +196,15 @@ export function HomeClient() {
       }
     }
 
-    // Adiciona ao cache de exibidos em lote (Otimizado)
     const cwIds = cwItems.map(item => String(item.id)).filter(Boolean)
     addBatchToDisplayedCache(cwIds)
 
-    // 1. Busca seções ativas ordenadas por posição
+    // Busca seções ativas
     const { data: secs, error } = await sb
       .from('home_sections')
       .select('*')
       .eq('ativo', true)
       .order('posicao', { ascending: true })
-
-    console.log(`[Home] ${secs?.length || 0} seções encontradas.`);
 
     if (error || !secs) {
       console.error("[Home] Erro ao buscar seções:", error);
@@ -240,13 +212,12 @@ export function HomeClient() {
       return
     }
 
-    // 2. Filtra por agendamento (Datas e Horários)
+    // Filtra por agendamento
     const now = new Date()
     const currentIsoDate = now.toISOString()
-    const currentHms = now.toTimeString().split(' ')[0] // Formato "HH:MM:SS"
+    const currentHms = now.toTimeString().split(' ')[0]
 
     const visibleSections = (secs as HomeSection[]).filter(sec => {
-      // Validação de intervalo de datas
       try {
         if (sec.data_inicio && currentIsoDate < sec.data_inicio) return false
         if (sec.data_fim && currentIsoDate > sec.data_fim) return false
@@ -254,9 +225,8 @@ export function HomeClient() {
         console.warn(`[Home] Erro ao validar datas da seção ${sec.titulo}:`, e);
       }
       
-      // Validação de intervalo de horários
       if (sec.hora_inicio && sec.hora_fim) {
-         if (sec.hora_inicio > sec.hora_fim) { // Caso a seção atravesse a meia-noite
+         if (sec.hora_inicio > sec.hora_fim) {
             if (currentHms < sec.hora_inicio && currentHms > sec.hora_fim) return false
          } else {
             if (currentHms < sec.hora_inicio || currentHms > sec.hora_fim) return false
@@ -266,16 +236,15 @@ export function HomeClient() {
     })
 
     setSections(visibleSections)
-    setPageLoading(false) // Libera a UI imediatamente após carregar seções
+    setPageLoading(false)
 
-    // 3. Carrega os itens para cada seção visível em paralelo
+    // Carrega itens das seções
     const newSectionsData: Record<string, any[]> = {}
     const sectionPromises = visibleSections.map(async (sec) => {
       try {
         const displayedIds = getDisplayedCache()
         let items: any[] = []
 
-        // Seção especial: Indicados por IA
         const lowerTitle = sec.titulo.toLowerCase();
         if (lowerTitle === 'indicados por ia' || lowerTitle === 'ia') {
           if (user) {
@@ -283,15 +252,12 @@ export function HomeClient() {
             if (userIsNew) {
               items = await getTrendingContent(sec.limite, isChild)
             } else {
-              // Aguarda as recomendações para garantir que o cache de IDs exibidos seja atualizado
               items = await getPersonalizedRecommendations(user.id, sec.limite, displayedIds, isChild)
             }
           } else {
             items = await getTrendingContent(sec.limite, isChild)
           }
         } else {
-          // Seção normal: usa o gerenciador de conteúdo (independente da fonte)
-          // Normalização robusta de categorias vindo do Supabase (text[] ou string separada por vírgula)
           let categories: string[] = []
           const rawCats = sec.categorias
           if (rawCats) {
@@ -310,7 +276,6 @@ export function HomeClient() {
           )
         }
 
-        // Adiciona IDs ao cache de exibidos
         const newIds = items.map((item: any) => String(item.id)).filter(Boolean)
         addBatchToDisplayedCache(newIds)
         newSectionsData[sec.id] = items
@@ -321,103 +286,33 @@ export function HomeClient() {
 
     await Promise.all(sectionPromises);
     setSectionsData(newSectionsData);
-    setPageLoading(false); // Agora sim, a página está carregada
+    setPageLoading(false);
   }, [user])
 
-  // Carrega dados iniciais e configura polling periódico
-  // Temporariamente desabilitado para corrigir erro React #310
-  /*
-  useEffect(() => {
-    if (!user) return
-
-    loadHome()
-
-    // Polling periódico para atualizar dados a cada 5 minutos
-    const pollingInterval = setInterval(() => {
-      if (user && document.visibilityState === 'visible') {
-        loadHome()
-      }
-    }, 5 * 60 * 1000) // 5 minutos
-
-    // Limpa o intervalo quando o componente é desmontado
-    return () => {
-      clearInterval(pollingInterval)
-    }
-  }, [user, loadHome])
-  */
-
-  // Carrega dados iniciais sem polling
+  // Carrega dados iniciais
   useEffect(() => {
     if (!user) return
     loadHome()
-  }, [user])
-
-  // Configura Supabase Realtime subscriptions para atualização em tempo real
-  // Temporariamente desabilitado para corrigir erro React #310
-  /*
-  useEffect(() => {
-    if (!user) return
-
-    const sb = createClient()
-
-    // Subscription para tabela cinema
-    const cinemaSubscription = sb
-      .channel('cinema-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'cinema' }, () => {
-        console.log('[Home] Mudança detectada na tabela cinema, recarregando...')
-        loadHome()
-      })
-      .subscribe()
-
-    // Subscription para tabela series
-    const seriesSubscription = sb
-      .channel('series-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'series' }, () => {
-        console.log('[Home] Mudança detectada na tabela series, recarregando...')
-        loadHome()
-      })
-      .subscribe()
-
-    // Subscription para tabela home_sections
-    const homeSectionsSubscription = sb
-      .channel('home-sections-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'home_sections' }, () => {
-        console.log('[Home] Mudança detectada na tabela home_sections, recarregando...')
-        loadHome()
-      })
-      .subscribe()
-
-    // Limpa as subscriptions quando o componente é desmontado
-    return () => {
-      cinemaSubscription.unsubscribe()
-      seriesSubscription.unsubscribe()
-      homeSectionsSubscription.unsubscribe()
-    }
   }, [user, loadHome])
-  */
 
-  // Mostra skeleton real em vez de um pulso vazio
-  if (loading) return <div className="min-h-screen bg-black" />
-
-  // Fallback de segurança: se pageLoading estiver true por muito tempo, libera a UI
+  // Timeout de segurança
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (pageLoading) {
         console.warn('[Home] Timeout de carregamento, forçando renderização')
         setPageLoading(false)
       }
-    }, 5000) // 5 segundos de timeout
+    }, 5000)
 
     return () => clearTimeout(timeout)
   }, [pageLoading])
 
+  if (loading) return <div className="min-h-screen bg-black" />
+
   return (
     <div className={`flex flex-col gap-16 pb-32 ${isTVLayout ? 'px-[6%] py-[4%]' : 'px-4 md:px-0'}`}>
-      {/* Banner de Destaque */}
-      {/* Temporariamente desabilitado para corrigir erro React #310 */}
-      {/* <HeroBanner canAutoPlayTrailer={canAutoPlayTrailer} /> */}
+      <HeroBanner canAutoPlayTrailer={canAutoPlayTrailer} />
 
-      {/* Popup de Continuar ou Reiniciar */}
       {resumeItem && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-[#1A1A1F] p-8 rounded-3xl border border-white/10 shadow-2xl max-w-md w-full mx-4">
@@ -460,14 +355,12 @@ export function HomeClient() {
         </div>
       )}
 
-      {/* Continuar Assistindo */}
-      {continueWatching.length > 0 && ( // Adicionado onItemClick para interceptar e mostrar o modal
+      {continueWatching.length > 0 && (
         <ContentRow 
           title="Continuar Assistindo" 
           items={continueWatching} 
           showProgress={true} 
           onItemClick={(item) => {
-            // Intercepta o clique para mostrar o modal de continuar/reiniciar
             setResumeItem(item);
           }}
         />
@@ -476,7 +369,6 @@ export function HomeClient() {
       {sections.map(sec => {
         const items = sectionsData[sec.id] || []
         
-        // Seção em carregamento (Skeleton Row para 3G/4G)
         if (items.length === 0) {
           if (sec.layout === 'featured') return null
           return (
@@ -518,7 +410,6 @@ export function HomeClient() {
           )
         }
 
-        // Layout 'row' (Carrossel Horizontal)
         return <ContentRow key={sec.id} title={sec.titulo} items={items} />
       })}
     </div>
