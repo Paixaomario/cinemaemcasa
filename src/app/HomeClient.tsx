@@ -147,9 +147,12 @@ export function HomeClient() {
 
             // Se não encontrou em cinema e é numérico, tenta buscar em series (id_n é integer)
             if (!contentData && isNumeric) {
-              const { data: seriesData } = await sb.from('series').select('id_n,titulo,ano,poster,capa,banner,backdrop').eq('id_n', parseInt(idStr)).maybeSingle();
-              if (seriesData) {
-                contentData = { ...seriesData, source_table: 'series', tipo: 'series' };
+              const numericId = parseInt(idStr);
+              if (!isNaN(numericId)) {
+                const { data: seriesData } = await sb.from('series').select('id_n,titulo,ano,poster,capa,banner,backdrop').eq('id_n', numericId).maybeSingle();
+                if (seriesData) {
+                  contentData = { ...seriesData, source_table: 'series', tipo: 'series' };
+                }
               }
             }
 
