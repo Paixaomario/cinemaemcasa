@@ -1,223 +1,129 @@
 'use client'
-export const dynamic = 'force-dynamic'
-import { useEffect, useRef, useState, useCallback } from 'react'
-import { useAuth } from '@/components/layout/SupabaseProvider'
-import { useRouter, useParams } from 'next/navigation'
-import Link from 'next/link'
-import { createClient } from '@/lib/supabase'
 
-function formatTime(s: number) {
-  const h = Math.floor(s / 3600)
-  const m = Math.floor((s % 3600) / 60)
-  const sec = Math.floor(s % 60)
-  return h > 0
-    ? `${h}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`
-    : `${m}:${sec.toString().padStart(2, '0')}`
-}
+import { useEffect, useState, useRef } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { supabase, Cinema, Series } from '../../../lib/supabase'
 
-export default function WatchPage() {
-  const { id } = useParams<{ id: string }>()
-  const { user, loading } = useAuth()
+export default function AssistirPage() {
+  const params = useParams()
   const router = useRouter()
-  const [title, setTitle]       = useState('')
-  const [videoUrl, setVideoUrl] = useState('')
-  const [fetching, setFetching] = useState(true)
-  const videoRef  = useRef<HTMLVideoElement>(null)
-  const timerRef  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const [playing, setPlaying]       = useState(false)
-  const [muted, setMuted]           = useState(false)
-  const [progress, setProgress]     = useState(0)
-  const [duration, setDuration]     = useState(0)
-  const [volume, setVolume]         = useState(1)
-  const [showCtrl, setShowCtrl]     = useState(true)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [content, setContent] = useState<Cinema | Series | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!loading && !user) router.push('/login')
-  }, [user, loading])
+    async function loadContent() {
+      const id = params.id as string
+      const path = window.location.pathname
 
-  useEffect(() => {
-    if (!user || !id) return
-    
-    async function loadVideo() {
-      const sb = createClient()
-      const movieIdNum = Number(id)
-      
       try {
-        if (!isNaN(movieIdNum)) {
-          // É um ID numérico, busca na tabela cinema
-          const { data: cinemaData, error: cinemaError } = await sb.from('cinema').select('titulo,url').eq('id', movieIdNum).maybeSingle()
-          if (cinemaError) {
-            console.error('[Watch] Erro ao buscar filme:', cinemaError)
-          }
-          if (cinemaData) {
-            setTitle(cinemaData.titulo || '')
-            setVideoUrl(cinemaData.url || '')
-            console.log(`[Watch] Filme encontrado: ${cinemaData.titulo}, URL: ${cinemaData.url ? 'configurada' : 'não configurada'}`, cinemaData)
-          } else {
-            console.log(`[Watch] Filme não encontrado na tabela cinema com ID ${movieIdNum}`)
+        let url = ''
+        
+        if (path.includes('/series/')) {
+          // É série
+          const { data } = await supabase
+            .from('series')
+            .select('*')
+            .eq('id_n', parseInt(id))
+            .single()
+
+          if (data) {
+            setContent(data as Series)
+            // Séries podem ter URLs diferentes, verificar
+            url = (data as any).url || ''
           }
         } else {
-          // É um UUID, busca na tabela content
-          const { data: contentData, error: contentError } = await sb.from('content').select('title,video_url,tmdb_id').eq('id', id).maybeSingle()
-          if (contentError) {
-            console.error('[Watch] Erro ao buscar content:', contentError)
-          }
-          
-          if (contentData && contentData.video_url) {
-            // Content encontrado com URL
-            setTitle(contentData.title || '')
-            setVideoUrl(contentData.video_url || '')
-            console.log(`[Watch] Content encontrado: ${contentData.title}, URL: ${contentData.video_url ? 'configurada' : 'não configurada'}`, contentData)
-          } else if (contentData) {
-            // Content encontrado mas SEM URL - tentar buscar em cinema
-            console.log(`[Watch] Content encontrado mas sem URL: ${contentData.title}, buscando em cinema...`)
-            
-            // Tenta buscar por tmdb_id primeiro (mais preciso)
-            if (contentData.tmdb_id) {
-              const { data: cinemaByTmdb, error: tmdbError } = await sb.from('cinema').select('titulo,url').eq('tmdb_id', contentData.tmdb_id).maybeSingle()
-              if (tmdbError) {
-                console.error('[Watch] Erro ao buscar por tmdb_id:', tmdbError)
-              }
-              if (cinemaByTmdb && cinemaByTmdb.url) {
-                setTitle(cinemaByTmdb.titulo || '')
-                setVideoUrl(cinemaByTmdb.url || '')
-                console.log(`[Watch] Encontrado em cinema por tmdb_id: ${cinemaByTmdb.titulo}`, cinemaByTmdb)
-              } else {
-                // Fallback por título se tmdb_id não funcionou
-                const { data: cinemaFallback, error: fallbackError } = await sb.from('cinema').select('titulo,url').ilike('titulo', `%${contentData.title}%`).maybeSingle()
-                if (fallbackError) {
-                  console.error('[Watch] Erro ao buscar por título:', fallbackError)
-                }
-                if (cinemaFallback && cinemaFallback.url) {
-                  setTitle(cinemaFallback.titulo || '')
-                  setVideoUrl(cinemaFallback.url || '')
-                  console.log(`[Watch] Encontrado em cinema por título: ${cinemaFallback.titulo}`, cinemaFallback)
-                } else {
-                  setTitle(contentData.title || '')
-                  setVideoUrl('')
-                  console.log(`[Watch] Content sem URL e não encontrado em cinema por título`)
-                }
-              }
-            } else {
-              // Fallback direto por título
-              const { data: cinemaFallback, error: fallbackError } = await sb.from('cinema').select('titulo,url').ilike('titulo', `%${contentData.title}%`).maybeSingle()
-              if (fallbackError) {
-                console.error('[Watch] Erro ao buscar por título:', fallbackError)
-              }
-              if (cinemaFallback && cinemaFallback.url) {
-                setTitle(cinemaFallback.titulo || '')
-                setVideoUrl(cinemaFallback.url || '')
-                console.log(`[Watch] Encontrado em cinema por título: ${cinemaFallback.titulo}`, cinemaFallback)
-              } else {
-                setTitle(contentData.title || '')
-                setVideoUrl('')
-                console.log(`[Watch] Content sem URL e não encontrado em cinema por título`)
-              }
-            }
-          } else {
-            console.log(`[Watch] Content não encontrado com ID ${id}`)
+          // É filme
+          const { data } = await supabase
+            .from('cinema')
+            .select('*')
+            .eq('id', parseInt(id))
+            .single()
+
+          if (data) {
+            setContent(data as Cinema)
+            url = data.url || ''
           }
         }
+
+        if (!url) {
+          setError('URL do vídeo não encontrada')
+        }
       } catch (err) {
-        console.error('[Watch] Erro ao carregar vídeo:', err)
+        console.error('Erro ao carregar vídeo:', err)
+        setError('Erro ao carregar vídeo')
       } finally {
-        setFetching(false)
+        setLoading(false)
       }
     }
-    
-    loadVideo()
-  }, [user, id])
 
-  const showControls = useCallback(() => {
-    setShowCtrl(true)
-    clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(() => { if (playing) setShowCtrl(false) }, 3000)
-  }, [playing])
+    loadContent()
+  }, [params.id])
 
-  function togglePlay() {
-    const v = videoRef.current
-    if (!v) return
-    if (v.paused) { v.play(); setPlaying(true) } else { v.pause(); setPlaying(false) }
-  }
-
-  if (loading || fetching) {
+  if (loading) {
     return (
-      <div style={{ display:'flex', height:'100vh', alignItems:'center', justifyContent:'center', background:'#000' }}>
-        <div style={{ width:32, height:32, border:'2px solid #333', borderTopColor:'#fff', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <p className="text-white text-xl">Carregando vídeo...</p>
       </div>
     )
   }
 
+  if (error || !content) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+        <p className="text-white text-xl mb-4">{error || 'Conteúdo não encontrado'}</p>
+        <button
+          onClick={() => router.back()}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+        >
+          Voltar
+        </button>
+      </div>
+    )
+  }
+
+  const titulo = content.titulo
+  const url = (content as Cinema).url || (content as any).url
+
   return (
-    <div
-      style={{ position:'fixed', inset:0, background:'#000', display:'flex', alignItems:'center', justifyContent:'center', cursor:'none', zIndex:9999 }}
-      onMouseMove={showControls}
-      onClick={togglePlay}
-    >
-      {videoUrl ? (
-        <video
-          ref={videoRef}
-          src={videoUrl}
-          style={{ width:'100%', height:'100%', objectFit:'contain' }}
-          onTimeUpdate={() => { const v = videoRef.current; if (v) { setProgress(v.currentTime); setDuration(v.duration) } }}
-          onEnded={() => setPlaying(false)}
-          onLoadedMetadata={() => { const v = videoRef.current; if (v) setDuration(v.duration) }}
-        />
-      ) : (
-        <div style={{ textAlign:'center' }}>
-          <div style={{ fontSize:64 }}>🎬</div>
-          <p style={{ color:'#fff', fontFamily:"'Inter',sans-serif", fontWeight:700, fontSize:20, marginTop:16 }}>{title}</p>
-          <p style={{ color:'#888', fontFamily:"'Open Sans',sans-serif", marginTop:8 }}>URL de vídeo não configurada</p>
-        </div>
-      )}
+    <div className="min-h-screen bg-black text-white">
+      {/* Header */}
+      <div className="absolute top-0 left-0 right-0 z-10 p-4 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent">
+        <button
+          onClick={() => router.back()}
+          className="text-white hover:text-blue-400 flex items-center gap-2"
+        >
+          ← Voltar
+        </button>
+        <h1 className="text-lg font-semibold truncate px-4">{titulo}</h1>
+        <div className="w-16" />
+      </div>
 
-      {/* Controls */}
-      <div
-        onClick={e => e.stopPropagation()}
-        style={{
-          position:'absolute', inset:0, display:'flex', flexDirection:'column', justifyContent:'space-between',
-          background:'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 20%, transparent 70%, rgba(0,0,0,0.85) 100%)',
-          opacity: showCtrl ? 1 : 0, transition:'opacity 0.3s', cursor:'default',
-          pointerEvents: showCtrl ? 'auto' : 'none',
-        }}
-      >
-        {/* Top */}
-        <div style={{ padding:'16px 24px', display:'flex', alignItems:'center', gap:16 }}>
-          <Link href="/home" style={{
-            display:'flex', alignItems:'center', gap:8, background:'rgba(0,0,0,0.5)',
-            borderRadius:10, padding:'8px 16px', color:'#fff', textDecoration:'none',
-            fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:600,
-          }}>← Voltar</Link>
-          <span style={{ color:'#fff', fontFamily:"'Inter',sans-serif", fontWeight:700, fontSize:16 }}>{title}</span>
-        </div>
-
-        {/* Bottom */}
-        <div style={{ padding:'16px 24px' }}>
-          {/* Progress */}
-          <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
-            <span style={{ color:'#ccc', fontSize:13, fontFamily:"'Open Sans',sans-serif", minWidth:40, textAlign:'right' }}>{formatTime(progress)}</span>
-            <input type="range" min={0} max={duration||0} value={progress} step={1} style={{ flex:1 }}
-              onChange={e => { const v = Number(e.target.value); if (videoRef.current) videoRef.current.currentTime = v; setProgress(v) }} />
-            <span style={{ color:'#ccc', fontSize:13, fontFamily:"'Open Sans',sans-serif", minWidth:40 }}>{formatTime(duration)}</span>
+      {/* Video Player */}
+      <div className="w-full h-screen flex items-center justify-center">
+        {url ? (
+          <video
+            ref={videoRef}
+            className="w-full h-full max-h-screen"
+            controls
+            autoPlay
+            playsInline
+          >
+            <source src={url} type="video/mp4" />
+            Seu navegador não suporta reprodução de vídeo.
+          </video>
+        ) : (
+          <div className="text-center">
+            <p className="text-xl mb-4">Vídeo não disponível</p>
+            <button
+              onClick={() => router.back()}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+            >
+              Voltar
+            </button>
           </div>
-          {/* Buttons */}
-          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <button onClick={togglePlay} style={{
-              width:40, height:40, borderRadius:'50%', background:'#fff', border:'none',
-              cursor:'pointer', fontSize:16, fontFamily:"'Inter',sans-serif", fontWeight:700,
-            }}>{playing ? '⏸' : '▶'}</button>
-            <button onClick={() => { if (videoRef.current) videoRef.current.currentTime = Math.min(progress + 10, duration) }}
-              style={{ background:'none', border:'none', color:'#ccc', cursor:'pointer', fontSize:20 }}>⏭</button>
-            <button onClick={() => { setMuted(!muted); if (videoRef.current) videoRef.current.muted = !muted }}
-              style={{ background:'none', border:'none', color:'#ccc', cursor:'pointer', fontSize:20 }}>{muted ? '🔇' : '🔊'}</button>
-            <input type="range" min={0} max={1} step={0.05} value={volume} style={{ width:80 }}
-              onChange={e => { const v = Number(e.target.value); setVolume(v); if (videoRef.current) videoRef.current.volume = v }} />
-            <div style={{ flex:1 }} />
-            <button onClick={() => { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen() }}
-              style={{ background:'none', border:'none', color:'#ccc', cursor:'pointer', fontSize:20 }}>⛶</button>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   )

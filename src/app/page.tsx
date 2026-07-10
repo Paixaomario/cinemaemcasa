@@ -1,27 +1,101 @@
-export const dynamic = 'force-dynamic'
+'use client'
 
-export default function Home() {
-  // Dados FAKE para testar renderização
-  const mockMovies = [
-    { id: 1, titulo: 'Filme Teste 1', poster: 'https://via.placeholder.com/150x200?text=Filme+1' },
-    { id: 2, titulo: 'Filme Teste 2', poster: 'https://via.placeholder.com/150x200?text=Filme+2' },
-    { id: 3, titulo: 'Filme Teste 3', poster: 'https://via.placeholder.com/150x200?text=Filme+3' },
-  ]
+import { useEffect, useState } from 'react'
+import { supabase, Cinema, Series } from '../lib/supabase'
+import { ContentCard } from '../components/ContentCard'
+
+export default function HomePage() {
+  const [movies, setMovies] = useState<Cinema[]>([])
+  const [series, setSeries] = useState<Series[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadContent() {
+      try {
+        // Busca filmes
+        const { data: moviesData } = await supabase
+          .from('cinema')
+          .select('id,titulo,poster,banner,backdrop')
+          .order('created_at', { ascending: false })
+          .limit(20)
+
+        // Busca séries
+        const { data: seriesData } = await supabase
+          .from('series')
+          .select('id_n,titulo,poster,capa,banner')
+          .order('created_at', { ascending: false })
+          .limit(20)
+
+        if (moviesData) setMovies(moviesData)
+        if (seriesData) setSeries(seriesData)
+      } catch (error) {
+        console.error('Erro ao carregar conteúdo:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadContent()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <p className="text-white text-xl">Carregando...</p>
+      </div>
+    )
+  }
 
   return (
-    <div style={{ padding: '20px', color: '#fff', background: '#000', minHeight: '100vh' }}>
-      <h1>🎬 Cinema em Casa - TESTE COM DADOS FAKE</h1>
-      <p style={{ color: '#0f0' }}>Se você vê as 3 imagens abaixo = página funciona, problema é Supabase</p>
-      
-      <h2>Filmes Teste ({mockMovies.length})</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '15px' }}>
-        {mockMovies.map((m) => (
-          <div key={m.id} style={{ background: '#333', padding: '10px', borderRadius: '8px' }}>
-            <img src={m.poster} alt={m.titulo} style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '4px' }} />
-            <p style={{ fontSize: '12px', marginTop: '10px' }}>{m.titulo}</p>
+    <div className="min-h-screen bg-black text-white p-4 md:p-8">
+      <header className="mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-blue-400">PaixãoFlix</h1>
+        <p className="text-gray-400 mt-2">Seu cinema em casa</p>
+      </header>
+
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold mb-4">Filmes</h2>
+        {movies.length > 0 ? (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+            {movies.map(movie => (
+              <ContentCard
+                key={movie.id}
+                id={movie.id}
+                title={movie.titulo}
+                poster={movie.poster}
+                banner={movie.banner}
+                backdrop={movie.backdrop}
+                type="movie"
+                onClick={() => window.location.href = `/detalhes/${movie.id}`}
+              />
+            ))}
           </div>
-        ))}
-      </div>
+        ) : (
+          <p className="text-gray-500">Nenhum filme encontrado</p>
+        )}
+      </section>
+
+      <section>
+        <h2 className="text-2xl font-semibold mb-4">Séries</h2>
+        {series.length > 0 ? (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+            {series.map(serie => (
+              <ContentCard
+                key={serie.id_n}
+                id={serie.id_n}
+                title={serie.titulo}
+                poster={serie.poster}
+                capa={serie.capa}
+                banner={serie.banner}
+                type="series"
+                onClick={() => window.location.href = `/detalhes/series/${serie.id_n}`}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500">Nenhuma série encontrada</p>
+        )}
+      </section>
     </div>
   )
 }
