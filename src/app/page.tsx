@@ -1,16 +1,24 @@
 export const dynamic = 'force-dynamic'
 
 export default function Home() {
+  // Dados FAKE para testar renderização
+  const mockMovies = [
+    { id: 1, titulo: 'Filme Teste 1', poster: 'https://via.placeholder.com/150x200?text=Filme+1' },
+    { id: 2, titulo: 'Filme Teste 2', poster: 'https://via.placeholder.com/150x200?text=Filme+2' },
+    { id: 3, titulo: 'Filme Teste 3', poster: 'https://via.placeholder.com/150x200?text=Filme+3' },
+  ]
+
   return (
-    <div style={{ padding: '40px', color: '#fff', background: '#000', minHeight: '100vh', fontFamily: 'Arial, sans-serif', textAlign: 'center' }}>
-      <h1 style={{ fontSize: '48px', marginBottom: '30px' }}>🎬 Cinema em Casa v2.0</h1>
-      <p style={{ fontSize: '20px', marginBottom: '40px' }}>✅ Versão limpa - Sem cache</p>
+    <div style={{ padding: '20px', color: '#fff', background: '#000', minHeight: '100vh' }}>
+      <h1>🎬 Cinema em Casa - TESTE COM DADOS FAKE</h1>
+      <p style={{ color: '#0f0' }}>Se você vê as 3 imagens abaixo = página funciona, problema é Supabase</p>
       
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '15px', maxWidth: '1200px', margin: '0 auto' }}>
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} style={{ background: '#333', padding: '15px', borderRadius: '8px' }}>
-            <div style={{ height: '200px', background: '#555', borderRadius: '4px', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>Placeholder {i}</div>
-            <p style={{ fontSize: '14px', color: '#ccc' }}>Filme {i}</p>
+      <h2>Filmes Teste ({mockMovies.length})</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '15px' }}>
+        {mockMovies.map((m) => (
+          <div key={m.id} style={{ background: '#333', padding: '10px', borderRadius: '8px' }}>
+            <img src={m.poster} alt={m.titulo} style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '4px' }} />
+            <p style={{ fontSize: '12px', marginTop: '10px' }}>{m.titulo}</p>
           </div>
         ))}
       </div>
