@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { getHomeSections, getSectionContent } from '@/lib/queries'
 import { ContentGrid } from '@/components/ContentGrid'
@@ -35,6 +36,8 @@ export default function Home() {
   }
 
   const heroItem = sections.length ? sectionContents[sections[0].id]?.[0] : null
+  const heroPoster = heroItem?.poster || heroItem?.capa
+  const heroHref = heroItem?.id || heroItem?.id_n ? `/detalhes/${heroItem?.id ?? heroItem?.id_n}` : undefined
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -50,12 +53,29 @@ export default function Home() {
             </div>
 
             {heroItem ? (
-              <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/90 p-6 shadow-2xl backdrop-blur-xl">
-                <p className="text-sm uppercase tracking-[0.35em] text-slate-400">Destaque</p>
-                <h2 className="mt-4 text-2xl font-semibold text-white">{heroItem.titulo || 'Sem título'}</h2>
-                <div className="mt-4 space-y-2 text-sm text-slate-300">
-                  <div>⭐ {heroItem.rating ?? 'N/A'}</div>
-                  <div>{heroItem.year ?? heroItem.ano ?? 'N/A'}</div>
+              <div className="relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-slate-950/90 p-6 shadow-2xl backdrop-blur-xl">
+                {heroPoster ? (
+                  <div
+                    className="absolute inset-0 bg-cover bg-center opacity-40"
+                    style={{ backgroundImage: `url(${heroPoster})` }}
+                  />
+                ) : null}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-slate-900/40" />
+                <div className="relative space-y-4">
+                  <p className="text-sm uppercase tracking-[0.35em] text-slate-400">Destaque</p>
+                  <h2 className="text-2xl font-semibold text-white">{heroItem.titulo || 'Sem título'}</h2>
+                  <div className="space-y-2 text-sm text-slate-300">
+                    <div>⭐ {heroItem.rating ?? 'N/A'}</div>
+                    <div>{heroItem.year ?? heroItem.ano ?? 'N/A'}</div>
+                  </div>
+                  {heroHref ? (
+                    <Link
+                      href={heroHref}
+                      className="inline-flex items-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
+                    >
+                      Ver detalhes
+                    </Link>
+                  ) : null}
                 </div>
               </div>
             ) : null}
