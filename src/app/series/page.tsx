@@ -1,23 +1,28 @@
 'use client'
  
 import { useEffect, useState } from 'react'
-import { getSeries, getSeriesCategories } from '@/lib/queries'
+import { getSeries, getSeriesBannerItems, getSeriesCategories } from '@/lib/queries'
 import { ContentGrid } from '@/components/ContentGrid'
+import { RotatingBanner } from '@/components/RotatingBanner'
 
 export default function SeriesPage() {
-  const [series, setSeries] = useState<any[]>([])
-  const [categories, setCategories] = useState<string[]>([])
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [seriesSections, setSeriesSections] = useState<Array<{ category: string; items: any[] }>>([])
+  const [bannerItems, setBannerItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const load = async () => {
       try {
-        const cats = await getSeriesCategories()
-        setCategories(cats)
+        const [categories, banner] = await Promise.all([getSeriesCategories(), getSeriesBannerItems(undefined, 12)])
+        setBannerItems(banner)
+        const sections = await Promise.all(
+          categories.map(async (category) => ({
+            category,
+            items: await getSeries(category, 5),
+          }))
+        )
 
-        const list = await getSeries(selectedCategory || undefined)
-        setSeries(list)
+        setSeriesSections(sections)
       } catch (err) {
         console.error('Erro ao carregar séries:', err)
       } finally {
@@ -26,41 +31,36 @@ export default function SeriesPage() {
     }
 
     load()
-  }, [selectedCategory])
+  }, [])
 
-  if (loading) return <div className="min-h-screen bg-black px-6 py-10 text-white">Carregando séries...</div>
+  if (loading) {
+    return <div className="min-h-screen bg-black px-6 py-10 text-white">Carregando séries...</div>
+  }
 
   return (
-    <main className="min-h-screen bg-black text-white px-6 py-10">
-      <div className="mx-auto max-w-7xl grid gap-8 lg:grid-cols-[220px_1fr]">
-        <aside className="hidden flex-col gap-2 lg:flex">
-          <h2 className="text-sm font-semibold text-slate-300">Categorias</h2>
-          <div className="flex flex-col gap-2">
-            <button onClick={() => setSelectedCategory(null)} className={`text-left rounded-md px-3 py-2 ${selectedCategory===null? 'bg-amber-500 text-slate-900':'bg-slate-900 text-slate-300'}`}>
-              Todas
-            </button>
-            {categories.map((cat) => (
-              <button key={cat} onClick={() => setSelectedCategory(cat)} className={`text-left rounded-md px-3 py-2 ${selectedCategory===cat? 'bg-amber-500 text-slate-900':'bg-slate-900 text-slate-300'}`}>
-                {cat}
-              </button>
-            ))}
-          </div>
-        </aside>
+    <main className="min-h-screen bg-black px-6 py-10 text-white">
+      <div className="mx-auto max-w-7xl space-y-10">
+        <header className="space-y-3">
+          <p className="text-sm uppercase tracking-[0.35em] text-slate-400">Catálogo</p>
+          <h1 className="text-3xl font-semibold">📺 Séries</h1>
+          <p className="max-w-2xl text-sm text-slate-400">
+            As categorias aparecem em blocos separados, com rolagem horizontal e sem menus laterais.
+          </p>
+        </header>
 
-        <section>
-          <h1 className="mb-4 text-3xl font-semibold">📺 Séries</h1>
-          <div className="mb-6 lg:hidden">
-            <label className="mb-2 block text-sm text-slate-300">Filtrar por categoria</label>
-            <select value={selectedCategory ?? ''} onChange={(e) => setSelectedCategory(e.target.value || null)} className="w-full rounded-xl bg-slate-900 px-3 py-2 text-white">
-              <option value="">Todas</option>
-              {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
+        <RotatingBanner items={bannerItems} title="Séries em destaque" subtitle="O catálogo de séries gira automaticamente sem repetição e sem botões de navegação." />
 
-          <p className="mb-4 text-slate-400">{series.length} série(s) encontrada(s)</p>
-
-          <ContentGrid items={series} onItemClick={(it) => console.log('Série:', it)} />
-        </section>
+        <div className="space-y-8">
+          {seriesSections.map((section) => (
+            <section key={section.category} className="space-y-3">
+              <div className="flex items-end justify-between gap-4">
+                <h2 className="text-lg font-semibold text-white">{section.category}</h2>
+                <span className="text-sm text-slate-500">{section.items.length} títulos</span>
+              </div>
+              <ContentGrid items={section.items} />
+            </section>
+          ))}
+        </div>
       </div>
     </main>
   )

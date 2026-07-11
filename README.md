@@ -13,6 +13,15 @@ Aplicação web de streaming em Next.js para filmes e séries, com catálogo car
 - Redirecionamento de login para a home
 - Build confirmado com Next.js 15
 
+## Atualizações recentes (2026-07-11)
+
+- Banners rotativos adicionados na `home`, `filmes` e `series` com rotação automática a cada 7 segundos e sem botões de navegação.
+- Navegação espacial aprimorada para TV/controle remoto, evitando saltos entre a sidebar e as grades de conteúdo.
+- A `home` agora evita repetição de itens entre seções e mostra até 5 capas por linha.
+- Páginas de `filmes` e `series` exibem categorias como blocos horizontais (sem menus laterais na página).
+
+Consulte o `CHANGELOG.md` para detalhes completos sobre as alterações recentes.
+
 ## Stack
 
 - Next.js 15

@@ -1,23 +1,28 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getMovies, getMovieCategories } from '@/lib/queries'
+import { getMovieBannerItems, getMovies, getMovieCategories } from '@/lib/queries'
 import { ContentGrid } from '@/components/ContentGrid'
+import { RotatingBanner } from '@/components/RotatingBanner'
 
 export default function FilmesPage() {
-  const [movies, setMovies] = useState<any[]>([])
-  const [categories, setCategories] = useState<string[]>([])
-  const [selected, setSelected] = useState<string | null>(null)
+  const [movieSections, setMovieSections] = useState<Array<{ category: string; items: any[] }>>([])
+  const [bannerItems, setBannerItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const load = async () => {
       try {
-        const cats = await getMovieCategories()
-        setCategories(cats)
+        const [categories, banner] = await Promise.all([getMovieCategories(), getMovieBannerItems(undefined, 12)])
+        setBannerItems(banner)
+        const sections = await Promise.all(
+          categories.map(async (category) => ({
+            category,
+            items: await getMovies(category, 5),
+          }))
+        )
 
-        const data = await getMovies(selected || undefined)
-        setMovies(data)
+        setMovieSections(sections)
       } catch (err) {
         console.error('Erro filmes:', err)
       } finally {
@@ -26,27 +31,36 @@ export default function FilmesPage() {
     }
 
     load()
-  }, [selected])
+  }, [])
 
-  if (loading) return <div className="min-h-screen bg-black px-6 py-10 text-white">Carregando filmes...</div>
+  if (loading) {
+    return <div className="min-h-screen bg-black px-6 py-10 text-white">Carregando filmes...</div>
+  }
 
   return (
-    <main className="min-h-screen bg-black text-white px-6 py-10">
-      <div className="mx-auto max-w-7xl">
-        <h1 className="mb-6 text-3xl font-semibold">🎬 Filmes</h1>
+    <main className="min-h-screen bg-black px-6 py-10 text-white">
+      <div className="mx-auto max-w-7xl space-y-10">
+        <header className="space-y-3">
+          <p className="text-sm uppercase tracking-[0.35em] text-slate-400">Catálogo</p>
+          <h1 className="text-3xl font-semibold">🎬 Filmes</h1>
+          <p className="max-w-2xl text-sm text-slate-400">
+            As categorias aparecem em blocos separados, com rolagem horizontal e até 5 capas por linha.
+          </p>
+        </header>
 
-        <div className="mb-6 flex flex-wrap gap-2">
-          <button onClick={() => setSelected(null)} className={`rounded-full px-4 py-2 text-sm ${selected===null? 'bg-amber-500 text-slate-900':'bg-slate-900 text-slate-300'}`}>
-            Todos
-          </button>
-          {categories.map((cat) => (
-            <button key={cat} onClick={() => setSelected(cat)} className={`rounded-full px-4 py-2 text-sm ${selected===cat? 'bg-amber-500 text-slate-900':'bg-slate-900 text-slate-300'}`}>
-              {cat}
-            </button>
+        <RotatingBanner items={bannerItems} title="Filmes em destaque" subtitle="As melhores capas do catálogo rotacionam automaticamente a cada 7 segundos." />
+
+        <div className="space-y-8">
+          {movieSections.map((section) => (
+            <section key={section.category} className="space-y-3">
+              <div className="flex items-end justify-between gap-4">
+                <h2 className="text-lg font-semibold text-white">{section.category}</h2>
+                <span className="text-sm text-slate-500">{section.items.length} títulos</span>
+              </div>
+              <ContentGrid items={section.items} />
+            </section>
           ))}
         </div>
-
-        <ContentGrid items={movies} onItemClick={(it) => console.log('Filme:', it)} />
       </div>
     </main>
   )

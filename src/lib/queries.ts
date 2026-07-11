@@ -1,5 +1,60 @@
 import { supabase } from './supabase'
 
+export const MOVIE_CATEGORY_ORDER = [
+  'Lançamento 2026',
+  'Lançamento 2025',
+  'Animação',
+  'Comédia',
+  'Ação',
+  'Aventura',
+  'Dorama',
+  'Negritude',
+  'Finanças',
+  'Infantil',
+  'Clássicos',
+  'Crime',
+  'Anime',
+  'Romance',
+  'Religioso',
+  'Nacional',
+  'Documentários',
+  'Drama',
+  'Família',
+  'Musical',
+  'Faroeste',
+  'Ficção',
+  'Policial',
+  'Suspense',
+  'Terror',
+  'Adulto',
+]
+
+export function getContentKey(item: any) {
+  return [item?.id, item?.id_n, item?.slug, item?.titulo].filter(Boolean).map(String).join('-')
+}
+
+export function selectUniqueItems<T extends Record<string, any>>(items: T[], limit: number, usedIds = new Set<string>()) {
+  const safeLimit = Math.max(0, limit)
+  const normalizedSeen = new Set(Array.from(usedIds).map((value) => String(value)))
+  const available = (items || []).filter((item) => {
+    const key = getContentKey(item)
+    return Boolean(key) && !normalizedSeen.has(key)
+  })
+
+  const shuffled = [...available].sort(() => Math.random() - 0.5)
+  const selected = shuffled.slice(0, safeLimit)
+
+  selected.forEach((item) => {
+    const key = getContentKey(item)
+    if (key) {
+      normalizedSeen.add(key)
+      usedIds.add(key)
+    }
+  })
+
+  return selected
+}
+
 // ============================================================
 // HOME - home_sections
 // ============================================================
@@ -20,10 +75,66 @@ export async function getHomeSections() {
   }
 }
 
-export async function getSectionContent(section: any) {
+export async function getHomeBannerItems(limit = 12) {
+  try {
+    const [cinemaResponse, seriesResponse] = await Promise.all([
+      supabase.from('cinema').select('*').eq('type', 'movie').order('created_at', { ascending: false }).limit(limit),
+      supabase.from('series').select('*').order('created_at', { ascending: false }).limit(limit),
+    ])
+
+    const cinemaItems = (cinemaResponse.data || []).filter((item) => item.poster || item.capa || item.banner || item.backdrop)
+    const seriesItems = (seriesResponse.data || []).filter((item) => item.poster || item.capa || item.banner || item.backdrop)
+    const combined = [...cinemaItems, ...seriesItems]
+
+    return selectUniqueItems(combined, Math.max(1, limit), new Set<string>())
+  } catch (error) {
+    console.error('Erro ao buscar banner da home:', error)
+    return []
+  }
+}
+
+export async function getMovieBannerItems(category?: string, limit = 12) {
+  try {
+    let query = supabase.from('cinema').select('*').eq('type', 'movie')
+
+    if (category) {
+      query = query.eq('category', category)
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false }).limit(limit)
+
+    if (error) throw error
+
+    return (data || []).filter((item) => item.poster || item.capa || item.banner || item.backdrop)
+  } catch (error) {
+    console.error('Erro ao buscar banner de filmes:', error)
+    return []
+  }
+}
+
+export async function getSeriesBannerItems(category?: string, limit = 12) {
+  try {
+    let query = supabase.from('series').select('*')
+
+    if (category) {
+      query = query.eq('genero', category)
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false }).limit(limit)
+
+    if (error) throw error
+
+    return (data || []).filter((item) => item.poster || item.capa || item.banner || item.backdrop)
+  } catch (error) {
+    console.error('Erro ao buscar banner de séries:', error)
+    return []
+  }
+}
+
+export async function getSectionContent(section: any, usedIds = new Set<string>()) {
   try {
     let query = supabase.from('cinema').select('*')
-    
+
     if (section.categorias && section.categorias.length > 0) {
       query = query.in('category', section.categorias)
     }
@@ -36,12 +147,14 @@ export async function getSectionContent(section: any) {
       query = query.order('year', { ascending: false })
     }
 
-    query = query.limit(section.limite || 5)
+    const rowLimit = Math.min(5, Number(section.limite) || 5)
+    const poolLimit = Math.max(rowLimit * 4, 20)
+    query = query.limit(poolLimit)
 
     const { data, error } = await query
 
     if (error) throw error
-    return data || []
+    return selectUniqueItems(data || [], rowLimit, usedIds)
   } catch (error) {
     console.error('Erro ao buscar conteúdo da seção:', error)
     return []
@@ -52,7 +165,7 @@ export async function getSectionContent(section: any) {
 // FILMES - cinema
 // ============================================================
 
-export async function getMovies(category?: string, limit = 50) {
+export async function getMovies(category?: string, limit = 5) {
   try {
     let query = supabase
       .from('cinema')
@@ -63,7 +176,8 @@ export async function getMovies(category?: string, limit = 50) {
       query = query.eq('category', category)
     }
 
-    const { data, error } = await query.limit(limit).order('created_at', { ascending: false })
+    const rowLimit = Math.min(5, Number(limit) || 5)
+    const { data, error } = await query.limit(rowLimit).order('created_at', { ascending: false })
 
     if (error) throw error
     return data || []
@@ -98,9 +212,12 @@ export async function getMovieCategories() {
       .not('category', 'is', null)
 
     if (error) throw error
-    
-    const categories = new Set(data?.map(d => d.category).filter(Boolean))
-    return Array.from(categories)
+
+    const categories = new Set(data?.map((d) => d.category).filter(Boolean))
+    const available = Array.from(categories) as string[]
+    const ordered = MOVIE_CATEGORY_ORDER.filter((category) => available.includes(category))
+    const extras = available.filter((category) => !ordered.includes(category))
+    return [...ordered, ...extras]
   } catch (error) {
     console.error('Erro ao buscar categorias:', error)
     return []
@@ -111,7 +228,7 @@ export async function getMovieCategories() {
 // SÉRIES - series
 // ============================================================
 
-export async function getSeries(category?: string, limit = 50) {
+export async function getSeries(category?: string, limit = 5) {
   try {
     let query = supabase.from('series').select('*')
 
@@ -119,7 +236,8 @@ export async function getSeries(category?: string, limit = 50) {
       query = query.eq('genero', category)
     }
 
-    const { data, error } = await query.limit(limit).order('created_at', { ascending: false })
+    const rowLimit = Math.min(5, Number(limit) || 5)
+    const { data, error } = await query.limit(rowLimit).order('created_at', { ascending: false })
 
     if (error) throw error
     return data || []

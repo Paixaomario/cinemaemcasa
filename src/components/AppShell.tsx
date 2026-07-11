@@ -89,6 +89,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
+                data-spatial-nav="true"
+                data-spatial-group="sidebar"
                 className={`group flex flex-col items-center justify-center rounded-2xl px-2 py-3 text-center transition ${
                   isActive
                     ? 'bg-white/10 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.1)]'
@@ -117,6 +119,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
+                data-spatial-nav="true"
+                data-spatial-group="sidebar"
                 className={`flex min-w-[56px] flex-col items-center rounded-full px-3 py-2 text-[11px] font-medium transition ${
                   isActive ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white'
                 }`}

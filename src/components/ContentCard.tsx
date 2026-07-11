@@ -22,6 +22,8 @@ export function ContentCard({ id, titulo, poster, rating, year, href, onClick }:
 
   const card = (
     <div
+      data-spatial-nav="true"
+      data-spatial-group="content"
       className="group relative overflow-hidden rounded-[1rem] bg-slate-950 shadow-[0_20px_60px_rgba(0,0,0,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400 focus-visible:ring-4 focus-visible:ring-amber-400/30"
       onClick={href ? undefined : onClick}
       tabIndex={href ? undefined : 0}
@@ -54,7 +56,7 @@ export function ContentCard({ id, titulo, poster, rating, year, href, onClick }:
 
   if (href) {
     return (
-      <Link href={href} className="block" tabIndex={0}>
+      <Link href={href} className="block" tabIndex={0} data-spatial-nav="true" data-spatial-group="content">
         {card}
       </Link>
     )
