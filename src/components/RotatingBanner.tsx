@@ -70,15 +70,15 @@ export function RotatingBanner({ items, title, subtitle, hrefPrefix = '/detalhes
   const href = currentItem ? `${hrefPrefix}/${getItemId(currentItem)}` : '#'
 
   return (
-    <section className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-slate-950 shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
+    <section className="w-full relative overflow-hidden bg-transparent">
       {poster ? (
         <div
           className="absolute inset-0 bg-cover bg-center transition-all duration-700"
-          style={{ backgroundImage: `url(${poster})` }}
+          style={{ backgroundImage: `url(${poster})`, backgroundSize: 'cover' }}
         />
       ) : null}
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-slate-950/25" />
-      <div className="relative flex min-h-[320px] flex-col justify-end gap-4 p-6 sm:p-8 lg:min-h-[380px] lg:p-10">
+      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/45 to-black/20" />
+      <div className="relative flex w-full min-h-[320px] flex-col justify-end gap-4 p-2 sm:p-6 lg:min-h-[380px] lg:p-10">
         <div className="space-y-3">
           <p className="text-sm uppercase tracking-[0.35em] text-slate-300">Em destaque</p>
           <h2 className="max-w-2xl text-3xl font-semibold leading-tight text-white sm:text-4xl">
@@ -89,19 +89,7 @@ export function RotatingBanner({ items, title, subtitle, hrefPrefix = '/detalhes
           </p>
         </div>
 
-        {currentItem ? (
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href={href}
-              className="inline-flex items-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
-            >
-              Ver detalhes
-            </Link>
-            <span className="text-sm text-slate-300">Atualiza a cada 7 segundos</span>
-          </div>
-        ) : (
-          <p className="text-sm text-slate-300">Nenhuma imagem disponível para o banner no momento.</p>
-        )}
+        {/* No navigation buttons - description and title rotate every 7s */}
       </div>
     </section>
   )

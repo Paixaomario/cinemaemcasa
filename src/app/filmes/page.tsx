@@ -48,7 +48,10 @@ export default function FilmesPage() {
           </p>
         </header>
 
-        <RotatingBanner items={bannerItems} title="Filmes em destaque" subtitle="As melhores capas do catálogo rotacionam automaticamente a cada 7 segundos." />
+        {/* Full width banner */}
+        <div className="w-full px-0">
+          <RotatingBanner items={bannerItems} title="Filmes em destaque" subtitle="As melhores capas do catálogo rotacionam automaticamente." />
+        </div>
 
         <div className="space-y-8">
           {movieSections.map((section) => (

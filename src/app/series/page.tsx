@@ -48,7 +48,10 @@ export default function SeriesPage() {
           </p>
         </header>
 
-        <RotatingBanner items={bannerItems} title="Séries em destaque" subtitle="O catálogo de séries gira automaticamente sem repetição e sem botões de navegação." />
+        {/* Full width banner */}
+        <div className="w-full px-0">
+          <RotatingBanner items={bannerItems} title="Séries em destaque" subtitle="O catálogo de séries gira automaticamente sem repetição." />
+        </div>
 
         <div className="space-y-8">
           {seriesSections.map((section) => (

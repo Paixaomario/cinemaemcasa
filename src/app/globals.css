@@ -16,10 +16,10 @@ body {
 :focus-visible, 
 .using-keyboard *:focus {
   outline: none !important;
-  box-shadow: 0 0 0 4px var(--brand-cyan, #00ADEF) !important;
+  box-shadow: 0 0 0 2px var(--media-focus-ring-color, #00ADEF) !important;
   /* Força aceleração de hardware no elemento focado */
-  transform: scale(1.02) translateZ(0);
-  transition: box-shadow 0.1s ease-out;
+  transform: translateZ(0);
+  transition: box-shadow 0.12s ease-out, transform 0.08s ease-out;
   backface-visibility: hidden;
 }
 
@@ -55,12 +55,12 @@ body {
   display: flex;
   flex-wrap: nowrap; /* Garante que os itens fiquem em uma única linha */
   gap: 1.5rem; /* Espaço entre as capas */
-  overflow-x: scroll; /* Força scroll horizontal para TVs e melhora compatibilidade */
+  overflow-x: auto; /* Força scroll horizontal para TVs e melhora compatibilidade */
   overflow-y: hidden; /* IMPORTANTE: Alterado de visible para hidden para destravar o scroll-x */
   scroll-snap-type: x mandatory;
   width: 100%;
-  padding: 40px 0; /* Ajustado para dar espaço ao efeito de escala sem cortar */
-  margin: -40px 0;
+  padding: 12px 0; /* Ajustado para dar espaço ao efeito de escala sem cortar */
+  margin: 0;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch; /* Melhora a fluidez no iOS/Safari */
   overscroll-behavior-x: contain;
@@ -79,6 +79,7 @@ body {
   .scroll-row > * {
     width: calc((100% - (4 * 1.5rem)) / 5.4) !important; /* Fits 5 items + peek */
   }
+  .scroll-row { padding-left: calc(6rem + 12px); }
   .tv-grid-layout {
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   }
@@ -96,10 +97,10 @@ body {
 
 /* Regras de Responsividade Crítica para Mobile */
 @media (max-width: 1023px) {
+  .section-px { padding-left: 2px !important; padding-right: 2px !important; }
   .scroll-row > * {
-    /* Garante visibilidade fluida em telas muito pequenas usando clamp */
-    width: clamp(140px, 45vw, 220px) !important;
-    min-width: 110px;
+    width: calc((100% - 4px) / 2) !important; /* 2 items per view */
+    min-width: 0;
   }
 }
 

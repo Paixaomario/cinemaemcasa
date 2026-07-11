@@ -59,7 +59,7 @@ function LoadingOverlay() {
         </div>
 
         <div className="w-full rounded-full bg-white/5 p-1">
-          <div className="h-2 rounded-full bg-amber-500 transition-all" style={{ width: `${progress}%` }} />
+          <div className="h-2 rounded-full transition-all" style={{ width: `${progress}%`, backgroundColor: 'var(--media-brand)' }} />
         </div>
         <div className="text-sm text-slate-400">Carregando... {progress}%</div>
       </div>
@@ -75,7 +75,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-black text-white">
       <LoadingOverlay />
 
-      <aside className="fixed left-0 top-0 z-30 hidden h-full w-24 flex-col border-r border-white/10 bg-black/95 px-3 py-6 lg:flex">
+            <aside className="fixed left-0 top-0 z-30 hidden h-full w-24 flex-col border-r border-white/10 bg-white/5 px-3 py-6 backdrop-blur-xl lg:flex">
         <div className="mb-8 flex h-12 w-12 items-center justify-center rounded-2xl bg-transparent text-xl font-semibold">
           <Image src="/logo.png" alt="logo" width={48} height={48} className="object-contain" />
         </div>
@@ -93,9 +93,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 data-spatial-group="sidebar"
                 className={`group flex flex-col items-center justify-center rounded-2xl px-2 py-3 text-center transition ${
                   isActive
-                    ? 'bg-white/10 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.1)]'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                        ? 'text-slate-900'
+                        : 'text-slate-400 hover:bg-white/5 hover:text-white'
                 }`}
+                    style={isActive ? { backgroundColor: 'var(--media-brand)' } : undefined}
               >
                 <Icon className="h-5 w-5" />
                 <span className="mt-2 text-[11px] font-medium tracking-wide">{item.label}</span>
@@ -115,15 +116,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             const Icon = item.icon
             const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
 
-            return (
+                return (
               <Link
                 key={item.href}
                 href={item.href}
                 data-spatial-nav="true"
                 data-spatial-group="sidebar"
                 className={`flex min-w-[56px] flex-col items-center rounded-full px-3 py-2 text-[11px] font-medium transition ${
-                  isActive ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                  isActive ? 'text-slate-900' : 'text-slate-400 hover:bg-white/5 hover:text-white'
                 }`}
+                style={isActive ? { backgroundColor: 'var(--media-brand)' } : undefined}
               >
                 <Icon className="h-5 w-5" />
                 <span className="mt-1">{item.label}</span>
