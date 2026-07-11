@@ -1,32 +1,35 @@
 'use client'
- 
+
 import { ContentCard } from './ContentCard'
- 
+
 interface ContentGridProps {
   items: any[]
   onItemClick?: (item: any) => void
-  columns?: number
 }
- 
-export function ContentGrid({ items, onItemClick, columns = 6 }: ContentGridProps) {
+
+export function ContentGrid({ items, onItemClick }: ContentGridProps) {
+  const getItemId = (item: any) => item.id ?? item.id_n
+
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: `repeat(auto-fill, minmax(150px, 1fr))`,
-      gap: '15px',
-      marginBottom: '30px'
-    }}>
-      {items.map((item) => (
-        <ContentCard
-          key={item.id || item.id_n}
-          id={item.id || item.id_n}
-          titulo={item.titulo}
-          poster={item.poster || item.capa}
-          rating={item.rating}
-          year={item.year || item.ano}
-          onClick={() => onItemClick?.(item)}
-        />
-      ))}
+    <div className="flex w-full gap-4 overflow-x-auto pb-4">
+      {items.map((item) => {
+        const id = getItemId(item)
+        const href = id ? `/detalhes/${id}` : undefined
+
+        return (
+          <div key={id ?? Math.random()} className="min-w-[180px] flex-shrink-0">
+            <ContentCard
+              id={id}
+              titulo={item.titulo}
+              poster={item.poster || item.capa}
+              rating={item.rating}
+              year={item.year || item.ano}
+              href={href}
+              onClick={() => onItemClick?.(item)}
+            />
+          </div>
+        )
+      })}
     </div>
   )
 }

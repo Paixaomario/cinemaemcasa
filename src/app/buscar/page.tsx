@@ -1,18 +1,20 @@
 'use client'
- 
-import { useEffect, useState } from 'react'
+
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { searchCatalog } from '@/lib/queries'
 import { ContentGrid } from '@/components/ContentGrid'
- 
-export default function BuscarPage() {
+
+export const dynamic = 'force-dynamic'
+
+function BuscarContent() {
   const searchParams = useSearchParams()
   const query = searchParams.get('q') || ''
-  
+
   const [results, setResults] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState(query)
   const [loading, setLoading] = useState(false)
- 
+
   useEffect(() => {
     if (query) {
       const search = async () => {
@@ -26,11 +28,11 @@ export default function BuscarPage() {
           setLoading(false)
         }
       }
- 
+
       search()
     }
   }, [query])
- 
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
@@ -40,51 +42,36 @@ export default function BuscarPage() {
       setSearchQuery('')
     }
   }
- 
+
   return (
-    <div style={{ padding: '20px', color: '#fff', background: '#000', minHeight: '100vh' }}>
-      <h1 style={{ marginBottom: '30px' }}>🔍 Pesquisar</h1>
- 
-      <form onSubmit={handleSearch} style={{ marginBottom: '30px' }}>
+    <div className="min-h-screen bg-black px-6 py-10 text-white">
+      <h1 className="mb-8 text-3xl font-semibold">🔍 Pesquisar</h1>
+
+      <form onSubmit={handleSearch} className="mb-8 space-y-4">
         <input
           type="text"
           placeholder="Buscar filmes, séries..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '12px',
-            fontSize: '16px',
-            borderRadius: '4px',
-            border: 'none',
-            marginBottom: '10px'
-          }}
+          className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-5 py-3 text-white outline-none focus:border-white"
         />
         <button
           type="submit"
-          style={{
-            padding: '12px 24px',
-            background: '#ff6b35',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '16px'
-          }}
+          className="rounded-2xl bg-orange-500 px-6 py-3 font-semibold text-white transition hover:bg-orange-600"
         >
           Buscar
         </button>
       </form>
- 
+
       {loading && <p>Buscando...</p>}
- 
+
       {!loading && query && (
         <>
-          <p style={{ color: '#999', marginBottom: '20px' }}>
+          <p className="mb-5 text-slate-400">
             {results.length} resultado(s) para "{query}"
           </p>
           {results.length > 0 ? (
-            <ContentGrid 
+            <ContentGrid
               items={results}
               onItemClick={(item) => console.log('Item clicado:', item)}
             />
@@ -94,5 +81,13 @@ export default function BuscarPage() {
         </>
       )}
     </div>
+  )
+}
+
+export default function BuscarPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black px-6 py-10 text-white">Carregando...</div>}>
+      <BuscarContent />
+    </Suspense>
   )
 }

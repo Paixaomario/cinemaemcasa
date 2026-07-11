@@ -1,145 +1,347 @@
-'use client'
+import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
+import Image from 'next/image'
+import Link from 'next/link'
+import {
+  getMovieById,
+  getSeriesById,
+  getSeriesSeasons,
+  getSeriesEpisodes,
+} from '@/lib/queries'
+import {
+  getMovieDetails,
+  getShowDetails,
+  tmdbImageUrl,
+  extractTmdbTrailer,
+} from '@/lib/tmdb'
 
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { supabase, Cinema, Series } from '../../../lib/supabase'
+type DetailModel = {
+  id: string
+  title: string
+  overview: string
+  posterUrl?: string | null
+  backdropUrl?: string | null
+  tagline?: string
+  year?: string
+  duration?: string
+  rating?: number
+  genres: string[]
+  status?: string
+  director?: string
+  cast: string[]
+  trailerUrl?: string | null
+  isSeries: boolean
+  watchPath: string
+  seasons?: any[]
+  episodesBySeason?: Record<string, any[]>
+}
 
-export default function DetalhesPage() {
-  const params = useParams()
-  const router = useRouter()
-  const [content, setContent] = useState<Cinema | Series | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [type, setType] = useState<'movie' | 'series'>('movie')
+function parseLegacyId(rawId: string) {
+  const match = rawId.match(/^(serie|movie)-(\d+)$/i)
+  if (!match) return null
+  return {
+    type: match[1].toLowerCase() === 'serie' ? 'serie' : 'movie',
+    tmdbId: match[2],
+  } as const
+}
 
-  useEffect(() => {
-    async function loadContent() {
-      const id = params.id as string
-      const path = window.location.pathname
+async function loadDetail(id: string): Promise<DetailModel | null> {
+  const parsedNumber = Number(id)
+  const isNumeric = !Number.isNaN(parsedNumber)
+  const movie = isNumeric ? await getMovieById(parsedNumber) : null
+  const series = isNumeric ? await getSeriesById(parsedNumber) : null
 
-      try {
-        if (path.includes('/series/')) {
-          // É série
-          const { data } = await supabase
-            .from('series')
-            .select('*')
-            .eq('id_n', parseInt(id))
-            .single()
-
-          if (data) {
-            setContent(data as Series)
-            setType('series')
-          }
-        } else {
-          // É filme
-          const { data } = await supabase
-            .from('cinema')
-            .select('*')
-            .eq('id', parseInt(id))
-            .single()
-
-          if (data) {
-            setContent(data as Cinema)
-            setType('movie')
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao carregar detalhes:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadContent()
-  }, [params.id])
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <p className="text-white text-xl">Carregando...</p>
-      </div>
-    )
-  }
+  const isSeries = Boolean(series)
+  const content = series || movie
 
   if (!content) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <p className="text-white text-xl">Conteúdo não encontrado</p>
-      </div>
+    const legacy = parseLegacyId(id)
+    if (!legacy) return null
+
+    const tmdbData = legacy.type === 'serie'
+      ? await getShowDetails(legacy.tmdbId)
+      : await getMovieDetails(legacy.tmdbId)
+
+    const posterUrl = tmdbImageUrl(tmdbData.poster_path, 'w500')
+    const backdropUrl = tmdbImageUrl(tmdbData.backdrop_path, 'original')
+    const genres = Array.from(new Set((tmdbData.genres || []).map((genre: any) => String(genre.name)))) as string[]
+    const trailerUrl = extractTmdbTrailer(tmdbData.videos?.results)
+
+    return {
+      id,
+      title: tmdbData.title || tmdbData.name || 'Sem título',
+      overview: tmdbData.overview || 'Descrição indisponível.',
+      posterUrl,
+      backdropUrl,
+      tagline: tmdbData.tagline || undefined,
+      year: tmdbData.release_date?.slice(0, 4) || tmdbData.first_air_date?.slice(0, 4),
+      duration: legacy.type === 'serie'
+        ? tmdbData.episode_run_time?.[0] ? `${tmdbData.episode_run_time[0]} min` : undefined
+        : tmdbData.runtime ? `${tmdbData.runtime} min` : undefined,
+      rating: tmdbData.vote_average,
+      genres,
+      status: tmdbData.status,
+      director: tmdbData.credits?.crew?.find((member: any) => member.job === 'Director')?.name,
+      cast: (tmdbData.credits?.cast || []).slice(0, 8).map((member: any) => member.name),
+      trailerUrl,
+      isSeries: legacy.type === 'serie',
+      watchPath: '/',
+      seasons: [],
+      episodesBySeason: {},
+    }
+  }
+
+  const localGenres = [
+    content.genero,
+    content.category,
+    content.genre,
+    content.tmdb_genres?.join(', '),
+  ]
+    .filter(Boolean)
+    .flatMap((value) => String(value).split(',').map((item) => item.trim()))
+    .filter(Boolean)
+
+  const tmdbId = content.tmdb_id ? String(content.tmdb_id) : null
+  let tmdbData: any = null
+
+  if (tmdbId) {
+    try {
+      tmdbData = isSeries
+        ? await getShowDetails(tmdbId)
+        : await getMovieDetails(tmdbId)
+    } catch (error) {
+      console.warn('Falha ao carregar dados TMDB:', error)
+    }
+  }
+
+  const posterUrl =
+    content.poster || content.capa || tmdbImageUrl(tmdbData?.poster_path, 'w500') || null
+  const backdropUrl =
+    content.banner || content.backdrop || tmdbImageUrl(tmdbData?.backdrop_path, 'original') || null
+  const title = content.titulo || tmdbData?.title || tmdbData?.name || 'Sem título'
+  const overview =
+    content.description || content.descricao || tmdbData?.overview || 'Descrição indisponível.'
+  const tagline = tmdbData?.tagline || undefined
+  const year =
+    String(content.ano || content.year || tmdbData?.first_air_date?.slice(0, 4) || tmdbData?.release_date?.slice(0, 4) || '')
+      .replace(/^undefined$/, '') || undefined
+  const duration =
+    content.duration || content.tmdb_runtime || (content.duration_seconds ? `${content.duration_seconds} min` : undefined) ||
+    (isSeries ? tmdbData?.episode_run_time?.[0] ? `${tmdbData.episode_run_time[0]} min` : undefined : tmdbData?.runtime ? `${tmdbData.runtime} min` : undefined)
+  const rating = content.rating ?? tmdbData?.vote_average
+  const genres = Array.from(new Set([...localGenres, ...(tmdbData?.genres || []).map((genre: any) => String(genre.name))])) as string[]
+  const status = content.classificacao || tmdbData?.status || undefined
+  const director =
+    tmdbData?.credits?.crew?.find((member: any) => member.job === 'Director')?.name ||
+    (tmdbData?.created_by?.map((creator: any) => creator.name).join(', ') || undefined)
+  const cast = (tmdbData?.credits?.cast || []).slice(0, 8).map((member: any) => member.name)
+  const trailerUrl =
+    content.trailer || extractTmdbTrailer(tmdbData?.videos?.results || []) || null
+  const seasons = isSeries ? await getSeriesSeasons(parsedNumber) : []
+  const episodesBySeason: Record<string, any[]> = {}
+
+  if (isSeries && seasons.length > 0) {
+    await Promise.all(
+      seasons.map(async (season: any) => {
+        episodesBySeason[String(season.id_n)] = await getSeriesEpisodes(season.id_n)
+      })
     )
   }
 
-  const imageUrl = (content as Cinema).poster || (content as Series).poster || (content as Series).capa
-  const backdropUrl = (content as Cinema).backdrop || (content as Cinema).banner || (content as Series).banner
-  const titulo = content.titulo
-  const descricao = (content as Cinema).description || (content as Series).descricao
-  const ano = (content as Cinema).year || (content as Series).ano
-  const rating = content.rating
-  const genero = (content as Cinema).category || (content as Series).genero
+  return {
+    id,
+    title,
+    overview,
+    posterUrl,
+    backdropUrl,
+    tagline,
+    year,
+    duration,
+    rating,
+    genres,
+    status,
+    director,
+    cast,
+    trailerUrl,
+    isSeries,
+    watchPath: isSeries ? `/assistir/series/${id}` : `/assistir/${id}`,
+    seasons,
+    episodesBySeason,
+  }
+}
+
+export async function generateMetadata({ params }: any): Promise<Metadata> {
+  const detail = await loadDetail(params.id)
+
+  if (!detail) {
+    return {
+      title: 'Conteúdo não encontrado | PaixãoFlix',
+      description: 'Detalhes do título não puderam ser carregados.',
+    }
+  }
+
+  return {
+    title: `${detail.title} | PaixãoFlix`,
+    description: detail.overview,
+    openGraph: {
+      title: detail.title,
+      description: detail.overview,
+      type: 'video.other',
+      images: detail.backdropUrl ? [detail.backdropUrl] : detail.posterUrl ? [detail.posterUrl] : [],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: detail.title,
+      description: detail.overview,
+      images: detail.backdropUrl ? [detail.backdropUrl] : detail.posterUrl ? [detail.posterUrl] : [],
+    },
+  }
+}
+
+export default async function DetalhesPage({ params }: any) {
+  const detail = await loadDetail(params.id)
+
+  if (!detail) {
+    notFound()
+  }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Backdrop */}
-      {backdropUrl && (
-        <div className="relative h-64 md:h-96">
-          <img
-            src={backdropUrl}
-            alt={titulo}
-            className="w-full h-full object-cover opacity-30"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-        </div>
-      )}
+    <main className="min-h-screen bg-black text-white">
+      <div className="relative overflow-hidden">
+        {detail.backdropUrl ? (
+          <div className="absolute inset-0">
+            <Image
+              src={detail.backdropUrl}
+              alt={detail.title}
+              fill
+              className="object-cover opacity-40"
+            />
+            <div className="absolute inset-0 bg-black/70" />
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-black" />
+        )}
 
-      <div className="px-4 md:px-8 -mt-32 relative z-10">
-        <button
-          onClick={() => router.back()}
-          className="mb-4 text-blue-400 hover:text-blue-300 flex items-center gap-2"
-        >
-          ← Voltar
-        </button>
+        <div className="relative mx-auto max-w-7xl px-4 py-12 md:px-8 lg:py-16">
+          <Link
+            href="/"
+            className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white transition hover:bg-white/10"
+          >
+            ← Voltar ao catálogo
+          </Link>
 
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Poster */}
-          {imageUrl && (
-            <div className="w-48 md:w-64 flex-shrink-0">
-              <img
-                src={imageUrl}
-                alt={titulo}
-                className="w-full rounded-lg shadow-2xl"
-              />
-            </div>
-          )}
-
-          {/* Info */}
-          <div className="flex-1">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">{titulo}</h1>
-
-            <div className="flex flex-wrap gap-4 mb-4 text-sm text-gray-400">
-              {ano && <span>{ano}</span>}
-              {rating && <span>★ {rating}</span>}
-              {genero && <span>{genero}</span>}
+          <div className="grid gap-10 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start">
+            <div className="relative mx-auto w-full max-w-[320px] overflow-hidden rounded-3xl border border-white/10 bg-slate-950/60 shadow-2xl">
+              {detail.posterUrl ? (
+                <Image
+                  src={detail.posterUrl}
+                  alt={detail.title}
+                  width={320}
+                  height={480}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex min-h-[480px] items-center justify-center bg-slate-900 text-slate-300">
+                  Sem imagem disponível
+                </div>
+              )}
             </div>
 
-            {descricao && (
-              <p className="text-gray-300 mb-6 leading-relaxed">{descricao}</p>
-            )}
+            <section className="space-y-6">
+              <div className="space-y-4">
+                <p className="font-semibold uppercase tracking-[0.28em] text-amber-300/90">
+                  {detail.isSeries ? 'Série' : 'Filme'} • {detail.status || 'Disponível'}
+                </p>
+                <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+                  {detail.title}
+                </h1>
+                {detail.tagline ? (
+                  <p className="text-lg italic text-slate-300">{detail.tagline}</p>
+                ) : null}
+              </div>
 
-            <button
-              onClick={() => {
-                const id = params.id as string
-                if (type === 'movie') {
-                  router.push(`/assistir/${id}`)
-                } else {
-                  router.push(`/assistir/series/${id}`)
-                }
-              }}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
-            >
-              Assistir Agora
-            </button>
+              <div className="flex flex-wrap gap-3 text-sm text-slate-300/80">
+                {detail.year ? <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">{detail.year}</span> : null}
+                {detail.duration ? <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">{detail.duration}</span> : null}
+                {detail.rating ? <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">★ {detail.rating.toFixed(1)}</span> : null}
+                {detail.genres.length > 0 ? (
+                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                    {detail.genres.join(' • ')}
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href={detail.watchPath}
+                  className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
+                >
+                  Assistir Agora
+                </Link>
+                {detail.trailerUrl ? (
+                  <a
+                    href={detail.trailerUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                  >
+                    Ver Trailer
+                  </a>
+                ) : null}
+              </div>
+
+              <div className="rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-2xl">
+                <h2 className="mb-4 text-xl font-semibold text-white">Sinopse</h2>
+                <p className="text-slate-300 leading-relaxed">{detail.overview}</p>
+              </div>
+
+              {detail.director || detail.cast.length > 0 ? (
+                <div className="grid gap-5 sm:grid-cols-2">
+                  {detail.director ? (
+                    <div className="rounded-3xl border border-white/10 bg-slate-950/80 p-6">
+                      <h3 className="mb-2 text-sm uppercase tracking-[0.3em] text-slate-400">Direção</h3>
+                      <p className="text-base text-slate-200">{detail.director}</p>
+                    </div>
+                  ) : null}
+
+                  {detail.cast.length > 0 ? (
+                    <div className="rounded-3xl border border-white/10 bg-slate-950/80 p-6">
+                      <h3 className="mb-2 text-sm uppercase tracking-[0.3em] text-slate-400">Elenco</h3>
+                      <p className="text-base text-slate-200">{detail.cast.join(', ')}</p>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {detail.isSeries && detail.seasons && detail.seasons.length > 0 ? (
+                <div className="space-y-4 rounded-3xl border border-white/10 bg-slate-950/80 p-6">
+                  <h2 className="text-xl font-semibold text-white">Temporadas</h2>
+                  {detail.seasons.map((season) => (
+                    <div key={season.id_n} className="space-y-2 rounded-2xl border border-white/5 bg-slate-900/70 p-4">
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-slate-300">
+                        <span className="font-semibold">Temporada {season.numero_temporada}</span>
+                        {season.ano ? <span>{season.ano}</span> : null}
+                      </div>
+                      {season.descricao ? <p className="text-slate-300">{season.descricao}</p> : null}
+                      {detail.episodesBySeason?.[String(season.id_n)]?.length ? (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {detail.episodesBySeason[String(season.id_n)].map((episode) => (
+                            <div key={episode.id_n} className="rounded-2xl border border-white/10 bg-slate-950/90 p-3">
+                              <p className="font-semibold text-slate-100">{episode.titulo || `Episódio ${episode.numero_episodio}`}</p>
+                              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Episódio {episode.numero_episodio}</p>
+                              {episode.duracao ? <p className="mt-2 text-sm text-slate-300">Duração: {episode.duracao}</p> : null}
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </section>
           </div>
         </div>
       </div>
-    </div>
+    </main>
   )
 }
