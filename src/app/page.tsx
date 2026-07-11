@@ -1,43 +1,29 @@
-'use client'
-
+import type { Metadata } from 'next'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
 import { getHomeSections, getSectionContent } from '@/lib/queries'
 import { ContentGrid } from '@/components/ContentGrid'
 
-export default function Home() {
-  const [sections, setSections] = useState<any[]>([])
-  const [sectionContents, setSectionContents] = useState<Record<string, any[]>>({})
-  const [loading, setLoading] = useState(true)
+export const metadata: Metadata = {
+  title: 'PaixãoFlix - Cinema em Casa',
+  description: 'Sua plataforma de streaming premium',
+}
 
-  useEffect(() => {
-    const loadHome = async () => {
-      try {
-        const sectionsData = await getHomeSections()
-        setSections(sectionsData)
+function getItemId(item: any) {
+  return item?.id ?? item?.id_n
+}
 
-        const contents: Record<string, any[]> = {}
-        for (const section of sectionsData) {
-          contents[section.id] = await getSectionContent(section)
-        }
-        setSectionContents(contents)
-      } catch (error) {
-        console.error('Erro ao carregar home:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
+export default async function HomePage() {
+  const sections = await getHomeSections()
+  const sectionContents: Record<string, any[]> = {}
 
-    loadHome()
-  }, [])
-
-  if (loading) {
-    return <div className="min-h-screen bg-black px-6 py-10 text-white">Carregando...</div>
+  for (const section of sections) {
+    sectionContents[section.id] = await getSectionContent(section)
   }
 
-  const heroItem = sections.length ? sectionContents[sections[0].id]?.[0] : null
-  const heroPoster = heroItem?.poster || heroItem?.capa
-  const heroHref = heroItem?.id || heroItem?.id_n ? `/detalhes/${heroItem?.id ?? heroItem?.id_n}` : undefined
+  const heroSection = sections[0]
+  const heroItem = heroSection ? sectionContents[heroSection.id]?.[0] : null
+  const heroPoster = heroItem?.poster || heroItem?.capa || heroItem?.banner
+  const heroHref = heroItem ? `/detalhes/${getItemId(heroItem)}` : undefined
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -46,9 +32,11 @@ export default function Home() {
           <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-end">
             <div className="space-y-4">
               <p className="text-sm uppercase tracking-[0.35em] text-slate-400">Streaming em casa</p>
-              <h1 className="text-4xl font-semibold leading-tight sm:text-5xl">Cinema em Casa</h1>
+              <h1 className="text-4xl font-semibold leading-tight sm:text-5xl break-words whitespace-normal">
+                Cinema em Casa
+              </h1>
               <p className="max-w-2xl text-slate-300">
-                Descubra filmes e séries organizados por seção, com visual horizontal e navegação de estilo Netflix.
+                Descubra filmes e séries organizados em seções horizontais, com navegação fluida e foco pronto para TV.
               </p>
             </div>
 
@@ -63,7 +51,9 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-slate-900/40" />
                 <div className="relative space-y-4">
                   <p className="text-sm uppercase tracking-[0.35em] text-slate-400">Destaque</p>
-                  <h2 className="text-2xl font-semibold text-white">{heroItem.titulo || 'Sem título'}</h2>
+                  <h2 className="text-2xl font-semibold text-white break-words whitespace-normal">
+                    {heroItem.titulo || 'Sem título'}
+                  </h2>
                   <div className="space-y-2 text-sm text-slate-300">
                     <div>⭐ {heroItem.rating ?? 'N/A'}</div>
                     <div>{heroItem.year ?? heroItem.ano ?? 'N/A'}</div>
@@ -83,16 +73,15 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl space-y-10 px-6 py-10">
+      <div className="mx-auto max-w-7xl space-y-12 px-6 py-10">
         {sections.map((section) => (
           <section key={section.id} className="space-y-4">
             <div>
-              <h2 className="text-xl font-semibold text-white">{section.titulo}</h2>
-              {section.subtitulo ? <p className="mt-2 text-sm text-slate-400">{section.subtitulo}</p> : null}
+              <h2 className="text-xl font-semibold text-white break-words whitespace-normal">{section.titulo}</h2>
+              {section.subtitulo ? <p className="mt-2 text-sm text-slate-400 break-words whitespace-normal">{section.subtitulo}</p> : null}
             </div>
             <ContentGrid
               items={sectionContents[section.id] || []}
-              onItemClick={(item) => console.log('Clicou em:', item)}
             />
           </section>
         ))}

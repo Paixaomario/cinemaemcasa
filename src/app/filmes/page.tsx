@@ -1,55 +1,53 @@
 'use client'
- 
+
 import { useEffect, useState } from 'react'
-import { getHomeSections, getSectionContent } from '@/lib/queries'
+import { getMovies, getMovieCategories } from '@/lib/queries'
 import { ContentGrid } from '@/components/ContentGrid'
- 
-export default function Home() {
-  const [sections, setSections] = useState<any[]>([])
-  const [sectionContents, setSectionContents] = useState<Record<string, any[]>>({})
+
+export default function FilmesPage() {
+  const [movies, setMovies] = useState<any[]>([])
+  const [categories, setCategories] = useState<string[]>([])
+  const [selected, setSelected] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
- 
+
   useEffect(() => {
-    const loadHome = async () => {
+    const load = async () => {
       try {
-        const sectionsData = await getHomeSections()
-        setSections(sectionsData)
- 
-        const contents: Record<string, any[]> = {}
-        for (const section of sectionsData) {
-          const content = await getSectionContent(section)
-          contents[section.id] = content
-        }
-        setSectionContents(contents)
-      } catch (error) {
-        console.error('Erro ao carregar home:', error)
+        const cats = await getMovieCategories()
+        setCategories(cats)
+
+        const data = await getMovies(selected || undefined)
+        setMovies(data)
+      } catch (err) {
+        console.error('Erro filmes:', err)
       } finally {
         setLoading(false)
       }
     }
- 
-    loadHome()
-  }, [])
- 
-  if (loading) {
-    return <div style={{ padding: '20px', color: '#fff' }}>Carregando...</div>
-  }
- 
+
+    load()
+  }, [selected])
+
+  if (loading) return <div className="min-h-screen bg-black px-6 py-10 text-white">Carregando filmes...</div>
+
   return (
-    <div style={{ padding: '20px', color: '#fff', background: '#000', minHeight: '100vh' }}>
-      <h1 style={{ marginBottom: '30px' }}>🎬 Cinema em Casa</h1>
- 
-      {sections.map((section) => (
-        <div key={section.id} style={{ marginBottom: '40px' }}>
-          <h2 style={{ fontSize: '20px', marginBottom: '15px', borderBottom: '2px solid #ff6b35', paddingBottom: '10px' }}>
-            {section.titulo}
-          </h2>
-          <ContentGrid 
-            items={sectionContents[section.id] || []}
-            onItemClick={(item) => console.log('Clicou em:', item)}
-          />
+    <main className="min-h-screen bg-black text-white px-6 py-10">
+      <div className="mx-auto max-w-7xl">
+        <h1 className="mb-6 text-3xl font-semibold">🎬 Filmes</h1>
+
+        <div className="mb-6 flex flex-wrap gap-2">
+          <button onClick={() => setSelected(null)} className={`rounded-full px-4 py-2 text-sm ${selected===null? 'bg-amber-500 text-slate-900':'bg-slate-900 text-slate-300'}`}>
+            Todos
+          </button>
+          {categories.map((cat) => (
+            <button key={cat} onClick={() => setSelected(cat)} className={`rounded-full px-4 py-2 text-sm ${selected===cat? 'bg-amber-500 text-slate-900':'bg-slate-900 text-slate-300'}`}>
+              {cat}
+            </button>
+          ))}
         </div>
-      ))}
-    </div>
+
+        <ContentGrid items={movies} onItemClick={(it) => console.log('Filme:', it)} />
+      </div>
+    </main>
   )
 }

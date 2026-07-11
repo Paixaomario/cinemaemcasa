@@ -11,13 +11,13 @@ export function ContentGrid({ items, onItemClick }: ContentGridProps) {
   const getItemId = (item: any) => item.id ?? item.id_n
 
   return (
-    <div className="flex w-full gap-4 overflow-x-auto pb-4">
+    <div className="scroll-row gap-4">
       {items.map((item) => {
         const id = getItemId(item)
         const href = id ? `/detalhes/${id}` : undefined
 
         return (
-          <div key={id ?? Math.random()} className="min-w-[180px] flex-shrink-0">
+          <div key={id ?? Math.random()} className="min-w-[120px] sm:min-w-[140px] md:min-w-[160px] lg:min-w-[180px] flex-shrink-0">
             <ContentCard
               id={id}
               titulo={item.titulo}

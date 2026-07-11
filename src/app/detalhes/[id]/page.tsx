@@ -164,7 +164,8 @@ async function loadDetail(id: string): Promise<DetailModel | null> {
     cast,
     trailerUrl,
     isSeries,
-    watchPath: isSeries ? `/assistir/series/${id}` : `/assistir/${id}`,
+    // Use a unified assistir path to avoid 404s for series
+    watchPath: `/assistir/${id}`,
     seasons,
     episodesBySeason,
   }
@@ -222,16 +223,16 @@ export default async function DetalhesPage({ params }: any) {
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-black" />
         )}
 
-        <div className="relative mx-auto max-w-7xl px-4 py-12 md:px-8 lg:py-16">
+        <div className="relative mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16 lg:px-10 lg:py-24">
           <Link
             href="/"
-            className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white transition hover:bg-white/10"
+            className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-white transition hover:bg-white/10"
           >
             ← Voltar ao catálogo
           </Link>
 
-          <div className="grid gap-10 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start">
-            <div className="relative mx-auto w-full max-w-[320px] overflow-hidden rounded-3xl border border-white/10 bg-slate-950/60 shadow-2xl">
+          <div className="grid gap-10 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-12 lg:items-start">
+            <div className="relative mx-auto w-full max-w-[360px] overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/60 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
               {detail.posterUrl ? (
                 <Image
                   src={detail.posterUrl}
@@ -241,40 +242,40 @@ export default async function DetalhesPage({ params }: any) {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="flex min-h-[480px] items-center justify-center bg-slate-900 text-slate-300">
+                <div className="flex min-h-[540px] items-center justify-center bg-slate-900 text-slate-300">
                   Sem imagem disponível
                 </div>
               )}
             </div>
 
-            <section className="space-y-6">
-              <div className="space-y-4">
-                <p className="font-semibold uppercase tracking-[0.28em] text-amber-300/90">
+            <section className="space-y-8 lg:pr-4">
+              <div className="space-y-5">
+                <p className="text-sm font-semibold uppercase tracking-[0.35em] text-amber-300/90">
                   {detail.isSeries ? 'Série' : 'Filme'} • {detail.status || 'Disponível'}
                 </p>
-                <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+                <h1 className="text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl lg:leading-[0.9]">
                   {detail.title}
                 </h1>
                 {detail.tagline ? (
-                  <p className="text-lg italic text-slate-300">{detail.tagline}</p>
+                  <p className="max-w-3xl text-xl italic text-slate-300">{detail.tagline}</p>
                 ) : null}
               </div>
 
-              <div className="flex flex-wrap gap-3 text-sm text-slate-300/80">
-                {detail.year ? <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">{detail.year}</span> : null}
-                {detail.duration ? <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">{detail.duration}</span> : null}
-                {detail.rating ? <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">★ {detail.rating.toFixed(1)}</span> : null}
+              <div className="flex flex-wrap gap-3 text-sm text-slate-300/80 sm:text-base">
+                {detail.year ? <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">{detail.year}</span> : null}
+                {detail.duration ? <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">{detail.duration}</span> : null}
+                {detail.rating ? <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">★ {detail.rating.toFixed(1)}</span> : null}
                 {detail.genres.length > 0 ? (
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                  <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">
                     {detail.genres.join(' • ')}
                   </span>
                 ) : null}
               </div>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-4">
                 <Link
                   href={detail.watchPath}
-                  className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
+                  className="inline-flex items-center justify-center rounded-full bg-white px-8 py-4 text-base font-semibold text-slate-950 transition hover:bg-slate-200"
                 >
                   Assistir Agora
                 </Link>
@@ -283,42 +284,42 @@ export default async function DetalhesPage({ params }: any) {
                     href={detail.trailerUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                    className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-8 py-4 text-base font-semibold text-white transition hover:bg-white/10"
                   >
                     Ver Trailer
                   </a>
                 ) : null}
               </div>
 
-              <div className="rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-2xl">
-                <h2 className="mb-4 text-xl font-semibold text-white">Sinopse</h2>
-                <p className="text-slate-300 leading-relaxed">{detail.overview}</p>
+              <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-8 shadow-2xl">
+                <h2 className="mb-4 text-2xl font-semibold text-white">Sinopse</h2>
+                <p className="text-lg leading-8 text-slate-300">{detail.overview}</p>
               </div>
 
               {detail.director || detail.cast.length > 0 ? (
                 <div className="grid gap-5 sm:grid-cols-2">
                   {detail.director ? (
-                    <div className="rounded-3xl border border-white/10 bg-slate-950/80 p-6">
+                    <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-7">
                       <h3 className="mb-2 text-sm uppercase tracking-[0.3em] text-slate-400">Direção</h3>
-                      <p className="text-base text-slate-200">{detail.director}</p>
+                      <p className="text-lg text-slate-200">{detail.director}</p>
                     </div>
                   ) : null}
 
                   {detail.cast.length > 0 ? (
-                    <div className="rounded-3xl border border-white/10 bg-slate-950/80 p-6">
+                    <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-7">
                       <h3 className="mb-2 text-sm uppercase tracking-[0.3em] text-slate-400">Elenco</h3>
-                      <p className="text-base text-slate-200">{detail.cast.join(', ')}</p>
+                      <p className="text-lg text-slate-200">{detail.cast.join(', ')}</p>
                     </div>
                   ) : null}
                 </div>
               ) : null}
 
               {detail.isSeries && detail.seasons && detail.seasons.length > 0 ? (
-                <div className="space-y-4 rounded-3xl border border-white/10 bg-slate-950/80 p-6">
-                  <h2 className="text-xl font-semibold text-white">Temporadas</h2>
+                <div className="space-y-4 rounded-[2rem] border border-white/10 bg-slate-950/80 p-8">
+                  <h2 className="text-2xl font-semibold text-white">Temporadas</h2>
                   {detail.seasons.map((season) => (
-                    <div key={season.id_n} className="space-y-2 rounded-2xl border border-white/5 bg-slate-900/70 p-4">
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-slate-300">
+                    <div key={season.id_n} className="space-y-3 rounded-[1.5rem] border border-white/5 bg-slate-900/70 p-5">
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-slate-300 sm:text-base">
                         <span className="font-semibold">Temporada {season.numero_temporada}</span>
                         {season.ano ? <span>{season.ano}</span> : null}
                       </div>
@@ -326,7 +327,7 @@ export default async function DetalhesPage({ params }: any) {
                       {detail.episodesBySeason?.[String(season.id_n)]?.length ? (
                         <div className="grid gap-3 sm:grid-cols-2">
                           {detail.episodesBySeason[String(season.id_n)].map((episode) => (
-                            <div key={episode.id_n} className="rounded-2xl border border-white/10 bg-slate-950/90 p-3">
+                            <div key={episode.id_n} className="rounded-[1.25rem] border border-white/10 bg-slate-950/90 p-4">
                               <p className="font-semibold text-slate-100">{episode.titulo || `Episódio ${episode.numero_episodio}`}</p>
                               <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Episódio {episode.numero_episodio}</p>
                               {episode.duracao ? <p className="mt-2 text-sm text-slate-300">Duração: {episode.duracao}</p> : null}

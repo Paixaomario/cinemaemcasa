@@ -15,35 +15,31 @@ export default function AssistirPage() {
   useEffect(() => {
     async function loadContent() {
       const id = params.id as string
-      const path = window.location.pathname
 
       try {
         let url = ''
-        
-        if (path.includes('/series/')) {
-          // É série
-          const { data } = await supabase
-            .from('series')
-            .select('*')
-            .eq('id_n', parseInt(id))
-            .single()
 
-          if (data) {
-            setContent(data as Series)
-            // Séries podem ter URLs diferentes, verificar
-            url = (data as any).url || ''
-          }
+        // Primeiro tente encontrar uma série com id_n = id
+        const seriesRes = await supabase
+          .from('series')
+          .select('*')
+          .eq('id_n', parseInt(id))
+          .single()
+
+        if (seriesRes.data) {
+          setContent(seriesRes.data as Series)
+          url = (seriesRes.data as any).url || ''
         } else {
-          // É filme
-          const { data } = await supabase
+          // Se não for série, tenta filme por id
+          const filmRes = await supabase
             .from('cinema')
             .select('*')
             .eq('id', parseInt(id))
             .single()
 
-          if (data) {
-            setContent(data as Cinema)
-            url = data.url || ''
+          if (filmRes.data) {
+            setContent(filmRes.data as Cinema)
+            url = (filmRes.data as any).url || ''
           }
         }
 

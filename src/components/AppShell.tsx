@@ -1,8 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { Film, Home, Search, Tv, UserRound } from 'lucide-react'
+import { useSpatialNavigation } from '@/hooks/useSpatialNavigation'
 
 const navItems = [
   { href: '/', label: 'Início', icon: Home },
@@ -12,14 +15,69 @@ const navItems = [
   { href: '/perfil', label: 'Perfil', icon: UserRound },
 ]
 
+function LoadingOverlay() {
+  const [progress, setProgress] = useState(0)
+  const [visible, setVisible] = useState(true)
+  const [logoSize, setLogoSize] = useState<number | string>('40vw')
+
+  useEffect(() => {
+    const updateSize = () => {
+      const w = window.innerWidth
+      // For very large screens show the 750px logo
+      if (w >= 1400) setLogoSize(750)
+      else setLogoSize(Math.min(560, Math.floor(w * 0.5)))
+    }
+
+    updateSize()
+    window.addEventListener('resize', updateSize)
+
+    // Simulate loading progress tied to window load and a minimum time
+    let mounted = true
+    const targetDuration = 1400 // ms
+    const start = Date.now()
+
+    const tick = () => {
+      const elapsed = Date.now() - start
+      const p = Math.min(100, Math.floor((elapsed / targetDuration) * 100))
+      if (mounted) setProgress(p)
+      if (p < 100) requestAnimationFrame(tick)
+      else setTimeout(() => { if (mounted) setVisible(false) }, 300)
+    }
+
+    requestAnimationFrame(tick)
+
+    return () => { mounted = false; window.removeEventListener('resize', updateSize) }
+  }, [])
+
+  if (!visible) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95">
+      <div className="flex w-full max-w-3xl flex-col items-center gap-6 px-6">
+        <div style={{ width: typeof logoSize === 'number' ? logoSize : undefined }} className="relative">
+          <Image src="/logo.png" alt="logo" width={750} height={750} style={{ width: typeof logoSize === 'number' ? `${logoSize}px` : undefined, height: 'auto' }} priority />
+        </div>
+
+        <div className="w-full rounded-full bg-white/5 p-1">
+          <div className="h-2 rounded-full bg-amber-500 transition-all" style={{ width: `${progress}%` }} />
+        </div>
+        <div className="text-sm text-slate-400">Carregando... {progress}%</div>
+      </div>
+    </div>
+  )
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  useSpatialNavigation()
 
   return (
     <div className="min-h-screen bg-black text-white">
+      <LoadingOverlay />
+
       <aside className="fixed left-0 top-0 z-30 hidden h-full w-24 flex-col border-r border-white/10 bg-black/95 px-3 py-6 lg:flex">
-        <div className="mb-8 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/20 text-xl font-semibold text-cyan-400">
-          P
+        <div className="mb-8 flex h-12 w-12 items-center justify-center rounded-2xl bg-transparent text-xl font-semibold">
+          <Image src="/logo.png" alt="logo" width={48} height={48} className="object-contain" />
         </div>
 
         <nav className="flex flex-1 flex-col gap-2">

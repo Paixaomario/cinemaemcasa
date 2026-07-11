@@ -13,25 +13,35 @@ interface ContentCardProps {
 }
 
 export function ContentCard({ id, titulo, poster, rating, year, href, onClick }: ContentCardProps) {
+  const handleKey = (e: React.KeyboardEvent) => {
+    if (!href && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault()
+      onClick?.()
+    }
+  }
+
   const card = (
     <div
-      className="group relative overflow-hidden rounded-[1rem] bg-slate-950 shadow-[0_20px_60px_rgba(0,0,0,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl"
+      className="group relative overflow-hidden rounded-[1rem] bg-slate-950 shadow-[0_20px_60px_rgba(0,0,0,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400 focus-visible:ring-4 focus-visible:ring-amber-400/30"
       onClick={href ? undefined : onClick}
+      tabIndex={href ? undefined : 0}
+      role={href ? undefined : 'button'}
+      onKeyDown={handleKey}
     >
       {poster ? (
         <img
           src={poster}
           alt={titulo}
-          className="h-[260px] w-full object-cover transition duration-500 group-hover:scale-105"
+          className="h-[160px] sm:h-[200px] md:h-[240px] lg:h-[260px] w-full object-cover transition duration-500 group-hover:scale-105"
         />
       ) : (
-        <div className="flex h-[260px] w-full items-center justify-center bg-slate-900 text-slate-500">
+        <div className="flex h-[160px] sm:h-[200px] md:h-[240px] lg:h-[260px] w-full items-center justify-center bg-slate-900 text-slate-500">
           Sem capa
         </div>
       )}
 
       <div className="space-y-2 p-3">
-        <p className="text-sm font-semibold text-white line-clamp-2">{titulo || 'Sem título'}</p>
+        <p className="text-sm font-semibold text-white line-clamp-2 break-words whitespace-normal">{titulo || 'Sem título'}</p>
         <div className="flex items-center justify-between text-xs text-slate-400">
           <span>⭐ {rating ?? 'N/A'}</span>
           <span>{year ?? 'N/A'}</span>
@@ -44,7 +54,7 @@ export function ContentCard({ id, titulo, poster, rating, year, href, onClick }:
 
   if (href) {
     return (
-      <Link href={href} className="block">
+      <Link href={href} className="block" tabIndex={0}>
         {card}
       </Link>
     )

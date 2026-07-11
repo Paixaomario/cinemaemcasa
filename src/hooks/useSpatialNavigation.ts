@@ -20,141 +20,157 @@ export function useSpatialNavigation() {
       }
     };
 
+    const focusableSelectors = 'a[href], button:not([disabled]), input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+    const getFocusableElements = () =>
+      Array.from(document.querySelectorAll<HTMLElement>(focusableSelectors)).filter(
+        (el) => el.tabIndex !== -1 && !el.hasAttribute('disabled') && el.offsetParent !== null
+      )
+
+    const getScore = (activeRect: DOMRect, rect: DOMRect, direction: string) => {
+      const dx = rect.left - activeRect.left
+      const dy = rect.top - activeRect.top
+
+      switch (direction) {
+        case 'right':
+          return dx >= 10 ? dx * 10 + Math.abs(dy) : Number.POSITIVE_INFINITY
+        case 'left':
+          return dx <= -10 ? -dx * 10 + Math.abs(dy) : Number.POSITIVE_INFINITY
+        case 'down':
+          return dy >= 10 ? dy * 10 + Math.abs(dx) : Number.POSITIVE_INFINITY
+        case 'up':
+          return dy <= -10 ? -dy * 10 + Math.abs(dx) : Number.POSITIVE_INFINITY
+        default:
+          return Number.POSITIVE_INFINITY
+      }
+    }
+
+    const findNextFocusable = (active: HTMLElement | null, direction: string) => {
+      const candidates = getFocusableElements()
+      if (!active || active === document.body) {
+        return candidates[0] || null
+      }
+
+      const activeRect = active.getBoundingClientRect()
+      let best: HTMLElement | null = null
+      let bestScore = Number.POSITIVE_INFINITY
+
+      for (const candidate of candidates) {
+        if (candidate === active) continue
+        const rect = candidate.getBoundingClientRect()
+        const score = getScore(activeRect, rect, direction)
+        if (score < bestScore) {
+          bestScore = score
+          best = candidate
+        }
+      }
+
+      return best
+    }
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      const active = document.activeElement as HTMLElement;
-
-      // Impede o scroll da página ao usar as setas (comum em TVs)
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        const isScrollable = active?.tagName === 'TEXTAREA';
-        if (!isScrollable) e.preventDefault();
+      const active = document.activeElement as HTMLElement | null
+      const key = e.key || String(e.keyCode)
+      const isArrowKey = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', '37', '38', '39', '40'].includes(key)
+      const directionMap: Record<string, string> = {
+        ArrowUp: 'up',
+        ArrowDown: 'down',
+        ArrowLeft: 'left',
+        ArrowRight: 'right',
+        '37': 'left',
+        '38': 'up',
+        '39': 'right',
+        '40': 'down',
       }
-      
-      // Lógica de transição solicitada: Esquerda -> Menu Home
-      if (e.key === 'ArrowLeft' && active) {
-        const rect = active.getBoundingClientRect();
-        // Se estiver na primeira coluna (left < 150) e não estiver no aside, vai para o menu
-        if (rect.left < 150 && !active.closest('aside')) {
-          const asideElement = document.querySelector('aside') as HTMLElement;
-          if (asideElement) {
-            // Foca no primeiro elemento focável do aside
-            const firstAsideItem = asideElement.querySelector('[tabindex="0"]') as HTMLElement;
-            firstAsideItem?.focus();
-          }
+
+      if (isArrowKey) {
+        const direction = directionMap[key]
+        const next = findNextFocusable(active, direction)
+        if (next) {
+          e.preventDefault()
+          next.focus()
+          next.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+          return
         }
       }
 
-      // Lógica de transição solicitada: Menu -> Conteúdo (Direita)
-      if (e.key === 'ArrowRight' && active?.closest('aside')) {
-        // Foca no primeiro elemento da primeira linha da primeira coluna do main
-        const mainElement = document.querySelector('main') as HTMLElement;
-        if (mainElement) {
-          // Busca o primeiro elemento focável no main
-          const firstContent = mainElement.querySelector('[tabindex="0"]') as HTMLElement;
-          if (firstContent) {
-            firstContent.focus();
-            // Garante que o elemento esteja visível
-            firstContent.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'start' });
-          }
-        }
-      }
-
-      // Impedir que o cursor do Magic Remote suma em momentos indesejados
       if (isWebOS && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'].includes(e.key)) {
-        // Adiciona uma classe ao body para indicar que estamos em modo teclado
-        // Isso ajuda o CSS a destacar o foco visualmente na TV
-        document.body.classList.add('using-keyboard');
-        
-        // Se nada estiver focado, foca no primeiro elemento disponível
+        document.body.classList.add('using-keyboard')
         if (!document.activeElement || document.activeElement === document.body) {
-          const firstFocusable = document.querySelector('[tabindex="0"]') as HTMLElement;
-          firstFocusable?.focus();
+          const firstFocusable = document.querySelector<HTMLElement>(focusableSelectors)
+          firstFocusable?.focus()
         }
       }
-      
-      // Lógica de navegação espacial baseada em foco nativo do navegador.
-      // O navegador lidará com o movimento do foco entre elementos com tabIndex="0".
-      
-      // Tratamento para o botão "Voltar" (Back) do controle remoto LG (461) ou Backspace
-      // Código 10009 é o padrão para o botão Return/Back nas TVs Samsung Tizen
+
       if (e.keyCode === 461 || e.keyCode === 10009 || e.key === 'Backspace') {
-        const activeElement = document.activeElement;
+        const activeElement = document.activeElement
         const isInputActive = activeElement?.tagName === 'INPUT' ||
                              activeElement?.tagName === 'TEXTAREA' ||
-                             (activeElement instanceof HTMLElement && activeElement.isContentEditable);
-        
-        // Se não estiver digitando em um input, volta para a página anterior
+                             (activeElement instanceof HTMLElement && activeElement.isContentEditable)
+
         if (!isInputActive) {
-          e.preventDefault();
-          // Procuramos por elementos com role="dialog" ou classes de modal
-          const openModal = document.querySelector('[role="dialog"], .modal-open');
-          
+          e.preventDefault()
+          const openModal = document.querySelector('[role="dialog"], .modal-open')
+
           if (openModal) {
-            // Se for o Player de vídeo, apenas fecha o player
-            const isPlayer = !!document.querySelector('.vds-video');
+            const isPlayer = !!document.querySelector('.vds-video')
             if (isPlayer) {
-              // Lógica customizada para fechar player sem desempilhar histórico se necessário
-              // Mas window.history.back() costuma ser o padrão esperado
-              window.history.back();
-              return;
+              window.history.back()
+              return
             }
 
-            // Tenta clicar no botão de fechar do modal automaticamente (X)
-            const closeButton = openModal.querySelector('button[aria-label*="Fechar"], button[class*="close"], .btn-close') as HTMLElement;
+            const closeButton = openModal.querySelector('button[aria-label*="Fechar"], button[class*="close"], .btn-close') as HTMLElement
             if (closeButton instanceof HTMLElement) {
-              closeButton.click();
-              return;
+              closeButton.click()
+              return
             }
           }
 
           const isRoot = window.location.pathname === '/home' || window.location.pathname === '/'
-          
           if (!isRoot) {
             if (window.history.length > 1) {
-              window.history.back();
+              window.history.back()
             } else {
-              window.location.replace('/home'); // Use replace para não sujar o histórico
+              window.location.replace('/home')
             }
           } else {
-            // Prevenção de fechamento acidental em TVs - Só fecha se estiver na Home
-            const webOS = (window as any).webOS;
+            const webOS = (window as any).webOS
             if (isWebOS) {
               if (typeof webOS.terminate === 'function') {
-                webOS.terminate();
+                webOS.terminate()
               } else if (webOS.app && typeof webOS.app.close === 'function') {
-                webOS.app.close();
+                webOS.app.close()
               }
-            } else if (window.confirm("Deseja sair do PaixãoFlix?")) {
-              window.close();
+            } else if (window.confirm('Deseja sair do PaixãoFlix?')) {
+              window.close()
             }
           }
         }
       }
 
-      // Suporte aos botões coloridos do Magic Remote LG
       if (isWebOS) {
-        switch(e.keyCode) {
-          case 403: // Vermelho
-            document.dispatchEvent(new CustomEvent('magicremote:red'));
-            break;
-          case 404: // Verde
-            document.dispatchEvent(new CustomEvent('magicremote:green'));
-            break;
-          case 405: // Amarelo
-            document.dispatchEvent(new CustomEvent('magicremote:yellow'));
-            break;
-          case 406: // Azul
-            document.dispatchEvent(new CustomEvent('magicremote:blue'));
-            break;
+        switch (e.keyCode) {
+          case 403:
+            document.dispatchEvent(new CustomEvent('magicremote:red'))
+            break
+          case 404:
+            document.dispatchEvent(new CustomEvent('magicremote:green'))
+            break
+          case 405:
+            document.dispatchEvent(new CustomEvent('magicremote:yellow'))
+            break
+          case 406:
+            document.dispatchEvent(new CustomEvent('magicremote:blue'))
+            break
         }
       }
 
-      // Suporte a botões de mídia físicos (Play/Pause) comuns em controles de TV
       if (e.key === 'MediaPlayPause' || e.key === 'MediaPlay' || e.key === 'MediaPause') {
-        document.dispatchEvent(new CustomEvent('magicremote:playpause'));
+        document.dispatchEvent(new CustomEvent('magicremote:playpause'))
       }
     }
 
-    document.addEventListener('focusin', handleFocus);
+    document.addEventListener('focusin', handleFocus)
     window.addEventListener('keydown', handleKeyDown)
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
