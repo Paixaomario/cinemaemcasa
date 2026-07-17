@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { getMovieBackdrop, getShowBackdrop } from './tmdb'
 
 export const MOVIE_CATEGORY_ORDER = [
   'Lançamento 2026',
@@ -82,9 +83,31 @@ export async function getHomeBannerItems(limit = 12) {
       supabase.from('series').select('*').order('created_at', { ascending: false }).limit(limit),
     ])
 
-    const cinemaItems = (cinemaResponse.data || []).filter((item) => item.poster || item.capa || item.banner || item.backdrop)
-    const seriesItems = (seriesResponse.data || []).filter((item) => item.poster || item.capa || item.banner || item.backdrop)
-    const combined = [...cinemaItems, ...seriesItems]
+    const cinemaItems = (cinemaResponse.data || []).filter((item) => item.banner || item.backdrop || item.poster)
+    const seriesItems = (seriesResponse.data || []).filter((item) => item.banner || item.capa || item.poster)
+
+    // Enrich items with TMDB backdrops if missing banner
+    const enrichedCinema = await Promise.all(
+      cinemaItems.map(async (item) => {
+        if (!item.banner && item.tmdb_id) {
+          const tmdbBackdrop = await getMovieBackdrop(item.tmdb_id)
+          return { ...item, banner: tmdbBackdrop || item.backdrop || item.poster }
+        }
+        return item
+      })
+    )
+
+    const enrichedSeries = await Promise.all(
+      seriesItems.map(async (item) => {
+        if (!item.banner && item.tmdb_id) {
+          const tmdbBackdrop = await getShowBackdrop(item.tmdb_id)
+          return { ...item, banner: tmdbBackdrop || item.capa || item.poster }
+        }
+        return item
+      })
+    )
+
+    const combined = [...enrichedCinema, ...enrichedSeries]
 
     return selectUniqueItems(combined, Math.max(1, limit), new Set<string>())
   } catch (error) {
@@ -105,7 +128,20 @@ export async function getMovieBannerItems(category?: string, limit = 12) {
 
     if (error) throw error
 
-    return (data || []).filter((item) => item.poster || item.capa || item.banner || item.backdrop)
+    const items = (data || []).filter((item) => item.banner || item.backdrop || item.poster)
+
+    // Enrich items with TMDB backdrops if missing banner
+    const enriched = await Promise.all(
+      items.map(async (item) => {
+        if (!item.banner && item.tmdb_id) {
+          const tmdbBackdrop = await getMovieBackdrop(item.tmdb_id)
+          return { ...item, banner: tmdbBackdrop || item.backdrop || item.poster }
+        }
+        return item
+      })
+    )
+
+    return enriched
   } catch (error) {
     console.error('Erro ao buscar banner de filmes:', error)
     return []
@@ -124,7 +160,20 @@ export async function getSeriesBannerItems(category?: string, limit = 12) {
 
     if (error) throw error
 
-    return (data || []).filter((item) => item.poster || item.capa || item.banner || item.backdrop)
+    const items = (data || []).filter((item) => item.banner || item.capa || item.poster)
+
+    // Enrich items with TMDB backdrops if missing banner
+    const enriched = await Promise.all(
+      items.map(async (item) => {
+        if (!item.banner && item.tmdb_id) {
+          const tmdbBackdrop = await getShowBackdrop(item.tmdb_id)
+          return { ...item, banner: tmdbBackdrop || item.capa || item.poster }
+        }
+        return item
+      })
+    )
+
+    return enriched
   } catch (error) {
     console.error('Erro ao buscar banner de séries:', error)
     return []
@@ -195,7 +244,10 @@ export async function getMovieById(id: string | number) {
       .eq('id', id)
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('Supabase error:', error)
+      throw error
+    }
     return data
   } catch (error) {
     console.error('Erro ao buscar filme:', error)
@@ -288,7 +340,19 @@ export async function getSeriesEpisodes(seasonId: string | number) {
       .order('numero_episodio', { ascending: true })
 
     if (error) throw error
-    return data || []
+
+    // Enrich episodes with TMDB backdrops if missing images
+    const enriched = await Promise.all(
+      (data || []).map(async (episode) => {
+        if (!episode.banner && episode.tmdb_id) {
+          const tmdbBackdrop = await getMovieBackdrop(episode.tmdb_id)
+          return { ...episode, banner: tmdbBackdrop || episode.imagem_500 || episode.imagem_342 || episode.imagem_185 }
+        }
+        return episode
+      })
+    )
+
+    return enriched
   } catch (error) {
     console.error('Erro ao buscar episódios:', error)
     return []

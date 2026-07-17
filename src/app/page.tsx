@@ -31,19 +31,16 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen bg-black text-white">
       {/* Full width rotating banner */}
-      <div className="w-full px-0">
-        <RotatingBanner items={bannerItems} title={heroItem?.titulo || 'Em destaque'} subtitle={heroItem ? `${heroItem.year ?? heroItem.ano ?? 'N/A'} • ⭐ ${heroItem.rating ?? 'N/A'}` : 'Conteúdo em destaque no catálogo.'} />
-      </div>
+      <RotatingBanner items={bannerItems} title={heroItem?.titulo || 'Em destaque'} subtitle={heroItem ? `${heroItem.year ?? heroItem.ano ?? 'N/A'} • ⭐ ${heroItem.rating ?? 'N/A'}` : 'Conteúdo em destaque no catálogo.'} />
 
       <div className="mx-auto max-w-7xl space-y-10 px-6 py-8">
         {sections.map((section) => (
           <section key={section.id} className="space-y-3">
             <div className="flex items-end justify-between gap-4">
               <div>
-                <h2 className="text-xl font-semibold break-words whitespace-normal text-white">{section.titulo}</h2>
-                {section.subtitulo ? <p className="mt-2 text-sm break-words whitespace-normal text-slate-400">{section.subtitulo}</p> : null}
+                <h2 className="text-3xl font-bold break-words whitespace-normal text-white drop-shadow-lg sm:text-4xl lg:text-5xl">{section.titulo}</h2>
+                {section.subtitulo ? <p className="mt-2 text-lg break-words whitespace-normal text-slate-400">{section.subtitulo}</p> : null}
               </div>
-              <span className="text-sm text-slate-500">5 títulos</span>
             </div>
             <ContentGrid items={sectionContents[section.id] || []} />
           </section>

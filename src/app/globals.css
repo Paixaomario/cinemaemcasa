@@ -274,6 +274,12 @@ header, .mobile-nav-bar {
     transition: margin-left 0.3s ease; /* Mantém transição para suavidade ao abrir/fechar sidebar */
   }
 
+  /* Banner full-width - remove margem lateral para o banner ocupar largura total */
+  main > section:first-child {
+    margin-left: -80px !important;
+    width: calc(100% + 80px) !important;
+  }
+
   /* O conteúdo permanece estático enquanto a barra flutua por cima ao abrir */
   body:has(aside:hover) main,
   body:has(aside:focus-within) main {
@@ -293,7 +299,7 @@ header, .mobile-nav-bar {
     backdrop-filter: none !important;
     border-right: 1px solid transparent !important;
     pointer-events: auto; /* Permite foco e interação na sidebar */
-    z-index: 100 !important; /* Aumentado para garantir que sobreponha a pesquisa */
+    z-index: 50 !important; /* Reduzido para não cobrir conteúdo de páginas de detalhes */
     transition: opacity 0.3s ease;
   }
 

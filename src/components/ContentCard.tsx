@@ -31,20 +31,22 @@ export function ContentCard({ id, titulo, poster, rating, year, href, onClick }:
       onKeyDown={handleKey}
     >
       {poster ? (
-        <img
-          src={poster}
-          alt={titulo}
-          className="h-[160px] sm:h-[200px] md:h-[240px] lg:h-[260px] w-full object-cover transition duration-500 group-hover:scale-105"
-        />
+        <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
+          <img
+            src={poster}
+            alt={titulo}
+            className="absolute inset-0 w-full h-full object-cover transition duration-500 group-hover:scale-105"
+          />
+        </div>
       ) : (
-        <div className="flex h-[160px] sm:h-[200px] md:h-[240px] lg:h-[260px] w-full items-center justify-center bg-slate-900 text-slate-500">
+        <div className="flex w-full items-center justify-center bg-slate-900 text-slate-500" style={{ aspectRatio: '16/9' }}>
           Sem capa
         </div>
       )}
 
-      <div className="space-y-2 p-3">
-        <p className="text-sm font-semibold text-white line-clamp-2 break-words whitespace-normal">{titulo || 'Sem título'}</p>
-        <div className="flex items-center justify-between text-xs text-slate-400">
+      <div className="space-y-2 p-4">
+        <p className="text-base font-bold text-white line-clamp-2 break-words whitespace-normal">{titulo || 'Sem título'}</p>
+        <div className="flex items-center justify-between text-sm text-slate-400">
           <span>⭐ {rating ?? 'N/A'}</span>
           <span>{year ?? 'N/A'}</span>
         </div>

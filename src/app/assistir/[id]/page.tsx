@@ -19,18 +19,18 @@ export default function AssistirPage() {
       try {
         let url = ''
 
-        // Primeiro tente encontrar uma série com id_n = id
-        const seriesRes = await supabase
-          .from('series')
+        // Primeiro tente encontrar um episódio por id_n
+        const episodeRes = await supabase
+          .from('episodios')
           .select('*')
           .eq('id_n', parseInt(id))
           .single()
 
-        if (seriesRes.data) {
-          setContent(seriesRes.data as Series)
-          url = (seriesRes.data as any).url || ''
+        if (episodeRes.data) {
+          setContent(episodeRes.data as any)
+          url = episodeRes.data.arquivo || ''
         } else {
-          // Se não for série, tenta filme por id
+          // Se não for episódio, tenta filme por id
           const filmRes = await supabase
             .from('cinema')
             .select('*')
@@ -39,7 +39,7 @@ export default function AssistirPage() {
 
           if (filmRes.data) {
             setContent(filmRes.data as Cinema)
-            url = (filmRes.data as any).url || ''
+            url = filmRes.data.url || ''
           }
         }
 
@@ -79,8 +79,8 @@ export default function AssistirPage() {
     )
   }
 
-  const titulo = content.titulo
-  const url = (content as Cinema).url || (content as any).url
+  const titulo = content.titulo || content.titulo
+  const url = (content as any).arquivo || (content as Cinema).url || (content as any).url
 
   return (
     <div className="min-h-screen bg-black text-white">

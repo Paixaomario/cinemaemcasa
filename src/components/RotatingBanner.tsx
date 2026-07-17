@@ -11,7 +11,7 @@ interface RotatingBannerProps {
 }
 
 function getPoster(item: any) {
-  return item?.poster || item?.capa || item?.banner || item?.backdrop
+  return item?.banner || item?.backdrop || item?.poster || item?.capa
 }
 
 function getTitle(item: any) {
@@ -70,26 +70,24 @@ export function RotatingBanner({ items, title, subtitle, hrefPrefix = '/detalhes
   const href = currentItem ? `${hrefPrefix}/${getItemId(currentItem)}` : '#'
 
   return (
-    <section className="w-full relative overflow-hidden bg-transparent">
+    <section className="w-full relative overflow-hidden bg-transparent ml-0 mr-0 pl-0 pr-0" style={{ aspectRatio: '8/3' }}>
       {poster ? (
         <div
           className="absolute inset-0 bg-cover bg-center transition-all duration-700"
-          style={{ backgroundImage: `url(${poster})`, backgroundSize: 'cover' }}
+          style={{ backgroundImage: `url(${poster})`, backgroundSize: 'cover', backgroundPosition: 'center top' }}
         />
       ) : null}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/45 to-black/20" />
-      <div className="relative flex w-full min-h-[320px] flex-col justify-end gap-4 p-2 sm:p-6 lg:min-h-[380px] lg:p-10">
-        <div className="space-y-3">
+      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+      <div className="relative flex w-full h-full flex-col justify-end gap-4 p-6 sm:p-8 lg:p-12">
+        <div className="space-y-3 max-w-2xl">
           <p className="text-sm uppercase tracking-[0.35em] text-slate-300">Em destaque</p>
-          <h2 className="max-w-2xl text-3xl font-semibold leading-tight text-white sm:text-4xl">
-            {title || getTitle(currentItem || {})}
+          <h2 className="text-5xl font-bold leading-tight text-white drop-shadow-lg sm:text-6xl lg:text-7xl">
+            {getTitle(currentItem || {})}
           </h2>
-          <p className="max-w-xl text-sm text-slate-200 sm:text-base">
-            {subtitle || getDescription(currentItem || {})}
-          </p>
         </div>
 
-        {/* No navigation buttons - description and title rotate every 7s */}
+        {/* No navigation buttons - title rotates every 7s */}
       </div>
     </section>
   )

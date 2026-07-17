@@ -76,8 +76,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <LoadingOverlay />
 
             <aside className="fixed left-0 top-0 z-30 hidden h-full w-24 flex-col border-r border-white/10 bg-white/5 px-3 py-6 backdrop-blur-xl lg:flex">
-        <div className="mb-8 flex h-12 w-12 items-center justify-center rounded-2xl bg-transparent text-xl font-semibold">
-          <Image src="/logo.png" alt="logo" width={48} height={48} className="object-contain" />
+        <div className="mb-6 flex h-24 w-full items-center justify-center rounded-2xl bg-transparent text-xl font-semibold">
+          <Image src="/logo.png" alt="logo" width={120} height={120} className="object-contain h-20 w-auto" />
         </div>
 
         <nav className="flex flex-1 flex-col gap-2">

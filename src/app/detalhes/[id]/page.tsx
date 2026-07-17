@@ -253,11 +253,11 @@ export default async function DetalhesPage({ params }: any) {
                 <p className="text-sm font-semibold uppercase tracking-[0.35em] text-amber-300/90">
                   {detail.isSeries ? 'Série' : 'Filme'} • {detail.status || 'Disponível'}
                 </p>
-                <h1 className="text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl lg:leading-[0.9]">
+                <h1 className="text-6xl font-bold tracking-tight text-white drop-shadow-lg sm:text-7xl lg:text-8xl lg:leading-[0.9]">
                   {detail.title}
                 </h1>
                 {detail.tagline ? (
-                  <p className="max-w-3xl text-xl italic text-slate-300">{detail.tagline}</p>
+                  <p className="max-w-3xl text-2xl italic text-slate-300">{detail.tagline}</p>
                 ) : null}
               </div>
 
@@ -265,6 +265,7 @@ export default async function DetalhesPage({ params }: any) {
                 {detail.year ? <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">{detail.year}</span> : null}
                 {detail.duration ? <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">{detail.duration}</span> : null}
                 {detail.rating ? <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">★ {detail.rating.toFixed(1)}</span> : null}
+                {detail.status ? <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">{detail.status}</span> : null}
                 {detail.genres.length > 0 ? (
                   <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">
                     {detail.genres.join(' • ')}
@@ -296,8 +297,14 @@ export default async function DetalhesPage({ params }: any) {
                 <p className="text-lg leading-8 text-slate-300">{detail.overview}</p>
               </div>
 
-              {detail.director || detail.cast.length > 0 ? (
+              {detail.director || detail.cast.length > 0 || detail.tagline ? (
                 <div className="grid gap-5 sm:grid-cols-2">
+                  {detail.tagline ? (
+                    <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-7 sm:col-span-2">
+                      <h3 className="mb-2 text-sm uppercase tracking-[0.3em] text-slate-400">Tagline</h3>
+                      <p className="text-lg italic text-slate-200">{detail.tagline}</p>
+                    </div>
+                  ) : null}
                   {detail.director ? (
                     <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-7">
                       <h3 className="mb-2 text-sm uppercase tracking-[0.3em] text-slate-400">Direção</h3>
@@ -307,7 +314,7 @@ export default async function DetalhesPage({ params }: any) {
 
                   {detail.cast.length > 0 ? (
                     <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-7">
-                      <h3 className="mb-2 text-sm uppercase tracking-[0.3em] text-slate-400">Elenco</h3>
+                      <h3 className="mb-2 text-sm uppercase tracking-[0.3em] text-slate-400">Elenco Principal</h3>
                       <p className="text-lg text-slate-200">{detail.cast.join(', ')}</p>
                     </div>
                   ) : null}
@@ -325,13 +332,34 @@ export default async function DetalhesPage({ params }: any) {
                       </div>
                       {season.descricao ? <p className="text-slate-300">{season.descricao}</p> : null}
                       {detail.episodesBySeason?.[String(season.id_n)]?.length ? (
-                        <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                           {detail.episodesBySeason[String(season.id_n)].map((episode) => (
-                            <div key={episode.id_n} className="rounded-[1.25rem] border border-white/10 bg-slate-950/90 p-4">
-                              <p className="font-semibold text-slate-100">{episode.titulo || `Episódio ${episode.numero_episodio}`}</p>
-                              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Episódio {episode.numero_episodio}</p>
-                              {episode.duracao ? <p className="mt-2 text-sm text-slate-300">Duração: {episode.duracao}</p> : null}
-                            </div>
+                            <Link
+                              key={episode.id_n}
+                              href={`/assistir/${episode.id_n}`}
+                              className="group relative overflow-hidden rounded-[1.25rem] border border-white/10 bg-slate-950/90 transition hover:border-white/30 hover:bg-slate-900/90"
+                            >
+                              {episode.banner || episode.imagem_500 || episode.imagem_342 || episode.imagem_185 ? (
+                                <div className="relative aspect-video">
+                                  <img
+                                    src={episode.banner || episode.imagem_500 || episode.imagem_342 || episode.imagem_185}
+                                    alt={episode.titulo || `Episódio ${episode.numero_episodio}`}
+                                    className="h-full w-full object-cover transition group-hover:scale-105"
+                                  />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                                </div>
+                              ) : (
+                                <div className="flex aspect-video items-center justify-center bg-slate-900">
+                                  <span className="text-slate-500">Sem imagem</span>
+                                </div>
+                              )}
+                              <div className="p-4">
+                                <p className="font-semibold text-slate-100">{episode.titulo || `Episódio ${episode.numero_episodio}`}</p>
+                                <p className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-500">Episódio {episode.numero_episodio}</p>
+                                {episode.duracao ? <p className="mt-2 text-sm text-slate-300">{episode.duracao}</p> : null}
+                                {episode.descricao ? <p className="mt-2 text-sm text-slate-400 line-clamp-2">{episode.descricao}</p> : null}
+                              </div>
+                            </Link>
                           ))}
                         </div>
                       ) : null}

@@ -64,3 +64,27 @@ export async function getShowDetails(id: string) {
     include_image_language: 'en,null',
   })
 }
+
+export async function getMovieBackdrop(tmdbId: string | number) {
+  try {
+    const data = await tmdbFetch(`/movie/${tmdbId}`, {
+      append_to_response: 'images',
+    })
+    return tmdbImageUrl(data?.backdrop_path || data?.images?.backdrops?.[0]?.file_path, 'original')
+  } catch (error) {
+    console.error('Erro ao buscar backdrop do filme:', error)
+    return null
+  }
+}
+
+export async function getShowBackdrop(tmdbId: string | number) {
+  try {
+    const data = await tmdbFetch(`/tv/${tmdbId}`, {
+      append_to_response: 'images',
+    })
+    return tmdbImageUrl(data?.backdrop_path || data?.images?.backdrops?.[0]?.file_path, 'original')
+  } catch (error) {
+    console.error('Erro ao buscar backdrop da série:', error)
+    return null
+  }
+}
