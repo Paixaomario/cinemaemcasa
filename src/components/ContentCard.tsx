@@ -31,7 +31,7 @@ export function ContentCard({ id, titulo, poster, rating, year, href, onClick }:
       onKeyDown={handleKey}
     >
       {poster ? (
-        <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
+        <div className="relative w-full" style={{ aspectRatio: '2/3' }}>
           <img
             src={poster}
             alt={titulo}
@@ -39,7 +39,7 @@ export function ContentCard({ id, titulo, poster, rating, year, href, onClick }:
           />
         </div>
       ) : (
-        <div className="flex w-full items-center justify-center bg-slate-900 text-slate-500" style={{ aspectRatio: '16/9' }}>
+        <div className="flex w-full items-center justify-center bg-slate-900 text-slate-500" style={{ aspectRatio: '2/3' }}>
           Sem capa
         </div>
       )}

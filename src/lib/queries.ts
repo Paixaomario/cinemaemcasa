@@ -222,10 +222,10 @@ export async function getMovies(category?: string, limit = 5) {
       .eq('type', 'movie')
 
     if (category) {
-      query = query.eq('category', category)
+      query = query.ilike('category', `%${category}%`)
     }
 
-    const rowLimit = Math.min(5, Number(limit) || 5)
+    const rowLimit = Number(limit) || 5
     const { data, error } = await query.limit(rowLimit).order('created_at', { ascending: false })
 
     if (error) throw error
@@ -265,7 +265,16 @@ export async function getMovieCategories() {
 
     if (error) throw error
 
-    const categories = new Set(data?.map((d) => d.category).filter(Boolean))
+    // Handle multiple categories separated by commas
+    const categories = new Set<string>()
+    data?.forEach(d => {
+      if (d.category) {
+        // Split by comma and trim each category
+        const categoryList = d.category.split(',').map((c: string) => c.trim()).filter(Boolean)
+        categoryList.forEach((c: string) => categories.add(c))
+      }
+    })
+
     const available = Array.from(categories) as string[]
     const ordered = MOVIE_CATEGORY_ORDER.filter((category) => available.includes(category))
     const extras = available.filter((category) => !ordered.includes(category))
@@ -285,10 +294,10 @@ export async function getSeries(category?: string, limit = 5) {
     let query = supabase.from('series').select('*')
 
     if (category) {
-      query = query.eq('genero', category)
+      query = query.ilike('genero', `%${category}%`)
     }
 
-    const rowLimit = Math.min(5, Number(limit) || 5)
+    const rowLimit = Number(limit) || 5
     const { data, error } = await query.limit(rowLimit).order('created_at', { ascending: false })
 
     if (error) throw error
@@ -368,7 +377,16 @@ export async function getSeriesCategories() {
 
     if (error) throw error
     
-    const categories = new Set(data?.map(d => d.genero).filter(Boolean))
+    // Handle multiple genres separated by commas
+    const categories = new Set<string>()
+    data?.forEach(d => {
+      if (d.genero) {
+        // Split by comma and trim each category
+        const genreList = d.genero.split(',').map((g: string) => g.trim()).filter(Boolean)
+        genreList.forEach((g: string) => categories.add(g))
+      }
+    })
+    
     return Array.from(categories)
   } catch (error) {
     console.error('Erro ao buscar categorias:', error)
