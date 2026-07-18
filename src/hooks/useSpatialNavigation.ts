@@ -2,8 +2,8 @@
 import { useEffect } from 'react'
 
 const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-const ROW_TOLERANCE = 80
-const COLUMN_TOLERANCE = 100
+const ROW_TOLERANCE = 150
+const COLUMN_TOLERANCE = 200
 
 type Direction = 'up' | 'down' | 'left' | 'right'
 
@@ -30,13 +30,13 @@ function getScore(activeRect: DOMRect, rect: DOMRect, direction: Direction) {
 
   switch (direction) {
     case 'right':
-      return dx > 10 ? dx * 10 + Math.abs(dy) : Number.POSITIVE_INFINITY
+      return dx > 0 ? dx * 5 + Math.abs(dy) * 2 : Number.POSITIVE_INFINITY
     case 'left':
-      return dx < -10 ? Math.abs(dx) * 10 + Math.abs(dy) : Number.POSITIVE_INFINITY
+      return dx < 0 ? Math.abs(dx) * 5 + Math.abs(dy) * 2 : Number.POSITIVE_INFINITY
     case 'down':
-      return dy > 10 ? dy * 10 + Math.abs(dx) : Number.POSITIVE_INFINITY
+      return dy > 0 ? dy * 5 + Math.abs(dx) * 2 : Number.POSITIVE_INFINITY
     case 'up':
-      return dy < -10 ? Math.abs(dy) * 10 + Math.abs(dx) : Number.POSITIVE_INFINITY
+      return dy < 0 ? Math.abs(dy) * 5 + Math.abs(dx) * 2 : Number.POSITIVE_INFINITY
     default:
       return Number.POSITIVE_INFINITY
   }
@@ -67,43 +67,12 @@ export function useSpatialNavigation() {
         return allCandidates[0] || null
       }
 
-      const activeGroup = getSpatialGroup(active)
-      
-      // First try to find candidates in the same group
-      let candidates = allCandidates.filter((candidate) => {
-        if (candidate === active) return false
-        return getSpatialGroup(candidate) === activeGroup
-      })
-
       const activeRect = active.getBoundingClientRect()
       let best: HTMLElement | null = null
       let bestScore = Number.POSITIVE_INFINITY
 
-      const rowCandidates = candidates.filter((candidate) => {
-        const rect = candidate.getBoundingClientRect()
-        return direction === 'left' || direction === 'right'
-          ? Math.abs(rect.top - activeRect.top) <= ROW_TOLERANCE
-          : true
-      })
-
-      const columnCandidates = candidates.filter((candidate) => {
-        const rect = candidate.getBoundingClientRect()
-        return direction === 'up' || direction === 'down'
-          ? Math.abs(rect.left - activeRect.left) <= COLUMN_TOLERANCE
-          : true
-      })
-
-      const preferredCandidates =
-        direction === 'left' || direction === 'right'
-          ? rowCandidates
-          : columnCandidates
-
-      let pool = preferredCandidates.length > 0 ? preferredCandidates : candidates
-
-      // If no candidates in same group, try all candidates (cross-group navigation)
-      if (pool.length === 0) {
-        pool = allCandidates.filter((candidate) => candidate !== active)
-      }
+      // Use all candidates for free navigation across groups
+      const pool = allCandidates.filter((candidate) => candidate !== active)
 
       for (const candidate of pool) {
         const rect = candidate.getBoundingClientRect()
@@ -111,10 +80,10 @@ export function useSpatialNavigation() {
         const dy = rect.top - activeRect.top
 
         const isInDirection =
-          (direction === 'right' && dx > 10) ||
-          (direction === 'left' && dx < -10) ||
-          (direction === 'down' && dy > 10) ||
-          (direction === 'up' && dy < -10)
+          (direction === 'right' && dx > 0) ||
+          (direction === 'left' && dx < 0) ||
+          (direction === 'down' && dy > 0) ||
+          (direction === 'up' && dy < 0)
 
         if (!isInDirection) continue
 

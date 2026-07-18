@@ -17,7 +17,7 @@ export function ContentGrid({ items, onItemClick }: ContentGridProps) {
         const href = id ? `/detalhes/${id}` : undefined
 
         return (
-          <div key={id ?? Math.random()} className="w-[175px] flex-shrink-0">
+          <div key={id ?? Math.random()} className="w-[220px] flex-shrink-0">
             <ContentCard
               id={id}
               titulo={item.titulo}
