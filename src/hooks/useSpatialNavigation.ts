@@ -68,7 +68,9 @@ export function useSpatialNavigation() {
       }
 
       const activeGroup = getSpatialGroup(active)
-      const candidates = allCandidates.filter((candidate) => {
+      
+      // First try to find candidates in the same group
+      let candidates = allCandidates.filter((candidate) => {
         if (candidate === active) return false
         return getSpatialGroup(candidate) === activeGroup
       })
@@ -96,7 +98,12 @@ export function useSpatialNavigation() {
           ? rowCandidates
           : columnCandidates
 
-      const pool = preferredCandidates.length > 0 ? preferredCandidates : candidates
+      let pool = preferredCandidates.length > 0 ? preferredCandidates : candidates
+
+      // If no candidates in same group, try all candidates (cross-group navigation)
+      if (pool.length === 0) {
+        pool = allCandidates.filter((candidate) => candidate !== active)
+      }
 
       for (const candidate of pool) {
         const rect = candidate.getBoundingClientRect()

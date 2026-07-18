@@ -70,7 +70,7 @@ export function RotatingBanner({ items, title, subtitle, hrefPrefix = '/detalhes
   const href = currentItem ? `${hrefPrefix}/${getItemId(currentItem)}` : '#'
 
   return (
-    <section className="w-full relative overflow-hidden bg-transparent ml-0 mr-0 pl-0 pr-0" style={{ aspectRatio: '8/3' }}>
+    <section className="w-full relative overflow-hidden bg-transparent ml-0 mr-0 pl-0 pr-0" style={{ aspectRatio: '16/9' }}>
       {poster ? (
         <div
           className="absolute inset-0 bg-cover bg-center transition-all duration-700"
