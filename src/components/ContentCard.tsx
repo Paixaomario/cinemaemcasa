@@ -58,7 +58,13 @@ export function ContentCard({ id, titulo, poster, rating, year, href, onClick }:
 
   if (href) {
     return (
-      <Link href={href} className="block" tabIndex={0} data-spatial-nav="true" data-spatial-group="content">
+      <Link 
+        href={href} 
+        className="block focus:outline-none" 
+        tabIndex={0} 
+        data-spatial-nav="true" 
+        data-spatial-group="content"
+      >
         {card}
       </Link>
     )

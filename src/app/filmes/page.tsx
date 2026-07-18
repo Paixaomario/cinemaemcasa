@@ -1,46 +1,20 @@
-'use client'
-
-import { useEffect, useState } from 'react'
 import { getMovieBannerItems, getMovies, getMovieCategories } from '@/lib/queries'
 import { ContentGrid } from '@/components/ContentGrid'
 import { RotatingBanner } from '@/components/RotatingBanner'
 
-export default function FilmesPage() {
-  const [movieSections, setMovieSections] = useState<Array<{ category: string; items: any[] }>>([])
-  const [bannerItems, setBannerItems] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const [categories, banner] = await Promise.all([getMovieCategories(), getMovieBannerItems(undefined, 12)])
-        setBannerItems(banner)
-        const sections = await Promise.all(
-          categories.map(async (category) => ({
-            category,
-            items: await getMovies(category, 5),
-          }))
-        )
-
-        setMovieSections(sections)
-      } catch (err) {
-        console.error('Erro filmes:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    load()
-  }, [])
-
-  if (loading) {
-    return <div className="min-h-screen bg-black px-6 py-10 text-white">Carregando filmes...</div>
-  }
+export default async function FilmesPage() {
+  const [categories, banner] = await Promise.all([getMovieCategories(), getMovieBannerItems(undefined, 12)])
+  const sections = await Promise.all(
+    categories.map(async (category) => ({
+      category,
+      items: await getMovies(category, 5),
+    }))
+  )
 
   return (
     <main className="min-h-screen bg-black text-white">
       {/* Full width banner */}
-      <RotatingBanner items={bannerItems} title="Filmes em destaque" subtitle="As melhores capas do catálogo rotacionam automaticamente." />
+      <RotatingBanner items={banner} title="Filmes em destaque" subtitle="As melhores capas do catálogo rotacionam automaticamente." />
 
       <div className="mx-auto max-w-7xl space-y-10 px-6 py-10">
         <header className="space-y-3">
@@ -52,7 +26,7 @@ export default function FilmesPage() {
         </header>
 
         <div className="space-y-8">
-          {movieSections.map((section) => (
+          {sections.map((section) => (
             <section key={section.category} className="space-y-3">
               <div className="flex items-end justify-between gap-4">
                 <h2 className="text-3xl font-bold text-white drop-shadow-lg sm:text-4xl lg:text-5xl">{section.category}</h2>
