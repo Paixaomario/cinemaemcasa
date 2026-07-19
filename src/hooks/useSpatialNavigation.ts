@@ -67,11 +67,99 @@ export function useSpatialNavigation() {
         return allCandidates[0] || null
       }
 
+      const activeGroup = getSpatialGroup(active)
       const activeRect = active.getBoundingClientRect()
       let best: HTMLElement | null = null
       let bestScore = Number.POSITIVE_INFINITY
 
-      // Use all candidates for free navigation across groups
+      // Special handling for sidebar navigation
+      if (activeGroup === 'sidebar') {
+        if (direction === 'right') {
+          // From sidebar right: go to first content element (top-left)
+          const contentElements = allCandidates.filter((c) => getSpatialGroup(c) === 'content')
+          if (contentElements.length > 0) {
+            // Find the top-left content element
+            let topLeft = contentElements[0]
+            let minScore = Number.POSITIVE_INFINITY
+            for (const candidate of contentElements) {
+              const rect = candidate.getBoundingClientRect()
+              const score = rect.left + rect.top
+              if (score < minScore) {
+                minScore = score
+                topLeft = candidate
+              }
+            }
+            return topLeft
+          }
+        }
+      }
+
+      // Special handling for first column navigation to left
+      if (activeGroup === 'content' && direction === 'left') {
+        const sidebarElements = allCandidates.filter((c) => getSpatialGroup(c) === 'sidebar')
+        if (sidebarElements.length > 0) {
+          // Check if we're in the first column (leftmost content elements)
+          const contentElements = allCandidates.filter((c) => getSpatialGroup(c) === 'content')
+          const minX = Math.min(...contentElements.map((c) => c.getBoundingClientRect().left))
+          if (Math.abs(activeRect.left - minX) < 50) {
+            // We're in first column, go to sidebar
+            return sidebarElements[0]
+          }
+        }
+      }
+
+      // For content navigation, use row/column tolerance for better grid navigation
+      if (activeGroup === 'content') {
+        const candidates = allCandidates.filter((candidate) => {
+          if (candidate === active) return false
+          return getSpatialGroup(candidate) === 'content'
+        })
+
+        const rowCandidates = candidates.filter((candidate) => {
+          const rect = candidate.getBoundingClientRect()
+          return direction === 'left' || direction === 'right'
+            ? Math.abs(rect.top - activeRect.top) <= ROW_TOLERANCE
+            : true
+        })
+
+        const columnCandidates = candidates.filter((candidate) => {
+          const rect = candidate.getBoundingClientRect()
+          return direction === 'up' || direction === 'down'
+            ? Math.abs(rect.left - activeRect.left) <= COLUMN_TOLERANCE
+            : true
+        })
+
+        const preferredCandidates =
+          direction === 'left' || direction === 'right'
+            ? rowCandidates
+            : columnCandidates
+
+        let pool = preferredCandidates.length > 0 ? preferredCandidates : candidates
+
+        for (const candidate of pool) {
+          const rect = candidate.getBoundingClientRect()
+          const dx = rect.left - activeRect.left
+          const dy = rect.top - activeRect.top
+
+          const isInDirection =
+            (direction === 'right' && dx > 0) ||
+            (direction === 'left' && dx < 0) ||
+            (direction === 'down' && dy > 0) ||
+            (direction === 'up' && dy < 0)
+
+          if (!isInDirection) continue
+
+          const score = getScore(activeRect, rect, direction)
+          if (score < bestScore) {
+            bestScore = score
+            best = candidate
+          }
+        }
+
+        return best
+      }
+
+      // Default: use all candidates for other groups
       const pool = allCandidates.filter((candidate) => candidate !== active)
 
       for (const candidate of pool) {

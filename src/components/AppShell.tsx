@@ -106,7 +106,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
       </aside>
 
-      <div className="pb-24 lg:pl-24 lg:pb-0">
+      <div className="pb-24 lg:pl-[106px] lg:pb-0">
         {children}
       </div>
 

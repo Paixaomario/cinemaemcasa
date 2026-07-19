@@ -29,7 +29,7 @@ export default async function SeriesPage() {
           {sections.map((section) => (
             <section key={section.category} className="space-y-3">
               <div className="flex items-end justify-between gap-4">
-                <h2 className="text-3xl font-bold text-white drop-shadow-lg sm:text-4xl lg:text-5xl">{section.category}</h2>
+                <h2 className="text-3xl font-bold sm:text-4xl lg:text-5xl" style={{ color: '#2aa3d3', textShadow: '2px 2px 4px rgba(0,0,0,0.5), -1px -1px 2px rgba(255,255,255,0.1)' }}>{section.category}</h2>
               </div>
               <ContentGrid items={section.items} />
             </section>
