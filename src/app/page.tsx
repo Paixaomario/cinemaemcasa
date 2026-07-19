@@ -38,7 +38,7 @@ export default async function HomePage() {
           <section key={section.id} className="space-y-3">
             <div className="flex items-end justify-between gap-4">
               <div>
-                <h2 className="text-3xl font-bold break-words whitespace-normal sm:text-4xl lg:text-5xl" style={{ color: '#2aa3d3', textShadow: '2px 2px 4px rgba(0,0,0,0.5), -1px -1px 2px rgba(255,255,255,0.1)' }}>{section.titulo}</h2>
+                <h2 className="text-3xl font-bold break-words whitespace-normal sm:text-4xl lg:text-5xl" style={{ color: '#2aa3d3', textShadow: '2px 2px 4px rgba(0,0,0,0.5), -1px -1px 2px rgba(255,255,255,0.3), 0 0 10px rgba(255,255,255,0.2)' }}>{section.titulo}</h2>
                 {section.subtitulo ? <p className="mt-2 text-lg break-words whitespace-normal text-slate-400">{section.subtitulo}</p> : null}
               </div>
             </div>
