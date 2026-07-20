@@ -7,7 +7,6 @@ interface RotatingBannerProps {
   items: any[]
   title?: string
   subtitle?: string
-  hrefPrefix?: string
 }
 
 function getPoster(item: any) {
@@ -35,7 +34,7 @@ function shuffle(items: number[]) {
   return clone
 }
 
-export function RotatingBanner({ items, title, subtitle, hrefPrefix = '/detalhes' }: RotatingBannerProps) {
+export function RotatingBanner({ items }: RotatingBannerProps) {
   const [order, setOrder] = useState<number[]>([])
   const [ready, setReady] = useState(false)
 
@@ -67,10 +66,10 @@ export function RotatingBanner({ items, title, subtitle, hrefPrefix = '/detalhes
 
   const currentItem = order.length > 0 ? safeItems[order[0]] : null
   const poster = currentItem ? getPoster(currentItem) : null
-  const href = currentItem ? `${hrefPrefix}/${getItemId(currentItem)}` : '#'
+  const href = currentItem ? `/detalhes/${getItemId(currentItem)}` : '#'
 
   return (
-    <section className="w-full relative overflow-hidden bg-transparent ml-0 mr-0 pl-0 pr-0" style={{ aspectRatio: '16/9' }}>
+    <section className="w-full relative overflow-hidden bg-transparent ml-0 mr-0 pl-0 pr-0" style={{ aspectRatio: '16/9', minHeight: '200px' }}>
       {poster ? (
         <div
           className="absolute inset-0 bg-cover bg-center transition-all duration-700"
@@ -79,13 +78,13 @@ export function RotatingBanner({ items, title, subtitle, hrefPrefix = '/detalhes
       ) : null}
       <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
-      <div className="relative flex w-full h-full flex-col justify-end gap-4 p-6 sm:p-8 lg:p-12 lg:pl-32">
-        <div className="space-y-3 max-w-2xl">
-          <p className="text-sm uppercase tracking-[0.35em] text-slate-300">Em destaque</p>
-          <h2 className="text-5xl font-bold leading-tight text-white drop-shadow-lg sm:text-6xl lg:text-7xl">
+      <div className="banner-content-wrapper">
+        <div className="space-y-1 sm:space-y-2 md:space-y-3 max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl">
+          <p className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.2em] sm:tracking-[0.35em] text-slate-300">Em destaque</p>
+          <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold leading-tight text-white drop-shadow-lg line-clamp-2 sm:line-clamp-3">
             {getTitle(currentItem || {})}
           </h2>
-          <p className="text-lg text-slate-300 line-clamp-3">{getDescription(currentItem || {})}</p>
+          <p className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl text-slate-300 line-clamp-2 sm:line-clamp-3">{getDescription(currentItem || {})}</p>
         </div>
 
         {/* No navigation buttons - title rotates every 7s */}

@@ -2,25 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Open+Sans:wght@400;700&display=swap');
+ 
 body {
   @apply bg-black text-white;
   background-color: #000000;
+  font-family: 'Open Sans', sans-serif; /* Fonte padrão para todo o texto */
   /* Proteção contra Overscan em Projetores e TVs */
   padding-top: env(safe-area-inset-top);
   padding-right: env(safe-area-inset-right);
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
+  /* Garante que o fundo seja sempre preto, mesmo com overscroll */
+  overscroll-behavior-y: contain;
+}
+
+/* Aplica a fonte Bebas Neue a todos os títulos */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.05em; /* Um leve espaçamento para melhorar a legibilidade */
 }
 
 /* Estilo de Foco Global para Navegação por Controle/Teclado */
 :focus-visible, 
 .using-keyboard *:focus {
   outline: none !important;
-  box-shadow: 0 0 0 2px var(--media-focus-ring-color, #00ADEF) !important;
+  box-shadow: 0 0 0 3px var(--media-focus-ring-color, #E50914) !important; /* Cor de foco da Netflix */
   /* Força aceleração de hardware no elemento focado */
   transform: translateZ(0);
   transition: box-shadow 0.12s ease-out, transform 0.08s ease-out;
   backface-visibility: hidden;
+  z-index: 50; /* Garante que o item focado fique sobre os outros */
+  position: relative;
 }
 
 /* Ajuste para elementos com escala nativa no hover/focus */
@@ -54,7 +67,7 @@ body {
 .scroll-row {
   display: flex;
   flex-wrap: nowrap; /* Garante que os itens fiquem em uma única linha */
-  gap: 1.5rem; /* Espaço entre as capas */
+  gap: 0.5rem; /* Espaçamento menor, como na Netflix */
   overflow-x: auto; /* Força scroll horizontal para TVs e melhora compatibilidade */
   overflow-y: hidden; /* IMPORTANTE: Alterado de visible para hidden para destravar o scroll-x */
   scroll-snap-type: x mandatory;
@@ -72,13 +85,25 @@ body {
 .scroll-row > * {
   flex-shrink: 0;
   scroll-snap-align: start; /* Ajuda no alinhamento ao navegar com controle remoto */
+  transition: transform 0.2s ease-in-out; /* Transição suave para o hover */
+}
+
+/* Efeito de escala no hover para Desktop, similar ao foco da TV */
+@media (hover: hover) and (pointer: fine) {
+  .scroll-row > *:hover {
+    transform: scale(1.05);
+    z-index: 20;
+  }
+}
+
+/* Estilo para o wrapper do card de conteúdo, definindo 5 por linha */
+.content-card-wrapper {
+  flex-shrink: 0;
+  width: calc(25% - 0.375rem); /* Exibindo 4 itens por linha */
 }
 
 /* Configuração para Smart TV até 65 polegadas (5 capas por linha) */
 @media (min-width: 1024px) {
-  .scroll-row > * {
-    width: calc((100% - (4 * 1.5rem)) / 5.4) !important; /* Fits 5 items + peek */
-  }
   .scroll-row { padding-left: calc(6rem + 12px); }
   .tv-grid-layout {
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
@@ -87,9 +112,6 @@ body {
 
 /* Configuração para Smart TV 70+ polegadas e Telas Gigantes (7 capas por linha) */
 @media (min-width: 2500px) {
-  .scroll-row > * {
-    width: calc((100% - (6 * 1.5rem)) / 7.4) !important; /* Fits 7 items + peek */
-  }
   .tv-grid-layout {
     grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
   }
@@ -98,8 +120,8 @@ body {
 /* Regras de Responsividade Crítica para Mobile */
 @media (max-width: 1023px) {
   .section-px { padding-left: 2px !important; padding-right: 2px !important; }
-  .scroll-row > * {
-    width: calc((100% - 4px) / 2) !important; /* 2 items per view */
+  .content-card-wrapper {
+    width: calc(50% - 0.25rem) !important; /* 2 itens por linha no mobile */
     min-width: 0;
   }
 }
@@ -324,6 +346,19 @@ header, .mobile-nav-bar {
   }
 }
 
+/* =========================================================
+   MODO PLAYER (TELA CHEIA)
+   ========================================================= */
+
+/* Quando a página contém o player, esconde a sidebar e expande o main */
+body:has(.player-page-active) main {
+  margin-left: 0 !important;
+}
+
+body:has(.player-page-active) aside {
+  display: none !important;
+}
+
 /* Estilo unificado para botões de "Ver Detalhes" - Redução de comprimento */
 .btn-detalhes,
 button[aria-label*="detalhes"],
@@ -446,51 +481,21 @@ a[href*="/series"]:not(.group) {
   pointer-events: auto !important;
   touch-action: manipulation;
 }
-/* COPIE ISTO E COLE NO FINAL DE: src/app/globals.css */
 
-/* Estilo de foco para WebOS */
-*:focus {
-  outline: 3px solid #FFD700;
-  outline-offset: 2px;
+/* Alinhamento unificado para o conteúdo do banner */
+.banner-content-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 100%;
+  height: 100%;
+  gap: 0.5rem;
+  padding: 1rem; /* Mobile */
 }
 
-.focused {
-  outline: 3px solid #FFD700;
-  outline-offset: 2px;
-  transform: scale(1.05);
-  transition: all 200ms ease-in-out;
-}
-
-/* Cartões focáveis */
-[role="button"],
-button,
-a {
-  cursor: pointer;
-  transition: all 200ms ease-in-out;
-}
-
-[role="button"]:focus,
-button:focus,
-a:focus {
-  transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
-}
-
-/* Grid responsivo */
-@media (max-width: 640px) {
-  .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 641px) and (max-width: 1024px) {
-  .grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1025px) {
-  .grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+@media (min-width: 768px) {
+  .banner-content-wrapper {
+    padding: 2.5rem 1.5rem 2.5rem calc(80px + 1.5rem); /* Desktop/TV: 80px da sidebar + 1.5rem do padding do conteúdo */
   }
 }

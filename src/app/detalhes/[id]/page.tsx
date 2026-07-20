@@ -8,6 +8,7 @@ import {
   getSeriesSeasons,
   getSeriesEpisodes,
 } from '@/lib/queries'
+import { SeasonSelector } from '@/components/SeasonSelector'
 import {
   getMovieDetails,
   getShowDetails,
@@ -281,14 +282,12 @@ export default async function DetalhesPage({ params }: any) {
                   Assistir Agora
                 </Link>
                 {detail.trailerUrl ? (
-                  <a
-                    href={detail.trailerUrl}
-                    target="_blank"
-                    rel="noreferrer"
+                  <Link
+                    href={`/assistir/${detail.id}?trailer=${encodeURIComponent(detail.trailerUrl)}`}
                     className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-8 py-4 text-base font-semibold text-white transition hover:bg-white/10"
                   >
                     Ver Trailer
-                  </a>
+                  </Link>
                 ) : null}
               </div>
 
@@ -322,50 +321,10 @@ export default async function DetalhesPage({ params }: any) {
               ) : null}
 
               {detail.isSeries && detail.seasons && detail.seasons.length > 0 ? (
-                <div className="space-y-4 rounded-[2rem] border border-white/10 bg-slate-950/80 p-8">
-                  <h2 className="text-2xl font-semibold text-white">Temporadas</h2>
-                  {detail.seasons.map((season) => (
-                    <div key={season.id_n} className="space-y-3 rounded-[1.5rem] border border-white/5 bg-slate-900/70 p-5">
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-slate-300 sm:text-base">
-                        <span className="font-semibold">Temporada {season.numero_temporada}</span>
-                        {season.ano ? <span>{season.ano}</span> : null}
-                      </div>
-                      {season.descricao ? <p className="text-slate-300">{season.descricao}</p> : null}
-                      {detail.episodesBySeason?.[String(season.id_n)]?.length ? (
-                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                          {detail.episodesBySeason[String(season.id_n)].map((episode) => (
-                            <Link
-                              key={episode.id_n}
-                              href={`/assistir/${episode.id_n}`}
-                              className="group relative overflow-hidden rounded-[1.25rem] border border-white/10 bg-slate-950/90 transition hover:border-white/30 hover:bg-slate-900/90"
-                            >
-                              {episode.banner || episode.imagem_500 || episode.imagem_342 || episode.imagem_185 ? (
-                                <div className="relative aspect-video">
-                                  <img
-                                    src={episode.banner || episode.imagem_500 || episode.imagem_342 || episode.imagem_185}
-                                    alt={episode.titulo || `Episódio ${episode.numero_episodio}`}
-                                    className="h-full w-full object-cover transition group-hover:scale-105"
-                                  />
-                                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                                </div>
-                              ) : (
-                                <div className="flex aspect-video items-center justify-center bg-slate-900">
-                                  <span className="text-slate-500">Sem imagem</span>
-                                </div>
-                              )}
-                              <div className="p-4">
-                                <p className="font-semibold text-slate-100">{episode.titulo || `Episódio ${episode.numero_episodio}`}</p>
-                                <p className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-500">Episódio {episode.numero_episodio}</p>
-                                {episode.duracao ? <p className="mt-2 text-sm text-slate-300">{episode.duracao}</p> : null}
-                                {episode.descricao ? <p className="mt-2 text-sm text-slate-400 line-clamp-2">{episode.descricao}</p> : null}
-                              </div>
-                            </Link>
-                          ))}
-                        </div>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
+                <SeasonSelector
+                  seasons={detail.seasons}
+                  episodesBySeason={detail.episodesBySeason || {}}
+                />
               ) : null}
             </section>
           </div>

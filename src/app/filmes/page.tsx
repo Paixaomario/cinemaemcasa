@@ -7,14 +7,14 @@ export default async function FilmesPage() {
   const sections = await Promise.all(
     categories.map(async (category) => ({
       category,
-      items: await getMovies(category, 5),
+      items: await getMovies(category), // Usará o limite padrão de 50
     }))
   )
 
   return (
     <main className="min-h-screen bg-black text-white">
       {/* Full width banner */}
-      <RotatingBanner items={banner} title="Filmes em destaque" subtitle="As melhores capas do catálogo rotacionam automaticamente." />
+      <RotatingBanner items={banner} />
 
       <div className="mx-auto max-w-7xl space-y-10 px-6 py-10">
         <header className="space-y-3">

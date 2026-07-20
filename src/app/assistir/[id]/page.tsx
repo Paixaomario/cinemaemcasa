@@ -1,18 +1,34 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { supabase, Cinema, Series } from '../../../lib/supabase'
 
-export default function AssistirPage() {
+// Imports do Player de Vídeo Avançado (Vidstack)
+import { MediaPlayer, MediaProvider } from '@vidstack/react'
+import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default'
+
+// Estilos do Player
+import '@vidstack/react/player/styles/default/theme.css'
+import '@vidstack/react/player/styles/default/layouts/video.css'
+
+function Player() {
   const params = useParams()
   const router = useRouter()
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const searchParams = useSearchParams()
+  const trailerUrl = searchParams.get('trailer')
+
   const [content, setContent] = useState<Cinema | Series | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // Se for um trailer, não precisa carregar conteúdo do banco.
+    if (trailerUrl) {
+      setLoading(false)
+      return
+    }
+
     async function loadContent() {
       const id = params.id as string
 
@@ -55,7 +71,7 @@ export default function AssistirPage() {
     }
 
     loadContent()
-  }, [params.id])
+  }, [params.id, trailerUrl])
 
   if (loading) {
     return (
@@ -65,7 +81,7 @@ export default function AssistirPage() {
     )
   }
 
-  if (error || !content) {
+  if (error || (!trailerUrl && !content)) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
         <p className="text-white text-xl mb-4">{error || 'Conteúdo não encontrado'}</p>
@@ -79,11 +95,14 @@ export default function AssistirPage() {
     )
   }
 
-  const titulo = content.titulo || content.titulo
-  const url = (content as any).arquivo || (content as Cinema).url || (content as any).url
+  // Define o título e a URL com base no tipo de conteúdo (trailer ou filme/série)
+  const titulo = trailerUrl ? 'Trailer' : content?.titulo || 'Vídeo'
+  const url = trailerUrl
+    ? trailerUrl
+    : (content as any)?.arquivo || (content as Cinema)?.url || ''
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white player-page-active">
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-10 p-4 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent">
         <button
@@ -98,29 +117,26 @@ export default function AssistirPage() {
 
       {/* Video Player */}
       <div className="w-full h-screen flex items-center justify-center">
-        {url ? (
-          <video
-            ref={videoRef}
-            className="w-full h-full max-h-screen"
-            controls
-            autoPlay
-            playsInline
-          >
-            <source src={url} type="video/mp4" />
-            Seu navegador não suporta reprodução de vídeo.
-          </video>
-        ) : (
-          <div className="text-center">
-            <p className="text-xl mb-4">Vídeo não disponível</p>
-            <button
-              onClick={() => router.back()}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
-            >
-              Voltar
-            </button>
-          </div>
-        )}
+        <MediaPlayer
+          title={titulo}
+          src={url}
+          autoPlay
+          playsInline
+          className="vds-cinema-player w-full h-full"
+        >
+          <MediaProvider />
+          <DefaultVideoLayout icons={defaultLayoutIcons} />
+        </MediaPlayer>
       </div>
     </div>
+  )
+}
+
+// Envolve o player com Suspense para ler os parâmetros da URL
+export default function AssistirPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center"><p className="text-white">Carregando...</p></div>}>
+      <Player />
+    </Suspense>
   )
 }

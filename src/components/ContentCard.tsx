@@ -24,34 +24,31 @@ export function ContentCard({ id, titulo, poster, rating, year, href, onClick }:
     <div
       data-spatial-nav="true"
       data-spatial-group="content"
-      className="group relative overflow-hidden rounded-[1rem] bg-slate-950 shadow-[0_20px_60px_rgba(0,0,0,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl focus:outline-none focus-visible:ring-4"
-      onClick={href ? undefined : onClick}
-      tabIndex={href ? undefined : 0}
-      role={href ? undefined : 'button'}
+      className="group relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-zinc-900 shadow-lg transition-transform duration-300 focus:outline-none"
+      onClick={onClick}
+      tabIndex={0}
+      role="button"
       onKeyDown={handleKey}
     >
       {poster ? (
-        <div className="relative w-full" style={{ aspectRatio: '2/3' }}>
-          <img
-            src={poster}
-            alt={titulo}
-            className="absolute inset-0 w-full h-full object-cover transition duration-500 group-hover:scale-105"
-          />
-        </div>
+        <img
+          src={poster}
+          alt={titulo}
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
       ) : (
-        <div className="flex w-full items-center justify-center bg-slate-900 text-slate-500" style={{ aspectRatio: '2/3' }}>
+        <div className="flex h-full w-full items-center justify-center text-zinc-500">
           Sem capa
         </div>
       )}
 
-      <div className="space-y-2 p-4">
-        <div className="flex items-center justify-between text-sm text-slate-400">
-          <span style={{ color: '#f7c53d' }}>⭐ {rating ?? 'N/A'}</span>
+      {/* Gradiente e informações sobrepostos */}
+      <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3">
+        <div className="mt-1 flex items-center justify-between text-xs text-zinc-300">
           <span>{year ?? 'N/A'}</span>
+          {rating && <span className="font-medium text-yellow-400">⭐ {rating.toFixed(1)}</span>}
         </div>
       </div>
-
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent opacity-0 transition duration-300 group-hover:opacity-100" />
     </div>
   )
 
@@ -59,7 +56,7 @@ export function ContentCard({ id, titulo, poster, rating, year, href, onClick }:
     return (
       <Link 
         href={href} 
-        className="block focus:outline-none" 
+        className="block h-full w-full focus:outline-none" 
         tabIndex={0} 
         data-spatial-nav="true" 
         data-spatial-group="content"

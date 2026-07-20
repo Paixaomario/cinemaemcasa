@@ -42,11 +42,12 @@ export function selectUniqueItems<T extends Record<string, any>>(items: T[], lim
     return Boolean(key) && !normalizedSeen.has(key)
   })
 
-  const shuffled = [...available].sort(() => Math.random() - 0.5)
-  const selected = shuffled.slice(0, safeLimit)
+  // Remove a aleatoriedade no servidor para evitar erros de hidratação.
+  // A lista já vem ordenada do banco de dados.
+  const selected = available.slice(0, safeLimit)
 
   selected.forEach((item) => {
-    const key = getContentKey(item)
+    const key = String(item.id ?? item.id_n) // Usar um ID consistente
     if (key) {
       normalizedSeen.add(key)
       usedIds.add(key)
@@ -182,27 +183,35 @@ export async function getSeriesBannerItems(category?: string, limit = 12) {
 
 export async function getSectionContent(section: any, usedIds = new Set<string>()) {
   try {
-    let query = supabase.from('cinema').select('*')
+    let query = supabase.from('cinema').select('*').eq('type', 'movie')
 
-    if (section.categorias && section.categorias.length > 0) {
-      query = query.in('category', section.categorias)
-    }
-
-    if (section.ordenacao === 'created_at_desc') {
+    // Se for a seção "Lançamento", ordena pelos mais recentes.
+    if (section.posicao === 1) {
       query = query.order('created_at', { ascending: false })
-    } else if (section.ordenacao === 'rating_desc') {
-      query = query.order('rating', { ascending: false })
-    } else if (section.ordenacao === 'year_desc') {
-      query = query.order('year', { ascending: false })
+    } else if (section.categorias) {
+      const categoryArray = Array.isArray(section.categorias)
+        ? section.categorias
+        : String(section.categorias).split(',').map(c => c.trim())
+      
+      if (categoryArray.length > 0) {
+        const orFilter = categoryArray.map(cat => `category.ilike.%${cat}%`).join(',')
+        query = query.or(orFilter)
+      }
     }
 
-    const rowLimit = Math.min(5, Number(section.limite) || 5)
-    const poolLimit = Math.max(rowLimit * 4, 20)
-    query = query.limit(poolLimit)
-
-    const { data, error } = await query
+    // Buscamos um "pool" grande de itens para garantir variedade na aleatorização.
+    const { data, error } = await query.limit(200)
 
     if (error) throw error
+
+    const rowLimit = Math.min(15, Number(section.limite) || 15)
+    
+    // Para a primeira seção, não aplicamos o filtro de 'usedIds' para garantir que ela sempre tenha conteúdo.
+    if (section.posicao === 1) {
+      return selectUniqueItems(data || [], rowLimit, usedIds)
+    }
+
+    // Para as demais, mantemos o filtro para evitar repetições.
     return selectUniqueItems(data || [], rowLimit, usedIds)
   } catch (error) {
     console.error('Erro ao buscar conteúdo da seção:', error)
@@ -214,19 +223,16 @@ export async function getSectionContent(section: any, usedIds = new Set<string>(
 // FILMES - cinema
 // ============================================================
 
-export async function getMovies(category?: string, limit = 5) {
+export async function getMovies(category?: string, limit = 50) {
   try {
     let query = supabase
       .from('cinema')
       .select('*')
       .eq('type', 'movie')
 
-    if (category) {
-      query = query.ilike('category', `%${category}%`)
-    }
+    if (category) query = query.ilike('category', `%${category}%`)
 
-    const rowLimit = Number(limit) || 5
-    const { data, error } = await query.limit(rowLimit).order('created_at', { ascending: false })
+    const { data, error } = await query.limit(limit).order('created_at', { ascending: false })
 
     if (error) throw error
     return data || []
@@ -244,10 +250,7 @@ export async function getMovieById(id: string | number) {
       .eq('id', id)
       .single()
 
-    if (error) {
-      console.error('Supabase error:', error)
-      throw error
-    }
+    if (error && error.code !== 'PGRST116') throw error
     return data
   } catch (error) {
     console.error('Erro ao buscar filme:', error)
@@ -289,16 +292,13 @@ export async function getMovieCategories() {
 // SÉRIES - series
 // ============================================================
 
-export async function getSeries(category?: string, limit = 5) {
+export async function getSeries(category?: string, limit = 50) {
   try {
     let query = supabase.from('series').select('*')
 
-    if (category) {
-      query = query.ilike('genero', `%${category}%`)
-    }
+    if (category) query = query.ilike('genero', `%${category}%`)
 
-    const rowLimit = Number(limit) || 5
-    const { data, error } = await query.limit(rowLimit).order('created_at', { ascending: false })
+    const { data, error } = await query.limit(limit).order('created_at', { ascending: false })
 
     if (error) throw error
     return data || []
@@ -316,7 +316,7 @@ export async function getSeriesById(id: string | number) {
       .eq('id_n', id)
       .single()
 
-    if (error) throw error
+    if (error && error.code !== 'PGRST116') throw error
     return data
   } catch (error) {
     console.error('Erro ao buscar série:', error)
