@@ -194,7 +194,7 @@ export async function getSectionContent(section: any, usedIds = new Set<string>(
         : String(section.categorias).split(',').map(c => c.trim())
       
       if (categoryArray.length > 0) {
-        const orFilter = categoryArray.map(cat => `category.ilike.%${cat}%`).join(',')
+        const orFilter = categoryArray.map((cat: string) => `category.ilike.%${cat}%`).join(',')
         query = query.or(orFilter)
       }
     }
