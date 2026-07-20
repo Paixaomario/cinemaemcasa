@@ -85,6 +85,7 @@ export function RotatingBanner({ items, title, subtitle, hrefPrefix = '/detalhes
           <h2 className="text-5xl font-bold leading-tight text-white drop-shadow-lg sm:text-6xl lg:text-7xl">
             {getTitle(currentItem || {})}
           </h2>
+          <p className="text-lg text-slate-300 line-clamp-3">{getDescription(currentItem || {})}</p>
         </div>
 
         {/* No navigation buttons - title rotates every 7s */}
