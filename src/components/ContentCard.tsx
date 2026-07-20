@@ -45,7 +45,6 @@ export function ContentCard({ id, titulo, poster, rating, year, href, onClick }:
       )}
 
       <div className="space-y-2 p-4">
-        <p className="text-base font-bold text-white line-clamp-2 break-words whitespace-normal">{titulo || 'Sem título'}</p>
         <div className="flex items-center justify-between text-sm text-slate-400">
           <span style={{ color: '#f7c53d' }}>⭐ {rating ?? 'N/A'}</span>
           <span>{year ?? 'N/A'}</span>
