@@ -189,7 +189,9 @@ export const getSectionContent = cache(async (section: any, usedIds = new Set<st
 
     // Se for a seção "Lançamento", ordena pelos mais recentes.
     if (section.posicao === 1) {
-      query = query.order('created_at', { ascending: false })
+      query = query
+        .gte('year', 2025) // Filtra para mostrar apenas anos de 2025 em diante
+        .order('year', { ascending: true }) // Ordena pelo ano para mostrar 2025 primeiro
     } else if (section.categorias) {
       const categoryArray = Array.isArray(section.categorias)
         ? section.categorias
