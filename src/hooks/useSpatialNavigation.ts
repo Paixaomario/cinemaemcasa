@@ -149,6 +149,41 @@ export function useSpatialNavigation() {
       return best;
     }
 
+    // Configuração da Web Speech API para pesquisa por voz universal
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    let recognition: any;
+
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.lang = 'pt-BR';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          console.log('Texto reconhecido (Web Speech API):', transcript);
+          window.location.href = `/buscar?q=${encodeURIComponent(transcript)}`;
+        }
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('Erro no reconhecimento de voz:', event.error);
+      };
+    }
+
+    const startVoiceSearch = () => {
+      if (recognition) {
+        try {
+          recognition.start();
+          console.log('Ouvindo...');
+        } catch (error) {
+          console.error('Não foi possível iniciar o reconhecimento de voz:', error);
+        }
+      }
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
       const active = document.activeElement as HTMLElement | null
       const key = e.key || String(e.keyCode)
@@ -236,6 +271,8 @@ export function useSpatialNavigation() {
             break
           case 404:
             document.dispatchEvent(new CustomEvent('magicremote:green'))
+            // Aciona a pesquisa por voz universal com o botão verde
+            startVoiceSearch();
             break
           case 405:
             document.dispatchEvent(new CustomEvent('magicremote:yellow'))
@@ -251,11 +288,30 @@ export function useSpatialNavigation() {
       }
     }
 
+    const handleVoiceSearch = (event: any) => {
+      const recognizedText = event.detail?.voice_message
+      if (recognizedText) {
+        console.log('Pesquisa por voz reconhecida:', recognizedText)
+        // Redireciona para a página de busca com o texto como query
+        window.location.href = `/buscar?q=${encodeURIComponent(recognizedText)}`
+      }
+    }
+
     document.addEventListener('focusin', handleFocus)
     window.addEventListener('keydown', handleKeyDown)
+
+    // Adiciona o listener para a pesquisa por voz do WebOS
+    if (isWebOS) {
+      document.addEventListener('webOSVoice', handleVoiceSearch)
+    }
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
       document.removeEventListener('focusin', handleFocus)
+      // Remove o listener ao desmontar o componente
+      if (isWebOS) {
+        document.removeEventListener('webOSVoice', handleVoiceSearch)
+      }
     }
   }, [])
 }
