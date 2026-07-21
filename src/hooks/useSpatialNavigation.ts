@@ -151,26 +151,12 @@ export function useSpatialNavigation() {
           return getSpatialGroup(candidate) === 'content'
         })
 
-        const rowCandidates = candidates.filter((candidate) => {
+        // A lógica para 'up' e 'down' já foi tratada.
+        // Aqui, filtramos apenas para navegação horizontal.
+        const pool = candidates.filter((candidate) => {
           const rect = candidate.getBoundingClientRect()
-          return direction === 'left' || direction === 'right'
-            ? Math.abs(rect.top - activeRect.top) <= ROW_TOLERANCE
-            : true
+          return Math.abs(rect.top - activeRect.top) <= ROW_TOLERANCE
         })
-
-        const columnCandidates = candidates.filter((candidate) => {
-          const rect = candidate.getBoundingClientRect()
-          return direction === 'up' || direction === 'down'
-            ? Math.abs(rect.left - activeRect.left) <= COLUMN_TOLERANCE
-            : true
-        })
-
-        const preferredCandidates =
-          direction === 'left' || direction === 'right'
-            ? rowCandidates
-            : columnCandidates
-
-        let pool = preferredCandidates.length > 0 ? preferredCandidates : candidates
 
         for (const candidate of pool) {
           const rect = candidate.getBoundingClientRect()
