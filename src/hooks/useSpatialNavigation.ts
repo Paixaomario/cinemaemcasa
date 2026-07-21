@@ -72,103 +72,72 @@ export function useSpatialNavigation() {
       let best: HTMLElement | null = null
       let bestScore = Number.POSITIVE_INFINITY
 
-      // Special handling for sidebar navigation
-      if (activeGroup === 'sidebar') {
-        if (direction === 'right') {
-          // From sidebar right: go to first content element (top-left)
-          const contentElements = allCandidates.filter((c) => getSpatialGroup(c) === 'content')
-          if (contentElements.length > 0) {
-            // Find the top-left content element
-            let topLeft = contentElements[0]
-            let minScore = Number.POSITIVE_INFINITY
-            for (const candidate of contentElements) {
-              const rect = candidate.getBoundingClientRect()
-              const score = rect.left + rect.top
-              if (score < minScore) {
-                minScore = score
-                topLeft = candidate
-              }
+      // Lógica de navegação simplificada e otimizada para performance em TVs
+      for (const candidate of allCandidates) {
+        if (candidate === active) continue;
+
+        const candidateGroup = getSpatialGroup(candidate);
+        const rect = candidate.getBoundingClientRect();
+        const dx = rect.left + rect.width / 2 - (activeRect.left + activeRect.width / 2);
+        const dy = rect.top + rect.height / 2 - (activeRect.top + activeRect.height / 2);
+
+        let isInDirection = false;
+        switch (direction) {
+          case 'right':
+            isInDirection = dx > 0 && Math.abs(dy) < activeRect.height;
+            break;
+          case 'left':
+            isInDirection = dx < 0 && Math.abs(dy) < activeRect.height;
+            break;
+          case 'down':
+            isInDirection = dy > 0 && Math.abs(dx) < activeRect.width;
+            break;
+          case 'up':
+            isInDirection = dy < 0 && Math.abs(dx) < activeRect.width;
+            break;
+        }
+
+        // Lógica para pular para o primeiro item da linha ao navegar para cima/baixo
+        if (activeGroup === 'content' && candidateGroup === 'content' && (direction === 'up' || direction === 'down')) {
+          const isDifferentRow = Math.abs(rect.top - activeRect.top) > activeRect.height / 2;
+          if (isDifferentRow) {
+            const score = Math.abs(dy) * 2 + Math.abs(dx); // Prioriza a linha mais próxima
+            if (score < bestScore) {
+              bestScore = score;
+              best = candidate;
             }
-            return topLeft
+          }
+        } else {
+          // Lógica de pontuação padrão para outras navegações
+          if (isInDirection) {
+            const score = getScore(activeRect, rect, direction);
+            if (score < bestScore) {
+              bestScore = score;
+              best = candidate;
+            }
           }
         }
       }
 
-      // Special handling for first column navigation to left
-      if (activeGroup === 'content' && direction === 'left') {
-        const sidebarElements = allCandidates.filter((c) => getSpatialGroup(c) === 'sidebar')
-        if (sidebarElements.length > 0) {
-          // Check if we're in the first column (leftmost content elements)
-          const contentElements = allCandidates.filter((c) => getSpatialGroup(c) === 'content')
-          const minX = Math.min(...contentElements.map((c) => c.getBoundingClientRect().left))
-          if (Math.abs(activeRect.left - minX) < 50) {
-            // We're in first column, go to sidebar
-            return sidebarElements[0]
-          }
-        }
-      }
-
-      // For content navigation, use row/column tolerance for better grid navigation
-      if (activeGroup === 'content') {
-        // NOVA LÓGICA: Ao navegar para cima/baixo, focar no primeiro item da linha de destino.
-        if (direction === 'up' || direction === 'down') {
-          const candidates = allCandidates.filter(c => {
-            if (c === active) return false;
-            const rect = c.getBoundingClientRect();
-            const dy = rect.top - activeRect.top;
-            return getSpatialGroup(c) === 'content' && (direction === 'down' ? dy > 20 : dy < -20);
-          });
-
-          if (candidates.length === 0) return null;
-
-          // Agrupa os candidatos por linha (usando o valor 'top')
-          const rows = new Map<number, HTMLElement[]>();
-          candidates.forEach(c => {
-            const top = Math.round(c.getBoundingClientRect().top);
-            if (!rows.has(top)) rows.set(top, []);
-            rows.get(top)?.push(c);
-          });
-
-          // Encontra a linha mais próxima na direção desejada
-          let closestRowY = direction === 'down' ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
-          for (const y of rows.keys()) {
-            if (direction === 'down' && y < closestRowY) closestRowY = y;
-            if (direction === 'up' && y > closestRowY) closestRowY = y;
-          }
-
-          const targetRow = rows.get(closestRowY);
-          if (!targetRow || targetRow.length === 0) return null;
-
-          // Retorna o primeiro item (o mais à esquerda) da linha de destino
-          return targetRow.reduce((first, current) => 
+      // Se a navegação vertical encontrou um item, vamos encontrar o primeiro daquela linha
+      if (best && activeGroup === 'content' && (direction === 'up' || direction === 'down')) {
+        const bestRect = best.getBoundingClientRect();
+        const targetRowElements = allCandidates.filter(c => 
+          getSpatialGroup(c) === 'content' && Math.abs(c.getBoundingClientRect().top - bestRect.top) < 10
+        );
+        if (targetRowElements.length > 0) {
+          return targetRowElements.reduce((first, current) => 
             current.getBoundingClientRect().left < first.getBoundingClientRect().left ? current : first
           );
         }
+      }
 
-        // Lógica antiga mantida para navegação esquerda/direita
-        const candidates = allCandidates.filter((candidate) => {
-          if (candidate === active) return false
-          return getSpatialGroup(candidate) === 'content'
-        })
-
-        // A lógica para 'up' e 'down' já foi tratada.
-        // Aqui, filtramos apenas para navegação horizontal.
-        const pool = candidates.filter((candidate) => {
+      // Fallback para a lógica de pontuação geral se a navegação de linha falhar ou não for aplicável
+      if (!best) {
+        bestScore = Number.POSITIVE_INFINITY;
+        for (const candidate of allCandidates) {
+          if (candidate === active) continue;
           const rect = candidate.getBoundingClientRect()
-          return Math.abs(rect.top - activeRect.top) <= ROW_TOLERANCE
-        })
-
-        for (const candidate of pool) {
-          const rect = candidate.getBoundingClientRect()
-          const dx = rect.left - activeRect.left
-          const dy = rect.top - activeRect.top
-
-          const isInDirection =
-            (direction === 'right' && dx > 0) ||
-            (direction === 'left' && dx < 0)
-
-          if (!isInDirection) continue
-
           const score = getScore(activeRect, rect, direction)
           if (score < bestScore) {
             bestScore = score
@@ -176,31 +145,8 @@ export function useSpatialNavigation() {
           }
         }
 
-        return best
       }
-
-      // Default: use all candidates for other groups
-      const pool = allCandidates.filter((candidate) => candidate !== active)
-
-      for (const candidate of pool) {
-        const rect = candidate.getBoundingClientRect()
-        const dx = rect.left - activeRect.left
-        const dy = rect.top - activeRect.top
-
-        const isInDirection =
-          (direction === 'right' && dx > 0) ||
-            (direction === 'left' && dx < 0)
-
-        if (!isInDirection) continue
-
-        const score = getScore(activeRect, rect, direction)
-        if (score < bestScore) {
-          bestScore = score
-          best = candidate
-        }
-      }
-
-      return best
+      return best;
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
