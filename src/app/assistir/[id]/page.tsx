@@ -2,7 +2,8 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { supabase, Cinema, Series, saveViewProgress, getViewProgress } from '../../../lib/supabase'
+import { supabase, Cinema, Series } from '../../../lib/supabase'
+import { saveViewProgress, getViewProgress } from '@/lib/actions'
 
 // Imports do Player de Vídeo Avançado (Vidstack)
 import { MediaPlayer, MediaProvider } from '@vidstack/react'

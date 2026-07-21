@@ -1,7 +1,8 @@
 'use client'
  
 import { useEffect, useState } from 'react'
-import { getProfile, updateProfile } from '@/lib/queries'
+import { getProfile } from '@/lib/queries'
+import { updateProfile } from '@/lib/actions' // Corrigido para importar de actions
  
 // Para agora, vamos usar um user mock
 const MOCK_USER_ID = '00000000-0000-0000-0000-000000000000'
