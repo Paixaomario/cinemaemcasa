@@ -19,10 +19,10 @@ export default async function HomePage() {
   const usedIds = new Set<string>()
 
   // Adiciona os IDs dos itens do banner aos 'usedIds' para não repeti-los nas seções abaixo
-  bannerItems.forEach(item => usedIds.add(String(item.id ?? item.id_n)))
+  bannerItems.forEach((item: any) => usedIds.add(String(item.id ?? item.id_n)))
 
   // Adiciona também os itens de "Continuar Assistindo" para não repeti-los
-  continueWatchingItems.forEach(item => usedIds.add(String(item.content_id)))
+  continueWatchingItems.forEach((item: any) => usedIds.add(String(item.content_id)))
 
   for (const section of sections) {
     sectionContents[section.id] = await getSectionContent(section, usedIds)
