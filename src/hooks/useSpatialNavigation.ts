@@ -189,9 +189,7 @@ export function useSpatialNavigation() {
 
         const isInDirection =
           (direction === 'right' && dx > 0) ||
-          (direction === 'left' && dx < 0) ||
-          (direction === 'down' && dy > 0) ||
-          (direction === 'up' && dy < 0)
+            (direction === 'left' && dx < 0)
 
         if (!isInDirection) continue
 
