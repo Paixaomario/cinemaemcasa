@@ -42,7 +42,7 @@ export default async function HomePage() {
               Continuar Assistindo
             </h2>
             <ContentGrid
-              items={continueWatchingItems.map(item => ({ ...item, id: item.content_id }))}
+              items={continueWatchingItems.map((item: any) => ({ ...item, id: item.content_id }))}
               isContinueWatching
             />
           </section>
