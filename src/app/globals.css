@@ -27,7 +27,7 @@ h1, h2, h3, h4, h5, h6 {
 :focus-visible, 
 .using-keyboard *:focus {
   outline: none !important;
-  box-shadow: 0 0 0 3px var(--media-focus-ring-color, #E50914) !important; /* Cor de foco da Netflix */
+  box-shadow: 0 0 0 3px var(--theme-focus-ring-color, #00ADEF) !important; /* Cor de foco dinâmica */
   /* Força aceleração de hardware no elemento focado */
   transform: translateZ(0);
   transition: box-shadow 0.12s ease-out, transform 0.08s ease-out;
@@ -144,8 +144,8 @@ h1, h2, h3, h4, h5, h6 {
    ========================================================= */
 
 :root {
-  /* Cor extraída do logo.png (#00ADEF) */
-  --media-brand: #00ADEF;
+  /* Cor de destaque dinâmica, com fallback para a cor do logo */
+  --media-brand: var(--theme-accent-color, #00ADEF);
   --media-focus-ring-color: #00ADEF;
   --media-slider-thumb-size: 28px;
 }
@@ -291,21 +291,21 @@ header, .mobile-nav-bar {
 
   /* Fix: Margem rígida para garantir que nenhum conteúdo (Home, Filmes, Perfil) seja coberto */
   main {
-    margin-left: 80px !important;
+    margin-left: 128px !important; /* Aumentado de 80px para 128px (largura da nova sidebar) */
     padding-top: 0 !important;
     transition: margin-left 0.3s ease; /* Mantém transição para suavidade ao abrir/fechar sidebar */
   }
 
   /* Banner full-width - remove margem lateral para o banner ocupar largura total */
   main > section:first-child {
-    margin-left: -80px !important;
-    width: calc(100% + 80px) !important;
+    margin-left: -128px !important;
+    width: calc(100% + 128px) !important;
   }
 
   /* O conteúdo permanece estático enquanto a barra flutua por cima ao abrir */
   body:has(aside:hover) main,
   body:has(aside:focus-within) main {
-    margin-left: 80px !important;
+    margin-left: 128px !important;
   }
 
   /* GARANTIMOS a exibição da Sidebar lateral */
@@ -496,6 +496,6 @@ a[href*="/series"]:not(.group) {
 
 @media (min-width: 768px) {
   .banner-content-wrapper {
-    padding: 2.5rem 1.5rem 2.5rem calc(80px + 1.5rem); /* Desktop/TV: 80px da sidebar + 1.5rem do padding do conteúdo */
+    padding: 2.5rem 1.5rem 2.5rem calc(128px + 1.5rem); /* Desktop/TV: 128px da sidebar + 1.5rem do padding do conteúdo */
   }
 }

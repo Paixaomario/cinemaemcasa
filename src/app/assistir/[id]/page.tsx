@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { supabase, Cinema, Series } from '../../../lib/supabase'
+import { supabase, Cinema, Series, saveViewProgress, getViewProgress } from '../../../lib/supabase'
 
 // Imports do Player de Vídeo Avançado (Vidstack)
 import { MediaPlayer, MediaProvider } from '@vidstack/react'
@@ -18,6 +18,7 @@ function Player() {
   const searchParams = useSearchParams()
   const trailerUrl = searchParams.get('trailer')
 
+  const contentId = params.id as string
   const [content, setContent] = useState<Cinema | Series | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -30,7 +31,7 @@ function Player() {
     }
 
     async function loadContent() {
-      const id = params.id as string
+      const id = contentId
 
       try {
         let url = ''
@@ -100,6 +101,7 @@ function Player() {
   const url = trailerUrl
     ? trailerUrl
     : (content as any)?.arquivo || (content as Cinema)?.url || ''
+  const playerRef = React.useRef<any>(null)
 
   return (
     <div className="min-h-screen bg-black text-white player-page-active">
@@ -117,12 +119,38 @@ function Player() {
 
       {/* Video Player */}
       <div className="w-full h-screen flex items-center justify-center">
-        <MediaPlayer
+        <MediaPlayer ref={playerRef}
           title={titulo}
           src={url}
           autoPlay
           playsInline
           className="vds-cinema-player w-full h-full"
+          onCanPlay={async () => {
+            if (trailerUrl) return; // Não salva progresso de trailers
+            const progress = await getViewProgress(contentId);
+            if (progress && progress.last_position > 0 && !progress.is_finished) {
+              playerRef.current.currentTime = progress.last_position;
+            }
+          }}
+          onTimeUpdate={(e) => {
+            // Salva o progresso a cada 15 segundos
+            const currentTime = Math.round(e.currentTime);
+            if (currentTime > 0 && currentTime % 15 === 0) {
+              if (trailerUrl) return;
+              saveViewProgress(contentId, currentTime);
+            }
+          }}
+          onEnded={() => {
+            if (trailerUrl) return;
+            saveViewProgress(contentId, 0, true);
+          }}
+          onPause={() => {
+            if (trailerUrl) return;
+            const currentTime = playerRef.current?.currentTime;
+            if (currentTime) {
+              saveViewProgress(contentId, currentTime);
+            }
+          }}
         >
           <MediaProvider />
           <DefaultVideoLayout icons={defaultLayoutIcons} />

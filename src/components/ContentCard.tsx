@@ -9,10 +9,12 @@ interface ContentCardProps {
   rating?: number
   year?: number
   href?: string
+  lastPosition?: number
+  duration?: number
   onClick?: () => void
 }
 
-export function ContentCard({ id, titulo, poster, rating, year, href, onClick }: ContentCardProps) {
+export function ContentCard({ id, titulo, poster, rating, year, href, lastPosition, duration, onClick }: ContentCardProps) {
   const handleKey = (e: React.KeyboardEvent) => {
     if (!href && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault()
@@ -48,6 +50,16 @@ export function ContentCard({ id, titulo, poster, rating, year, href, onClick }:
           <span>{year ?? 'N/A'}</span>
           {rating && <span className="font-medium text-yellow-400">⭐ {rating.toFixed(1)}</span>}
         </div>
+        {lastPosition && duration && duration > 0 && (
+          <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gray-700/50">
+            <div
+              className="h-full bg-red-600"
+              style={{
+                width: `${(lastPosition / duration) * 100}%`,
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   )

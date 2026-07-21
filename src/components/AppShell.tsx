@@ -85,9 +85,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-black text-white">
       <LoadingOverlay />
 
-            <aside className="fixed left-0 top-0 z-30 hidden h-full w-24 flex-col border-r border-white/10 bg-white/5 px-3 py-6 backdrop-blur-xl lg:flex">
-        <div className="mb-6 flex h-24 w-full items-center justify-center rounded-2xl bg-transparent text-xl font-semibold">
-          <Image src="/logo.png" alt="logo" width={120} height={120} className="object-contain h-20 w-auto" />
+            <aside className="fixed left-0 top-0 z-30 hidden h-full w-32 flex-col border-r border-white/10 bg-white/5 px-3 py-6 backdrop-blur-xl lg:flex">
+        <div className="mb-6 flex h-32 w-full items-center justify-center rounded-2xl bg-transparent text-xl font-semibold">
+          <Image src="/logo.png" alt="logo" width={160} height={160} className="object-contain h-28 w-auto" />
         </div>
 
         <nav className="flex flex-1 flex-col gap-2">
@@ -106,17 +106,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         ? 'text-slate-900'
                         : 'text-slate-400 hover:bg-white/5 hover:text-white'
                 }`}
-                    style={isActive ? { backgroundColor: 'var(--media-brand)' } : undefined}
+                style={isActive ? { backgroundColor: 'var(--media-brand)' } : undefined}
               >
-                <Icon className="h-5 w-5" />
-                <span className="mt-2 text-[11px] font-medium tracking-wide">{item.label}</span>
+                <Icon className="h-8 w-8" />
+                <span className="mt-2 text-xs font-semibold tracking-wide">{item.label}</span>
               </Link>
             )
           })}
         </nav>
       </aside>
 
-      <div className="pb-24 lg:pl-0 lg:pb-0">
+      <div className="pb-24 lg:pb-0">
         {children}
       </div>
 
