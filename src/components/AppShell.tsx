@@ -71,6 +71,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   useSpatialNavigation()
 
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((registration) => console.log('Service Worker registrado com sucesso:', registration))
+        .catch((error) => console.error('Erro ao registrar Service Worker:', error));
+    }
+  }, []);
+
+
   return (
     <div className="min-h-screen bg-black text-white">
       <LoadingOverlay />

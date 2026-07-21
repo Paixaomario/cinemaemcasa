@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { supabase } from './supabase'
 import { getMovieBackdrop, getShowBackdrop } from './tmdb'
 
@@ -61,7 +62,7 @@ export function selectUniqueItems<T extends Record<string, any>>(items: T[], lim
 // HOME - home_sections
 // ============================================================
 
-export async function getHomeSections() {
+export const getHomeSections = cache(async () => {
   try {
     const { data, error } = await supabase
       .from('home_sections')
@@ -75,9 +76,9 @@ export async function getHomeSections() {
     console.error('Erro ao buscar seções da home:', error)
     return []
   }
-}
+})
 
-export async function getHomeBannerItems(limit = 12) {
+export const getHomeBannerItems = cache(async (limit = 12) => {
   try {
     const [cinemaResponse, seriesResponse] = await Promise.all([
       supabase.from('cinema').select('*').eq('type', 'movie').order('created_at', { ascending: false }).limit(limit),
@@ -115,9 +116,9 @@ export async function getHomeBannerItems(limit = 12) {
     console.error('Erro ao buscar banner da home:', error)
     return []
   }
-}
+})
 
-export async function getMovieBannerItems(category?: string, limit = 12) {
+export const getMovieBannerItems = cache(async (category?: string, limit = 12) => {
   try {
     let query = supabase.from('cinema').select('*').eq('type', 'movie')
 
@@ -147,9 +148,9 @@ export async function getMovieBannerItems(category?: string, limit = 12) {
     console.error('Erro ao buscar banner de filmes:', error)
     return []
   }
-}
+})
 
-export async function getSeriesBannerItems(category?: string, limit = 12) {
+export const getSeriesBannerItems = cache(async (category?: string, limit = 12) => {
   try {
     let query = supabase.from('series').select('*')
 
@@ -179,9 +180,9 @@ export async function getSeriesBannerItems(category?: string, limit = 12) {
     console.error('Erro ao buscar banner de séries:', error)
     return []
   }
-}
+})
 
-export async function getSectionContent(section: any, usedIds = new Set<string>()) {
+export const getSectionContent = cache(async (section: any, usedIds = new Set<string>()) => {
   try {
     let query = supabase.from('cinema').select('*').eq('type', 'movie')
 
@@ -217,13 +218,13 @@ export async function getSectionContent(section: any, usedIds = new Set<string>(
     console.error('Erro ao buscar conteúdo da seção:', error)
     return []
   }
-}
+})
 
 // ============================================================
 // FILMES - cinema
 // ============================================================
 
-export async function getMovies(category?: string, limit = 50) {
+export const getMovies = cache(async (category?: string, limit = 50) => {
   try {
     let query = supabase
       .from('cinema')
@@ -240,9 +241,9 @@ export async function getMovies(category?: string, limit = 50) {
     console.error('Erro ao buscar filmes:', error)
     return []
   }
-}
+})
 
-export async function getMovieById(id: string | number) {
+export const getMovieById = cache(async (id: string | number) => {
   try {
     const { data, error } = await supabase
       .from('cinema')
@@ -256,9 +257,9 @@ export async function getMovieById(id: string | number) {
     console.error('Erro ao buscar filme:', error)
     return null
   }
-}
+})
 
-export async function getMovieCategories() {
+export const getMovieCategories = cache(async () => {
   try {
     const { data, error } = await supabase
       .from('cinema')
@@ -286,13 +287,13 @@ export async function getMovieCategories() {
     console.error('Erro ao buscar categorias:', error)
     return []
   }
-}
+})
 
 // ============================================================
 // SÉRIES - series
 // ============================================================
 
-export async function getSeries(category?: string, limit = 50) {
+export const getSeries = cache(async (category?: string, limit = 50) => {
   try {
     let query = supabase.from('series').select('*')
 
@@ -306,9 +307,9 @@ export async function getSeries(category?: string, limit = 50) {
     console.error('Erro ao buscar séries:', error)
     return []
   }
-}
+})
 
-export async function getSeriesById(id: string | number) {
+export const getSeriesById = cache(async (id: string | number) => {
   try {
     const { data, error } = await supabase
       .from('series')
@@ -322,9 +323,9 @@ export async function getSeriesById(id: string | number) {
     console.error('Erro ao buscar série:', error)
     return null
   }
-}
+})
 
-export async function getSeriesSeasons(seriesId: string | number) {
+export const getSeriesSeasons = cache(async (seriesId: string | number) => {
   try {
     const { data, error } = await supabase
       .from('temporadas')
@@ -338,9 +339,9 @@ export async function getSeriesSeasons(seriesId: string | number) {
     console.error('Erro ao buscar temporadas:', error)
     return []
   }
-}
+})
 
-export async function getSeriesEpisodes(seasonId: string | number) {
+export const getSeriesEpisodes = cache(async (seasonId: string | number) => {
   try {
     const { data, error } = await supabase
       .from('episodios')
@@ -366,9 +367,9 @@ export async function getSeriesEpisodes(seasonId: string | number) {
     console.error('Erro ao buscar episódios:', error)
     return []
   }
-}
+})
 
-export async function getSeriesCategories() {
+export const getSeriesCategories = cache(async () => {
   try {
     const { data, error } = await supabase
       .from('series')
@@ -392,7 +393,7 @@ export async function getSeriesCategories() {
     console.error('Erro ao buscar categorias:', error)
     return []
   }
-}
+})
 
 // ============================================================
 // PESQUISA - search_catalog

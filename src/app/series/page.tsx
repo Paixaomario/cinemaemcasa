@@ -7,7 +7,7 @@ export default async function SeriesPage() {
   const sections = await Promise.all(
     categories.map(async (category) => ({
       category,
-      items: await getSeries(category), // Usará o limite padrão de 50
+      items: await getSeries(category, 50),
     }))
   )
 

@@ -7,7 +7,7 @@ export default async function FilmesPage() {
   const sections = await Promise.all(
     categories.map(async (category) => ({
       category,
-      items: await getMovies(category), // Usará o limite padrão de 50
+      items: await getMovies(category, 50),
     }))
   )
 

@@ -110,6 +110,42 @@ export function useSpatialNavigation() {
 
       // For content navigation, use row/column tolerance for better grid navigation
       if (activeGroup === 'content') {
+        // NOVA LÓGICA: Ao navegar para cima/baixo, focar no primeiro item da linha de destino.
+        if (direction === 'up' || direction === 'down') {
+          const candidates = allCandidates.filter(c => {
+            if (c === active) return false;
+            const rect = c.getBoundingClientRect();
+            const dy = rect.top - activeRect.top;
+            return getSpatialGroup(c) === 'content' && (direction === 'down' ? dy > 20 : dy < -20);
+          });
+
+          if (candidates.length === 0) return null;
+
+          // Agrupa os candidatos por linha (usando o valor 'top')
+          const rows = new Map<number, HTMLElement[]>();
+          candidates.forEach(c => {
+            const top = Math.round(c.getBoundingClientRect().top);
+            if (!rows.has(top)) rows.set(top, []);
+            rows.get(top)?.push(c);
+          });
+
+          // Encontra a linha mais próxima na direção desejada
+          let closestRowY = direction === 'down' ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
+          for (const y of rows.keys()) {
+            if (direction === 'down' && y < closestRowY) closestRowY = y;
+            if (direction === 'up' && y > closestRowY) closestRowY = y;
+          }
+
+          const targetRow = rows.get(closestRowY);
+          if (!targetRow || targetRow.length === 0) return null;
+
+          // Retorna o primeiro item (o mais à esquerda) da linha de destino
+          return targetRow.reduce((first, current) => 
+            current.getBoundingClientRect().left < first.getBoundingClientRect().left ? current : first
+          );
+        }
+
+        // Lógica antiga mantida para navegação esquerda/direita
         const candidates = allCandidates.filter((candidate) => {
           if (candidate === active) return false
           return getSpatialGroup(candidate) === 'content'
