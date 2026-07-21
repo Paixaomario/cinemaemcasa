@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import React, { useEffect, useState, Suspense, useRef } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { supabase, Cinema, Series } from '../../../lib/supabase'
 import { saveViewProgress, getViewProgress } from '@/lib/actions'
@@ -102,7 +102,7 @@ function Player() {
   const url = trailerUrl
     ? trailerUrl
     : (content as any)?.arquivo || (content as Cinema)?.url || ''
-  const playerRef = React.useRef<any>(null)
+  const playerRef = useRef<any>(null)
 
   return (
     <div className="min-h-screen bg-black text-white player-page-active">

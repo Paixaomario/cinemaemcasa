@@ -470,23 +470,6 @@ export async function getProfile(userId: string) {
   }
 }
 
-export async function updateProfile(userId: string, updates: any) {
-  try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', userId)
-      .select()
-      .single()
-
-    if (error) throw error
-    return data
-  } catch (error) {
-    console.error('Erro ao atualizar perfil:', error)
-    return null
-  }
-}
-
 // ============================================================
 // ASSISTIR MAIS TARDE - watch_later
 // ============================================================
