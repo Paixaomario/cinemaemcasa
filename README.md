@@ -1,82 +1,82 @@
-# 🎬 Cinema em Casa
+# Cinema em Casa
 
-Aplicação web de streaming em Next.js para filmes e séries, com catálogo carregado a partir do Supabase, páginas de detalhes, player de conteúdo e interface responsiva para mobile, desktop e TV.
+Sistema de streaming caseiro (estilo HBO Max/Netflix), 100% em Português BR,
+construído com Next.js + Supabase, pronto para deploy automático no Vercel.
 
-## Status atual
-
-- Home com visual inspirado em Netflix e seções horizontais
-- Páginas separadas para filmes e séries
-- Página de detalhes com destaque visual para TV e visão à distância
-- Fluxo de reprodução unificado em /assistir/[id]
-- Sidebar responsiva e navegação mobile
-- Tela de carregamento com logo e barra de progresso
-- Redirecionamento de login para a home
-- Build confirmado com Next.js 15
-
-## Atualizações recentes (2026-07-11)
-
-- Banners rotativos adicionados na `home`, `filmes` e `series` com rotação automática a cada 7 segundos e sem botões de navegação.
-- Navegação espacial aprimorada para TV/controle remoto, evitando saltos entre a sidebar e as grades de conteúdo.
-- A `home` agora evita repetição de itens entre seções e mostra até 5 capas por linha.
-- Páginas de `filmes` e `series` exibem categorias como blocos horizontais (sem menus laterais na página).
-
-Consulte o `CHANGELOG.md` para detalhes completos sobre as alterações recentes.
-
-## Stack
-
-- Next.js 15
-- React 19
-- TypeScript
-- Tailwind CSS
-- Supabase
-- WebOS assets em [public](public)
-
-## Como rodar localmente
+## 1. Configuração local
 
 ```bash
 npm install
-cp .env.example .env.local
+cp .env.local.example .env.local
+# preencha .env.local com suas chaves reais do Supabase e do TMDB
 npm run dev
 ```
 
-A aplicação ficará disponível em http://localhost:3000.
+## 2. Variáveis de ambiente (Vercel)
 
-## Variáveis de ambiente
+No painel do projeto em vercel.com/paixaocasainteligente-8419s-projects/cinemaemcasa,
+em **Settings → Environment Variables**, cadastre:
 
-Adicione no arquivo .env.local:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` (ou `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`)
+- `TMDB_API_READ_TOKEN`
+- `TMDB_API_KEY`
+
+## 3. Subindo para o GitHub
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+git init
+git add .
+git commit -m "Cinema em Casa - versão inicial"
+git branch -M main
+git remote add origin <URL_DO_SEU_REPOSITORIO>
+git push -u origin main
 ```
 
-## Build
+Com o repositório já conectado ao seu projeto Vercel, cada push na branch
+`main` dispara automaticamente um novo deploy.
 
-```bash
-npm run build
-```
+## 4. Estrutura de agentes (mapeamento código ↔ função)
 
-## Estrutura principal
+| Agente | Onde está no código |
+|---|---|
+| Home | `app/page.tsx`, `components/HomeSectionRow.tsx` |
+| Menu lateral (Web/TV) | `components/Sidebar.tsx` |
+| Mobile / responsividade | `components/BottomNav.tsx`, breakpoints Tailwind |
+| Filmes + detalhes | `app/filmes/**` |
+| Séries + detalhes | `app/series/**` |
+| Usuário (acesso) | `app/login/page.tsx` |
+| Perfil | `app/perfil/page.tsx` |
+| Pesquisa | `app/busca/page.tsx`, `components/SearchResultsGrid.tsx` |
+| Indicações por IA | `lib/recommendations.ts` (restrito ao catálogo próprio) |
+| Assistir Juntos | `app/assistir-junto/[roomId]/page.tsx`, `components/PartyRoomClient.tsx` |
+| Chat | `components/PartyChat.tsx` |
+| Emoji | `components/EmojiPicker.tsx` |
+| Player / próximo episódio / legendas / áudio | `components/Player.tsx` |
+| Administração | `app/admin/page.tsx` |
+| Telas gigantes (100"+) | breakpoint `tv:` em `tailwind.config.ts` |
 
-- [src/app](src/app) — páginas e rotas da aplicação
-- [src/components](src/components) — shell, cards e grade de conteúdo
-- [src/hooks](src/hooks) — navegação espacial e comportamento de TV
-- [src/lib](src/lib) — consultas ao Supabase, TMDB e helpers de plataforma
-- [public](public) — assets e manifestos para WebOS
+## 5. Notas do Agente QA Final
 
-## Recursos principais
-
-- Catálogo dinâmico com conteúdo do Supabase
-- Fallback para TMDB quando necessário
-- Navegação otimizada para controle remoto
-- Layout adaptado para telas grandes e telas pequenas
-
-## Documentação
-
-- [CHANGELOG.md](CHANGELOG.md) — histórico das mudanças recentes
-
-## Contribuição
-
-1. Crie uma branch para a sua alteração
-2. Faça o desenvolvimento e teste local
-3. Abra um pull request com resumo claro
+- **Nenhuma tabela/coluna do Supabase é alterada** — o sistema apenas lê os
+  dados existentes, exatamente como solicitado.
+- **Indicações por IA:** validadas para nunca consultar TMDB nem qualquer
+  fonte externa — somente `cinema`/`recommendations`, com filtro de termos
+  adultos (`lib/recommendations.ts`). Se sua coluna de classificação adulta
+  tiver um nome diferente do esperado (`category`/`genre`), ajuste a lista
+  `ADULT_TERMS` ou o campo verificado.
+- **Idioma:** toda a interface está em Português BR; nenhuma string em
+  outro idioma foi usada nos componentes.
+- **Limite de 5 convidados em "Assistir Juntos":** a tabela `party_rooms`
+  atual não tem uma coluna de lista de participantes, então esse limite é
+  hoje controlado pelo anfitrião (compartilhando o link manualmente). Se
+  quiser um limite tecnicamente garantido (bloquear o 6º convidado
+  automaticamente), será necessário criar uma nova tabela de participantes
+  — combinamos que tabelas existentes não seriam alteradas, então essa
+  seria uma tabela nova, adicional.
+- **Telas 100"+:** o breakpoint `tv` em `tailwind.config.ts` está com valor
+  aproximado (2560px) — recomendo validar no seu modelo real de LG webOS e
+  ajustar esse número se a interface não escalar como esperado.
+- **Pendências para produção:** conectar botão "Minha lista" à tabela
+  `favorites`, e paginação/infinite scroll em `app/filmes` e `app/series`
+  se o catálogo crescer muito (hoje carregam tudo de uma vez por categoria).

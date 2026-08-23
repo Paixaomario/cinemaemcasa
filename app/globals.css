@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  background-color: #000000;
+  color: #ffffff;
+  font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* Foco navegável por controle remoto / teclado — obrigatório em toda a TV */
+.focusable {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+}
+.focusable:focus-visible,
+.focusable[data-focused='true'] {
+  transform: scale(1.06);
+  box-shadow: 0 0 0 2px #e8c97a;
+  z-index: 10;
+  position: relative;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .focusable {
+    transition: none;
+  }
+}
