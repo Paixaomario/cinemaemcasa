@@ -56,7 +56,36 @@ Com o repositório já conectado ao seu projeto Vercel, cada push na branch
 | Administração | `app/admin/page.tsx` |
 | Telas gigantes (100"+) | breakpoint `tv:` em `tailwind.config.ts` |
 
-## 5. Notas do Agente QA Final
+## 5. Empacotamento nativo para LG webOS
+
+O projeto roda como app web (Vercel) e também pode virar um pacote `.ipk`
+instalável nativamente na TV:
+
+1. `npm run build:webos` monta a pasta `dist-webos/`
+2. Edite `dist-webos/index.html` trocando a URL de exemplo pela URL real
+   do seu deploy no Vercel
+3. Adicione os ícones em `webos/` (`icon.png` 80x80, `icon-large.png`
+   130x130, `splash.png` 1920x1080) — não incluídos aqui, precisam ser
+   gerados a partir da sua logo
+4. Instale o [webOS TV CLI](https://webostv.developer.lge.com/develop/tools/cli-installation)
+   e rode `ares-package dist-webos/ -o ./` para gerar o `.ipk`
+5. Com a TV em modo desenvolvedor: `ares-install nome-do-pacote.ipk`
+
+**Importante:** seu projeto já tinha essa infraestrutura de empacotamento
+antes (`manifest.webos.json`, `config.xml` do Tizen, scripts de build,
+arquivos `.brs` de Roku, hooks de navegação espacial e proteção de
+burn-in) e ela foi **apagada** num commit que substituiu a estrutura
+antiga pela nova (`app/` do Next.js). Os arquivos em `webos/`,
+`hooks/useSpatialNavigation.ts`, `hooks/useBurnInProtection.ts` e
+`lib/platform/platformDetect.ts` desta entrega são **recriações do
+zero**, não uma restauração do código original — cobrem a mesma
+necessidade, mas a lógica interna é diferente. Se você tiver um backup
+git de antes desse commit (`git log` + `git show <hash>:caminho`), pode
+valer a pena comparar. O suporte a **Tizen (Samsung)** e **Roku** não foi
+recriado nesta entrega — avise se quiser que eu monte essa camada
+também.
+
+## 6. Notas do Agente QA Final
 
 - **Nenhuma tabela/coluna do Supabase é alterada** — o sistema apenas lê os
   dados existentes, exatamente como solicitado.

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Cinema em Casa</title>
+    <style>
+      html, body { margin: 0; padding: 0; background: #000; height: 100%; }
+      iframe { border: 0; width: 100%; height: 100%; }
+    </style>
+  </head>
+  <body>
+    <!--
+      Este arquivo é o ponto de entrada do pacote nativo webOS (.ipk).
+      Ele carrega o app real, hospedado no Vercel, dentro de uma
+      "casca" nativa — é assim que a TV consegue instalar/abrir o
+      Cinema em Casa como um app de verdade, com ícone na tela inicial,
+      em vez de precisar abrir o navegador manualmente.
+
+      Troque a URL abaixo pela URL de produção do seu projeto Vercel
+      antes de gerar o pacote .ipk.
+    -->
+    <iframe
+      id="app-frame"
+      src="https://SEU-PROJETO.vercel.app"
+      allow="autoplay; fullscreen"
+      allowfullscreen
+    ></iframe>
+  </body>
+</html>

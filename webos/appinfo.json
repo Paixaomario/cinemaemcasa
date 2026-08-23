@@ -1,0 +1,16 @@
+{
+  "id": "com.cinemaemcasa.app",
+  "version": "1.0.0",
+  "vendor": "Cinema em Casa",
+  "type": "web",
+  "main": "index.html",
+  "title": "Cinema em Casa",
+  "icon": "icon.png",
+  "largeIcon": "icon-large.png",
+  "bgImage": "splash.png",
+  "resolution": "1920x1080",
+  "iconColor": "#000000",
+  "splashBackground": "#000000",
+  "disableBackHistoryAPI": true,
+  "requiredPermissions": ["network.tv.info"]
+}
