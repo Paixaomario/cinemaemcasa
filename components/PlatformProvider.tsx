@@ -19,6 +19,21 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  useEffect(() => {
+    // Garante um ponto de partida para o D-pad: se nada estiver focado
+    // ao carregar a página, foca o primeiro item focável do conteúdo
+    // (e, na ausência dele, o ícone Início do menu).
+    const t = setTimeout(() => {
+      if (document.activeElement && document.activeElement !== document.body) return;
+      const main = document.querySelector<HTMLElement>('main');
+      const primeiro =
+        main?.querySelector<HTMLElement>('.focusable') ||
+        document.querySelector<HTMLElement>('aside a[href="/"]');
+      primeiro?.focus();
+    }, 300);
+    return () => clearTimeout(t);
+  }, []);
+
   const isTV = ehSmartTV(plataforma);
 
   // Navegação por D-pad é útil em qualquer ambiente sem toque (TV e

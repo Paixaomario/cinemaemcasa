@@ -75,7 +75,7 @@ export default async function FilmeDetalhesPage({ params }: { params: { id: stri
 
       {relacionados.length > 0 && (
         <div className="px-6 pt-6 pb-10">
-          <h2 className="text-[15px] font-medium mb-3">Títulos semelhantes</h2>
+          <h2 className="text-[18px] font-semibold mb-3">Títulos semelhantes</h2>
           <div className="flex gap-1.5 overflow-x-auto">
             {relacionados.map((r) => (
               <TitleCard

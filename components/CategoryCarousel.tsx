@@ -31,7 +31,7 @@ export function CategoryCarousel({ titulo, items, basePath }: Props) {
 
   return (
     <section className="px-3 py-4">
-      <h2 className="text-[15px] font-medium text-white mb-2 px-1">{titulo}</h2>
+      <h2 className="text-[18px] font-semibold text-white mb-2.5 px-1">{titulo}</h2>
       <div className="flex items-center gap-1">
         {total > VISIBLE && (
           <button

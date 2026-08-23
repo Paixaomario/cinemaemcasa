@@ -107,7 +107,33 @@ também.
   vez de largura fixa em pixels, com `gap` reduzido nas grades — as
   capas agora preenchem a largura disponível de cada seção/carrossel.
 
-## 7. Notas do Agente QA Final
+## 8. Foco, categorias fixas e banner com trailer (esta entrega)
+
+- **Navegação por D-pad corrigida:** `hooks/useSpatialNavigation.ts` agora
+  trata o menu lateral e o conteúdo como regiões separadas, com duas
+  regras explícitas: do menu, seta direita vai para a primeira linha/
+  coluna do conteúdo; da primeira coluna do conteúdo, seta esquerda volta
+  para o ícone Início do menu (expandindo-o). Também adicionei um foco
+  inicial automático (`PlatformProvider.tsx`) para o D-pad ter de onde
+  partir assim que a página carrega.
+- **Menu lateral:** ícones agora são brancos (antes usavam uma cor cinza
+  de baixo contraste) e o ícone do logo encolhido aumentou de 28px para
+  44px. Item **Minha lista** adicionado, apontando para `/minha-lista`
+  (nova página, lê a tabela `favorites`).
+- **Categorias da página Filmes:** lista fixa e ordem exatas em
+  `lib/categorias.ts` (`CATEGORIAS_FILMES`). Cada filme pode aparecer em
+  mais de uma categoria — o campo `category` é lido como uma lista
+  separada por vírgula/ponto e vírgula/barra (ex: `"Ação, Aventura"`).
+  Se seu banco guarda categoria de um jeito diferente disso, me avise
+  para eu ajustar o separador em `categoriasDoTitulo()`.
+- **Banner hero com trailer:** `components/HeroBanner.tsx` mostra a capa
+  por 10s e troca para o `trailer` do mesmo título (mudo, em loop até
+  acabar, depois volta pra capa). Se um título não tiver `trailer`
+  preenchido no banco, ele simplesmente continua mostrando a capa.
+- **Títulos de seção:** padronizados em `18px/semibold` em toda a Home,
+  Filmes, Séries e Minha Lista.
+
+## 9. Notas do Agente QA Final
 
 - **Nenhuma tabela/coluna do Supabase é alterada** — o sistema apenas lê os
   dados existentes, exatamente como solicitado.

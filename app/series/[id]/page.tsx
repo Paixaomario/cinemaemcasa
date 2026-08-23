@@ -60,7 +60,7 @@ export default async function SerieDetalhesPage({
       </div>
 
       <div className="px-6 pt-5 flex items-center justify-between">
-        <h2 className="text-[15px] font-medium">Episódios</h2>
+        <h2 className="text-[18px] font-semibold">Episódios</h2>
         <div className="flex gap-1.5">
           {temporadas.map((t) => (
             <Link
