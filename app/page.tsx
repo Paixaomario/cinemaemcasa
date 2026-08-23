@@ -69,7 +69,7 @@ export default async function HomePage() {
           </p>
           <div className="flex gap-2">
             <Link
-              href={`/filmes/${hero.id}`}
+              href={hero.type === 'series' ? `/series/${hero.id}` : `/filmes/${hero.id}/assistir`}
               className="focusable bg-accent text-white text-[13px] font-medium rounded-card px-5 py-2.5"
             >
               <i className="ti ti-player-play mr-1.5" aria-hidden="true" />
@@ -88,17 +88,17 @@ export default async function HomePage() {
       ))}
 
       {recomendados.length > 0 && (
-        <section className="px-5 py-3">
-          <div className="flex items-center gap-2 mb-3">
+        <section className="px-3 py-3">
+          <div className="flex items-center gap-2 mb-2 px-1">
             <i className="ti ti-sparkles text-gold text-base" aria-hidden="true" />
             <h2 className="text-[15px] font-medium text-white">Escolhido para você</h2>
           </div>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-5 gap-1.5">
             {recomendados.slice(0, 5).map((item) => (
               <Link
                 key={item.id}
                 href={`/filmes/${item.id}`}
-                className="focusable block rounded-card overflow-hidden bg-card h-[170px]"
+                className="focusable block overflow-hidden bg-card rounded-[4px] w-full aspect-[2/3]"
               >
                 {item.poster && (
                   // eslint-disable-next-line @next/next/no-img-element

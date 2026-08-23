@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabase/client';
+import { Logo } from '@/components/Logo';
 
 // Agente de Usuário: tela simples de acesso. Não há cadastro público —
 // usuários autorizados são criados por você (admin) via Supabase Auth
@@ -33,8 +34,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-5">
       <form onSubmit={entrar} className="w-full max-w-[280px] flex flex-col items-center">
+        <Logo width={160} className="mb-6" />
         <p className="text-[11px] text-textmuted tracking-widest mb-4">ACESSO RESTRITO</p>
-        <h1 className="text-[16px] font-medium mb-6">Entrar no Cinema em Casa</h1>
 
         <input
           type="email"

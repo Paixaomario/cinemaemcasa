@@ -14,9 +14,9 @@ export function HomeSectionRow({ titulo, items }: Props) {
   const shown = items.slice(0, 5);
 
   return (
-    <section className="px-5 py-3">
-      <h2 className="text-[15px] font-medium text-white mb-3">{titulo}</h2>
-      <div className="grid grid-cols-5 gap-2">
+    <section className="px-3 py-3">
+      <h2 className="text-[15px] font-medium text-white mb-2 px-1">{titulo}</h2>
+      <div className="grid grid-cols-5 gap-1.5">
         {shown.map((item) => (
           <TitleCard
             key={item.id}

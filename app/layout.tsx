@@ -3,6 +3,7 @@ import './globals.css';
 import { Sidebar } from '@/components/Sidebar';
 import { BottomNav } from '@/components/BottomNav';
 import { PlatformProvider } from '@/components/PlatformProvider';
+import { SplashScreen } from '@/components/SplashScreen';
 
 export const metadata: Metadata = {
   title: 'Cinema em Casa',
@@ -25,6 +26,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#000000" />
       </head>
       <body className="bg-black text-white">
+        <SplashScreen />
         <PlatformProvider>
           <div className="flex min-h-screen">
             <Sidebar />

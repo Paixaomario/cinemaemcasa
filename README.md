@@ -85,7 +85,29 @@ valer a pena comparar. O suporte a **Tizen (Samsung)** e **Roku** não foi
 recriado nesta entrega — avise se quiser que eu monte essa camada
 também.
 
-## 6. Notas do Agente QA Final
+## 6. Atualização de marca e navegação (agentes de layout/menu/splash)
+
+- **Logo:** `public/logo.png` (marca completa) e `public/logo-icon.png`
+  (símbolo recortado, sem texto) substituem o texto "CINEMA EM CASA" em
+  todo o sistema (`components/Logo.tsx`). Favicon (`app/icon.png`),
+  ícone Apple (`app/apple-icon.png`) e ícones PWA (`public/icons/`) já
+  foram gerados a partir do logo enviado.
+- **Splash screen:** `components/SplashScreen.tsx`, 700px no desktop /
+  500px no mobile (responsivo), com barra de progresso de 0–100%
+  simulada (~1,8s) antes de revelar a Home.
+- **Menu lateral com efeito vidro:** `components/Sidebar.tsx` agora usa
+  `backdrop-blur` + fundo translúcido, encolhido (só ícone) por padrão e
+  expandindo com nomes via `:hover` (mouse) e `:focus-within` (teclado/
+  D-pad/controle remoto) — sem depender de JavaScript para abrir/fechar.
+- **Detalhes vs. exibição separados:** `/filmes/[id]` agora é só a
+  página de informações (padrão HBO Max); o player ficou isolado em
+  `/filmes/[id]/assistir`. Para séries, `/series/[id]` já lista
+  episódios e cada um abre em `/series/[id]/assistir/[episodioId]`.
+- **Capas maiores:** `TitleCard` passou a usar `aspect-ratio` fluido em
+  vez de largura fixa em pixels, com `gap` reduzido nas grades — as
+  capas agora preenchem a largura disponível de cada seção/carrossel.
+
+## 7. Notas do Agente QA Final
 
 - **Nenhuma tabela/coluna do Supabase é alterada** — o sistema apenas lê os
   dados existentes, exatamente como solicitado.

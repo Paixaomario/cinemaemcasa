@@ -30,9 +30,9 @@ export function CategoryCarousel({ titulo, items, basePath }: Props) {
   const prev = () => setStart((s) => (s - 1 + total) % total);
 
   return (
-    <section className="px-5 py-4">
-      <h2 className="text-[15px] font-medium text-white mb-3">{titulo}</h2>
-      <div className="flex items-center gap-2">
+    <section className="px-3 py-4">
+      <h2 className="text-[15px] font-medium text-white mb-2 px-1">{titulo}</h2>
+      <div className="flex items-center gap-1">
         {total > VISIBLE && (
           <button
             onClick={prev}
@@ -43,7 +43,7 @@ export function CategoryCarousel({ titulo, items, basePath }: Props) {
           </button>
         )}
 
-        <div className="grid grid-cols-5 gap-2 flex-1">
+        <div className="grid grid-cols-5 gap-1.5 flex-1">
           {visible.map((item) => (
             <TitleCard
               key={item.id}

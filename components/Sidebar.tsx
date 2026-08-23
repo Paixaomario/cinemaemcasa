@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Logo } from './Logo';
 
 const ITEMS = [
   { href: '/', label: 'Início', icon: 'home' },
@@ -10,15 +11,37 @@ const ITEMS = [
   { href: '/busca', label: 'Buscar', icon: 'search' }
 ];
 
+// Agente de menu lateral: efeito vidro (glass), encolhido mostrando só
+// ícones quando não está em uso. Expande com nomes ao passar o mouse OU
+// ao receber foco por controle remoto/setas (via :focus-within, sem
+// depender de JS) — mesmo comportamento em Web e Smart TV.
 export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex md:flex-col md:justify-between md:w-[220px] md:shrink-0 bg-panel border-r border-border py-5">
+    <aside
+      className="
+        group hidden md:flex md:flex-col md:justify-between md:shrink-0
+        w-[76px] hover:w-[220px] focus-within:w-[220px]
+        transition-[width] duration-300 ease-out
+        bg-black/40 backdrop-blur-xl border-r border-white/10
+        py-5 overflow-hidden
+      "
+    >
       <div>
-        <p className="px-5 mb-7 text-sm font-medium text-gold tracking-wide">
-          CINEMA EM CASA
-        </p>
+        <div className="px-[26px] mb-7 h-9 flex items-center relative">
+          <Logo iconOnly width={28} className="absolute left-[26px] group-hover:opacity-0 group-focus-within:opacity-0 transition-opacity duration-200 shrink-0" />
+          <Logo
+            width={140}
+            className="
+              opacity-0 -translate-x-1
+              group-hover:opacity-100 group-hover:translate-x-0
+              group-focus-within:opacity-100 group-focus-within:translate-x-0
+              transition-all duration-300
+            "
+          />
+        </div>
+
         <nav className="flex flex-col gap-1">
           {ITEMS.map((item) => {
             const active = pathname === item.href;
@@ -26,14 +49,21 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`focusable flex items-center gap-3 px-5 py-3 text-sm ${
-                  active
-                    ? 'bg-accent text-white border-l-2 border-gold -ml-[2px] pl-[22px]'
-                    : 'text-textmuted hover:text-white'
+                className={`focusable flex items-center gap-3 px-[26px] py-3 text-sm whitespace-nowrap ${
+                  active ? 'bg-accent/70 text-white border-l-2 border-gold' : 'text-textmuted hover:text-white'
                 }`}
               >
-                <i className={`ti ti-${item.icon} text-lg`} aria-hidden="true" />
-                {item.label}
+                <i className={`ti ti-${item.icon} text-lg shrink-0`} aria-hidden="true" />
+                <span
+                  className="
+                    max-w-0 opacity-0 overflow-hidden
+                    group-hover:max-w-[140px] group-hover:opacity-100
+                    group-focus-within:max-w-[140px] group-focus-within:opacity-100
+                    transition-all duration-300
+                  "
+                >
+                  {item.label}
+                </span>
               </Link>
             );
           })}
@@ -43,19 +73,37 @@ export function Sidebar() {
       <div className="flex flex-col gap-1">
         <Link
           href="/admin"
-          className="focusable flex items-center gap-3 px-5 py-3 text-sm text-textmuted hover:text-white"
+          className="focusable flex items-center gap-3 px-[26px] py-3 text-sm text-textmuted hover:text-white whitespace-nowrap"
         >
-          <i className="ti ti-settings text-lg" aria-hidden="true" />
-          Configurações
+          <i className="ti ti-settings text-lg shrink-0" aria-hidden="true" />
+          <span
+            className="
+              max-w-0 opacity-0 overflow-hidden
+              group-hover:max-w-[140px] group-hover:opacity-100
+              group-focus-within:max-w-[140px] group-focus-within:opacity-100
+              transition-all duration-300
+            "
+          >
+            Configurações
+          </span>
         </Link>
         <Link
           href="/perfil"
-          className="focusable flex items-center gap-3 px-5 py-3 text-sm text-textmuted hover:text-white"
+          className="focusable flex items-center gap-3 px-[26px] py-3 text-sm text-textmuted hover:text-white whitespace-nowrap"
         >
-          <span className="w-[22px] h-[22px] rounded-full bg-accent flex items-center justify-center text-[10px]">
+          <span className="w-[22px] h-[22px] rounded-full bg-accent flex items-center justify-center text-[10px] shrink-0">
             <i className="ti ti-user" aria-hidden="true" />
           </span>
-          Perfil
+          <span
+            className="
+              max-w-0 opacity-0 overflow-hidden
+              group-hover:max-w-[140px] group-hover:opacity-100
+              group-focus-within:max-w-[140px] group-focus-within:opacity-100
+              transition-all duration-300
+            "
+          >
+            Perfil
+          </span>
         </Link>
       </div>
     </aside>
