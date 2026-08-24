@@ -26,7 +26,7 @@ export function Sidebar() {
         group hidden md:flex md:flex-col md:justify-between md:shrink-0
         w-[76px] hover:w-[220px] focus-within:w-[220px]
         transition-[width] duration-300 ease-out
-        bg-black/40 backdrop-blur-xl border-r border-white/10
+        bg-black/85 border-r border-white/10
         py-5 overflow-hidden
       "
     >

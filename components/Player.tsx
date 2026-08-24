@@ -100,7 +100,7 @@ export function Player({
       <button
         onClick={() => router.push(exitHref)}
         aria-label="Sair"
-        className="focusable absolute top-5 left-5 z-30 w-11 h-11 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white"
+        className="focusable absolute top-5 left-5 z-30 w-11 h-11 rounded-full bg-black/75 flex items-center justify-center text-white"
       >
         <i className="ti ti-x text-xl" aria-hidden="true" />
       </button>
@@ -111,7 +111,7 @@ export function Player({
           <button
             onClick={() => setMenuAberto((v) => !v)}
             aria-label="Áudio e legendas"
-            className="focusable w-11 h-11 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white"
+            className="focusable w-11 h-11 rounded-full bg-black/75 flex items-center justify-center text-white"
           >
             <i className="ti ti-adjustments-horizontal text-xl" aria-hidden="true" />
           </button>

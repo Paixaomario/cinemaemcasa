@@ -26,7 +26,7 @@ export function BottomNav() {
     <nav
       className="
         md:hidden fixed left-3 right-3 bottom-3 z-30
-        bg-black/75 backdrop-blur-xl border border-white/10
+        bg-black/90 border border-white/10
         rounded-2xl shadow-[0_6px_24px_rgba(0,0,0,0.5)]
         flex justify-around items-center py-2 px-1
       "
