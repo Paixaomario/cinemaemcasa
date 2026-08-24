@@ -68,6 +68,10 @@ export interface Episodio {
   trailer: string | null;
   subtitles: { lang: string; url: string }[] | null;
   audio_tracks: { lang: string; url?: string }[] | null;
+  tmdb_id: number | null;
+  poster: string | null;
+  capa: string | null;
+  tmd_id_ref: number | null;
 }
 
 export interface HomeSection {

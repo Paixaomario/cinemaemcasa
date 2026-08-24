@@ -76,7 +76,8 @@ export default async function HomePage() {
   // tmdb_id salvo no próprio registro — nunca de outra fonte.
   let heroResolvido = hero;
   if (hero && !hero.backdrop && !hero.banner && hero.tmdb_id) {
-    const backdropTMDB = await getBackdropDoTMDB(hero.tmdb_id, hero.type === 'series' ? 'series' : 'movie');
+    const tmdbId = hero.tmdb_id;
+    const backdropTMDB = await getBackdropDoTMDB(tmdbId, hero.type === 'series' ? 'series' : 'movie');
     if (backdropTMDB) heroResolvido = { ...hero, backdrop: backdropTMDB };
   }
 
