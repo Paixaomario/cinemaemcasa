@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useSpatialNavigation } from '@/hooks/useSpatialNavigation';
 import { useBurnInProtection } from '@/hooks/useBurnInProtection';
 import { detectarPlataforma, ehSmartTV, type Plataforma } from '@/lib/platform/platformDetect';
 
 export function PlatformProvider({ children }: { children: React.ReactNode }) {
   const [plataforma, setPlataforma] = useState<Plataforma>('desktop');
+  const pathname = usePathname();
 
   useEffect(() => {
     setPlataforma(detectarPlataforma());
@@ -20,9 +22,10 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Garante um ponto de partida para o D-pad: se nada estiver focado
-    // ao carregar a página, foca o primeiro item focável do conteúdo
-    // (e, na ausência dele, o ícone Início do menu).
+    // Garante um ponto de partida para o D-pad em TODA troca de página
+    // (não só no carregamento inicial) — sem isso, depois de navegar
+    // para uma nova rota o foco "sumia" (voltava pro body) e o
+    // controle remoto parecia travado até o usuário usar o mouse.
     const t = setTimeout(() => {
       if (document.activeElement && document.activeElement !== document.body) return;
       const main = document.querySelector<HTMLElement>('main');
@@ -30,9 +33,9 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
         main?.querySelector<HTMLElement>('.focusable') ||
         document.querySelector<HTMLElement>('aside a[href="/"]');
       primeiro?.focus();
-    }, 300);
+    }, 250);
     return () => clearTimeout(t);
-  }, []);
+  }, [pathname]);
 
   const isTV = ehSmartTV(plataforma);
 
@@ -46,3 +49,4 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>;
 }
+

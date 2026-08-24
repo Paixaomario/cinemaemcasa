@@ -1,4 +1,5 @@
 import { supabaseServer } from '@/lib/supabase/server';
+import { BackButton } from '@/components/BackButton';
 import type { Serie, Temporada, Episodio } from '@/lib/types';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -26,6 +27,9 @@ async function getEpisodios(temporadaId: number): Promise<Episodio[]> {
   return data || [];
 }
 
+// Página de DETALHES da série — imagem com object-top (sem cortar o
+// topo), tipografia ampliada para leitura a distância, botão voltar, e
+// lista de episódios com capa + nome + descrição (2 linhas) + duração.
 export default async function SerieDetalhesPage({
   params,
   searchParams
@@ -41,32 +45,42 @@ export default async function SerieDetalhesPage({
     temporadas.find((t) => String(t.numero_temporada) === searchParams.temporada) ||
     temporadas[0];
   const episodios = temporadaAtual ? await getEpisodios(temporadaAtual.id_n) : [];
+  const imagem = serie.banner || serie.capa;
 
   return (
     <div>
-      <div className="relative bg-accent-soft px-6 pt-12 pb-7">
-        <h1 className="text-[22px] font-medium mb-1">{serie.titulo}</h1>
-        <p className="text-[13px] text-accent-hover mb-1">
-          {[serie.ano, `${temporadas.length} temporadas`, serie.classificacao]
-            .filter(Boolean)
-            .join(' · ')}
-        </p>
-        {serie.rating !== null && (
-          <p className="text-[12px] text-gold mb-4">
-            {Math.round((serie.rating || 0) * 10)}% de compatibilidade
-          </p>
+      <div className="relative min-h-[56vh] flex items-end px-6 md:px-10 pb-8 overflow-hidden bg-accent-soft">
+        {imagem && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imagem} alt={serie.titulo || ''} className="absolute inset-0 w-full h-full object-cover object-top" />
         )}
-        <p className="text-[13px] text-white/90 max-w-[520px]">{serie.descricao}</p>
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/10" />
+        <BackButton />
+
+        <div className="relative z-10 max-w-3xl">
+          <h1 className="font-heading font-bold text-[32px] md:text-[48px] lg:text-[56px] leading-tight mb-3">
+            {serie.titulo}
+          </h1>
+          <p className="text-[16px] md:text-[20px] text-accent-hover mb-2">
+            {[serie.ano, `${temporadas.length} temporadas`, serie.classificacao].filter(Boolean).join(' · ')}
+          </p>
+          {serie.rating !== null && (
+            <p className="text-[15px] md:text-[18px] text-gold mb-4">
+              {Math.round((serie.rating || 0) * 10)}% de compatibilidade
+            </p>
+          )}
+          <p className="text-[16px] md:text-[19px] text-white/90 leading-relaxed max-w-2xl">{serie.descricao}</p>
+        </div>
       </div>
 
-      <div className="px-6 pt-5 flex items-center justify-between">
-        <h2 className="text-[18px] font-semibold">Episódios</h2>
-        <div className="flex gap-1.5">
+      <div className="px-6 md:px-10 pt-8 flex items-center justify-between flex-wrap gap-3">
+        <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold">Episódios</h2>
+        <div className="flex gap-2 flex-wrap">
           {temporadas.map((t) => (
             <Link
               key={t.id_n}
               href={`/series/${serie.id_n}?temporada=${t.numero_temporada}`}
-              className={`focusable text-[12px] rounded px-3 py-1.5 ${
+              className={`focusable text-[14px] rounded px-4 py-2 ${
                 t.id_n === temporadaAtual?.id_n ? 'bg-accent text-white' : 'bg-card text-textmuted'
               }`}
             >
@@ -76,30 +90,30 @@ export default async function SerieDetalhesPage({
         </div>
       </div>
 
-      <div className="px-6 pt-4 pb-10 flex flex-col gap-2.5">
+      <div className="px-6 md:px-10 pt-5 pb-10 flex flex-col gap-3">
         {episodios.map((ep, idx) => {
           const next = episodios[idx + 1];
+          const capa = ep.imagem_342 || ep.imagem_500 || ep.capa || ep.banner;
           return (
             <Link
               key={ep.id_n}
-              href={`/series/${serie.id_n}/assistir/${ep.id_n}${
-                next ? `?proximo=${next.id_n}` : ''
-              }`}
-              className="focusable flex gap-3 items-center bg-panel rounded-card p-2.5"
+              href={`/series/${serie.id_n}/assistir/${ep.id_n}${next ? `?proximo=${next.id_n}` : ''}`}
+              className="focusable flex gap-4 items-center bg-panel rounded-card p-3 shadow-card"
             >
-              <div className="w-[100px] h-14 rounded bg-card shrink-0 overflow-hidden">
-                {ep.imagem_342 && (
+              <div className="w-[140px] md:w-[180px] aspect-video rounded bg-card shrink-0 overflow-hidden">
+                {capa && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={ep.imagem_342} alt={ep.titulo || ''} className="w-full h-full object-cover" />
+                  <img src={capa} alt={ep.titulo || ''} className="w-full h-full object-cover" />
                 )}
               </div>
-              <div>
-                <p className="text-[13px] font-medium">
+              <div className="flex-1 min-w-0">
+                <p className="text-[15px] md:text-[17px] font-medium mb-1">
                   {ep.numero_episodio}. {ep.titulo}
                 </p>
-                <p className="text-[11px] text-textmuted">
-                  {[ep.duracao, ep.descricao].filter(Boolean).join(' · ')}
+                <p className="text-[13px] md:text-[14px] text-textmuted leading-snug line-clamp-2 mb-1">
+                  {ep.descricao}
                 </p>
+                {ep.duracao && <p className="text-[12px] text-gold">{ep.duracao}</p>}
               </div>
             </Link>
           );

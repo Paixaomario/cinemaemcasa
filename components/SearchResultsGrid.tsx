@@ -41,7 +41,7 @@ function ResultCard({ item, className }: { item: SearchCatalogItem; className?: 
   return (
     <Link
       href={href}
-      className={`focusable block rounded-card overflow-hidden bg-card h-[130px] shrink-0 ${className || ''}`}
+      className={`focusable block rounded-card overflow-hidden bg-card h-[130px] shrink-0 shadow-card ${className || ''}`}
     >
       {item.poster && (
         // eslint-disable-next-line @next/next/no-img-element

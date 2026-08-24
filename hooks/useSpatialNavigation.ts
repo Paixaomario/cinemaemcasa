@@ -1,8 +1,15 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 type Direcao = 'up' | 'down' | 'left' | 'right';
+
+// Intervalo mínimo entre duas navegações processadas. Controles remotos
+// de smart TV costumam disparar vários eventos "keydown" repetidos
+// enquanto o botão fica pressionado; sem esse limite, os eventos se
+// acumulam numa fila e o app "trava" por vários segundos processando
+// tudo de uma vez (o efeito de "delay de 10s" relatado na LG webOS).
+const INTERVALO_MINIMO_MS = 140;
 
 function getFocusaveis(container: ParentNode | null): HTMLElement[] {
   if (!container) return [];
@@ -25,19 +32,25 @@ function maisProximoNoTopo(elementos: HTMLElement[]): HTMLElement | null {
  * Navegação espacial por D-pad (setas do controle remoto / teclado).
  *
  * Regras explícitas de transição entre o menu lateral e o conteúdo da
- * página (evitam que o foco fique "preso" no menu):
- *  - Estando em qualquer item do menu lateral, seta para a DIREITA leva
- *    direto para a primeira linha/primeira coluna do conteúdo da página.
- *  - Estando na PRIMEIRA COLUNA do conteúdo, seta para a ESQUERDA volta
- *    para o ícone Início do menu lateral (o que também expande o menu,
- *    já que a expansão usa :focus-within).
+ * página:
+ *  - Do menu lateral, seta DIREITA leva direto para a primeira linha/
+ *    primeira coluna do conteúdo.
+ *  - Da PRIMEIRA COLUNA do conteúdo, seta ESQUERDA volta para o ícone
+ *    Início do menu lateral (que também expande o menu, via
+ *    :focus-within).
  *
- * Fora dessas transições, o foco se move para o elemento `.focusable`
- * mais próximo na direção pressionada, com base na posição real na
- * tela — dentro da mesma região (menu OU conteúdo) para não pular de
- * um pro outro no meio do caminho.
+ * Fora dessas transições, o foco vai para o elemento `.focusable` mais
+ * próximo na direção pressionada, dentro da MESMA região (menu OU
+ * conteúdo) — nunca pula de uma pra outra fora das regras acima.
+ *
+ * Otimizado para TVs mais lentas (LG webOS): throttle de eventos,
+ * scroll instantâneo (sem animação) e cálculo de distância mais
+ * assertivo pra evitar "pulos" errados de direção.
  */
 export function useSpatialNavigation() {
+  const ultimoProcessadoRef = useRef(0);
+  const processandoRef = useRef(false);
+
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const map: Record<string, Direcao> = {
@@ -49,80 +62,102 @@ export function useSpatialNavigation() {
       const direction = map[e.key];
       if (!direction) return;
 
+      // Throttle: ignora eventos repetidos demais em sequência (evita
+      // fila de eventos travando a TV) e eventos de "auto-repeat" do
+      // navegador enquanto a tecla fica pressionada.
+      const agora = performance.now();
+      if (e.repeat || agora - ultimoProcessadoRef.current < INTERVALO_MINIMO_MS) {
+        e.preventDefault();
+        return;
+      }
+      if (processandoRef.current) {
+        e.preventDefault();
+        return;
+      }
+
       const current = document.activeElement as HTMLElement | null;
       if (!current) return;
 
-      const aside = document.querySelector<HTMLElement>('aside');
-      const main = document.querySelector<HTMLElement>('main');
-      const emMenu = !!aside && aside.contains(current);
-      const emConteudo = !!main && main.contains(current);
+      processandoRef.current = true;
+      ultimoProcessadoRef.current = agora;
 
-      // Regra 1: do menu lateral, direita -> primeira linha/coluna do conteúdo.
-      if (direction === 'right' && emMenu) {
-        const alvo = maisProximoNoTopo(getFocusaveis(main));
-        if (alvo) {
-          e.preventDefault();
-          alvo.focus();
-          alvo.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
-          return;
-        }
-      }
+      try {
+        const aside = document.querySelector<HTMLElement>('aside');
+        const main = document.querySelector<HTMLElement>('main');
+        const emMenu = !!aside && aside.contains(current);
+        const emConteudo = !!main && main.contains(current);
 
-      // Regra 2: da primeira coluna do conteúdo, esquerda -> ícone Início do menu.
-      if (direction === 'left' && emConteudo) {
-        const focaveisConteudo = getFocusaveis(main);
-        const currentRect = current.getBoundingClientRect();
-        const menorEsquerda = Math.min(...focaveisConteudo.map((el) => el.getBoundingClientRect().left));
-        const primeiraColuna = currentRect.left - menorEsquerda < 8;
-
-        if (primeiraColuna) {
-          const inicio = aside?.querySelector<HTMLElement>('a[href="/"]');
-          if (inicio) {
+        // Regra 1: do menu lateral, direita -> primeira linha/coluna do conteúdo.
+        if (direction === 'right' && emMenu) {
+          const alvo = maisProximoNoTopo(getFocusaveis(main));
+          if (alvo) {
             e.preventDefault();
-            inicio.focus();
+            alvo.focus();
+            alvo.scrollIntoView({ block: 'nearest', inline: 'nearest' });
             return;
           }
         }
-      }
 
-      // Navegação genérica: restrita à própria região (menu OU conteúdo)
-      // para não pular de uma pra outra fora das regras acima.
-      const pool = emMenu ? getFocusaveis(aside) : emConteudo ? getFocusaveis(main) : getFocusaveis(document.body);
+        // Regra 2: da primeira coluna do conteúdo, esquerda -> ícone Início do menu.
+        if (direction === 'left' && emConteudo) {
+          const focaveisConteudo = getFocusaveis(main);
+          const currentRect = current.getBoundingClientRect();
+          const menorEsquerda = Math.min(...focaveisConteudo.map((el) => el.getBoundingClientRect().left));
+          const primeiraColuna = currentRect.left - menorEsquerda < 8;
 
-      const currentRect = current.getBoundingClientRect();
-      let melhor: HTMLElement | null = null;
-      let melhorDistancia = Infinity;
-
-      for (const el of pool) {
-        if (el === current) continue;
-        const rect = el.getBoundingClientRect();
-
-        const dx = rect.left - currentRect.left;
-        const dy = rect.top - currentRect.top;
-
-        const naDirecao =
-          (direction === 'up' && dy < -4) ||
-          (direction === 'down' && dy > 4) ||
-          (direction === 'left' && dx < -4) ||
-          (direction === 'right' && dx > 4);
-
-        if (!naDirecao) continue;
-
-        const distancia =
-          direction === 'up' || direction === 'down'
-            ? Math.abs(dy) + Math.abs(dx) * 2
-            : Math.abs(dx) + Math.abs(dy) * 2;
-
-        if (distancia < melhorDistancia) {
-          melhorDistancia = distancia;
-          melhor = el;
+          if (primeiraColuna) {
+            const inicio = aside?.querySelector<HTMLElement>('a[href="/"]');
+            if (inicio) {
+              e.preventDefault();
+              inicio.focus();
+              return;
+            }
+          }
         }
-      }
 
-      if (melhor) {
-        e.preventDefault();
-        melhor.focus();
-        melhor.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+        // Navegação genérica: restrita à própria região (menu OU conteúdo).
+        const pool = emMenu ? getFocusaveis(aside) : emConteudo ? getFocusaveis(main) : getFocusaveis(document.body);
+
+        const currentRect = current.getBoundingClientRect();
+        let melhor: HTMLElement | null = null;
+        let melhorDistancia = Infinity;
+
+        for (const el of pool) {
+          if (el === current) continue;
+          const rect = el.getBoundingClientRect();
+
+          const dx = rect.left - currentRect.left;
+          const dy = rect.top - currentRect.top;
+
+          const naDirecao =
+            (direction === 'up' && dy < -4) ||
+            (direction === 'down' && dy > 4) ||
+            (direction === 'left' && dx < -4) ||
+            (direction === 'right' && dx > 4);
+
+          if (!naDirecao) continue;
+
+          // Penalidade maior no eixo perpendicular: favorece fortemente
+          // o vizinho alinhado na mesma linha/coluna, evitando que o
+          // foco "pule" pra direção errada em grades apertadas.
+          const distancia =
+            direction === 'up' || direction === 'down'
+              ? Math.abs(dy) + Math.abs(dx) * 3
+              : Math.abs(dx) + Math.abs(dy) * 3;
+
+          if (distancia < melhorDistancia) {
+            melhorDistancia = distancia;
+            melhor = el;
+          }
+        }
+
+        if (melhor) {
+          e.preventDefault();
+          melhor.focus();
+          melhor.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        }
+      } finally {
+        processandoRef.current = false;
       }
     };
 

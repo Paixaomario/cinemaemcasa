@@ -1,5 +1,5 @@
 import { supabaseServer } from '@/lib/supabase/server';
-import { TitleCard } from '@/components/TitleCard';
+import { PosterGrid } from '@/components/PosterGrid';
 import type { Cinema, Serie } from '@/lib/types';
 
 // Agente de Minha Lista: lê a tabela `favorites` do usuário autenticado
@@ -71,23 +71,19 @@ export default async function MinhaListaPage() {
 
       {itensFilme.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-[18px] font-semibold text-white mb-2 px-2">Filmes</h2>
-          <div className="grid grid-cols-5 gap-1.5">
-            {itensFilme.map((f) => (
-              <TitleCard key={`f-${f.id}`} href={`/filmes/${f.id}`} poster={f.poster} titulo={f.titulo} ano={f.ano} tall />
-            ))}
-          </div>
+          <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold text-white mb-3 px-2">Filmes</h2>
+          <PosterGrid
+            items={itensFilme.map((f) => ({ id: `f-${f.id}`, href: `/filmes/${f.id}`, poster: f.poster, titulo: f.titulo, ano: f.ano }))}
+          />
         </div>
       )}
 
       {itensSerie.length > 0 && (
         <div>
-          <h2 className="text-[18px] font-semibold text-white mb-2 px-2">Séries</h2>
-          <div className="grid grid-cols-5 gap-1.5">
-            {itensSerie.map((s) => (
-              <TitleCard key={`s-${s.id}`} href={`/series/${s.id}`} poster={s.poster} titulo={s.titulo} ano={s.ano} tall />
-            ))}
-          </div>
+          <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold text-white mb-3 px-2">Séries</h2>
+          <PosterGrid
+            items={itensSerie.map((s) => ({ id: `s-${s.id}`, href: `/series/${s.id}`, poster: s.poster, titulo: s.titulo, ano: s.ano }))}
+          />
         </div>
       )}
     </div>

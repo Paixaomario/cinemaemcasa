@@ -133,7 +133,63 @@ também.
 - **Títulos de seção:** padronizados em `18px/semibold` em toda a Home,
   Filmes, Séries e Minha Lista.
 
-## 9. Notas do Agente QA Final
+## 10. Correções desta entrega (foco, tipografia, player e mais)
+
+- **Ícones sumidos (causa raiz):** o link do CDN do Tabler Icons estava
+  com o caminho errado (404 silencioso) — por isso nenhum ícone
+  aparecia em lugar nenhum do sistema, não só no menu. Corrigido em
+  `app/layout.tsx`.
+- **Fontes oficiais:** `Inter` (texto corrido) + `Poppins` (títulos de
+  seção/categoria), configuradas via `next/font` em `app/layout.tsx` e
+  expostas como `font-sans`/`font-heading` no Tailwind.
+- **Títulos de seção/categoria:** 40px em telas grandes, responsivos
+  (20px→32px→40px) em telas menores, usando `font-heading`.
+- **Capas:** sombra leve (`shadow-card`) para não ficarem sem contorno
+  no fundo preto; espaçamento de 2px de cada lado (`gap-x-[4px]`).
+- **Páginas de detalhes (filme/série):** imagem trocada de
+  `background-image` para `<img object-top>` (não corta mais o topo),
+  textos bem maiores para leitura a distância, e botão **Voltar**
+  (`components/BackButton.tsx`).
+- **Episódios:** cada linha agora mostra capa (16:9), nome, descrição
+  limitada a 2 linhas (`line-clamp-2`) e duração em destaque.
+- **Página de exibição (player):** virou tela cheia (`fixed inset-0`,
+  sem scroll vertical), com botão **Sair** que volta para `/filmes` ou
+  `/series` conforme o conteúdo. O seletor de áudio/legenda passou a
+  flutuar sobre o vídeo em vez de empurrar o layout.
+- **Banner hero da Home:** agora respeita a seção com `layout =
+  'featured'` em `home_sections` (categoria/ordenação) para escolher o
+  destaque, em vez de sempre pegar o melhor avaliado do catálogo
+  inteiro — se você já tinha configurado essa seção antes, ela deve
+  aparecer corretamente agora.
+
+## 12. Correções desta entrega (imagem do hero, tamanho das capas, performance na TV, menu mobile)
+
+- **Capas do hero:** `getHero()` na Home agora só usa a coluna
+  `backdrop`/`banner` do próprio título ou, na ausência dela, busca o
+  backdrop direto no TMDB pelo `tmdb_id` (`lib/tmdb.ts →
+  getBackdropDoTMDB`). Nunca usa qualquer outra fonte.
+- **Tamanho das capas:** criado `components/PosterGrid.tsx` — no
+  desktop/TV, cada capa tem largura MÁXIMA travada (170px, ajustável
+  via `LARGURA_MAX`) em vez de esticar para preencher a tela toda
+  (comportamento mais próximo do HBO Max real). Usado em Home, Filmes,
+  Séries, Minha Lista e "Títulos semelhantes".
+- **Performance/foco na LG webOS:** `hooks/useSpatialNavigation.ts`
+  agora tem throttle (ignora eventos repetidos em menos de 140ms,
+  comuns em controles remotos) e troca `scrollIntoView` suave por
+  instantâneo — isso deve eliminar o delay de vários segundos. Também
+  aumentei a penalidade de desalinhamento no cálculo de distância, pra
+  reduzir "pulos" de foco na direção errada. Além disso,
+  `PlatformProvider.tsx` agora refaz o foco inicial a CADA troca de
+  página (antes só rodava uma vez, no carregamento inicial — por isso
+  o D-pad "sumia" depois de navegar).
+- **Menu mobile:** `components/BottomNav.tsx` virou uma barra flutuante
+  com cantos arredondados, efeito vidro e sombra (estilo Telegram), com
+  ícone + legenda — incluí também o atalho para Minha Lista.
+- **Mobile — 2 capas por linha:** Home, Filmes e Séries agora mostram
+  2 capas por linha com rolagem horizontal em telas pequenas
+  (`PosterGrid`/`CategoryCarousel` já cuidam disso automaticamente).
+
+## 13. Notas do Agente QA Final
 
 - **Nenhuma tabela/coluna do Supabase é alterada** — o sistema apenas lê os
   dados existentes, exatamente como solicitado.

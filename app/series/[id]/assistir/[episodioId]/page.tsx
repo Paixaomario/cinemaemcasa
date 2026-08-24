@@ -8,6 +8,8 @@ async function getEpisodio(id: string): Promise<Episodio | null> {
   return data;
 }
 
+// Página de EXIBIÇÃO do episódio — tela cheia, sem rolagem vertical.
+// Botão Sair volta para a listagem de Séries.
 export default async function AssistirEpisodioPage({
   params,
   searchParams
@@ -19,25 +21,16 @@ export default async function AssistirEpisodioPage({
   if (!episodio) notFound();
 
   return (
-    <div>
-      <Player
-        src={episodio.arquivo}
-        poster={episodio.banner || episodio.imagem_500}
-        subtitles={episodio.subtitles}
-        audioTracks={episodio.audio_tracks}
-        contentId={String(episodio.id_n)}
-        nextEpisodeHref={
-          searchParams.proximo
-            ? `/series/${params.id}/assistir/${searchParams.proximo}`
-            : null
-        }
-      />
-      <div className="px-6 pt-4 pb-10">
-        <h1 className="text-[16px] font-medium">
-          {episodio.numero_episodio}. {episodio.titulo}
-        </h1>
-        <p className="text-[12px] text-textmuted mt-1">{episodio.descricao}</p>
-      </div>
-    </div>
+    <Player
+      src={episodio.arquivo}
+      poster={episodio.banner || episodio.imagem_500}
+      subtitles={episodio.subtitles}
+      audioTracks={episodio.audio_tracks}
+      contentId={String(episodio.id_n)}
+      nextEpisodeHref={
+        searchParams.proximo ? `/series/${params.id}/assistir/${searchParams.proximo}` : null
+      }
+      exitHref="/series"
+    />
   );
 }

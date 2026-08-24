@@ -30,7 +30,7 @@ export function TitleCard({ href, poster, titulo, ano, duracao, tall }: TitleCar
   return (
     <Link
       href={href}
-      className={`focusable relative block overflow-hidden bg-card rounded-[4px] w-full ${
+      className={`focusable relative block overflow-hidden bg-card rounded-[4px] w-full shadow-card ${
         tall ? 'aspect-[2/3]' : 'aspect-video'
       }`}
       onMouseEnter={start}

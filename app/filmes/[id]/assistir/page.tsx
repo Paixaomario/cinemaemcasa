@@ -8,25 +8,22 @@ async function getFilme(id: string): Promise<Cinema | null> {
   return data;
 }
 
-// Página de EXIBIÇÃO — só o player em tela cheia, separada da página
-// de detalhes (informações ficam em /filmes/[id]).
+// Página de EXIBIÇÃO — só o player em tela cheia, sem rolagem vertical,
+// separada da página de detalhes (informações ficam em /filmes/[id]).
+// Botão Sair volta para a listagem de Filmes.
 export default async function AssistirFilmePage({ params }: { params: { id: string } }) {
   const filme = await getFilme(params.id);
   if (!filme) notFound();
 
   return (
-    <div>
-      <Player
-        src={filme.url}
-        poster={filme.backdrop || filme.banner}
-        subtitles={filme.subtitles}
-        audioTracks={filme.audio_tracks}
-        contentId={String(filme.id)}
-        nextEpisodeHref={null}
-      />
-      <div className="px-6 pt-4 pb-10">
-        <h1 className="text-[16px] font-medium">{filme.titulo}</h1>
-      </div>
-    </div>
+    <Player
+      src={filme.url}
+      poster={filme.backdrop || filme.banner}
+      subtitles={filme.subtitles}
+      audioTracks={filme.audio_tracks}
+      contentId={String(filme.id)}
+      nextEpisodeHref={null}
+      exitHref="/filmes"
+    />
   );
 }

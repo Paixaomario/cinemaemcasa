@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { PosterGrid } from './PosterGrid';
 import { TitleCard } from './TitleCard';
 import type { Cinema } from '@/lib/types';
 
@@ -12,9 +13,14 @@ interface Props {
 
 const VISIBLE = 5;
 
-// Agente de Filmes/Séries: rolagem horizontal infinita. Ao avançar a
-// partir do último item, o índice volta direto ao primeiro via módulo —
-// nunca percorre os itens anteriores de novo.
+// Agente de Filmes/Séries.
+// Desktop/TV: rolagem horizontal infinita por botões — ao avançar a
+// partir do último item, o índice volta direto ao primeiro via módulo
+// (nunca percorre os itens anteriores de novo), com tiles em tamanho
+// travado (estilo HBO Max, via PosterGrid).
+// Mobile: rolagem horizontal simples por toque, 2 capas por linha,
+// mostrando TODOS os itens da categoria (sem loop programático — o
+// próprio gesto de arrastar já percorre a lista completa).
 export function CategoryCarousel({ titulo, items, basePath }: Props) {
   const [start, setStart] = useState(0);
   const total = items.length;
@@ -31,41 +37,50 @@ export function CategoryCarousel({ titulo, items, basePath }: Props) {
 
   return (
     <section className="px-3 py-4">
-      <h2 className="text-[18px] font-semibold text-white mb-2.5 px-1">{titulo}</h2>
-      <div className="flex items-center gap-1">
+      <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold text-white mb-3 px-1">
+        {titulo}
+      </h2>
+
+      {/* Desktop / TV */}
+      <div className="hidden md:flex items-center gap-1">
         {total > VISIBLE && (
-          <button
-            onClick={prev}
-            aria-label="Anterior"
-            className="focusable shrink-0 text-textmuted hover:text-white"
-          >
+          <button onClick={prev} aria-label="Anterior" className="focusable shrink-0 text-textmuted hover:text-white">
             <i className="ti ti-chevron-left text-xl" aria-hidden="true" />
           </button>
         )}
 
-        <div className="grid grid-cols-5 gap-1.5 flex-1">
-          {visible.map((item) => (
+        <div className="flex-1">
+          <PosterGrid
+            items={visible.map((item) => ({
+              id: item.id,
+              href: `/${basePath}/${item.id}`,
+              poster: item.poster || item.banner,
+              titulo: item.titulo,
+              ano: item.year
+            }))}
+          />
+        </div>
+
+        {total > VISIBLE && (
+          <button onClick={next} aria-label="Próximo" className="focusable shrink-0 text-textmuted hover:text-white">
+            <i className="ti ti-chevron-right text-xl" aria-hidden="true" />
+          </button>
+        )}
+      </div>
+
+      {/* Mobile: todos os itens, 2 por linha, rolagem por toque */}
+      <div className="flex md:hidden gap-1 overflow-x-auto -mx-3 px-3 snap-x snap-mandatory">
+        {items.map((item) => (
+          <div key={item.id} className="shrink-0 w-[47%] snap-start">
             <TitleCard
-              key={item.id}
               href={`/${basePath}/${item.id}`}
               poster={item.poster || item.banner}
               titulo={item.titulo}
               ano={item.year}
-              duracao={item.duration}
               tall
             />
-          ))}
-        </div>
-
-        {total > VISIBLE && (
-          <button
-            onClick={next}
-            aria-label="Próximo"
-            className="focusable shrink-0 text-textmuted hover:text-white"
-          >
-            <i className="ti ti-chevron-right text-xl" aria-hidden="true" />
-          </button>
-        )}
+          </div>
+        ))}
       </div>
     </section>
   );

@@ -29,6 +29,14 @@ const config: Config = {
       },
       borderRadius: {
         card: '8px'
+      },
+      fontFamily: {
+        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+        heading: ['var(--font-heading)', 'var(--font-sans)', 'system-ui', 'sans-serif']
+      },
+      boxShadow: {
+        // Sombra leve para as capas não ficarem "sem borda" no fundo preto.
+        card: '0 3px 12px rgba(0,0,0,0.6)'
       }
     }
   },
