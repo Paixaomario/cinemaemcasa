@@ -34,3 +34,41 @@ body {
     transition: none;
   }
 }
+
+/* Skin do Video.js no padrão visual do Cinema em Casa (substitui o azul
+   padrão da biblioteca pelas cores da marca — dourado em destaque,
+   igual ao efeito usado por players de streaming AAA). */
+.cinema-player-skin .video-js {
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+.cinema-player-skin .vjs-big-play-button {
+  background-color: rgba(29, 78, 122, 0.85);
+  border: none;
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  line-height: 80px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.cinema-player-skin .vjs-big-play-button:hover {
+  background-color: #256093;
+}
+.cinema-player-skin .vjs-control-bar {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent);
+  height: 4em;
+}
+.cinema-player-skin .vjs-play-progress,
+.cinema-player-skin .vjs-volume-level {
+  background-color: #e8c97a;
+}
+.cinema-player-skin .vjs-slider {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+.cinema-player-skin .vjs-play-progress:before {
+  color: #e8c97a;
+}
+.cinema-player-skin .vjs-loading-spinner {
+  border-color: #e8c97a;
+}

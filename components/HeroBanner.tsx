@@ -1,79 +1,72 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import type { Cinema } from '@/lib/types';
+import type { HeroData } from '@/lib/heroEnrichment';
 
 interface Props {
-  hero: Cinema;
+  hero: HeroData;
 }
 
 const TEMPO_CAPA_MS = 10_000;
 
-// Agente de Home: banner hero mostra a capa e, depois de 10s (mesmo
-// tempo de exibição do HBO Max), troca para o trailer do MESMO título
-// em loop mudo. Ao terminar o trailer, volta pra capa e reinicia o
-// ciclo — nunca mistura capa/trailer de títulos diferentes.
+// Agente de Home (banner hero, usado em Home/Filmes/Séries/Minha Lista/
+// Busca): proporção 16:9, mostra a capa e depois de 10s troca para o
+// trailer do MESMO título (mudo, loop até acabar, volta pra capa).
+// Sem botões de ação — só bandeira do país + classificação + duração e
+// até 2 linhas de descrição, no padrão de leitura a distância da TV.
 export function HeroBanner({ hero }: Props) {
   const [mostrandoTrailer, setMostrandoTrailer] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     setMostrandoTrailer(false);
     if (!hero.trailer) return;
-
     const t = setTimeout(() => setMostrandoTrailer(true), TEMPO_CAPA_MS);
     return () => clearTimeout(t);
   }, [hero.id, hero.trailer]);
 
-  const voltarParaCapa = () => setMostrandoTrailer(false);
+  const imagem = hero.backdrop || hero.banner;
 
   return (
-    <div className="relative min-h-[46vh] flex items-end px-6 pb-8 overflow-hidden bg-accent-soft">
+    <Link
+      href={hero.type === 'series' ? `/series/${hero.id}` : `/filmes/${hero.id}`}
+      className="focusable relative block w-full aspect-video overflow-hidden bg-accent-soft"
+    >
       {mostrandoTrailer && hero.trailer ? (
         <video
-          ref={videoRef}
           src={hero.trailer}
           autoPlay
           muted
           playsInline
-          onEnded={voltarParaCapa}
+          onEnded={() => setMostrandoTrailer(false)}
           className="absolute inset-0 w-full h-full object-cover"
         />
-      ) : (hero.backdrop || hero.banner) ? (
+      ) : imagem ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={hero.backdrop || hero.banner || undefined}
-          alt={hero.titulo}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        <img src={imagem} alt={hero.titulo} className="absolute inset-0 w-full h-full object-cover" />
       ) : null}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-black/5" />
 
-      <div className="relative z-10">
-        <p className="text-[11px] text-gold tracking-widest mb-2">
-          {hero.type === 'series' ? 'SÉRIE EM DESTAQUE' : 'FILME EM DESTAQUE'}
-        </p>
-        <h1 className="text-2xl font-medium mb-2 max-w-[360px]">{hero.titulo}</h1>
-        <p className="text-[13px] text-accent-hover mb-1">
-          {[hero.year, hero.genre, hero.duration].filter(Boolean).join(' · ')}
-        </p>
-        <p className="text-[13px] text-textmuted mb-4 max-w-[420px] line-clamp-3">{hero.description}</p>
-        <div className="flex gap-2">
-          <Link
-            href={hero.type === 'series' ? `/series/${hero.id}` : `/filmes/${hero.id}/assistir`}
-            className="focusable bg-accent text-white text-[13px] font-medium rounded-card px-5 py-2.5"
-          >
-            <i className="ti ti-player-play mr-1.5" aria-hidden="true" />
-            Assistir
-          </Link>
-          <button className="focusable bg-white/10 border border-border text-white text-[13px] font-medium rounded-card px-5 py-2.5">
-            <i className="ti ti-plus mr-1.5" aria-hidden="true" />
-            Minha lista
-          </button>
+      <div className="absolute left-6 md:left-10 bottom-6 md:bottom-10 right-6 md:right-1/3">
+        <h1 className="font-heading font-bold text-[26px] md:text-[42px] lg:text-[48px] leading-tight mb-2 drop-shadow-lg">
+          {hero.titulo}
+        </h1>
+        <div className="flex items-center gap-2 text-[14px] md:text-[17px] text-white/90 mb-2">
+          {hero.bandeira && <span>{hero.bandeira}</span>}
+          {hero.classificacao && (
+            <span className="border border-white/40 rounded px-1.5 py-0.5 text-[11px] md:text-[13px]">
+              {hero.classificacao}
+            </span>
+          )}
+          {hero.duration && <span>{hero.duration}</span>}
         </div>
+        {hero.description && (
+          <p className="text-[14px] md:text-[17px] text-white/85 leading-snug line-clamp-2 max-w-xl">
+            {hero.description}
+          </p>
+        )}
       </div>
-    </div>
+    </Link>
   );
 }

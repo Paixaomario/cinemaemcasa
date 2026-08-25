@@ -1,6 +1,7 @@
 import { supabaseServer } from '@/lib/supabase/server';
 import { PosterGrid } from '@/components/PosterGrid';
 import { BackButton } from '@/components/BackButton';
+import { AssistirJuntoButton } from '@/components/AssistirJuntoButton';
 import type { Cinema } from '@/lib/types';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -62,6 +63,7 @@ export default async function FilmeDetalhesPage({ params }: { params: { id: stri
               <i className="ti ti-plus mr-2" aria-hidden="true" />
               Minha lista
             </button>
+            <AssistirJuntoButton contentId={String(filme.id)} contentType="movie" />
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { supabaseServer } from '@/lib/supabase/server';
 import { HeroBanner } from '@/components/HeroBanner';
+import { enrichHero } from '@/lib/heroEnrichment';
 import { LiveSearch } from '@/components/LiveSearch';
 import type { Cinema } from '@/lib/types';
 
@@ -16,7 +17,8 @@ async function getHeroBusca(): Promise<Cinema | null> {
 // Agente da página de Busca: banner hero de destaque no topo + campo de
 // pesquisa em tempo real (ver components/LiveSearch.tsx) logo abaixo.
 export default async function BuscaPage() {
-  const hero = await getHeroBusca();
+  const heroBase = await getHeroBusca();
+  const hero = heroBase ? await enrichHero(heroBase) : null;
 
   return (
     <div>

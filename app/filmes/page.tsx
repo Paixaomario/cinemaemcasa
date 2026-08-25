@@ -1,6 +1,7 @@
 import { supabaseServer } from '@/lib/supabase/server';
 import { CategoryCarousel } from '@/components/CategoryCarousel';
 import { HeroBanner } from '@/components/HeroBanner';
+import { enrichHero } from '@/lib/heroEnrichment';
 import { CATEGORIAS_FILMES, categoriasDoTitulo } from '@/lib/categorias';
 import type { Cinema } from '@/lib/types';
 
@@ -22,7 +23,8 @@ async function getHeroFilme(filmes: Cinema[]): Promise<Cinema | null> {
 // o banner hero já identifica a seção visualmente.
 export default async function FilmesPage() {
   const filmes = await getTodosFilmes();
-  const hero = await getHeroFilme(filmes);
+  const heroBase = await getHeroFilme(filmes);
+  const hero = heroBase ? await enrichHero(heroBase) : null;
 
   // Cada título pode aparecer em mais de uma categoria (conforme o
   // campo `category` no banco), respeitando sempre a ordem e a lista

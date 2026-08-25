@@ -189,7 +189,41 @@ também.
   2 capas por linha com rolagem horizontal em telas pequenas
   (`PosterGrid`/`CategoryCarousel` já cuidam disso automaticamente).
 
-## 13. Notas do Agente QA Final
+## 14. Video.js, Assistir Juntos visível e refinamentos finais (esta entrega)
+
+- **Player agora usa Video.js:** `components/Player.tsx` foi reescrito
+  sobre a biblioteca [Video.js](https://videojs.com/), com skin
+  customizada nas cores da marca (dourado no lugar do azul padrão) —
+  ver `.cinema-player-skin` em `app/globals.css`. Rode `npm install`
+  para baixar a dependência (`video.js` + `@types/video.js` já estão no
+  `package.json`). Suporta MP4 nativamente; se algum dia os arquivos
+  virarem HLS/DASH (`.m3u8`/`.mpd`), o player já detecta pela extensão.
+- **"Assistir Juntos" agora tem botão:** o recurso já existia em código
+  (`/assistir-junto/[roomId]`, chat, emojis) mas não tinha nenhum
+  gatilho na interface — por isso "não aparecia em lugar nenhum".
+  Adicionei `components/AssistirJuntoButton.tsx` nas páginas de
+  detalhes de filme e série.
+- **Banner hero (Home/Filmes/Séries/Minha Lista/Busca):** agora 16:9,
+  sem botões de ação, com bandeira do país (via TMDB), classificação
+  (quando a tabela de origem tem essa coluna — séries têm, filmes não)
+  e duração, descrição limitada a 2 linhas. Resolvido por
+  `lib/heroEnrichment.ts`.
+- **Capas:** data/avaliação com fonte maior (+5px) e peso 500 (antes
+  quase ilegível); trailer toca automaticamente ao focar/passar o mouse
+  em qualquer capa do sistema (não só no hero); +10% de tamanho.
+- **Foco não pula mais de linha sozinho:** na ponta de uma linha de
+  capas, ele dá a volta para o outro extremo da mesma linha — só
+  cima/baixo trocam de linha.
+
+### Limitação conhecida
+A "classificação indicativa" no banner hero só aparece para séries
+(coluna `classificacao` existe na tabela `series`); a tabela `cinema`
+não tem uma coluna equivalente, então não exibo nada ali para filmes —
+preferi deixar em branco a inventar um valor. Se você tiver essa
+informação em outro lugar (categoria, TMDB certification), me diga
+onde que eu conecto.
+
+## 15. Notas do Agente QA Final
 
 - **Nenhuma tabela/coluna do Supabase é alterada** — o sistema apenas lê os
   dados existentes, exatamente como solicitado.

@@ -117,8 +117,51 @@ export function useSpatialNavigation() {
 
         // Navegação genérica: restrita à própria região (menu OU conteúdo).
         const pool = emMenu ? getFocusaveis(aside) : emConteudo ? getFocusaveis(main) : getFocusaveis(document.body);
-
         const currentRect = current.getBoundingClientRect();
+
+        // Regra 3: dentro de uma linha de capas (esquerda/direita), o
+        // foco nunca pula para outra linha sozinho — se não há vizinho
+        // na mesma linha na direção pressionada, ele dá a volta para o
+        // outro extremo DA MESMA LINHA. Só cima/baixo trocam de linha.
+        if ((direction === 'left' || direction === 'right') && !emMenu) {
+          const ALTURA_TOLERANCIA = 12;
+          const mesmaLinha = pool.filter((el) => {
+            if (el === current) return false;
+            const r = el.getBoundingClientRect();
+            return Math.abs(r.top - currentRect.top) < ALTURA_TOLERANCIA;
+          });
+
+          if (mesmaLinha.length > 0) {
+            const candidatosNaDirecao = mesmaLinha.filter((el) => {
+              const r = el.getBoundingClientRect();
+              return direction === 'right' ? r.left > currentRect.left : r.left < currentRect.left;
+            });
+
+            let alvoLinha: HTMLElement | null = null;
+            if (candidatosNaDirecao.length > 0) {
+              alvoLinha = candidatosNaDirecao.sort(
+                (a, b) => Math.abs(a.getBoundingClientRect().left - currentRect.left) -
+                  Math.abs(b.getBoundingClientRect().left - currentRect.left)
+              )[0];
+            } else {
+              // Chegou na ponta da linha: dá a volta para o outro extremo
+              // DESSA MESMA LINHA (nunca pula para a linha de baixo/cima).
+              alvoLinha = [...mesmaLinha].sort((a, b) => {
+                const ra = a.getBoundingClientRect().left;
+                const rb = b.getBoundingClientRect().left;
+                return direction === 'right' ? ra - rb : rb - ra;
+              })[0];
+            }
+
+            if (alvoLinha) {
+              e.preventDefault();
+              alvoLinha.focus();
+              alvoLinha.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+              return;
+            }
+          }
+        }
+
         let melhor: HTMLElement | null = null;
         let melhorDistancia = Infinity;
 

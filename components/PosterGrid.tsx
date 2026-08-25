@@ -7,6 +7,7 @@ interface Item {
   titulo: string;
   ano?: number | null;
   rating?: number | null;
+  trailer?: string | null;
 }
 
 interface Props {
@@ -18,7 +19,7 @@ interface Props {
 // grade PREENCHE a largura disponível (auto-fill + 1fr) em vez de
 // deixar sobra de espaço em telas grandes — mais colunas aparecem
 // conforme a tela cresce.
-const LARGURA_MIN = 187;
+const LARGURA_MIN = 206;
 
 export function PosterGrid({ items, tall = true }: Props) {
   if (items.length === 0) return null;
@@ -38,6 +39,7 @@ export function PosterGrid({ items, tall = true }: Props) {
             titulo={item.titulo}
             ano={item.ano}
             rating={item.rating}
+            trailer={item.trailer}
             tall={tall}
           />
         ))}
@@ -53,6 +55,7 @@ export function PosterGrid({ items, tall = true }: Props) {
               titulo={item.titulo}
               ano={item.ano}
               rating={item.rating}
+            trailer={item.trailer}
               tall={tall}
             />
           </div>

@@ -1,5 +1,6 @@
 import { supabaseServer } from '@/lib/supabase/server';
 import { BackButton } from '@/components/BackButton';
+import { AssistirJuntoButton } from '@/components/AssistirJuntoButton';
 import type { Serie, Temporada, Episodio } from '@/lib/types';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -70,6 +71,11 @@ export default async function SerieDetalhesPage({
             </p>
           )}
           <p className="text-[16px] md:text-[19px] text-white/90 leading-relaxed max-w-2xl">{serie.descricao}</p>
+          {episodios[0] && (
+            <div className="mt-4">
+              <AssistirJuntoButton contentId={String(episodios[0].id_n)} contentType="series" />
+            </div>
+          )}
         </div>
       </div>
 

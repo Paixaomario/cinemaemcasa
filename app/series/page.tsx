@@ -1,6 +1,7 @@
 import { supabaseServer } from '@/lib/supabase/server';
 import { CategoryCarousel } from '@/components/CategoryCarousel';
 import { HeroBanner } from '@/components/HeroBanner';
+import { enrichHero } from '@/lib/heroEnrichment';
 import type { Cinema, Serie } from '@/lib/types';
 
 function toCardShape(serie: Serie): Cinema {
@@ -54,10 +55,20 @@ export default async function SeriesPage() {
   );
 
   const todasSeries = grupos.flatMap((g) => g.items);
-  const hero =
+  const heroBase =
     todasSeries.length > 0
       ? [...todasSeries].sort((a, b) => (b.rating || 0) - (a.rating || 0))[0]
       : null;
+
+  let hero = null;
+  if (heroBase) {
+    const { data: serieOriginal } = await supabaseServer
+      .from('series')
+      .select('classificacao')
+      .eq('id_n', heroBase.id)
+      .maybeSingle();
+    hero = await enrichHero(heroBase, serieOriginal?.classificacao);
+  }
 
   return (
     <div>

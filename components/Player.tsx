@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import type Player from 'video.js/dist/types/player';
 
 interface Track {
   lang: string;
@@ -19,13 +20,14 @@ interface Props {
   exitHref: string;
 }
 
-// Agente de página de exibição: tela cheia SEM rolagem vertical
-// (fixed inset-0), com botão de Sair que volta para a página de Filmes
-// ou Séries (conforme o conteúdo). Legendas/áudio configuráveis
-// flutuam sobre o vídeo em vez de empurrar layout (o que causaria
-// scroll). Próximo episódio automático com contagem regressiva
-// cancelável + progresso salvo em view_progress.
-export function Player({
+// Agente de página de exibição: player construído sobre o Video.js
+// (biblioteca madura, pensada para catálogos grandes — suporta MP4,
+// HLS/DASH via plugins, controle de qualidade e é a mesma base usada
+// por várias plataformas de streaming), com skin customizada nas cores
+// da marca em vez do azul padrão do Video.js. Tela cheia, SEM rolagem
+// vertical, botão Sair que volta para Filmes/Séries, legendas/áudio
+// próprios flutuando sobre o vídeo, e próximo episódio automático.
+export function PlayerVideoJS({
   src,
   poster,
   subtitles,
@@ -35,23 +37,57 @@ export function Player({
   userId,
   exitHref
 }: Props) {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoElRef = useRef<HTMLVideoElement>(null);
+  const playerRef = useRef<Player | null>(null);
   const router = useRouter();
   const [countdown, setCountdown] = useState<number | null>(null);
   const [audioTrack, setAudioTrack] = useState(audioTracks?.[0]?.lang || '');
   const [subtitleTrack, setSubtitleTrack] = useState('off');
   const [menuAberto, setMenuAberto] = useState(false);
 
+  // Inicializa o Video.js uma vez por src.
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
+    if (!videoElRef.current || !src) return;
 
-    const onEnded = () => {
-      if (nextEpisodeHref) setCountdown(10);
+    let ativo = true;
+
+    (async () => {
+      const videojs = (await import('video.js')).default;
+      await import('video.js/dist/video-js.css');
+
+      if (!ativo || !videoElRef.current) return;
+
+      const player = videojs(videoElRef.current, {
+        autoplay: true,
+        controls: true,
+        fluid: false,
+        fill: true,
+        preload: 'auto',
+        playbackRates: [0.5, 1, 1.25, 1.5, 2],
+        sources: [{ src, type: guessType(src) }],
+        poster: poster || undefined
+      });
+
+      playerRef.current = player;
+
+      player.on('ended', () => {
+        if (nextEpisodeHref) setCountdown(10);
+      });
+
+      player.on('timeupdate', () => {
+        if (!userId) return;
+        const t = player.currentTime();
+        if (typeof t === 'number') saveProgress(t);
+      });
+    })();
+
+    return () => {
+      ativo = false;
+      playerRef.current?.dispose();
+      playerRef.current = null;
     };
-    video.addEventListener('ended', onEnded);
-    return () => video.removeEventListener('ended', onEnded);
-  }, [nextEpisodeHref]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [src]);
 
   useEffect(() => {
     if (countdown === null) return;
@@ -63,14 +99,14 @@ export function Player({
     return () => clearTimeout(t);
   }, [countdown, nextEpisodeHref, router]);
 
-  const saveProgress = async () => {
-    if (!userId || !videoRef.current) return;
+  const saveProgress = async (currentTime: number) => {
+    if (!userId) return;
     const { supabaseBrowser } = await import('@/lib/supabase/client');
     await supabaseBrowser.from('view_progress').upsert(
       {
         user_id: userId,
         content_id: contentId,
-        last_position: Math.floor(videoRef.current.currentTime),
+        last_position: Math.floor(currentTime),
         is_finished: false
       },
       { onConflict: 'user_id,content_id' }
@@ -78,40 +114,27 @@ export function Player({
   };
 
   return (
-    <div className="fixed inset-0 bg-black overflow-hidden">
-      <video
-        ref={videoRef}
-        src={src || undefined}
-        poster={poster || undefined}
-        controls
-        autoPlay
-        className="w-full h-full object-contain bg-black"
-        onTimeUpdate={saveProgress}
-      >
-        {subtitleTrack !== 'off' &&
-          subtitles?.map(
-            (s) =>
-              s.lang === subtitleTrack &&
-              s.url && <track key={s.lang} kind="subtitles" src={s.url} srcLang={s.lang} label={s.lang} default />
-          )}
-      </video>
+    <div className="fixed inset-0 bg-black overflow-hidden cinema-player-skin">
+      <div data-vjs-player className="w-full h-full">
+        <video ref={videoElRef} className="video-js w-full h-full" playsInline />
+      </div>
 
-      {/* Botão Sair — sempre visível, volta para a listagem (Filmes ou Séries) */}
+      {/* Botão Sair — volta para a listagem (Filmes ou Séries) */}
       <button
         onClick={() => router.push(exitHref)}
         aria-label="Sair"
-        className="focusable absolute top-5 left-5 z-30 w-11 h-11 rounded-full bg-black/75 flex items-center justify-center text-white"
+        className="focusable absolute top-5 left-5 z-30 w-11 h-11 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white"
       >
         <i className="ti ti-x text-xl" aria-hidden="true" />
       </button>
 
-      {/* Legendas/áudio: flutua sobre o vídeo, nunca empurra o layout (sem scroll) */}
+      {/* Legendas/áudio: flutua sobre o vídeo, nunca empurra layout */}
       {(audioTracks?.length || subtitles?.length) ? (
         <div className="absolute top-5 right-5 z-30">
           <button
             onClick={() => setMenuAberto((v) => !v)}
             aria-label="Áudio e legendas"
-            className="focusable w-11 h-11 rounded-full bg-black/75 flex items-center justify-center text-white"
+            className="focusable w-11 h-11 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white"
           >
             <i className="ti ti-adjustments-horizontal text-xl" aria-hidden="true" />
           </button>
@@ -178,3 +201,11 @@ export function Player({
     </div>
   );
 }
+
+function guessType(src: string): string {
+  if (src.endsWith('.m3u8')) return 'application/x-mpegURL';
+  if (src.endsWith('.mpd')) return 'application/dash+xml';
+  return 'video/mp4';
+}
+
+export { PlayerVideoJS as Player };

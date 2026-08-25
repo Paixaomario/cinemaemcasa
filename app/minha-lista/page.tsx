@@ -1,6 +1,7 @@
 import { supabaseServer } from '@/lib/supabase/server';
 import { PosterGrid } from '@/components/PosterGrid';
 import { HeroBanner } from '@/components/HeroBanner';
+import { enrichHero } from '@/lib/heroEnrichment';
 import type { Cinema, Serie } from '@/lib/types';
 
 function serieParaHero(s: Serie): Cinema {
@@ -75,7 +76,8 @@ export default async function MinhaListaPage() {
     titulo: s.titulo || '',
     poster: s.poster || s.capa,
     ano: s.ano,
-    rating: s.rating
+    rating: s.rating,
+    trailer: s.trailer
   }));
 
   const itensFilme = filmes.map((f) => ({
@@ -83,16 +85,20 @@ export default async function MinhaListaPage() {
     titulo: f.titulo,
     poster: f.poster || f.banner,
     ano: f.year,
-    rating: f.rating
+    rating: f.rating,
+    trailer: f.trailer
   }));
 
   const vazio = itensFilme.length === 0 && itensSerie.length === 0;
   // Agente de Minha Lista: banner hero com o item mais recente favoritado.
   const heroFonte = filmes[0] || (series[0] ? serieParaHero(series[0]) : null);
+  const hero = heroFonte
+    ? await enrichHero(heroFonte, series[0] && !filmes[0] ? series[0].classificacao : null)
+    : null;
 
   return (
     <div>
-      {heroFonte && <HeroBanner hero={heroFonte} />}
+      {heroFonte && <HeroBanner hero={hero!} />}
       <div className="px-3 pt-6 pb-10">
       <h1 className="text-xl font-medium mb-4 px-2">Minha lista</h1>
 
@@ -106,7 +112,7 @@ export default async function MinhaListaPage() {
         <div className="mb-6">
           <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold text-white mb-3 px-2">Filmes</h2>
           <PosterGrid
-            items={itensFilme.map((f) => ({ id: `f-${f.id}`, href: `/filmes/${f.id}`, poster: f.poster, titulo: f.titulo, ano: f.ano, rating: f.rating }))}
+            items={itensFilme.map((f) => ({ id: `f-${f.id}`, href: `/filmes/${f.id}`, poster: f.poster, titulo: f.titulo, ano: f.ano, rating: f.rating, trailer: f.trailer }))}
           />
         </div>
       )}
@@ -115,7 +121,7 @@ export default async function MinhaListaPage() {
         <div>
           <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold text-white mb-3 px-2">Séries</h2>
           <PosterGrid
-            items={itensSerie.map((s) => ({ id: `s-${s.id}`, href: `/series/${s.id}`, poster: s.poster, titulo: s.titulo, ano: s.ano, rating: s.rating }))}
+            items={itensSerie.map((s) => ({ id: `s-${s.id}`, href: `/series/${s.id}`, poster: s.poster, titulo: s.titulo, ano: s.ano, rating: s.rating, trailer: s.trailer }))}
           />
         </div>
       )}

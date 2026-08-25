@@ -27,7 +27,8 @@ export function HomeSectionRow({ titulo, items }: Props) {
           poster: item.poster || item.banner,
           titulo: item.titulo,
           ano: item.year,
-          rating: item.rating
+          rating: item.rating,
+          trailer: item.trailer
         }))}
       />
     </section>

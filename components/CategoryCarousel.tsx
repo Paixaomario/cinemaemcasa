@@ -24,13 +24,14 @@ export function CategoryCarousel({ titulo, items, basePath }: Props) {
 
       <div className="flex gap-1 overflow-x-auto -mx-3 px-3">
         {items.map((item) => (
-          <div key={item.id} className="shrink-0 w-[31%] md:w-[187px]">
+          <div key={item.id} className="shrink-0 w-[31%] md:w-[206px]">
             <TitleCard
               href={`/${basePath}/${item.id}`}
               poster={item.poster || item.banner}
               titulo={item.titulo}
               ano={item.year}
               rating={item.rating}
+              trailer={item.trailer}
               tall
             />
           </div>

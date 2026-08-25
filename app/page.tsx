@@ -1,6 +1,6 @@
 import { supabaseServer } from '@/lib/supabase/server';
 import { getHomeRecommendations } from '@/lib/recommendations';
-import { getBackdropDoTMDB } from '@/lib/tmdb';
+import { enrichHero } from '@/lib/heroEnrichment';
 import { HomeSectionRow } from '@/components/HomeSectionRow';
 import { HeroBanner } from '@/components/HeroBanner';
 import { PosterGrid } from '@/components/PosterGrid';
@@ -71,15 +71,7 @@ export default async function HomePage() {
   // Agente de indicações por IA: sempre a 4ª seção, restrita ao catálogo próprio.
   const recomendados = await getHomeRecommendations(null, 5);
 
-  // Agente de Home: a imagem do banner hero SEMPRE vem da coluna exata
-  // da tabela (backdrop/banner) ou, na ausência dela, do TMDB pelo
-  // tmdb_id salvo no próprio registro — nunca de outra fonte.
-  let heroResolvido = hero;
-  if (hero && !hero.backdrop && !hero.banner && hero.tmdb_id) {
-    const tmdbId = hero.tmdb_id;
-    const backdropTMDB = await getBackdropDoTMDB(tmdbId, hero.type === 'series' ? 'series' : 'movie');
-    if (backdropTMDB) heroResolvido = { ...hero, backdrop: backdropTMDB };
-  }
+  const heroResolvido = hero ? await enrichHero(hero) : null;
 
   const rows = [...sectionData];
   const heroSectionIndex = 3;
@@ -107,7 +99,8 @@ export default async function HomePage() {
               poster: item.poster || item.banner,
               titulo: item.titulo,
               ano: item.year,
-              rating: item.rating
+              rating: item.rating,
+              trailer: item.trailer
             }))}
           />
           <p className="text-[10px] text-textmuted mt-2">
