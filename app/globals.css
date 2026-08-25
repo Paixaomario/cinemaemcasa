@@ -29,6 +29,15 @@ body {
   position: relative;
 }
 
+/* O banner hero é grande demais para o mesmo zoom das capas pequenas —
+   usa um contorno mais discreto, sem escalar (evita "esticar" a imagem
+   de fundo inteira). */
+.focusable[data-hero]:focus-visible,
+.focusable[data-hero][data-focused='true'] {
+  transform: none;
+  box-shadow: inset 0 0 0 3px #e8c97a;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .focusable {
     transition: none;

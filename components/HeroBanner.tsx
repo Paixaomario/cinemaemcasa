@@ -25,12 +25,13 @@ export function HeroBanner({ hero }: Props) {
     return () => clearTimeout(t);
   }, [hero.id, hero.trailer]);
 
-  const imagem = hero.backdrop || hero.banner;
+  const imagem = hero.backdrop || hero.banner || hero.poster;
 
   return (
     <Link
       href={hero.type === 'series' ? `/series/${hero.id}` : `/filmes/${hero.id}`}
       className="focusable relative block w-full aspect-video overflow-hidden bg-accent-soft"
+      data-hero="true"
     >
       {mostrandoTrailer && hero.trailer ? (
         <video
