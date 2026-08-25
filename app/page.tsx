@@ -106,7 +106,8 @@ export default async function HomePage() {
               href: `/filmes/${item.id}`,
               poster: item.poster || item.banner,
               titulo: item.titulo,
-              ano: item.year
+              ano: item.year,
+              rating: item.rating
             }))}
           />
           <p className="text-[10px] text-textmuted mt-2">

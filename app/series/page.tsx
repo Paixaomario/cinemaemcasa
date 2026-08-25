@@ -1,5 +1,6 @@
 import { supabaseServer } from '@/lib/supabase/server';
 import { CategoryCarousel } from '@/components/CategoryCarousel';
+import { HeroBanner } from '@/components/HeroBanner';
 import type { Cinema, Serie } from '@/lib/types';
 
 function toCardShape(serie: Serie): Cinema {
@@ -30,7 +31,9 @@ function toCardShape(serie: Serie): Cinema {
 
 async function getGeneros(): Promise<string[]> {
   const { data } = await supabaseServer.from('series').select('genero').not('genero', 'is', null);
-  return Array.from(new Set((data || []).map((d) => d.genero as string)));
+  const unicos = Array.from(new Set((data || []).map((d) => d.genero as string)));
+  // Agente de Séries: categorias em ordem alfabética (pt-BR).
+  return unicos.sort((a, b) => a.localeCompare(b, 'pt-BR'));
 }
 
 async function getByGenero(genero: string): Promise<Cinema[]> {
@@ -42,18 +45,28 @@ async function getByGenero(genero: string): Promise<Cinema[]> {
   return (data || []).map(toCardShape);
 }
 
+// Agente da página Séries: sem título de página (removido a pedido) —
+// o banner hero já identifica a seção visualmente.
 export default async function SeriesPage() {
   const generos = await getGeneros();
   const grupos = await Promise.all(
     generos.map(async (g) => ({ genero: g, items: await getByGenero(g) }))
   );
 
+  const todasSeries = grupos.flatMap((g) => g.items);
+  const hero =
+    todasSeries.length > 0
+      ? [...todasSeries].sort((a, b) => (b.rating || 0) - (a.rating || 0))[0]
+      : null;
+
   return (
-    <div className="pt-8">
-      <h1 className="px-5 text-xl font-medium mb-2">Séries</h1>
-      {grupos.map(({ genero, items }) => (
-        <CategoryCarousel key={genero} titulo={genero} items={items} basePath="series" />
-      ))}
+    <div>
+      {hero && <HeroBanner hero={hero} />}
+      <div className="pt-4">
+        {grupos.map(({ genero, items }) => (
+          <CategoryCarousel key={genero} titulo={genero} items={items} basePath="series" />
+        ))}
+      </div>
     </div>
   );
 }

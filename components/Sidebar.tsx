@@ -24,18 +24,18 @@ export function Sidebar() {
     <aside
       className="
         group hidden md:flex md:flex-col md:justify-between md:shrink-0
-        w-[76px] hover:w-[220px] focus-within:w-[220px]
+        w-[92px] hover:w-[192px] focus-within:w-[192px]
         transition-[width] duration-300 ease-out
         bg-black/85 border-r border-white/10
         py-5 overflow-hidden
       "
     >
       <div>
-        <div className="px-[18px] mb-8 h-11 flex items-center relative">
+        <div className="px-[14px] mb-8 h-16 flex items-center relative">
           <Logo
             iconOnly
-            width={44}
-            className="absolute left-[18px] group-hover:opacity-0 group-focus-within:opacity-0 transition-opacity duration-200 shrink-0"
+            width={64}
+            className="absolute left-[14px] group-hover:opacity-0 group-focus-within:opacity-0 transition-opacity duration-200 shrink-0"
           />
           <Logo
             width={150}
@@ -55,16 +55,16 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`focusable flex items-center gap-3 px-[26px] py-3 text-sm whitespace-nowrap ${
+                className={`focusable flex items-center gap-3 pl-[26px] pr-[3px] py-3 text-sm whitespace-nowrap ${
                   active ? 'bg-accent/70 text-white border-l-2 border-gold' : 'text-white/90 hover:text-white'
                 }`}
               >
-                <i className={`ti ti-${item.icon} text-xl shrink-0 text-white`} aria-hidden="true" />
+                <i className={`ti ti-${item.icon} text-[30px] shrink-0 text-white`} aria-hidden="true" />
                 <span
                   className="
                     max-w-0 opacity-0 overflow-hidden
-                    group-hover:max-w-[140px] group-hover:opacity-100
-                    group-focus-within:max-w-[140px] group-focus-within:opacity-100
+                    group-hover:max-w-[115px] group-hover:opacity-100
+                    group-focus-within:max-w-[115px] group-focus-within:opacity-100
                     transition-all duration-300
                   "
                 >
@@ -79,14 +79,14 @@ export function Sidebar() {
       <div className="flex flex-col gap-1">
         <Link
           href="/admin"
-          className="focusable flex items-center gap-3 px-[26px] py-3 text-sm text-white/90 hover:text-white whitespace-nowrap"
+          className="focusable flex items-center gap-3 pl-[26px] pr-[3px] py-3 text-sm text-white/90 hover:text-white whitespace-nowrap"
         >
-          <i className="ti ti-settings text-xl shrink-0 text-white" aria-hidden="true" />
+          <i className="ti ti-settings text-[30px] shrink-0 text-white" aria-hidden="true" />
           <span
             className="
               max-w-0 opacity-0 overflow-hidden
-              group-hover:max-w-[140px] group-hover:opacity-100
-              group-focus-within:max-w-[140px] group-focus-within:opacity-100
+              group-hover:max-w-[115px] group-hover:opacity-100
+              group-focus-within:max-w-[115px] group-focus-within:opacity-100
               transition-all duration-300
             "
           >
@@ -95,7 +95,7 @@ export function Sidebar() {
         </Link>
         <Link
           href="/perfil"
-          className="focusable flex items-center gap-3 px-[26px] py-3 text-sm text-white/90 hover:text-white whitespace-nowrap"
+          className="focusable flex items-center gap-3 pl-[26px] pr-[3px] py-3 text-sm text-white/90 hover:text-white whitespace-nowrap"
         >
           <span className="w-[22px] h-[22px] rounded-full bg-accent flex items-center justify-center text-[10px] shrink-0">
             <i className="ti ti-user text-white" aria-hidden="true" />
@@ -103,8 +103,8 @@ export function Sidebar() {
           <span
             className="
               max-w-0 opacity-0 overflow-hidden
-              group-hover:max-w-[140px] group-hover:opacity-100
-              group-focus-within:max-w-[140px] group-focus-within:opacity-100
+              group-hover:max-w-[115px] group-hover:opacity-100
+              group-focus-within:max-w-[115px] group-focus-within:opacity-100
               transition-all duration-300
             "
           >

@@ -93,7 +93,8 @@ export default async function FilmeDetalhesPage({ params }: { params: { id: stri
               href: `/filmes/${r.id}`,
               poster: r.poster || r.banner,
               titulo: r.titulo,
-              ano: r.year
+              ano: r.year,
+              rating: r.rating
             }))}
           />
         </div>

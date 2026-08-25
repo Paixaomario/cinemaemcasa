@@ -1,6 +1,33 @@
 import { supabaseServer } from '@/lib/supabase/server';
 import { PosterGrid } from '@/components/PosterGrid';
+import { HeroBanner } from '@/components/HeroBanner';
 import type { Cinema, Serie } from '@/lib/types';
+
+function serieParaHero(s: Serie): Cinema {
+  return {
+    id: s.id_n,
+    titulo: s.titulo || '',
+    description: s.descricao,
+    tmdb_id: s.tmdb_id,
+    url: null,
+    trailer: s.trailer,
+    year: s.ano,
+    rating: s.rating,
+    duration: s.tmdb_runtime,
+    duration_seconds: null,
+    category: s.genero,
+    genre: s.genero,
+    type: 'series',
+    poster: s.poster || s.capa,
+    banner: s.banner,
+    backdrop: null,
+    created_at: '',
+    subtitles: null,
+    audio_tracks: null,
+    elenco: s.elenco,
+    relacionados: s.relacionados
+  };
+}
 
 // Agente de Minha Lista: lê a tabela `favorites` do usuário autenticado
 // e resolve cada item na tabela de origem (cinema ou series), sem
@@ -47,20 +74,26 @@ export default async function MinhaListaPage() {
     id: s.id_n,
     titulo: s.titulo || '',
     poster: s.poster || s.capa,
-    ano: s.ano
+    ano: s.ano,
+    rating: s.rating
   }));
 
   const itensFilme = filmes.map((f) => ({
     id: f.id,
     titulo: f.titulo,
     poster: f.poster || f.banner,
-    ano: f.year
+    ano: f.year,
+    rating: f.rating
   }));
 
   const vazio = itensFilme.length === 0 && itensSerie.length === 0;
+  // Agente de Minha Lista: banner hero com o item mais recente favoritado.
+  const heroFonte = filmes[0] || (series[0] ? serieParaHero(series[0]) : null);
 
   return (
-    <div className="px-3 pt-10 pb-10">
+    <div>
+      {heroFonte && <HeroBanner hero={heroFonte} />}
+      <div className="px-3 pt-6 pb-10">
       <h1 className="text-xl font-medium mb-4 px-2">Minha lista</h1>
 
       {vazio && (
@@ -73,7 +106,7 @@ export default async function MinhaListaPage() {
         <div className="mb-6">
           <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold text-white mb-3 px-2">Filmes</h2>
           <PosterGrid
-            items={itensFilme.map((f) => ({ id: `f-${f.id}`, href: `/filmes/${f.id}`, poster: f.poster, titulo: f.titulo, ano: f.ano }))}
+            items={itensFilme.map((f) => ({ id: `f-${f.id}`, href: `/filmes/${f.id}`, poster: f.poster, titulo: f.titulo, ano: f.ano, rating: f.rating }))}
           />
         </div>
       )}
@@ -82,10 +115,11 @@ export default async function MinhaListaPage() {
         <div>
           <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold text-white mb-3 px-2">Séries</h2>
           <PosterGrid
-            items={itensSerie.map((s) => ({ id: `s-${s.id}`, href: `/series/${s.id}`, poster: s.poster, titulo: s.titulo, ano: s.ano }))}
+            items={itensSerie.map((s) => ({ id: `s-${s.id}`, href: `/series/${s.id}`, poster: s.poster, titulo: s.titulo, ano: s.ano, rating: s.rating }))}
           />
         </div>
       )}
+    </div>
     </div>
   );
 }

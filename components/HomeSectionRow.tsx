@@ -26,7 +26,8 @@ export function HomeSectionRow({ titulo, items }: Props) {
           href: `/filmes/${item.id}`,
           poster: item.poster || item.banner,
           titulo: item.titulo,
-          ano: item.year
+          ano: item.year,
+          rating: item.rating
         }))}
       />
     </section>
