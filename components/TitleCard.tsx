@@ -40,6 +40,7 @@ export function TitleCard({ href, poster, titulo, ano, duracao, rating, trailer,
   return (
     <Link
       href={href}
+      data-focused={showPreview ? 'true' : undefined}
       className={`focusable relative block overflow-hidden bg-card rounded-[4px] w-full shadow-card ${
         tall ? 'aspect-[2/3]' : 'aspect-video'
       }`}

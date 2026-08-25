@@ -223,7 +223,57 @@ preferi deixar em branco a inventar um valor. Se você tiver essa
 informação em outro lugar (categoria, TMDB certification), me diga
 onde que eu conecto.
 
-## 15. Notas do Agente QA Final
+## 16. Correções desta entrega (regressões de layout, hero rotativo, player, capas)
+
+- **Menu lateral:** efeito vidro restaurado (`backdrop-blur-md` + fundo
+  translúcido), sem nenhuma borda, e agora **some completamente** na
+  página de exibição (`/assistir`). Usei um blur mais leve que antes
+  (`md` em vez de `xl`) para não repetir o problema de lentidão no
+  webOS que resolvemos há algumas entregas — é um equilíbrio entre
+  efeito visual e performance real na TV; se ainda notar lentidão
+  especificamente por causa do blur, me avise que eu removo de vez.
+- **Capas não "expandiam" ao passar o mouse:** o efeito usava
+  `:focus-visible`, que por padrão dos navegadores **não ativa com
+  mouse/toque**, só com teclado/D-pad — por isso funcionava (talvez) no
+  controle remoto mas nunca ao passar o mouse. Trocado para um controle
+  explícito via estado do React, funciona em qualquer dispositivo.
+- **Banner hero agora é ROTATIVO** (`components/HeroBanner.tsx` recebe
+  uma lista `heroes[]`, não mais um único item): mostra capa → trailer
+  do mesmo título → passa pro próximo título da lista, com indicadores
+  (bolinhas) no canto, igual Netflix/YouTube. Aplicado nas 5 páginas.
+  Continua 16:9 e ocupando 100% da largura (confirmei que não há
+  padding lateral no código — se ainda aparecer com espaçamento, pode
+  ser cache/deploy antigo; vale conferir se o site já está no commit
+  mais recente).
+- **Seção "Continuar assistindo"** criada do zero como a **primeira**
+  seção da Home (antes do restante), lendo `view_progress` do usuário
+  logado e resolvendo cada item como filme (`cinema`) ou episódio
+  (`episodios` → `temporadas` → série).
+- **Player:** botão trocado de "Sair" para **Voltar** (seta, canto
+  superior esquerdo) — mesma função, ícone mais claro. Adicionados
+  botões de **retroceder/avançar 10s** flutuando sobre o vídeo, além da
+  barra nativa do Video.js (play/pause, volume, velocidade, tela
+  cheia). Skin da marca já estava aplicada via `.cinema-player-skin`
+  em `app/globals.css`.
+- **Filmes/Séries com capas em branco/tamanho inconsistente:**
+  encontrei uma causa de código real — `CategoryCarousel.tsx` tinha uma
+  implementação de grade PRÓPRIA, diferente do `PosterGrid` usado na
+  Home/Minha Lista, causando tamanhos diferentes entre páginas. Unifiquei
+  os dois (Category Carousel agora só chama PosterGrid por dentro).
+  Além disso, adicionei um fallback: se uma série não tiver NENHUMA
+  imagem própria (`poster`/`capa`/`banner` vazios) mas tiver `tmdb_id`,
+  busco o pôster direto do TMDB.
+
+  **Isso é best-effort, não a correção definitiva:** eu não tenho
+  acesso direto ao seu Supabase pra confirmar se as colunas de imagem
+  da tabela `series` realmente estão vazias, ou se têm um valor mas em
+  formato de caminho relativo (não uma URL completa). Se depois
+  desse fallback ainda sobrar alguma capa em branco, me manda o valor
+  exato de `poster`/`capa`/`banner` de uma linha da tabela `series`
+  que eu ajusto com precisão cirúrgica em vez de tentar de novo às
+  cegas.
+
+## 17. Notas do Agente QA Final
 
 - **Nenhuma tabela/coluna do Supabase é alterada** — o sistema apenas lê os
   dados existentes, exatamente como solicitado.

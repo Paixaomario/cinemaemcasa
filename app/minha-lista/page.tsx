@@ -1,7 +1,7 @@
 import { supabaseServer } from '@/lib/supabase/server';
 import { PosterGrid } from '@/components/PosterGrid';
 import { HeroBanner } from '@/components/HeroBanner';
-import { enrichHero } from '@/lib/heroEnrichment';
+import { enrichHeroes } from '@/lib/heroEnrichment';
 import type { Cinema, Serie } from '@/lib/types';
 
 function serieParaHero(s: Serie): Cinema {
@@ -90,15 +90,14 @@ export default async function MinhaListaPage() {
   }));
 
   const vazio = itensFilme.length === 0 && itensSerie.length === 0;
-  // Agente de Minha Lista: banner hero com o item mais recente favoritado.
-  const heroFonte = filmes[0] || (series[0] ? serieParaHero(series[0]) : null);
-  const hero = heroFonte
-    ? await enrichHero(heroFonte, series[0] && !filmes[0] ? series[0].classificacao : null)
-    : null;
+  // Agente de Minha Lista: banner hero rotativo entre os favoritos mais recentes.
+  const heroesFonte = [...filmes.slice(0, 3), ...series.slice(0, 2).map(serieParaHero)];
+  const mapaClassificacao = new Map(series.map((s) => [s.id_n, s.classificacao] as const));
+  const heroes = await enrichHeroes(heroesFonte, mapaClassificacao);
 
   return (
     <div>
-      {heroFonte && <HeroBanner hero={hero!} />}
+      {heroes.length > 0 && <HeroBanner heroes={heroes} />}
       <div className="px-3 pt-6 pb-10">
       <h1 className="text-xl font-medium mb-4 px-2">Minha lista</h1>
 

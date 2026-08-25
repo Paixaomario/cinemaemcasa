@@ -1,10 +1,76 @@
 import { supabaseServer } from '@/lib/supabase/server';
 import { getHomeRecommendations } from '@/lib/recommendations';
-import { enrichHero } from '@/lib/heroEnrichment';
+import { enrichHeroes } from '@/lib/heroEnrichment';
 import { HomeSectionRow } from '@/components/HomeSectionRow';
 import { HeroBanner } from '@/components/HeroBanner';
 import { PosterGrid } from '@/components/PosterGrid';
 import type { Cinema, HomeSection } from '@/lib/types';
+
+interface ItemContinuar {
+  id: string;
+  href: string;
+  poster: string | null;
+  titulo: string;
+  ano: number | null;
+  rating: number | null;
+}
+
+async function getContinuarAssistindo(): Promise<ItemContinuar[]> {
+  // Agente de Home: seção "Continuar assistindo" — SEMPRE a primeira,
+  // lida da tabela view_progress do usuário logado. Cada content_id
+  // pode ser um filme (tabela cinema) ou um episódio (tabela
+  // episodios); tenta resolver nas duas, na ordem.
+  const { data: userData } = await supabaseServer.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) return [];
+
+  const { data: progresso } = await supabaseServer
+    .from('view_progress')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_finished', false)
+    .order('updated_at', { ascending: false })
+    .limit(8);
+
+  if (!progresso || progresso.length === 0) return [];
+
+  const itens: ItemContinuar[] = [];
+  for (const p of progresso) {
+    const idNum = Number(p.content_id);
+    if (Number.isNaN(idNum)) continue;
+
+    const { data: filme } = await supabaseServer.from('cinema').select('*').eq('id', idNum).maybeSingle();
+    if (filme) {
+      itens.push({
+        id: `c-${filme.id}`,
+        href: `/filmes/${filme.id}/assistir`,
+        poster: filme.poster || filme.banner,
+        titulo: filme.titulo,
+        ano: filme.year,
+        rating: filme.rating
+      });
+      continue;
+    }
+
+    const { data: episodio } = await supabaseServer
+      .from('episodios')
+      .select('*, temporadas(serie_id)')
+      .eq('id_n', idNum)
+      .maybeSingle();
+    if (episodio) {
+      const serieId = (episodio as unknown as { temporadas?: { serie_id: number } }).temporadas?.serie_id;
+      itens.push({
+        id: `e-${episodio.id_n}`,
+        href: serieId ? `/series/${serieId}/assistir/${episodio.id_n}` : '#',
+        poster: episodio.imagem_342 || episodio.banner,
+        titulo: episodio.titulo || '',
+        ano: null,
+        rating: null
+      });
+    }
+  }
+  return itens;
+}
 
 async function getSections(): Promise<HomeSection[]> {
   const { data } = await supabaseServer
@@ -30,32 +96,29 @@ async function getSectionItems(section: HomeSection): Promise<Cinema[]> {
   return data || [];
 }
 
-async function getHero(featuredSection: HomeSection | undefined): Promise<Cinema | null> {
-  // Agente de Home: o banner hero deve respeitar a configuração da seção
-  // com layout = 'featured' em home_sections (categorias/ordenação),
-  // em vez de ignorar essa configuração como antes.
+async function getHeroes(featuredSection: HomeSection | undefined): Promise<Cinema[]> {
+  // Agente de Home: o banner hero ROTATIVO respeita a configuração da
+  // seção com layout = 'featured' em home_sections (categorias/
+  // ordenação) e mostra vários títulos em sequência, não só um.
   if (featuredSection) {
-    let query = supabaseServer.from('cinema').select('*').limit(1);
+    let query = supabaseServer.from('cinema').select('*').limit(5);
     if (featuredSection.categorias && featuredSection.categorias.length > 0) {
       query = query.in('category', featuredSection.categorias);
     }
     if (featuredSection.ordenacao === 'rating_desc') query = query.order('rating', { ascending: false });
     else if (featuredSection.ordenacao === 'year_desc') query = query.order('year', { ascending: false });
-    else if (featuredSection.ordenacao === 'random') query = query.order('created_at', { ascending: false });
     else query = query.order('created_at', { ascending: false });
 
-    const { data } = await query.maybeSingle();
-    if (data) return data;
+    const { data } = await query;
+    if (data && data.length > 0) return data;
   }
 
-  // Sem seção 'featured' configurada: usa o melhor avaliado do catálogo.
   const { data } = await supabaseServer
     .from('cinema')
     .select('*')
     .order('rating', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  return data;
+    .limit(5);
+  return data || [];
 }
 
 export default async function HomePage() {
@@ -63,15 +126,16 @@ export default async function HomePage() {
   const secaoFeatured = todasSecoes.find((s) => s.layout === 'featured');
   const secoesLinha = todasSecoes.filter((s) => s.layout !== 'featured');
 
-  const [hero, sectionData] = await Promise.all([
-    getHero(secaoFeatured),
-    Promise.all(secoesLinha.map(async (s) => ({ section: s, items: await getSectionItems(s) })))
+  const [heroesBase, sectionData, continuarAssistindo] = await Promise.all([
+    getHeroes(secaoFeatured),
+    Promise.all(secoesLinha.map(async (s) => ({ section: s, items: await getSectionItems(s) }))),
+    getContinuarAssistindo()
   ]);
 
   // Agente de indicações por IA: sempre a 4ª seção, restrita ao catálogo próprio.
   const recomendados = await getHomeRecommendations(null, 5);
 
-  const heroResolvido = hero ? await enrichHero(hero) : null;
+  const heroes = await enrichHeroes(heroesBase);
 
   const rows = [...sectionData];
   const heroSectionIndex = 3;
@@ -80,7 +144,16 @@ export default async function HomePage() {
 
   return (
     <div>
-      {heroResolvido && <HeroBanner hero={heroResolvido} />}
+      {heroes.length > 0 && <HeroBanner heroes={heroes} />}
+
+      {continuarAssistindo.length > 0 && (
+        <section className="px-3 py-3">
+          <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold text-white mb-3 px-1">
+            Continuar assistindo
+          </h2>
+          <PosterGrid items={continuarAssistindo} tall={false} />
+        </section>
+      )}
 
       {beforeAI.map(({ section, items }) => (
         <HomeSectionRow key={section.id} titulo={section.titulo} items={items} />

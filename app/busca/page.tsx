@@ -1,28 +1,27 @@
 import { supabaseServer } from '@/lib/supabase/server';
 import { HeroBanner } from '@/components/HeroBanner';
-import { enrichHero } from '@/lib/heroEnrichment';
+import { enrichHeroes } from '@/lib/heroEnrichment';
 import { LiveSearch } from '@/components/LiveSearch';
 import type { Cinema } from '@/lib/types';
 
-async function getHeroBusca(): Promise<Cinema | null> {
+async function getHeroesBusca(): Promise<Cinema[]> {
   const { data } = await supabaseServer
     .from('cinema')
     .select('*')
     .order('rating', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  return data;
+    .limit(5);
+  return data || [];
 }
 
-// Agente da página de Busca: banner hero de destaque no topo + campo de
+// Agente da página de Busca: banner hero rotativo no topo + campo de
 // pesquisa em tempo real (ver components/LiveSearch.tsx) logo abaixo.
 export default async function BuscaPage() {
-  const heroBase = await getHeroBusca();
-  const hero = heroBase ? await enrichHero(heroBase) : null;
+  const heroesBase = await getHeroesBusca();
+  const heroes = await enrichHeroes(heroesBase);
 
   return (
     <div>
-      {hero && <HeroBanner hero={hero} />}
+      {heroes.length > 0 && <HeroBanner heroes={heroes} />}
       <LiveSearch />
     </div>
   );

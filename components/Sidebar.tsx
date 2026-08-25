@@ -12,13 +12,15 @@ const ITEMS = [
   { href: '/busca', label: 'Buscar', icon: 'search' }
 ];
 
-// Agente de menu lateral: efeito vidro (glass), encolhido mostrando só
-// ícones (brancos, para contraste) quando não está em uso. Expande com
-// nomes ao passar o mouse OU ao receber foco por controle remoto/setas
-// (via :focus-within, sem depender de JS) — mesmo comportamento em Web
-// e Smart TV.
+// Agente de menu lateral: efeito vidro (glass) de verdade — fundo
+// translúcido com blur — sem nenhuma borda, encolhido mostrando só
+// ícones brancos quando não está em uso, expandindo com nomes ao focar
+// (mouse ou controle remoto/setas via :focus-within). Some por completo
+// na página de exibição (player), que precisa da tela inteira.
 export function Sidebar() {
   const pathname = usePathname();
+
+  if (pathname.includes('/assistir')) return null;
 
   return (
     <aside
@@ -26,7 +28,7 @@ export function Sidebar() {
         group hidden md:flex md:flex-col md:justify-between md:shrink-0
         w-[92px] hover:w-[192px] focus-within:w-[192px]
         transition-[width] duration-300 ease-out
-        bg-black/85 border-r border-white/10
+        bg-black/35 backdrop-blur-md
         py-5 overflow-hidden
       "
     >

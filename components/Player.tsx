@@ -11,7 +11,7 @@ import 'video.js/dist/video-js.css';
 type VideoJsPlayer = {
   dispose: () => void;
   on: (evento: string, cb: (...args: unknown[]) => void) => void;
-  currentTime: () => number | undefined;
+  currentTime: (segundos?: number) => number | undefined;
 };
 
 interface Track {
@@ -54,6 +54,11 @@ export function PlayerVideoJS({
   const [audioTrack, setAudioTrack] = useState(audioTracks?.[0]?.lang || '');
   const [subtitleTrack, setSubtitleTrack] = useState('off');
   const [menuAberto, setMenuAberto] = useState(false);
+
+  const pular = (segundos: number) => {
+    const atual = playerRef.current?.currentTime();
+    if (typeof atual === 'number') playerRef.current?.currentTime(atual + segundos);
+  };
 
   // Inicializa o Video.js uma vez por src.
   useEffect(() => {
@@ -128,14 +133,33 @@ export function PlayerVideoJS({
         <video ref={videoElRef} className="video-js w-full h-full" playsInline />
       </div>
 
-      {/* Botão Sair — volta para a listagem (Filmes ou Séries) */}
+      {/* Botão Voltar — volta para a listagem (Filmes ou Séries) */}
       <button
         onClick={() => router.push(exitHref)}
-        aria-label="Sair"
+        aria-label="Voltar"
         className="focusable absolute top-5 left-5 z-30 w-11 h-11 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white"
       >
-        <i className="ti ti-x text-xl" aria-hidden="true" />
+        <i className="ti ti-arrow-left text-xl" aria-hidden="true" />
       </button>
+
+      {/* Controles estilo Netflix: retroceder/avançar 10s, sobre o vídeo,
+          além da barra nativa do Video.js (play/pause, volume, tela cheia). */}
+      <div className="absolute inset-x-0 bottom-[4.5em] flex items-center justify-center gap-10 z-20 pointer-events-none">
+        <button
+          onClick={() => pular(-10)}
+          aria-label="Retroceder 10 segundos"
+          className="focusable pointer-events-auto w-12 h-12 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white"
+        >
+          <i className="ti ti-rewind-backward-10 text-2xl" aria-hidden="true" />
+        </button>
+        <button
+          onClick={() => pular(10)}
+          aria-label="Avançar 10 segundos"
+          className="focusable pointer-events-auto w-12 h-12 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white"
+        >
+          <i className="ti ti-rewind-forward-10 text-2xl" aria-hidden="true" />
+        </button>
+      </div>
 
       {/* Legendas/áudio: flutua sobre o vídeo, nunca empurra layout */}
       {(audioTracks?.length || subtitles?.length) ? (

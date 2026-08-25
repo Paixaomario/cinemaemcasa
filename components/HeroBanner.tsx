@@ -5,26 +5,42 @@ import Link from 'next/link';
 import type { HeroData } from '@/lib/heroEnrichment';
 
 interface Props {
-  hero: HeroData;
+  heroes: HeroData[];
 }
 
 const TEMPO_CAPA_MS = 10_000;
+const TEMPO_SEM_TRAILER_MS = 15_000;
 
-// Agente de Home (banner hero, usado em Home/Filmes/Séries/Minha Lista/
-// Busca): proporção 16:9, mostra a capa e depois de 10s troca para o
-// trailer do MESMO título (mudo, loop até acabar, volta pra capa).
-// Sem botões de ação — só bandeira do país + classificação + duração e
-// até 2 linhas de descrição, no padrão de leitura a distância da TV.
-export function HeroBanner({ hero }: Props) {
+// Agente de Home (banner hero — usado em Home/Filmes/Séries/Minha
+// Lista/Busca): ROTATIVO entre vários títulos (igual Netflix/YouTube),
+// não fica travado sempre no mesmo. Para cada título do ciclo: mostra a
+// capa por 10s, depois o trailer do MESMO título em loop mudo; ao
+// terminar o trailer (ou depois de ~15s se não houver trailer), passa
+// pro próximo título da lista, voltando ao primeiro no fim.
+// Proporção 16:9, ocupa 100% da largura, sem espaçamento lateral.
+export function HeroBanner({ heroes }: Props) {
+  const [indice, setIndice] = useState(0);
   const [mostrandoTrailer, setMostrandoTrailer] = useState(false);
+
+  const hero = heroes[indice];
 
   useEffect(() => {
     setMostrandoTrailer(false);
-    if (!hero.trailer) return;
+    if (!hero) return;
+
+    if (!hero.trailer) {
+      const t = setTimeout(() => avancar(), TEMPO_SEM_TRAILER_MS);
+      return () => clearTimeout(t);
+    }
+
     const t = setTimeout(() => setMostrandoTrailer(true), TEMPO_CAPA_MS);
     return () => clearTimeout(t);
-  }, [hero.id, hero.trailer]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [indice, hero?.id]);
 
+  const avancar = () => setIndice((i) => (i + 1) % heroes.length);
+
+  if (!hero) return null;
   const imagem = hero.backdrop || hero.banner || hero.poster;
 
   return (
@@ -35,16 +51,22 @@ export function HeroBanner({ hero }: Props) {
     >
       {mostrandoTrailer && hero.trailer ? (
         <video
+          key={`trailer-${hero.id}`}
           src={hero.trailer}
           autoPlay
           muted
           playsInline
-          onEnded={() => setMostrandoTrailer(false)}
+          onEnded={avancar}
           className="absolute inset-0 w-full h-full object-cover"
         />
       ) : imagem ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={imagem} alt={hero.titulo} className="absolute inset-0 w-full h-full object-cover" />
+        <img
+          key={`capa-${hero.id}`}
+          src={imagem}
+          alt={hero.titulo}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
       ) : null}
 
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-black/5" />
@@ -68,6 +90,17 @@ export function HeroBanner({ hero }: Props) {
           </p>
         )}
       </div>
+
+      {heroes.length > 1 && (
+        <div className="absolute bottom-3 right-4 flex gap-1.5 z-10">
+          {heroes.map((h, i) => (
+            <span
+              key={h.id}
+              className={`w-1.5 h-1.5 rounded-full ${i === indice ? 'bg-gold' : 'bg-white/40'}`}
+            />
+          ))}
+        </div>
+      )}
     </Link>
   );
 }

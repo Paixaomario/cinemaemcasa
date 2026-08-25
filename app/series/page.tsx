@@ -1,7 +1,8 @@
 import { supabaseServer } from '@/lib/supabase/server';
 import { CategoryCarousel } from '@/components/CategoryCarousel';
 import { HeroBanner } from '@/components/HeroBanner';
-import { enrichHero } from '@/lib/heroEnrichment';
+import { enrichHeroes } from '@/lib/heroEnrichment';
+import { getPosterDoTMDB } from '@/lib/tmdb';
 import type { Cinema, Serie } from '@/lib/types';
 
 function toCardShape(serie: Serie): Cinema {
@@ -30,6 +31,15 @@ function toCardShape(serie: Serie): Cinema {
   };
 }
 
+// Se a série não tem NENHUMA imagem própria (poster/capa/banner vazios
+// no Supabase) mas tem tmdb_id, busca o pôster no TMDB como último
+// recurso — evita capa em branco quando o dado só existe lá fora.
+async function comFallbackDeCapa(item: Cinema): Promise<Cinema> {
+  if (item.poster || item.banner || !item.tmdb_id) return item;
+  const posterTMDB = await getPosterDoTMDB(item.tmdb_id, 'series');
+  return posterTMDB ? { ...item, poster: posterTMDB } : item;
+}
+
 async function getGeneros(): Promise<string[]> {
   const { data } = await supabaseServer.from('series').select('genero').not('genero', 'is', null);
   const unicos = Array.from(new Set((data || []).map((d) => d.genero as string)));
@@ -43,7 +53,8 @@ async function getByGenero(genero: string): Promise<Cinema[]> {
     .select('*')
     .eq('genero', genero)
     .order('created_at', { ascending: false });
-  return (data || []).map(toCardShape);
+  const itens = (data || []).map(toCardShape);
+  return Promise.all(itens.map(comFallbackDeCapa));
 }
 
 // Agente da página Séries: sem título de página (removido a pedido) —
@@ -55,24 +66,21 @@ export default async function SeriesPage() {
   );
 
   const todasSeries = grupos.flatMap((g) => g.items);
-  const heroBase =
-    todasSeries.length > 0
-      ? [...todasSeries].sort((a, b) => (b.rating || 0) - (a.rating || 0))[0]
-      : null;
+  const heroesBase = [...todasSeries].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 5);
 
-  let hero = null;
-  if (heroBase) {
-    const { data: serieOriginal } = await supabaseServer
-      .from('series')
-      .select('classificacao')
-      .eq('id_n', heroBase.id)
-      .maybeSingle();
-    hero = await enrichHero(heroBase, serieOriginal?.classificacao);
-  }
+  const idsHero = heroesBase.map((h) => h.id);
+  const { data: classificacoes } = idsHero.length
+    ? await supabaseServer.from('series').select('id_n, classificacao').in('id_n', idsHero)
+    : { data: [] as { id_n: number; classificacao: string | null }[] };
+
+  const mapaClassificacao = new Map(
+    (classificacoes || []).map((c) => [c.id_n, c.classificacao] as const)
+  );
+  const heroes = await enrichHeroes(heroesBase, mapaClassificacao);
 
   return (
     <div>
-      {hero && <HeroBanner hero={hero} />}
+      {heroes.length > 0 && <HeroBanner heroes={heroes} />}
       <div className="pt-4">
         {grupos.map(({ genero, items }) => (
           <CategoryCarousel key={genero} titulo={genero} items={items} basePath="series" />

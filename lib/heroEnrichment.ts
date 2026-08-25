@@ -7,6 +7,18 @@ export interface HeroData extends Cinema {
 }
 
 /**
+ * Mesma resolução do enrichHero, mas para uma LISTA de títulos — usada
+ * pelo banner hero rotativo (várias capas em sequência, como Netflix/
+ * YouTube), em vez de mostrar sempre o mesmo único título.
+ */
+export async function enrichHeroes(
+  bases: Cinema[],
+  classificacaoPorId?: Map<number | string, string | null>
+): Promise<HeroData[]> {
+  return Promise.all(bases.map((b) => enrichHero(b, classificacaoPorId?.get(b.id) ?? null)));
+}
+
+/**
  * Resolve os dados extras do banner hero, usados nas 5 páginas que o
  * exibem (Home, Filmes, Séries, Minha Lista, Busca):
  *  - imagem: coluna backdrop/banner do próprio título ou, na ausência,
