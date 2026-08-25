@@ -2,7 +2,17 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type Player from 'video.js/dist/types/player';
+import 'video.js/dist/video-js.css';
+
+// Tipagem do player mantida solta (sem importar um caminho interno do
+// pacote video.js) — caminhos internos como 'video.js/dist/types/...'
+// podem mudar entre versões e quebrar o build no Vercel. O player em
+// si continua 100% funcional; só a checagem de tipo fica mais simples.
+type VideoJsPlayer = {
+  dispose: () => void;
+  on: (evento: string, cb: (...args: unknown[]) => void) => void;
+  currentTime: () => number | undefined;
+};
 
 interface Track {
   lang: string;
@@ -38,7 +48,7 @@ export function PlayerVideoJS({
   exitHref
 }: Props) {
   const videoElRef = useRef<HTMLVideoElement>(null);
-  const playerRef = useRef<Player | null>(null);
+  const playerRef = useRef<VideoJsPlayer | null>(null);
   const router = useRouter();
   const [countdown, setCountdown] = useState<number | null>(null);
   const [audioTrack, setAudioTrack] = useState(audioTracks?.[0]?.lang || '');
@@ -53,7 +63,6 @@ export function PlayerVideoJS({
 
     (async () => {
       const videojs = (await import('video.js')).default;
-      await import('video.js/dist/video-js.css');
 
       if (!ativo || !videoElRef.current) return;
 
