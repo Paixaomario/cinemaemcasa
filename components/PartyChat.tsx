@@ -123,7 +123,7 @@ export function PartyChat({ roomId, nome }: Props) {
         >
           <i className="ti ti-mood-smile" aria-hidden="true" />
         </button>
-        <button onClick={() => enviar(texto)} aria-label="Enviar" className="focusable text-accent-hover text-lg">
+        <button onClick={() => enviar(texto)} aria-label="Enviar" className="focusable text-white text-lg">
           <i className="ti ti-send" aria-hidden="true" />
         </button>
 

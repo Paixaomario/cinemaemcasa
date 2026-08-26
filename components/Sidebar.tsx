@@ -25,7 +25,8 @@ export function Sidebar() {
   return (
     <aside
       className="
-        group hidden md:flex md:flex-col md:justify-between md:shrink-0
+        group hidden md:flex md:flex-col md:justify-between
+        fixed inset-y-0 left-0 z-40
         w-[92px] hover:w-[192px] focus-within:w-[192px]
         transition-[width] duration-300 ease-out
         bg-black/35 backdrop-blur-md

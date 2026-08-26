@@ -273,7 +273,54 @@ onde que eu conecto.
   que eu ajusto com precisão cirúrgica em vez de tentar de novo às
   cegas.
 
-## 17. Notas do Agente QA Final
+## 18. Correções desta entrega (regressão do carrossel, layout do menu, textos, player)
+
+- **Carrossel de categorias voltou a ser UMA linha só, com loop
+  infinito de verdade:** na entrega anterior eu unifiquei
+  `CategoryCarousel` com o `PosterGrid` pensando em consistência de
+  tamanho, mas isso quebrou a rolagem horizontal (virou grade com
+  várias linhas). Desfiz isso — `CategoryCarousel` agora é dedicado,
+  com uma linha, `overflow-x-auto`, e loop infinito real (a lista é
+  duplicada uma vez; ao chegar perto do fim, o scroll salta de volta
+  pro meio de forma imperceptível). Os itens duplicados ficam marcados
+  para o D-pad não parar neles.
+- **Indicadores (bolinhas) removidos** do banner hero.
+- **Menu lateral agora "flutua" sobre o conteúdo** (`position: fixed`)
+  em vez de empurrar a página — por isso o banner hero consegue
+  começar atrás dele (mesmo efeito visual do HBO Max/Netflix, com o
+  menu translúcido por cima).
+- **Capas +10% novamente** (206px → 227px) e **ano/avaliação bem
+  maiores** (de 15px para 38px). Não consegui aplicar literalmente
+  "3x" (45px) porque nesse tamanho o ano e a avaliação se sobrepõem
+  numa capa de ~227px de largura — 38px é o maior tamanho que ainda
+  cabe os dois lado a lado sem cortar. Se quiser ainda maior, dá pra
+  aumentar mais a capa em si pra abrir espaço.
+- **Legendas do player maiores:** `::cue` em `app/globals.css`, com um
+  tamanho ainda maior a partir de telas de 1024px+ (computador, smart
+  TV, projetor).
+- **Textos em azul ilegível:** encontrei e troquei — eram as linhas de
+  ano/duração/categoria nas páginas de detalhes e o ícone de enviar no
+  chat, que usavam a cor de destaque azul como cor de TEXTO (baixo
+  contraste). Agora usam branco translúcido; o azul continua reservado
+  pra botões/ícones de ação.
+- **Assistir Juntos agora gera link compartilhável:** depois de criar a
+  sala, aparece o link (já curto, 7 caracteres de ID) com o nome do
+  conteúdo na mensagem, botão direto pro WhatsApp (`wa.me`) e botão de
+  copiar.
+
+### Sobre os itens que pareciam "não corrigidos": rotação do hero e trailer nas capas
+Revisei `HeroBanner.tsx` e `TitleCard.tsx` a fundo — o código dessas
+duas coisas está correto (rotação por lista de títulos, troca pra
+trailer no foco). Se ainda não aparecem no seu ambiente depois deste
+deploy, são dois motivos possíveis:
+1. O deploy anterior não chegou a ir ao ar (já aconteceu antes nesta
+   conversa) — vale conferir o hash do commit mais recente na Vercel.
+2. Os registros do seu banco realmente não têm valor na coluna
+   `trailer` — nesse caso não há capa/hero que consiga mostrar um
+   trailer que não existe. Pode confirmar abrindo um registro na tabela
+   `cinema` ou `series` e olhando se `trailer` tem uma URL preenchida?
+
+## 19. Notas do Agente QA Final
 
 - **Nenhuma tabela/coluna do Supabase é alterada** — o sistema apenas lê os
   dados existentes, exatamente como solicitado.

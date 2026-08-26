@@ -62,7 +62,7 @@ export default async function SerieDetalhesPage({
           <h1 className="font-heading font-bold text-[32px] md:text-[48px] lg:text-[56px] leading-tight mb-3">
             {serie.titulo}
           </h1>
-          <p className="text-[16px] md:text-[20px] text-accent-hover mb-2">
+          <p className="text-[16px] md:text-[20px] text-white/80 mb-2">
             {[serie.ano, `${temporadas.length} temporadas`, serie.classificacao].filter(Boolean).join(' · ')}
           </p>
           {serie.rating !== null && (
@@ -73,7 +73,7 @@ export default async function SerieDetalhesPage({
           <p className="text-[16px] md:text-[19px] text-white/90 leading-relaxed max-w-2xl">{serie.descricao}</p>
           {episodios[0] && (
             <div className="mt-4">
-              <AssistirJuntoButton contentId={String(episodios[0].id_n)} contentType="series" />
+              <AssistirJuntoButton contentId={String(episodios[0].id_n)} contentType="series" titulo={serie.titulo || ''} />
             </div>
           )}
         </div>

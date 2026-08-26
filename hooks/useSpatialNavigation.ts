@@ -14,7 +14,9 @@ const INTERVALO_MINIMO_MS = 140;
 function getFocusaveis(container: ParentNode | null): HTMLElement[] {
   if (!container) return [];
   return Array.from(container.querySelectorAll<HTMLElement>('.focusable')).filter(
-    (el) => el.offsetParent !== null // ignora elementos escondidos (display:none)
+    (el) =>
+      el.offsetParent !== null && // ignora elementos escondidos (display:none)
+      !el.closest('[data-nav-ignore]') // ignora clones do loop infinito dos carrosséis
   );
 }
 

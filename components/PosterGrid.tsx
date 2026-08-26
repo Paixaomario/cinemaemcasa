@@ -19,7 +19,7 @@ interface Props {
 // grade PREENCHE a largura disponível (auto-fill + 1fr) em vez de
 // deixar sobra de espaço em telas grandes — mais colunas aparecem
 // conforme a tela cresce.
-const LARGURA_MIN = 206;
+const LARGURA_MIN = 227;
 
 export function PosterGrid({ items, tall = true }: Props) {
   if (items.length === 0) return null;

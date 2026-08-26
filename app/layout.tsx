@@ -41,10 +41,8 @@ export default function RootLayout({
       <body className="bg-black text-white font-sans">
         <SplashScreen />
         <PlatformProvider>
-          <div className="flex min-h-screen">
-            <Sidebar />
-            <main className="flex-1 pb-24 md:pb-0">{children}</main>
-          </div>
+          <Sidebar />
+          <main className="md:pl-[92px] pb-24 md:pb-0">{children}</main>
           <BottomNav />
         </PlatformProvider>
       </body>

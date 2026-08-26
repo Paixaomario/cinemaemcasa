@@ -46,7 +46,7 @@ export function HeroBanner({ heroes }: Props) {
   return (
     <Link
       href={hero.type === 'series' ? `/series/${hero.id}` : `/filmes/${hero.id}`}
-      className="focusable relative block w-full aspect-video overflow-hidden bg-accent-soft"
+      className="focusable relative block w-full aspect-video overflow-hidden bg-accent-soft md:-ml-[92px] md:w-[calc(100%+92px)]"
       data-hero="true"
     >
       {mostrandoTrailer && hero.trailer ? (
@@ -91,16 +91,6 @@ export function HeroBanner({ heroes }: Props) {
         )}
       </div>
 
-      {heroes.length > 1 && (
-        <div className="absolute bottom-3 right-4 flex gap-1.5 z-10">
-          {heroes.map((h, i) => (
-            <span
-              key={h.id}
-              className={`w-1.5 h-1.5 rounded-full ${i === indice ? 'bg-gold' : 'bg-white/40'}`}
-            />
-          ))}
-        </div>
-      )}
     </Link>
   );
 }

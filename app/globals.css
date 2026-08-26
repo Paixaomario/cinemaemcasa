@@ -81,3 +81,16 @@ body {
 .cinema-player-skin .vjs-loading-spinner {
   border-color: #e8c97a;
 }
+
+/* Legendas (subtítulos do vídeo) grandes o bastante para leitura a
+   distância em computadores, smart TVs e projetores. */
+::cue {
+  font-size: 1.6em;
+  font-weight: 500;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+@media (min-width: 1024px) {
+  ::cue {
+    font-size: 2.1em;
+  }
+}

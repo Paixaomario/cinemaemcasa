@@ -43,7 +43,7 @@ export default async function FilmeDetalhesPage({ params }: { params: { id: stri
           <h1 className="font-heading font-bold text-[32px] md:text-[48px] lg:text-[56px] leading-tight mb-3">
             {filme.titulo}
           </h1>
-          <p className="text-[16px] md:text-[20px] text-accent-hover mb-2">
+          <p className="text-[16px] md:text-[20px] text-white/80 mb-2">
             {[filme.year, filme.duration, filme.category].filter(Boolean).join(' · ')}
           </p>
           {filme.rating !== null && (
@@ -63,7 +63,7 @@ export default async function FilmeDetalhesPage({ params }: { params: { id: stri
               <i className="ti ti-plus mr-2" aria-hidden="true" />
               Minha lista
             </button>
-            <AssistirJuntoButton contentId={String(filme.id)} contentType="movie" />
+            <AssistirJuntoButton contentId={String(filme.id)} contentType="movie" titulo={filme.titulo} />
           </div>
         </div>
       </div>
