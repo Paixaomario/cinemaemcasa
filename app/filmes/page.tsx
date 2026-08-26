@@ -16,7 +16,7 @@ async function getTodosFilmes(): Promise<Cinema[]> {
 
 async function getHeroesFilme(filmes: Cinema[]): Promise<Cinema[]> {
   if (filmes.length === 0) return [];
-  return [...filmes].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 5);
+  return [...filmes].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 40);
 }
 
 // Agente da página Filmes: sem título de página (removido a pedido) —

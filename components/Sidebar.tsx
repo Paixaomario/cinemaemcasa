@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Logo } from './Logo';
@@ -16,14 +17,27 @@ const ITEMS = [
 // translúcido com blur — sem nenhuma borda, encolhido mostrando só
 // ícones brancos quando não está em uso, expandindo com nomes ao focar
 // (mouse ou controle remoto/setas via :focus-within). Some por completo
-// na página de exibição (player), que precisa da tela inteira.
+// na página de exibição (player). Fecha sozinho assim que um item é
+// clicado (mesmo que o mouse continue em cima dele).
 export function Sidebar() {
   const pathname = usePathname();
+  const [forcarFechado, setForcarFechado] = useState(false);
+
+  useEffect(() => {
+    setForcarFechado(false);
+  }, [pathname]);
 
   if (pathname.includes('/assistir')) return null;
 
+  const aoClicarItem = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    setForcarFechado(true);
+    e.currentTarget.blur();
+  };
+
   return (
     <aside
+      onMouseLeave={() => setForcarFechado(false)}
+      style={forcarFechado ? { width: 92 } : undefined}
       className="
         group hidden md:flex md:flex-col md:justify-between
         fixed inset-y-0 left-0 z-40
@@ -58,6 +72,7 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={aoClicarItem}
                 className={`focusable flex items-center gap-3 pl-[26px] pr-[3px] py-3 text-sm whitespace-nowrap ${
                   active ? 'bg-accent/70 text-white border-l-2 border-gold' : 'text-white/90 hover:text-white'
                 }`}
@@ -82,6 +97,7 @@ export function Sidebar() {
       <div className="flex flex-col gap-1">
         <Link
           href="/admin"
+          onClick={aoClicarItem}
           className="focusable flex items-center gap-3 pl-[26px] pr-[3px] py-3 text-sm text-white/90 hover:text-white whitespace-nowrap"
         >
           <i className="ti ti-settings text-[30px] shrink-0 text-white" aria-hidden="true" />
@@ -98,6 +114,7 @@ export function Sidebar() {
         </Link>
         <Link
           href="/perfil"
+          onClick={aoClicarItem}
           className="focusable flex items-center gap-3 pl-[26px] pr-[3px] py-3 text-sm text-white/90 hover:text-white whitespace-nowrap"
         >
           <span className="w-[22px] h-[22px] rounded-full bg-accent flex items-center justify-center text-[10px] shrink-0">

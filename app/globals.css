@@ -7,6 +7,9 @@ body {
   background-color: #000000;
   color: #ffffff;
   font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  overscroll-behavior-y: contain;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 * {
@@ -36,6 +39,14 @@ body {
 .focusable[data-hero][data-focused='true'] {
   transform: none;
   box-shadow: inset 0 0 0 3px #e8c97a;
+}
+
+/* Capas dentro de carrosséis de categoria "crescem" mais ao focar —
+   efeito próximo do Prime Video, ficando por cima das vizinhas. */
+[data-carousel-card] .focusable:focus-visible,
+[data-carousel-card] .focusable[data-focused='true'] {
+  transform: scale(1.35);
+  z-index: 30;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -92,5 +103,33 @@ body {
 @media (min-width: 1024px) {
   ::cue {
     font-size: 2.1em;
+  }
+}
+
+/* Tamanho das capas: cresce progressivamente em telas maiores, pra
+   ficar confortável de ver em smart TVs e telas gigantes (100"+),
+   não só em monitor de computador. */
+.poster-grid-desktop {
+  display: grid;
+  gap: 4px 4px;
+  grid-template-columns: repeat(auto-fit, minmax(227px, 1fr));
+}
+.poster-card-width {
+  width: 227px;
+}
+@media (min-width: 1600px) {
+  .poster-grid-desktop {
+    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  }
+  .poster-card-width {
+    width: 270px;
+  }
+}
+@media (min-width: 2560px) {
+  .poster-grid-desktop {
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  }
+  .poster-card-width {
+    width: 360px;
   }
 }

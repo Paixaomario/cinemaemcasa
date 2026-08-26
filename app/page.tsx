@@ -101,7 +101,7 @@ async function getHeroes(featuredSection: HomeSection | undefined): Promise<Cine
   // seção com layout = 'featured' em home_sections (categorias/
   // ordenação) e mostra vários títulos em sequência, não só um.
   if (featuredSection) {
-    let query = supabaseServer.from('cinema').select('*').limit(5);
+    let query = supabaseServer.from('cinema').select('*').limit(40);
     if (featuredSection.categorias && featuredSection.categorias.length > 0) {
       query = query.in('category', featuredSection.categorias);
     }
@@ -117,7 +117,7 @@ async function getHeroes(featuredSection: HomeSection | undefined): Promise<Cine
     .from('cinema')
     .select('*')
     .order('rating', { ascending: false })
-    .limit(5);
+    .limit(40);
   return data || [];
 }
 

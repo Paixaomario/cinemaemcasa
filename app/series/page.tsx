@@ -66,7 +66,7 @@ export default async function SeriesPage() {
   );
 
   const todasSeries = grupos.flatMap((g) => g.items);
-  const heroesBase = [...todasSeries].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 5);
+  const heroesBase = [...todasSeries].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 40);
 
   const idsHero = heroesBase.map((h) => h.id);
   const { data: classificacoes } = idsHero.length

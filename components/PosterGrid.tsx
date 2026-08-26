@@ -15,11 +15,10 @@ interface Props {
   tall?: boolean;
 }
 
-// Capas em tamanho HBO Max, mas 10% maiores que a versão anterior, e a
-// grade PREENCHE a largura disponível (auto-fill + 1fr) em vez de
-// deixar sobra de espaço em telas grandes — mais colunas aparecem
-// conforme a tela cresce.
-const LARGURA_MIN = 227;
+// Capas em tamanho HBO Max — a grade PREENCHE a largura disponível
+// (auto-fit + 1fr), crescendo ainda mais em telas grandes/TV via CSS
+// (.poster-grid-desktop, ver app/globals.css) em vez de um tamanho
+// único fixo, para ficar confortável de ver também em 100"+.
 
 export function PosterGrid({ items, tall = true }: Props) {
   if (items.length === 0) return null;
@@ -27,10 +26,7 @@ export function PosterGrid({ items, tall = true }: Props) {
   return (
     <>
       {/* Desktop / Smart TV / computador */}
-      <div
-        className="hidden md:grid gap-x-[4px] gap-y-3"
-        style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${LARGURA_MIN}px, 1fr))` }}
-      >
+      <div className="hidden md:grid poster-grid-desktop">
         {items.map((item) => (
           <TitleCard
             key={item.id}

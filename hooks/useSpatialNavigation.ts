@@ -95,7 +95,7 @@ export function useSpatialNavigation() {
           if (alvo) {
             e.preventDefault();
             alvo.focus();
-            alvo.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            alvo.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
             return;
           }
         }
@@ -158,7 +158,7 @@ export function useSpatialNavigation() {
             if (alvoLinha) {
               e.preventDefault();
               alvoLinha.focus();
-              alvoLinha.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+              alvoLinha.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
               return;
             }
           }
@@ -199,7 +199,7 @@ export function useSpatialNavigation() {
         if (melhor) {
           e.preventDefault();
           melhor.focus();
-          melhor.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+          melhor.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
         }
       } finally {
         processandoRef.current = false;

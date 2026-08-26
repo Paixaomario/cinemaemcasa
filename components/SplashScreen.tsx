@@ -4,12 +4,19 @@ import { useEffect, useState } from 'react';
 
 // Agente de página de carregamento: logo em 700px no desktop / 500px no
 // mobile (com responsividade para telas menores), barra de progresso
-// simulada de 0 a 100% dando tempo da Home e demais páginas carregarem.
+// simulada de 0 a 100%. Aparece SÓ UMA VEZ por sessão do navegador —
+// antes reaparecia a cada troca de página, dando a impressão de uma
+// "tela de carregamento" entre capas/categorias, quando a transição
+// deveria ser imediata.
 export function SplashScreen() {
   const [progresso, setProgresso] = useState(0);
-  const [visivel, setVisivel] = useState(true);
+  const [visivel, setVisivel] = useState(false);
 
   useEffect(() => {
+    if (sessionStorage.getItem('splash_exibida')) return;
+    sessionStorage.setItem('splash_exibida', '1');
+    setVisivel(true);
+
     const inicio = Date.now();
     const duracao = 1800;
 

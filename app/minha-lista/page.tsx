@@ -91,7 +91,7 @@ export default async function MinhaListaPage() {
 
   const vazio = itensFilme.length === 0 && itensSerie.length === 0;
   // Agente de Minha Lista: banner hero rotativo entre os favoritos mais recentes.
-  const heroesFonte = [...filmes.slice(0, 3), ...series.slice(0, 2).map(serieParaHero)];
+  const heroesFonte = [...filmes, ...series.map(serieParaHero)];
   const mapaClassificacao = new Map(series.map((s) => [s.id_n, s.classificacao] as const));
   const heroes = await enrichHeroes(heroesFonte, mapaClassificacao);
 

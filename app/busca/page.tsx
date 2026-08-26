@@ -9,7 +9,7 @@ async function getHeroesBusca(): Promise<Cinema[]> {
     .from('cinema')
     .select('*')
     .order('rating', { ascending: false })
-    .limit(5);
+    .limit(40);
   return data || [];
 }
 

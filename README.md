@@ -320,7 +320,59 @@ deploy, são dois motivos possíveis:
    trailer que não existe. Pode confirmar abrindo um registro na tabela
    `cinema` ou `series` e olhando se `trailer` tem uma URL preenchida?
 
-## 19. Notas do Agente QA Final
+## 20. Correções desta entrega (viewport mobile, hero atrás do menu, rotação, scroll)
+
+- **Causa raiz de vários problemas de mobile encontrada:** faltava a
+  tag/config de **viewport** (`export const viewport` em
+  `app/layout.tsx`). Sem ela, o navegador do celular assume uma largura
+  de página "desktop" (~980px) e encolhe tudo — isso sozinho explica o
+  menu lateral aparecendo em vez da barra inferior, e o sistema
+  "parecendo site" em vez de app. Corrigido, junto com ajustes de
+  `overscroll-behavior`/`touch-action` pra reduzir a sensação de
+  navegador (bounce de scroll, zoom por toque duplo).
+- **Título/descrição do hero atrás do menu lateral:** corrigido — o
+  texto agora começa depois da largura do menu, mesmo com a imagem de
+  fundo continuando por baixo dele.
+- **Capas pequenas em smart TV/telas gigantes:** agora crescem em
+  etapas conforme a tela aumenta (227px → 270px a partir de 1600px →
+  360px a partir de 2560px), em vez de um tamanho único fixo.
+- **Ano/avaliação:** reduzidos em 2px (36px agora).
+- **Tela de carregamento reaparecendo entre navegações:** ela só
+  deveria aparecer uma vez; corrigido para aparecer só na primeira
+  carga da sessão (`sessionStorage`).
+- **Banner rotativo sem limite artificial:** aumentei a quantidade de
+  títulos que alimentam a rotação de 5 para até 40 por página (Minha
+  Lista usa todos os favoritos). Também persisti o índice mostrado por
+  página (`localStorage`) — ao recarregar, continua do próximo título
+  em vez de voltar sempre ao primeiro.
+
+  **Limitação honesta:** "nunca repetir antes de chegar na última capa
+  do sistema" eu implementei dentro do lote de até 40 títulos buscados
+  por página, não literalmente entre TODOS os milhares de títulos do
+  catálogo — buscar e enriquecer (com TMDB) milhares de registros a
+  cada carregamento da Home ficaria lento demais. Se quiser cobertura
+  de 100% do catálogo na rotação, o caminho certo é pré-calcular isso
+  num job separado (ex: tabela `home_sections` já preenchida
+  periodicamente), não em tempo real a cada visita — me avisa se quiser
+  que eu monte isso.
+- **Capas "expandindo lateralmente" tipo Prime Video:** aumentei bem o
+  efeito de zoom ao focar/passar o mouse nas capas dentro dos
+  carrosséis de categoria (mais forte que nas capas da Home/Minha
+  Lista). Uma reprodução 100% fiel do Prime Video (onde a capa foca
+  cresce por cima de várias vizinhas simultaneamente, com uma
+  micro-prévia animada dentro dela) é uma reformulação bem mais
+  profunda do componente — o que entreguei aqui já expande e mostra o
+  trailer, mas se quiser o efeito exatamente idêntico linha por linha,
+  me diga que eu dedico uma rodada só pra isso.
+- **Menu lateral fecha ao clicar num item:** mesmo com o mouse parado
+  em cima, agora colapsa imediatamente ao navegar.
+- **Rolagem horizontal das categorias:** roda do mouse/trackpad agora
+  é convertida pra rolagem horizontal (antes só funcionava por
+  toque/D-pad). Também troquei `scrollIntoView` de `nearest` para
+  `center` — capas cortadas na borda da tela agora são trazidas
+  totalmente pra vista ao navegar até elas por controle remoto/setas.
+
+## 21. Notas do Agente QA Final
 
 - **Nenhuma tabela/coluna do Supabase é alterada** — o sistema apenas lê os
   dados existentes, exatamente como solicitado.

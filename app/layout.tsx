@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, Poppins } from 'next/font/google';
 import './globals.css';
 import { Sidebar } from '@/components/Sidebar';
@@ -23,6 +23,20 @@ export const metadata: Metadata = {
   description: 'Filmes e séries do seu acervo pessoal, em qualquer tela.'
 };
 
+// CAUSA RAIZ de vários problemas de mobile reportados (menu lateral
+// aparecendo em vez da barra inferior, sistema "parecendo site"): não
+// havia uma tag de viewport explícita. Sem ela, o navegador do celular
+// assume uma largura de página desktop (~980px) e encolhe tudo — o que
+// faz até os breakpoints `md:` do Tailwind se comportarem errado. Este
+// export é a forma correta de declarar isso no Next.js (App Router).
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#000000'
+};
+
 export default function RootLayout({
   children
 }: {
@@ -36,7 +50,6 @@ export default function RootLayout({
           href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"
         />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#000000" />
       </head>
       <body className="bg-black text-white font-sans">
         <SplashScreen />

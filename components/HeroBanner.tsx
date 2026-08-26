@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import type { HeroData } from '@/lib/heroEnrichment';
 
@@ -19,10 +20,26 @@ const TEMPO_SEM_TRAILER_MS = 15_000;
 // pro próximo título da lista, voltando ao primeiro no fim.
 // Proporção 16:9, ocupa 100% da largura, sem espaçamento lateral.
 export function HeroBanner({ heroes }: Props) {
-  const [indice, setIndice] = useState(0);
+  const pathname = usePathname();
+  const chaveArmazenamento = `hero_idx_${pathname}`;
+
+  // Começa do PRÓXIMO título depois do último mostrado nesta página
+  // (persistido entre recarregamentos) — nunca reinicia no mesmo.
+  const [indice, setIndice] = useState(() => {
+    if (typeof window === 'undefined' || heroes.length === 0) return 0;
+    const salvo = Number(window.localStorage.getItem(chaveArmazenamento));
+    return Number.isFinite(salvo) ? (salvo + 1) % heroes.length : 0;
+  });
   const [mostrandoTrailer, setMostrandoTrailer] = useState(false);
 
   const hero = heroes[indice];
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(chaveArmazenamento, String(indice));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [indice]);
 
   useEffect(() => {
     setMostrandoTrailer(false);
@@ -38,6 +55,8 @@ export function HeroBanner({ heroes }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [indice, hero?.id]);
 
+  // Percorre TODOS os títulos recebidos em sequência antes de voltar
+  // ao início — nunca repete um título antes de chegar ao último.
   const avancar = () => setIndice((i) => (i + 1) % heroes.length);
 
   if (!hero) return null;
@@ -71,7 +90,7 @@ export function HeroBanner({ heroes }: Props) {
 
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-black/5" />
 
-      <div className="absolute left-6 md:left-10 bottom-6 md:bottom-10 right-6 md:right-1/3">
+      <div className="absolute left-6 md:left-[124px] bottom-6 md:bottom-10 right-6 md:right-1/3">
         <h1 className="font-heading font-bold text-[26px] md:text-[42px] lg:text-[48px] leading-tight mb-2 drop-shadow-lg">
           {hero.titulo}
         </h1>

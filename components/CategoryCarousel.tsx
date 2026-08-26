@@ -10,15 +10,14 @@ interface Props {
   basePath: 'filmes' | 'series';
 }
 
-const LARGURA_CARD = 227; // +10% sobre o valor anterior (206px)
-
 // Agente de Filmes/Séries: UMA linha só por categoria, com rolagem
 // horizontal (nunca quebra em várias linhas) e loop infinito de
 // verdade — a lista é duplicada uma vez; ao chegar perto do fim, o
-// scroll salta de volta pro meio de forma imperceptível, então parece
-// contínuo em qualquer direção. Os itens duplicados ficam marcados com
-// data-nav-ignore para o D-pad/controle remoto não parar neles (a
-// navegação por setas usa a lista original, com wrap-around próprio).
+// scroll salta de volta pro meio de forma imperceptível. Os itens
+// duplicados ficam marcados com data-nav-ignore para o D-pad/controle
+// remoto não parar neles. O tamanho da capa cresce em telas grandes
+// via .poster-card-width (ver app/globals.css) — mesma escala usada na
+// grade da Home/Minha Lista.
 export function CategoryCarousel({ titulo, items, basePath }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -38,6 +37,18 @@ export function CategoryCarousel({ titulo, items, basePath }: Props) {
     }
   };
 
+  // Mouse/trackpad: roda do mouse é vertical por padrão do navegador —
+  // converte pra rolagem horizontal, senão a rolagem "não funciona"
+  // com mouse comum (só funcionava por touch/D-pad antes).
+  const aoRodarMouse = (e: React.WheelEvent<HTMLDivElement>) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      e.preventDefault();
+      el.scrollLeft += e.deltaY;
+    }
+  };
+
   return (
     <section className="py-4">
       <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold text-white mb-3 px-3">
@@ -46,7 +57,8 @@ export function CategoryCarousel({ titulo, items, basePath }: Props) {
       <div
         ref={scrollRef}
         onScroll={aoRolar}
-        className="flex gap-1 overflow-x-auto px-3"
+        onWheel={aoRodarMouse}
+        className="flex gap-1 overflow-x-auto px-3 py-8 -my-8"
         style={{ scrollSnapType: 'x proximity' }}
       >
         {lista.map((item, idx) => {
@@ -55,8 +67,9 @@ export function CategoryCarousel({ titulo, items, basePath }: Props) {
             <div
               key={`${item.id}-${idx}`}
               data-nav-ignore={duplicata ? 'true' : undefined}
-              className="shrink-0"
-              style={{ width: LARGURA_CARD, scrollSnapAlign: 'start' }}
+              className="shrink-0 poster-card-width"
+              data-carousel-card="true"
+              style={{ scrollSnapAlign: 'start' }}
             >
               <TitleCard
                 href={`/${basePath}/${item.id}`}
