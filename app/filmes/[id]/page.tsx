@@ -1,4 +1,6 @@
-import { supabaseServer } from '@/lib/supabase/server';
+export const revalidate = 300;
+
+import { supabasePublic } from '@/lib/supabase/server';
 import { PosterGrid } from '@/components/PosterGrid';
 import { BackButton } from '@/components/BackButton';
 import { AssistirJuntoButton } from '@/components/AssistirJuntoButton';
@@ -7,13 +9,13 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
 async function getFilme(id: string): Promise<Cinema | null> {
-  const { data } = await supabaseServer.from('cinema').select('*').eq('id', id).maybeSingle();
+  const { data } = await supabasePublic.from('cinema').select('*').eq('id', id).maybeSingle();
   return data;
 }
 
 async function getRelacionados(ids: number[] | null): Promise<Cinema[]> {
   if (!ids || ids.length === 0) return [];
-  const { data } = await supabaseServer.from('cinema').select('*').in('id', ids);
+  const { data } = await supabasePublic.from('cinema').select('*').in('id', ids);
   return data || [];
 }
 

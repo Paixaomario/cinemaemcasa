@@ -1,4 +1,6 @@
-import { supabaseServer } from '@/lib/supabase/server';
+export const revalidate = 300;
+
+import { supabasePublic } from '@/lib/supabase/server';
 import { BackButton } from '@/components/BackButton';
 import { AssistirJuntoButton } from '@/components/AssistirJuntoButton';
 import type { Serie, Temporada, Episodio } from '@/lib/types';
@@ -6,12 +8,12 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
 async function getSerie(id: string): Promise<Serie | null> {
-  const { data } = await supabaseServer.from('series').select('*').eq('id_n', id).maybeSingle();
+  const { data } = await supabasePublic.from('series').select('*').eq('id_n', id).maybeSingle();
   return data;
 }
 
 async function getTemporadas(serieId: number): Promise<Temporada[]> {
-  const { data } = await supabaseServer
+  const { data } = await supabasePublic
     .from('temporadas')
     .select('*')
     .eq('serie_id', serieId)
@@ -20,7 +22,7 @@ async function getTemporadas(serieId: number): Promise<Temporada[]> {
 }
 
 async function getEpisodios(temporadaId: number): Promise<Episodio[]> {
-  const { data } = await supabaseServer
+  const { data } = await supabasePublic
     .from('episodios')
     .select('*')
     .eq('temporada_id', temporadaId)

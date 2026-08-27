@@ -372,7 +372,55 @@ deploy, são dois motivos possíveis:
   `center` — capas cortadas na borda da tela agora são trazidas
   totalmente pra vista ao navegar até elas por controle remoto/setas.
 
-## 21. Notas do Agente QA Final
+## 22. Performance para catálogo grande (200 mil títulos) — esta entrega
+
+- **Bug crítico encontrado e corrigido:** o cliente Supabase usado nas
+  páginas de servidor nunca lia o cookie de sessão do navegador —
+  `.auth.getUser()` no servidor **nunca** reconhecia quem estava
+  logado, mesmo com sessão válida. Isso deixava "Continuar assistindo"
+  (Home) e "Minha Lista" sempre vazios, silenciosamente. Corrigido com
+  `@supabase/ssr` (`lib/supabase/server.ts`), que agora lê os cookies
+  via `next/headers` no padrão oficial da biblioteca.
+- **Dois clientes separados, de propósito:**
+  - `supabaseServer` (com cookies) — só para páginas realmente
+    pessoais (Home, Minha Lista). Não pode ter cache de página, porque
+    o conteúdo depende de quem está logado.
+  - `supabasePublic` (sem cookies) — para catálogo/detalhes/busca, que
+    é igual pra todo mundo. Só esse pode usar cache de página.
+  Misturar os dois teria feito toda página virar dinâmica (sem cache)
+  só por causa da leitura de cookies — separei exatamente pra evitar
+  isso.
+- **Fim das buscas "traga tudo e filtre depois":** a página de Filmes
+  buscava **o catálogo inteiro** de filmes e organizava as categorias
+  em JavaScript — inviável em 200 mil linhas. Agora cada categoria
+  busca direto no banco, já filtrada e limitada (30 itens por
+  categoria), usando índice. Séries já era um pouco melhor mas também
+  não tinha limite por gênero — adicionado.
+- **Cache de página (ISR) de 5 minutos** em Filmes, Séries, detalhes de
+  filme/série e Busca (`export const revalidate = 300`). Isso significa
+  que o banco só é consultado de verdade a cada 5 minutos por página,
+  não a cada visita — o resto do tempo o Vercel serve a versão em
+  cache. A busca em tempo real (`LiveSearch`) continua sempre ao vivo,
+  porque roda no navegador, não afeta esse cache.
+- **Script de índices** em `supabase/indices-performance.sql` — **você
+  precisa rodar isso no SQL Editor do Supabase** pra essas otimizações
+  funcionarem de verdade (índices de busca por categoria, ordenação por
+  nota, episódios por temporada, progresso do usuário). Só adiciona
+  índices, não altera nenhuma coluna/tabela existente.
+
+### Limitações que ficaram de fora por ora
+- `getGeneros()` (Séries) ainda lê a coluna `genero` de toda a tabela
+  pra descobrir a lista de gêneros existentes — isso é mais leve que
+  buscar linhas inteiras, e como a página inteira já fica em cache por
+  5 minutos, o custo real é baixo, mas em escala muito grande o ideal
+  seria uma tabela de referência de gêneros à parte, ou uma função RPC
+  com `SELECT DISTINCT` no Postgres.
+- Não implementei cache em camada extra (Redis/Upstash) — o ISR do
+  Next.js já cobre a maior parte do ganho de performance sem precisar
+  de mais uma peça de infraestrutura. Se o catálogo crescer muito além
+  de 200 mil títulos ou o tráfego for alto, aí sim vale considerar.
+
+## 23. Notas do Agente QA Final
 
 - **Nenhuma tabela/coluna do Supabase é alterada** — o sistema apenas lê os
   dados existentes, exatamente como solicitado.

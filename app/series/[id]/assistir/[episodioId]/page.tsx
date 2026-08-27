@@ -1,10 +1,10 @@
-import { supabaseServer } from '@/lib/supabase/server';
+import { supabasePublic } from '@/lib/supabase/server';
 import { Player } from '@/components/Player';
 import type { Episodio } from '@/lib/types';
 import { notFound } from 'next/navigation';
 
 async function getEpisodio(id: string): Promise<Episodio | null> {
-  const { data } = await supabaseServer.from('episodios').select('*').eq('id_n', id).maybeSingle();
+  const { data } = await supabasePublic.from('episodios').select('*').eq('id_n', id).maybeSingle();
   return data;
 }
 

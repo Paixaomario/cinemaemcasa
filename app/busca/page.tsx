@@ -1,11 +1,13 @@
-import { supabaseServer } from '@/lib/supabase/server';
+export const revalidate = 300;
+
+import { supabasePublic } from '@/lib/supabase/server';
 import { HeroBanner } from '@/components/HeroBanner';
 import { enrichHeroes } from '@/lib/heroEnrichment';
 import { LiveSearch } from '@/components/LiveSearch';
 import type { Cinema } from '@/lib/types';
 
 async function getHeroesBusca(): Promise<Cinema[]> {
-  const { data } = await supabaseServer
+  const { data } = await supabasePublic
     .from('cinema')
     .select('*')
     .order('rating', { ascending: false })

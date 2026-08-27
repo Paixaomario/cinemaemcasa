@@ -1,4 +1,4 @@
-import { supabaseServer } from '@/lib/supabase/server';
+import { supabasePublic } from '@/lib/supabase/server';
 import { CategoryCarousel } from '@/components/CategoryCarousel';
 import { HeroBanner } from '@/components/HeroBanner';
 import { enrichHeroes } from '@/lib/heroEnrichment';
@@ -41,18 +41,24 @@ async function comFallbackDeCapa(item: Cinema): Promise<Cinema> {
 }
 
 async function getGeneros(): Promise<string[]> {
-  const { data } = await supabaseServer.from('series').select('genero').not('genero', 'is', null);
+  const { data } = await supabasePublic.from('series').select('genero').not('genero', 'is', null);
   const unicos = Array.from(new Set((data || []).map((d) => d.genero as string)));
   // Agente de Séries: categorias em ordem alfabética (pt-BR).
   return unicos.sort((a, b) => a.localeCompare(b, 'pt-BR'));
 }
 
+// ISR: cache de 5 minutos — evita bater no banco a cada visita.
+export const revalidate = 300;
+
+const ITENS_POR_CATEGORIA = 30;
+
 async function getByGenero(genero: string): Promise<Cinema[]> {
-  const { data } = await supabaseServer
+  const { data } = await supabasePublic
     .from('series')
     .select('*')
     .eq('genero', genero)
-    .order('created_at', { ascending: false });
+    .order('rating', { ascending: false })
+    .limit(ITENS_POR_CATEGORIA);
   const itens = (data || []).map(toCardShape);
   return Promise.all(itens.map(comFallbackDeCapa));
 }
@@ -70,7 +76,7 @@ export default async function SeriesPage() {
 
   const idsHero = heroesBase.map((h) => h.id);
   const { data: classificacoes } = idsHero.length
-    ? await supabaseServer.from('series').select('id_n, classificacao').in('id_n', idsHero)
+    ? await supabasePublic.from('series').select('id_n, classificacao').in('id_n', idsHero)
     : { data: [] as { id_n: number; classificacao: string | null }[] };
 
   const mapaClassificacao = new Map(

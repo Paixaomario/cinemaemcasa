@@ -1,10 +1,10 @@
-import { supabaseServer } from '@/lib/supabase/server';
+import { supabasePublic } from '@/lib/supabase/server';
 import { Player } from '@/components/Player';
 import type { Cinema } from '@/lib/types';
 import { notFound } from 'next/navigation';
 
 async function getFilme(id: string): Promise<Cinema | null> {
-  const { data } = await supabaseServer.from('cinema').select('*').eq('id', id).maybeSingle();
+  const { data } = await supabasePublic.from('cinema').select('*').eq('id', id).maybeSingle();
   return data;
 }
 
