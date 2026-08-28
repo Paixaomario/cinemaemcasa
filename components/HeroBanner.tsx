@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import Link from 'next/link';
 import type { HeroData } from '@/lib/heroEnrichment';
 
 interface Props {
@@ -63,11 +62,7 @@ export function HeroBanner({ heroes }: Props) {
   const imagem = hero.backdrop || hero.banner || hero.poster;
 
   return (
-    <Link
-      href={hero.type === 'series' ? `/series/${hero.id}` : `/filmes/${hero.id}`}
-      className="focusable relative block w-full aspect-video overflow-hidden bg-accent-soft md:-ml-[92px] md:w-[calc(100%+92px)]"
-      data-hero="true"
-    >
+    <div className="relative w-full aspect-video overflow-hidden bg-accent-soft md:-ml-[92px] md:w-[calc(100%+92px)]">
       {mostrandoTrailer && hero.trailer ? (
         <video
           key={`trailer-${hero.id}`}
@@ -109,7 +104,6 @@ export function HeroBanner({ heroes }: Props) {
           </p>
         )}
       </div>
-
-    </Link>
+    </div>
   );
 }

@@ -1,13 +1,25 @@
 {
+  "id": "/",
   "name": "Cinema em Casa",
   "short_name": "Cinema em Casa",
+  "description": "Filmes e séries do seu acervo pessoal, em qualquer tela.",
+  "lang": "pt-BR",
   "start_url": "/",
-  "display": "fullscreen",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "fullscreen"],
   "background_color": "#000000",
   "theme_color": "#000000",
-  "orientation": "landscape",
+  "orientation": "any",
+  "categories": ["entertainment", "video"],
   "icons": [
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Filmes", "url": "/filmes" },
+    { "name": "Séries", "url": "/series" },
+    { "name": "Minha lista", "url": "/minha-lista" }
   ]
 }

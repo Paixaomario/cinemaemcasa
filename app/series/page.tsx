@@ -2,43 +2,8 @@ import { supabasePublic } from '@/lib/supabase/server';
 import { CategoryCarousel } from '@/components/CategoryCarousel';
 import { HeroBanner } from '@/components/HeroBanner';
 import { enrichHeroes } from '@/lib/heroEnrichment';
-import { getPosterDoTMDB } from '@/lib/tmdb';
-import type { Cinema, Serie } from '@/lib/types';
-
-function toCardShape(serie: Serie): Cinema {
-  return {
-    id: serie.id_n,
-    titulo: serie.titulo || '',
-    description: serie.descricao,
-    tmdb_id: serie.tmdb_id,
-    url: null,
-    trailer: serie.trailer,
-    year: serie.ano,
-    rating: serie.rating,
-    duration: serie.tmdb_runtime,
-    duration_seconds: null,
-    category: serie.genero,
-    genre: serie.genero,
-    type: 'series',
-    poster: serie.poster || serie.capa,
-    banner: serie.banner,
-    backdrop: null,
-    created_at: '',
-    subtitles: null,
-    audio_tracks: null,
-    elenco: serie.elenco,
-    relacionados: serie.relacionados
-  };
-}
-
-// Se a série não tem NENHUMA imagem própria (poster/capa/banner vazios
-// no Supabase) mas tem tmdb_id, busca o pôster no TMDB como último
-// recurso — evita capa em branco quando o dado só existe lá fora.
-async function comFallbackDeCapa(item: Cinema): Promise<Cinema> {
-  if (item.poster || item.banner || !item.tmdb_id) return item;
-  const posterTMDB = await getPosterDoTMDB(item.tmdb_id, 'series');
-  return posterTMDB ? { ...item, poster: posterTMDB } : item;
-}
+import { buscarSeriesPorGenero } from '@/lib/catalogoPorCategoria';
+import type { Cinema } from '@/lib/types';
 
 async function getGeneros(): Promise<string[]> {
   const { data } = await supabasePublic.from('series').select('genero').not('genero', 'is', null);
@@ -50,28 +15,18 @@ async function getGeneros(): Promise<string[]> {
 // ISR: cache de 5 minutos — evita bater no banco a cada visita.
 export const revalidate = 300;
 
-const ITENS_POR_CATEGORIA = 30;
-
-async function getByGenero(genero: string): Promise<Cinema[]> {
-  const { data } = await supabasePublic
-    .from('series')
-    .select('*')
-    .eq('genero', genero)
-    .order('rating', { ascending: false })
-    .limit(ITENS_POR_CATEGORIA);
-  const itens = (data || []).map(toCardShape);
-  return Promise.all(itens.map(comFallbackDeCapa));
-}
-
-// Agente da página Séries: sem título de página (removido a pedido) —
-// o banner hero já identifica a seção visualmente.
+// Agente da página Séries: cada gênero mostra o PRIMEIRO lote (mais
+// bem avaliados) já vindo do servidor — o resto é carregado sob
+// demanda pelo próprio CategoryCarousel conforme o usuário rola (ver
+// /api/categoria), sem limite máximo de itens por categoria.
 export default async function SeriesPage() {
   const generos = await getGeneros();
   const grupos = await Promise.all(
-    generos.map(async (g) => ({ genero: g, items: await getByGenero(g) }))
+    generos.map(async (genero) => ({ genero, ...(await buscarSeriesPorGenero(genero, 0)) }))
   );
+  const gruposComItens = grupos.filter((g) => g.items.length > 0);
 
-  const todasSeries = grupos.flatMap((g) => g.items);
+  const todasSeries = gruposComItens.flatMap((g) => g.items);
   const heroesBase = [...todasSeries].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 40);
 
   const idsHero = heroesBase.map((h) => h.id);
@@ -88,8 +43,16 @@ export default async function SeriesPage() {
     <div>
       {heroes.length > 0 && <HeroBanner heroes={heroes} />}
       <div className="pt-4">
-        {grupos.map(({ genero, items }) => (
-          <CategoryCarousel key={genero} titulo={genero} items={items} basePath="series" />
+        {gruposComItens.map(({ genero, items, fim }) => (
+          <CategoryCarousel
+            key={genero}
+            titulo={genero}
+            itensIniciais={items}
+            fimInicial={fim}
+            categoria={genero}
+            tipo="serie"
+            basePath="series"
+          />
         ))}
       </div>
     </div>

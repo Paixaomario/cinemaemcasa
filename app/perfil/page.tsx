@@ -3,11 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabase/client';
+import { COOKIE_PERFIL_INFANTIL } from '@/lib/kidsMode';
 import type { Profile } from '@/lib/types';
 
 // Agente de Perfil: seleção de perfil dentro da conta autorizada.
-// Perfis marcados como is_child aplicam o filtro content_rating_limit
-// (modo infantil) em todas as listagens.
+// Perfis marcados como is_child gravam um cookie lido pelo SERVIDOR
+// (Home/Filmes/Séries) pra filtrar todo conteúdo adulto automaticamente
+// enquanto esse perfil estiver ativo — antes essa flag existia mas
+// nunca era usada em lugar nenhum.
 export default function PerfilPage() {
   const [perfis, setPerfis] = useState<Profile[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -28,6 +31,10 @@ export default function PerfilPage() {
 
   const escolherPerfil = (perfil: Profile) => {
     sessionStorage.setItem('perfil_ativo', JSON.stringify(perfil));
+    // Cookie (não sessionStorage) porque precisa ser lido pelo
+    // SERVIDOR — Home/Filmes/Séries filtram conteúdo adulto direto na
+    // consulta ao banco, antes de qualquer coisa chegar no navegador.
+    document.cookie = `${COOKIE_PERFIL_INFANTIL}=${perfil.is_child};path=/;max-age=31536000`;
     router.push('/');
   };
 

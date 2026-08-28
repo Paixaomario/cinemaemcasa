@@ -420,7 +420,131 @@ deploy, são dois motivos possíveis:
   de mais uma peça de infraestrutura. Se o catálogo crescer muito além
   de 200 mil títulos ou o tráfego for alto, aí sim vale considerar.
 
-## 23. Notas do Agente QA Final
+## 24. Rolagem infinita real por categoria (esta entrega)
+
+- **Sem limite de itens por categoria, sem botão "carregar mais":** a
+  página carrega só o primeiro lote de cada categoria (rápido); o
+  `CategoryCarousel` (agora client-side) busca mais pela
+  `/api/categoria` conforme o usuário rola — mouse, toque ou D-pad —
+  até esgotar TUDO que existe no banco para aquela categoria. Só
+  depois de mostrar tudo é que a rolagem reinicia do primeiro item.
+- **Trava de segurança:** categorias muito pequenas (que cabem inteiras
+  numa tela) não entram num loop de recarregamento automático infinito
+  — depois de uma volta completa sem crescer, o carregamento automático
+  por scroll para (a navegação por D-pad continua funcionando sob
+  demanda, já que aí é o usuário pedindo explicitamente).
+- **Consulta compartilhada:** `lib/catalogoPorCategoria.ts` centraliza
+  a busca por categoria/gênero, usada tanto na primeira carga da
+  página quanto na API de rolagem — mesma ordenação, mesmo
+  comportamento, sem duplicar lógica.
+
+## 26. Ajustes AAA dentro da arquitetura 100% gratuita (esta entrega)
+
+Tudo abaixo funciona com GitHub + Vercel + Supabase + Archive.org, sem
+nenhum investimento financeiro novo.
+
+### Segurança — `supabase/politicas-seguranca-rls.sql` (PRIORIDADE MÁXIMA)
+Pelo schema original, nenhuma tabela tinha política de RLS visível —
+ou seja, era possível que qualquer usuário logado (ou até anônimo,
+dependendo da configuração) lesse ou alterasse dado de OUTRA pessoa
+direto pela API do Supabase, sem passar pelo site. **Rode esse script
+no SQL Editor do Supabase o quanto antes.** Ele:
+- Libera leitura pública só nas tabelas de catálogo (`cinema`,
+  `series`, `episodios`, etc.) — o que já era público de fato.
+- Tranca as tabelas pessoais (`view_progress`, `favorites`,
+  `parental_control`, etc.) pra cada usuário só ver o próprio dado.
+- No "Assistir Juntos", mantém leitura/chat aberta pra quem tem o link
+  da sala (convidados não têm login, por desenho) — só criar sala
+  continua exigindo o host estar logado.
+Depois de rodar, teste o app inteiro de novo — se algo parar de
+mostrar dado que devia, me avise que ajusto a consulta.
+
+### Monitoramento de erros — Sentry (gratuito)
+Adicionei `@sentry/nextjs` (`sentry.client/server/edge.config.ts` +
+`app/global-error.tsx`). Crie uma conta grátis em sentry.io, um
+projeto Next.js, e preencha `NEXT_PUBLIC_SENTRY_DSN` (+ opcionalmente
+`SENTRY_ORG`/`SENTRY_PROJECT`) nas variáveis de ambiente do Vercel.
+Sem isso preenchido, o app funciona normal — só não manda erro pra
+lugar nenhum.
+
+### CI no GitHub Actions — `.github/workflows/ci.yml`
+Roda checagem de tipos, testes e build a cada push/PR, **antes** de
+chegar no Vercel — teria pego o bug do import do Video.js e outros
+erros de build que só descobrimos depois de various tentativas nesta
+conversa. **Importante:** pra o passo de build funcionar no CI, você
+precisa cadastrar `NEXT_PUBLIC_SUPABASE_URL`,
+`NEXT_PUBLIC_SUPABASE_ANON_KEY` e `TMDB_API_READ_TOKEN` como *secrets*
+do repositório no GitHub (Settings → Secrets and variables → Actions)
+— sem isso, o build do CI falha por falta de variável, mesmo que o
+código esteja certo.
+
+### Testes automatizados — Vitest
+`lib/__tests__/categorias.test.ts` cobre a lógica de categorias (a que
+mais deu problema nesta conversa: múltiplas categorias por título,
+acentuação, categoria inventada, duplicata). Rode com `npm test`.
+
+### PWA mais "nível app"
+- `manifest.json` revisado: `display: standalone` (antes era
+  `fullscreen`, que em alguns navegadores se comporta pior),
+  orientação livre (antes travava só em paisagem, o que atrapalhava
+  navegar pelo catálogo no celular), atalhos rápidos (Filmes/Séries/
+  Minha Lista) e ícone "maskable" pra Android.
+- Meta tags específicas do iOS em `app/layout.tsx` — o Safari ignora
+  boa parte do `manifest.json`; sem essas tags, "Adicionar à Tela de
+  Início" no iPhone abre com a barra do Safari por cima, quebrando a
+  sensação de app.
+
+### Painel de administração — seções da Home
+`/admin/secoes` — liga/desliga seções da Home sem precisar abrir o
+Supabase Studio. Criar seção nova ou mudar categoria/ordenação ainda
+exige o Studio (deixei isso documentado na própria tela).
+
+### O que fica de fora, mesmo de graça (limitação real, não falta de esforço)
+- **Streaming adaptativo de verdade:** confirmei que o Archive.org gera
+  só UM derivado de vídeo por arquivo (H.264, ~768kb/s, 640×480) — sem
+  múltiplas qualidades, sem HLS/DASH. Isso é um teto da própria
+  plataforma de hospedagem, não algo que dá pra contornar só com
+  código.
+- **DRM:** exige serviço pago (Widevine/FairPlay/PlayReady).
+- **CDN de vídeo dedicado:** o Archive.org já cumpre parcialmente esse
+  papel (serve os arquivos), mas sem controle de qualidade adaptativa.
+- **Apps publicados em loja:** taxas obrigatórias da Apple/Google, sem
+  jeito gratuito de contornar.
+
+## 28. Correções de navegação + Modo Infantil implementado de verdade (esta entrega)
+
+- **Banner hero não é mais clicável nem focável:** virou uma `<div>`
+  simples (era um `<Link>` com classe `focusable`). Isso, sozinho, já
+  resolve o pedido de navegação: como a barra lateral e os carrosséis
+  usam a classe `.focusable` pra decidir pra onde o foco vai, o hero
+  agora é automaticamente pulado — seta direita a partir do menu já
+  cai direto na primeira capa da primeira seção/categoria, sem
+  precisar de nenhuma regra especial a mais.
+- **Splash mais rápida (700ms, era 1800ms):** o HTML da página
+  (incluindo o hero) já vem pronto do servidor por baixo da splash —
+  ela nunca bloqueou o carregamento de verdade, só ficava tempo demais
+  na frente. Agora o banner hero é a primeira coisa que aparece de
+  fato, quase instantaneamente.
+- **Modo Infantil implementado de verdade:** existia a coluna
+  `is_child`/`content_rating_limit`, mas nada no código realmente
+  filtrava conteúdo — era só um rótulo. Agora, ao escolher um perfil
+  infantil em `/perfil`, um cookie é gravado e:
+  - Home filtra no SERVIDOR (ela já é dinâmica por causa do login, não
+    tem cache pra perder).
+  - Filmes/Séries/Busca filtram no CLIENTE, depois que os dados
+    (cacheados, iguais pra todo mundo) chegam no navegador — ler o
+    cookie no servidor ali quebraria o cache que sustenta os 200 mil
+    títulos. Documentei isso com honestidade no código: é uma barreira
+    de experiência, não uma trava de segurança inquebrável (dá pra
+    contornar pelo DevTools) — bloqueio de verdade exigiria
+    autenticação por perfil no servidor, fora do escopo gratuito atual.
+  - Categoria "Adulto" some inteira das listagens e do banner hero;
+    títulos adultos em qualquer outra categoria também somem.
+  - Acesso direto por link a um título adulto (sem passar pela
+    listagem) redireciona pra Home — `components/GuardaModoInfantil.tsx`.
+  - Testado em `lib/__tests__/kidsMode.test.ts`.
+
+## 29. Notas do Agente QA Final
 
 - **Nenhuma tabela/coluna do Supabase é alterada** — o sistema apenas lê os
   dados existentes, exatamente como solicitado.

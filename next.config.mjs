@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+import { withSentryConfig } from '@sentry/nextjs';
+
 const nextConfig = {
   images: {
     remotePatterns: [
@@ -8,4 +10,12 @@ const nextConfig = {
   }
 };
 
-export default nextConfig;
+// Monitoramento de erros (Sentry, plano gratuito). Sem
+// SENTRY_ORG/SENTRY_PROJECT configurados no ambiente, o wrapper não
+// falha o build — só não faz upload de source maps.
+export default withSentryConfig(nextConfig, {
+  silent: true,
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  disableLogger: true
+});

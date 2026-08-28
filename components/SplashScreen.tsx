@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react';
 
 // Agente de página de carregamento: logo em 700px no desktop / 500px no
-// mobile (com responsividade para telas menores), barra de progresso
-// simulada de 0 a 100%. Aparece SÓ UMA VEZ por sessão do navegador —
-// antes reaparecia a cada troca de página, dando a impressão de uma
-// "tela de carregamento" entre capas/categorias, quando a transição
-// deveria ser imediata.
+// mobile, com barra de progresso rápida. O CONTEÚDO real da página
+// (incluindo o banner hero) já vem pronto no HTML enviado pelo
+// servidor por baixo dela — a splash é só um flash de marca breve,
+// não um bloqueio de carregamento. Assim que ela some, o banner hero
+// já é a primeira coisa que aparece, igual nos grandes streamings.
+// Aparece SÓ UMA VEZ por sessão do navegador.
 export function SplashScreen() {
   const [progresso, setProgresso] = useState(0);
   const [visivel, setVisivel] = useState(false);
@@ -18,7 +19,7 @@ export function SplashScreen() {
     setVisivel(true);
 
     const inicio = Date.now();
-    const duracao = 1800;
+    const duracao = 700;
 
     const tick = () => {
       const decorrido = Date.now() - inicio;
@@ -27,7 +28,7 @@ export function SplashScreen() {
       if (pct < 100) {
         requestAnimationFrame(tick);
       } else {
-        setTimeout(() => setVisivel(false), 250);
+        setTimeout(() => setVisivel(false), 120);
       }
     };
     requestAnimationFrame(tick);

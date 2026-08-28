@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { SearchResultsGrid } from './SearchResultsGrid';
+import { estaEmModoInfantilCliente, contemTermoAdulto } from '@/lib/kidsMode';
 import type { SearchCatalogItem } from '@/lib/types';
 
 // Agente de Busca: pesquisa em tempo real — a cada tecla digitada (com
@@ -28,7 +29,12 @@ export function LiveSearch() {
         .select('*')
         .ilike('titulo', `%${termoAtual}%`)
         .limit(30);
-      setResultados(data || []);
+      // Modo infantil (Agente de Perfil): nunca mostra resultado
+      // marcado como conteúdo adulto (ver lib/kidsMode.ts).
+      const filtrados = estaEmModoInfantilCliente()
+        ? (data || []).filter((r) => !contemTermoAdulto(r.genero) && !contemTermoAdulto(r.tipo))
+        : data || [];
+      setResultados(filtrados);
       setBuscando(false);
     }, 300);
 

@@ -35,12 +35,6 @@ body {
 /* O banner hero é grande demais para o mesmo zoom das capas pequenas —
    usa um contorno mais discreto, sem escalar (evita "esticar" a imagem
    de fundo inteira). */
-.focusable[data-hero]:focus-visible,
-.focusable[data-hero][data-focused='true'] {
-  transform: none;
-  box-shadow: inset 0 0 0 3px #e8c97a;
-}
-
 /* Capas dentro de carrosséis de categoria "crescem" mais ao focar —
    efeito próximo do Prime Video, ficando por cima das vizinhas. */
 [data-carousel-card] .focusable:focus-visible,

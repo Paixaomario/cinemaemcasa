@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import type { Profile } from '@/lib/types';
 
@@ -53,8 +54,11 @@ export default function AdminPage() {
 
   return (
     <div className="px-6 pt-10 pb-10">
-      <h1 className="text-xl font-medium mb-6">Usuários autorizados</h1>
-      <div className="flex flex-col gap-2">
+      <h1 className="text-xl font-medium mb-2">Usuários autorizados</h1>
+      <Link href="/admin/secoes" className="text-[12px] text-white underline mb-6 inline-block">
+        Gerenciar seções da Home →
+      </Link>
+      <div className="flex flex-col gap-2 mt-4">
         {perfis.map((p) => (
           <div
             key={p.id}

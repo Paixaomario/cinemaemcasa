@@ -2,6 +2,7 @@ export const revalidate = 300;
 
 import { supabasePublic } from '@/lib/supabase/server';
 import { BackButton } from '@/components/BackButton';
+import { GuardaModoInfantil } from '@/components/GuardaModoInfantil';
 import { AssistirJuntoButton } from '@/components/AssistirJuntoButton';
 import type { Serie, Temporada, Episodio } from '@/lib/types';
 import { notFound } from 'next/navigation';
@@ -59,6 +60,7 @@ export default async function SerieDetalhesPage({
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/10" />
         <BackButton />
+        <GuardaModoInfantil category={serie.genero} genre={serie.genero} />
 
         <div className="relative z-10 max-w-3xl">
           <h1 className="font-heading font-bold text-[32px] md:text-[48px] lg:text-[56px] leading-tight mb-3">

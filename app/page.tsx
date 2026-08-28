@@ -1,6 +1,8 @@
 import { supabaseServer } from '@/lib/supabase/server';
 import { getHomeRecommendations } from '@/lib/recommendations';
 import { enrichHeroes } from '@/lib/heroEnrichment';
+import { filtrarConteudoAdulto, contemTermoAdulto, COOKIE_PERFIL_INFANTIL } from '@/lib/kidsMode';
+import { cookies } from 'next/headers';
 import { HomeSectionRow } from '@/components/HomeSectionRow';
 import { HeroBanner } from '@/components/HeroBanner';
 import { PosterGrid } from '@/components/PosterGrid';
@@ -96,11 +98,12 @@ async function getSectionItems(section: HomeSection): Promise<Cinema[]> {
   return data || [];
 }
 
-async function getHeroes(featuredSection: HomeSection | undefined): Promise<Cinema[]> {
+async function getHeroes(featuredSection: HomeSection | undefined, infantil: boolean): Promise<Cinema[]> {
   // Agente de Home: o banner hero ROTATIVO respeita a configuração da
   // seção com layout = 'featured' em home_sections (categorias/
-  // ordenação) e mostra vários títulos em sequência, não só um.
-  if (featuredSection) {
+  // ordenação) e mostra vários títulos em sequência, não só um. Em
+  // modo infantil, nunca sorteia um título de categoria adulta.
+  if (featuredSection && !(infantil && featuredSection.categorias.some((c) => contemTermoAdulto(c)))) {
     let query = supabaseServer.from('cinema').select('*').limit(40);
     if (featuredSection.categorias && featuredSection.categorias.length > 0) {
       query = query.in('category', featuredSection.categorias);
@@ -110,7 +113,7 @@ async function getHeroes(featuredSection: HomeSection | undefined): Promise<Cine
     else query = query.order('created_at', { ascending: false });
 
     const { data } = await query;
-    if (data && data.length > 0) return data;
+    if (data && data.length > 0) return infantil ? filtrarConteudoAdulto(data) : data;
   }
 
   const { data } = await supabaseServer
@@ -118,21 +121,34 @@ async function getHeroes(featuredSection: HomeSection | undefined): Promise<Cine
     .select('*')
     .order('rating', { ascending: false })
     .limit(40);
-  return data || [];
+  return infantil ? filtrarConteudoAdulto(data || []) : data || [];
 }
 
 export default async function HomePage() {
+  const infantil = cookies().get(COOKIE_PERFIL_INFANTIL)?.value === 'true';
+
   const todasSecoes = await getSections();
   const secaoFeatured = todasSecoes.find((s) => s.layout === 'featured');
-  const secoesLinha = todasSecoes.filter((s) => s.layout !== 'featured');
+  const secoesLinha = todasSecoes
+    .filter((s) => s.layout !== 'featured')
+    // Modo infantil (Agente de Perfil): a seção inteira some se a
+    // categoria configurada for de conteúdo adulto.
+    .filter((s) => !infantil || !s.categorias.some((c) => contemTermoAdulto(c)));
 
   const [heroesBase, sectionData, continuarAssistindo] = await Promise.all([
-    getHeroes(secaoFeatured),
-    Promise.all(secoesLinha.map(async (s) => ({ section: s, items: await getSectionItems(s) }))),
+    getHeroes(secaoFeatured, infantil),
+    Promise.all(
+      secoesLinha.map(async (s) => ({
+        section: s,
+        items: infantil ? filtrarConteudoAdulto(await getSectionItems(s)) : await getSectionItems(s)
+      }))
+    ),
     getContinuarAssistindo()
   ]);
 
   // Agente de indicações por IA: sempre a 4ª seção, restrita ao catálogo próprio.
+  // Já filtra termos adultos por padrão (ver lib/recommendations.ts),
+  // independente do modo infantil.
   const recomendados = await getHomeRecommendations(null, 5);
 
   const heroes = await enrichHeroes(heroesBase);

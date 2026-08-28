@@ -50,6 +50,13 @@ export default function RootLayout({
           href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"
         />
         <link rel="manifest" href="/manifest.json" />
+        {/* iOS ignora boa parte do manifest.json — sem essas tags, o
+            "Adicionar à Tela de Início" no Safari não fica em modo
+            app (aparece a barra do navegador por cima). */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Cinema em Casa" />
+        <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="bg-black text-white font-sans">
         <SplashScreen />

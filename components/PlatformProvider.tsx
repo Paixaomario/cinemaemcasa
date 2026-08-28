@@ -30,7 +30,7 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
       if (document.activeElement && document.activeElement !== document.body) return;
       const main = document.querySelector<HTMLElement>('main');
       const primeiro =
-        main?.querySelector<HTMLElement>('.focusable:not([data-hero])') ||
+        main?.querySelector<HTMLElement>('.focusable') ||
         document.querySelector<HTMLElement>('aside a[href="/"]');
       primeiro?.focus();
     }, 250);
