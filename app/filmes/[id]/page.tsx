@@ -5,6 +5,7 @@ import { PosterGrid } from '@/components/PosterGrid';
 import { BackButton } from '@/components/BackButton';
 import { GuardaModoInfantil } from '@/components/GuardaModoInfantil';
 import { AssistirJuntoButton } from '@/components/AssistirJuntoButton';
+import { BotaoMinhaLista } from '@/components/BotaoMinhaLista';
 import type { Cinema } from '@/lib/types';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -63,10 +64,7 @@ export default async function FilmeDetalhesPage({ params }: { params: { id: stri
               <i className="ti ti-player-play mr-2" aria-hidden="true" />
               Assistir
             </Link>
-            <button className="focusable bg-white/10 border border-border text-white text-[15px] md:text-[17px] font-medium rounded-card px-6 py-3">
-              <i className="ti ti-plus mr-2" aria-hidden="true" />
-              Minha lista
-            </button>
+            <BotaoMinhaLista contentId={filme.id} contentType="movie" />
             <AssistirJuntoButton contentId={String(filme.id)} contentType="movie" titulo={filme.titulo} />
           </div>
         </div>

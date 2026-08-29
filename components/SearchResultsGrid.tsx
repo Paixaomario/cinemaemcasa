@@ -15,7 +15,7 @@ export function SearchResultsGrid({ results }: Props) {
       {/* Mobile: carrossel com 3 visíveis */}
       <div className="flex gap-2.5 overflow-x-auto md:hidden -mx-1 px-1">
         {results.map((r) => (
-          <ResultCard key={`${r.source_table}-${r.source_id}`} item={r} className="min-w-[90px] w-[calc(33.333%-8px)]" />
+          <ResultCard key={`${r.source_table}-${r.source_id}`} item={r} className="shrink-0 min-w-[90px] w-[calc(33.333%-8px)]" />
         ))}
       </div>
 
@@ -41,7 +41,7 @@ function ResultCard({ item, className }: { item: SearchCatalogItem; className?: 
   return (
     <Link
       href={href}
-      className={`focusable block rounded-card overflow-hidden bg-card h-[130px] shrink-0 shadow-card ${className || ''}`}
+      className={`focusable block rounded-card overflow-hidden bg-card shadow-card w-full aspect-[2/3] ${className || ''}`}
     >
       {item.poster && (
         // eslint-disable-next-line @next/next/no-img-element

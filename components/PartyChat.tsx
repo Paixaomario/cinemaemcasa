@@ -101,7 +101,7 @@ export function PartyChat({ roomId, nome }: Props) {
         {mensagens.map((m) => (
           <div key={m.id}>
             <span className="text-[10px] font-medium text-gold">{m.sender_name}</span>
-            <p className="text-[12px] text-white/90 leading-snug line-clamp-2">{m.message}</p>
+            <p className="emoji-fonte text-[12px] text-white/90 leading-snug line-clamp-2">{m.message}</p>
           </div>
         ))}
         <div ref={fimRef} />

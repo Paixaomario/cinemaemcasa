@@ -32,7 +32,7 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
       const primeiro =
         main?.querySelector<HTMLElement>('.focusable') ||
         document.querySelector<HTMLElement>('aside a[href="/"]');
-      primeiro?.focus();
+      primeiro?.focus({ preventScroll: true });
     }, 250);
     return () => clearTimeout(t);
   }, [pathname]);

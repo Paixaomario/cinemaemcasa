@@ -27,7 +27,7 @@ export function EmojiPicker({ onSelect, onClose }: Props) {
               onSelect(e);
               onClose();
             }}
-            className="focusable text-lg"
+            className="focusable emoji-fonte text-[23px]"
             aria-label={`Enviar reação ${e}`}
           >
             {e}
@@ -42,7 +42,7 @@ export function EmojiPicker({ onSelect, onClose }: Props) {
               onSelect(e);
               onClose();
             }}
-            className="focusable text-base"
+            className="focusable emoji-fonte text-[21px]"
             aria-label={`Enviar emoji ${e}`}
           >
             {e}

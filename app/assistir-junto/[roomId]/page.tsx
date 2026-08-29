@@ -35,5 +35,13 @@ export default async function AssistirJuntoPage({ params }: { params: { roomId: 
     titulo = data?.titulo || '';
   }
 
-  return <PartyRoomClient room={room} videoSrc={videoSrc} poster={poster} titulo={titulo} />;
+  return (
+    <PartyRoomClient
+      room={room}
+      videoSrc={videoSrc}
+      poster={poster}
+      titulo={titulo}
+      exitHref={room.content_type === 'movie' ? '/filmes' : '/series'}
+    />
+  );
 }

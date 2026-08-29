@@ -59,9 +59,9 @@ export function TitleCard({ href, poster, titulo, ano, duracao, rating, trailer,
       )}
 
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2 pt-9 pb-2 flex items-center justify-between">
-        {ano ? <span className="text-[36px] leading-none font-bold text-white/90">{ano}</span> : <span />}
+        {ano ? <span className="text-[33px] leading-none font-bold text-white/90">{ano}</span> : <span />}
         {rating !== null && rating !== undefined && rating > 0 && (
-          <span className="flex items-center gap-1 text-[36px] leading-none font-bold text-gold">
+          <span className="flex items-center gap-1 text-[33px] leading-none font-bold text-gold">
             <i className="ti ti-star-filled text-[26px]" aria-hidden="true" />
             {rating.toFixed(1)}
           </span>

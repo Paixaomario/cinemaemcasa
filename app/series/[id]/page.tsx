@@ -4,6 +4,7 @@ import { supabasePublic } from '@/lib/supabase/server';
 import { BackButton } from '@/components/BackButton';
 import { GuardaModoInfantil } from '@/components/GuardaModoInfantil';
 import { AssistirJuntoButton } from '@/components/AssistirJuntoButton';
+import { BotaoMinhaLista } from '@/components/BotaoMinhaLista';
 import type { Serie, Temporada, Episodio } from '@/lib/types';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -75,11 +76,12 @@ export default async function SerieDetalhesPage({
             </p>
           )}
           <p className="text-[16px] md:text-[19px] text-white/90 leading-relaxed max-w-2xl">{serie.descricao}</p>
-          {episodios[0] && (
-            <div className="mt-4">
+          <div className="flex gap-3 mt-4 flex-wrap">
+            <BotaoMinhaLista contentId={serie.id_n} contentType="series" />
+            {episodios[0] && (
               <AssistirJuntoButton contentId={String(episodios[0].id_n)} contentType="series" titulo={serie.titulo || ''} />
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

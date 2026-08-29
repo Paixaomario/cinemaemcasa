@@ -20,25 +20,30 @@ const TEMPO_SEM_TRAILER_MS = 15_000;
 // Proporção 16:9, ocupa 100% da largura, sem espaçamento lateral.
 export function HeroBanner({ heroes }: Props) {
   const pathname = usePathname();
-  const chaveArmazenamento = `hero_idx_${pathname}`;
+  const chaveArmazenamento = `hero_passo_${pathname}`;
 
-  // Começa do PRÓXIMO título depois do último mostrado nesta página
-  // (persistido entre recarregamentos) — nunca reinicia no mesmo.
-  const [indice, setIndice] = useState(() => {
-    if (typeof window === 'undefined' || heroes.length === 0) return 0;
+  // Usa um contador MONOTÔNICO (nunca "empata" com o valor anterior)
+  // em vez do índice direto — bug corrigido: com poucos títulos (ou
+  // até só 1), setIndice(mesmoValor) não reexecutava o efeito do timer
+  // (o React ignora set de estado pro mesmo valor), então a rotação
+  // parava de vez depois do 1º ciclo e só "voltava a funcionar" ao
+  // recarregar a página (o que sorteava um passo inicial diferente).
+  const [passo, setPasso] = useState(() => {
+    if (typeof window === 'undefined') return 0;
     const salvo = Number(window.localStorage.getItem(chaveArmazenamento));
-    return Number.isFinite(salvo) ? (salvo + 1) % heroes.length : 0;
+    return Number.isFinite(salvo) ? salvo + 1 : 0;
   });
   const [mostrandoTrailer, setMostrandoTrailer] = useState(false);
 
+  const indice = heroes.length > 0 ? passo % heroes.length : 0;
   const hero = heroes[indice];
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem(chaveArmazenamento, String(indice));
+      window.localStorage.setItem(chaveArmazenamento, String(passo));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [indice]);
+  }, [passo]);
 
   useEffect(() => {
     setMostrandoTrailer(false);
@@ -52,11 +57,12 @@ export function HeroBanner({ heroes }: Props) {
     const t = setTimeout(() => setMostrandoTrailer(true), TEMPO_CAPA_MS);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [indice, hero?.id]);
+  }, [passo]);
 
-  // Percorre TODOS os títulos recebidos em sequência antes de voltar
-  // ao início — nunca repete um título antes de chegar ao último.
-  const avancar = () => setIndice((i) => (i + 1) % heroes.length);
+  // SEMPRE incrementa (nunca reatribui o mesmo valor) — garante que o
+  // efeito acima rode de novo mesmo com 1 único título na lista (nesse
+  // caso ele simplesmente repete capa→trailer→capa→trailer...).
+  const avancar = () => setPasso((p) => p + 1);
 
   if (!hero) return null;
   const imagem = hero.backdrop || hero.banner || hero.poster;

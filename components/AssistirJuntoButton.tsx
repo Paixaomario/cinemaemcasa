@@ -49,11 +49,14 @@ export function AssistirJuntoButton({ contentId, contentType, titulo }: Props) {
     if (!error) setLink(`${window.location.origin}/assistir-junto/${id}`);
   };
 
-  const mensagem = `Assista comigo "${titulo}" no Cinema em Casa: ${link}`;
+  const mensagem = `Assista comigo "${titulo}" no Cinema em Casa:\n${link}`;
 
-  const copiar = async () => {
+  const copiarLink = async () => {
+    // Copia SÓ o link (não a mensagem inteira) — colar o texto+link
+    // grudados na barra de endereço de um navegador faz ele tratar
+    // tudo como uma busca no Google, em vez de abrir o link.
     if (!link) return;
-    await navigator.clipboard.writeText(mensagem);
+    await navigator.clipboard.writeText(link);
     setCopiado(true);
     setTimeout(() => setCopiado(false), 2000);
   };
@@ -74,7 +77,7 @@ export function AssistirJuntoButton({ contentId, contentType, titulo }: Props) {
             WhatsApp
           </a>
           <button
-            onClick={copiar}
+            onClick={copiarLink}
             className="focusable flex-1 bg-white/10 border border-border text-white text-[13px] font-medium rounded-card px-4 py-2.5"
           >
             <i className="ti ti-copy mr-1.5" aria-hidden="true" />

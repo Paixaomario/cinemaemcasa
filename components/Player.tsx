@@ -54,6 +54,23 @@ export function PlayerVideoJS({
   const [audioTrack, setAudioTrack] = useState(audioTracks?.[0]?.lang || '');
   const [subtitleTrack, setSubtitleTrack] = useState('off');
   const [menuAberto, setMenuAberto] = useState(false);
+  const [controlesVisiveis, setControlesVisiveis] = useState(true);
+  const [erro, setErro] = useState(false);
+  const timerInatividade = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const registrarAtividade = () => {
+    setControlesVisiveis(true);
+    if (timerInatividade.current) clearTimeout(timerInatividade.current);
+    timerInatividade.current = setTimeout(() => setControlesVisiveis(false), 3000);
+  };
+
+  useEffect(() => {
+    registrarAtividade();
+    return () => {
+      if (timerInatividade.current) clearTimeout(timerInatividade.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const pular = (segundos: number) => {
     const atual = playerRef.current?.currentTime();
@@ -65,6 +82,7 @@ export function PlayerVideoJS({
     if (!videoElRef.current || !src) return;
 
     let ativo = true;
+    let ultimoSegundoSalvo = -1;
 
     (async () => {
       const videojs = (await import('video.js')).default;
@@ -88,10 +106,22 @@ export function PlayerVideoJS({
         if (nextEpisodeHref) setCountdown(10);
       });
 
+      player.on('error', () => {
+        setErro(true);
+      });
+
       player.on('timeupdate', () => {
         if (!userId) return;
         const t = player.currentTime();
-        if (typeof t === 'number') saveProgress(t);
+        // CORREÇÃO DE PERFORMANCE: 'timeupdate' dispara várias vezes
+        // por segundo — salvar no Supabase a cada disparo (sem limite
+        // nenhum) sobrecarregava a rede durante a própria reprodução,
+        // contribuindo pra travamentos. Agora salva no máximo 1x a
+        // cada 10 segundos de vídeo.
+        if (typeof t === 'number' && Math.floor(t) % 10 === 0 && Math.floor(t) !== ultimoSegundoSalvo) {
+          ultimoSegundoSalvo = Math.floor(t);
+          saveProgress(t);
+        }
       });
     })();
 
@@ -128,34 +158,66 @@ export function PlayerVideoJS({
   };
 
   return (
-    <div className="fixed inset-0 bg-black overflow-hidden cinema-player-skin">
+    <div
+      className="fixed inset-0 bg-black overflow-hidden cinema-player-skin"
+      onMouseMove={registrarAtividade}
+      onTouchStart={registrarAtividade}
+      onKeyDown={registrarAtividade}
+    >
       <div data-vjs-player className="w-full h-full">
         <video ref={videoElRef} className="video-js w-full h-full" playsInline />
       </div>
+
+      {erro && (
+        <div className="absolute inset-0 bg-black flex flex-col items-center justify-center gap-4 z-50 px-6 text-center">
+          <i className="ti ti-alert-triangle text-4xl text-gold" aria-hidden="true" />
+          <p className="text-sm text-white">
+            Não foi possível carregar este vídeo. O arquivo pode estar indisponível ou num
+            formato não suportado pelo navegador.
+          </p>
+          <button
+            onClick={() => router.push(exitHref)}
+            className="focusable bg-accent text-white text-[13px] font-medium rounded-card px-5 py-2.5"
+          >
+            Voltar
+          </button>
+        </div>
+      )}
 
       {/* Botão Voltar — volta para a listagem (Filmes ou Séries) */}
       <button
         onClick={() => router.push(exitHref)}
         aria-label="Voltar"
-        className="focusable absolute top-5 left-5 z-30 w-11 h-11 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white"
+        className={`focusable absolute top-5 left-5 z-30 w-11 h-11 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white transition-opacity duration-300 ${
+          controlesVisiveis ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
       >
         <i className="ti ti-arrow-left text-xl" aria-hidden="true" />
       </button>
 
       {/* Controles estilo Netflix: retroceder/avançar 10s, sobre o vídeo,
-          além da barra nativa do Video.js (play/pause, volume, tela cheia). */}
-      <div className="absolute inset-x-0 bottom-[4.5em] flex items-center justify-center gap-10 z-20 pointer-events-none">
+          além da barra nativa do Video.js (play/pause, volume, tela cheia).
+          Some junto com o resto dos controles após alguns segundos parado. */}
+      <div
+        className={`absolute inset-x-0 bottom-[4.5em] flex items-center justify-center gap-10 z-20 pointer-events-none transition-opacity duration-300 ${
+          controlesVisiveis ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
         <button
           onClick={() => pular(-10)}
           aria-label="Retroceder 10 segundos"
-          className="focusable pointer-events-auto w-12 h-12 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white"
+          className={`focusable w-12 h-12 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white ${
+            controlesVisiveis ? 'pointer-events-auto' : 'pointer-events-none'
+          }`}
         >
           <i className="ti ti-rewind-backward-10 text-2xl" aria-hidden="true" />
         </button>
         <button
           onClick={() => pular(10)}
           aria-label="Avançar 10 segundos"
-          className="focusable pointer-events-auto w-12 h-12 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white"
+          className={`focusable w-12 h-12 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white ${
+            controlesVisiveis ? 'pointer-events-auto' : 'pointer-events-none'
+          }`}
         >
           <i className="ti ti-rewind-forward-10 text-2xl" aria-hidden="true" />
         </button>
@@ -163,7 +225,11 @@ export function PlayerVideoJS({
 
       {/* Legendas/áudio: flutua sobre o vídeo, nunca empurra layout */}
       {(audioTracks?.length || subtitles?.length) ? (
-        <div className="absolute top-5 right-5 z-30">
+        <div
+          className={`absolute top-5 right-5 z-30 transition-opacity duration-300 ${
+            controlesVisiveis ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+        >
           <button
             onClick={() => setMenuAberto((v) => !v)}
             aria-label="Áudio e legendas"

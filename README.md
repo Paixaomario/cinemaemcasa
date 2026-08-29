@@ -544,7 +544,78 @@ exige o Studio (deixei isso documentado na própria tela).
     listagem) redireciona pra Home — `components/GuardaModoInfantil.tsx`.
   - Testado em `lib/__tests__/kidsMode.test.ts`.
 
-## 29. Notas do Agente QA Final
+## 30. Lote grande de correções (esta entrega)
+
+- **Rotação do hero — bug de verdade encontrado:** o índice usava
+  módulo (`i % total`) como estado do React; quando o próximo valor
+  calculado era IGUAL ao atual (acontece sempre que só há 1 título na
+  lista, e podia acontecer em outros casos), o React não reexecuta o
+  efeito (`setState` pro mesmo valor é ignorado) — a rotação
+  simplesmente parava depois do 1º ciclo, e só "voltava" ao recarregar
+  a página (que sorteava outro ponto de partida). Corrigido com um
+  contador que só cresce, nunca reatribui o mesmo valor.
+- **Sistema abria com uma capa já focada, escondendo o hero:** o foco
+  automático inicial chamava `.focus()` sem `preventScroll`, e o
+  navegador rolava a página pra trazer aquele card pra vista — pulando
+  o hero. Corrigido.
+- **Foco muda de linha → agora centraliza verticalmente** (`block:
+  'center'`, era `'nearest'`).
+- **Botões de avançar/voltar 10s no player agora somem com
+  inatividade** (3s), como o resto dos controles — antes ficavam
+  sempre visíveis, "grudados" na tela.
+- **Erro de mídia agora mostra mensagem amigável** em vez de tela preta
+  ou erro cru do navegador.
+- **Travamentos durante a reprodução — causa real encontrada:** o
+  progresso era salvo no Supabase a CADA disparo do evento
+  `timeupdate` do vídeo (várias vezes por segundo, sem limite nenhum)
+  — uma enxurrada de requisições concorrendo com o próprio streaming
+  do vídeo. Agora salva no máximo 1x a cada 10 segundos.
+- **Assistir Juntos — três correções:**
+  - Guests ficavam "carregando pra sempre" porque só o host via a
+    sessão iniciar (não havia sincronização em tempo real) — agora usa
+    Supabase Realtime pra avisar todo mundo.
+  - Vídeo sem `autoplay` e sem tratamento de erro — corrigido.
+  - Faltava botão de sair — adicionado.
+  - **Link do WhatsApp abrindo o Google:** o botão "Copiar link"
+    copiava a MENSAGEM inteira (texto + link grudados). Colar isso na
+    barra de endereço de um navegador (em vez de clicar num link já
+    reconhecido) faz o navegador tratar tudo como busca no Google, não
+    como link. Agora "Copiar link" copia só a URL.
+- **Emojis pequenos/escuros:** aumentados (+5px) e com fonte de emoji
+  colorida forçada explicitamente (`.emoji-fonte` em `globals.css`) —
+  a fonte principal do app (Inter) não tem glifos de emoji, e em
+  alguns navegadores/SOs o fallback escolhido não é o de emoji colorido
+  por padrão.
+- **Capas sem imagem (filmes):** o reforço via TMDB que já existia só
+  pra séries agora vale também para filmes — se `poster`/`banner`
+  estiverem vazios mas houver `tmdb_id`, busca o pôster no TMDB.
+- **Capas +5px, ano/avaliação -3px.**
+- **Carrossel de categorias (Filmes/Séries) agora respeita 3 por linha
+  no mobile** — usava um tamanho fixo (227px+) direto, ignorando
+  completamente o layout mobile; agora usa `31vw` abaixo de 768px.
+- **Botão "Minha Lista" funcionava só visualmente — agora salva de
+  verdade** (`components/BotaoMinhaLista.tsx`), com estado
+  salvo/não-salvo, nas páginas de filme e série (série nem tinha esse
+  botão antes).
+- **Página de Busca:** banner removido; capas dos resultados não
+  cortam mais (trocado de altura fixa pra proporção de pôster real).
+
+### Sobre "filmes em sequência aparecendo com a mesma capa de coleção"
+Isso **não é um bug de código** — é dado: a coluna `poster`/`banner`
+de cada um desses filmes no Supabase provavelmente está apontando pro
+mesmo arquivo de imagem (uma capa de "coleção" salva por engano em vez
+da capa individual de cada continuação). O reforço via TMDB que acabei
+de adicionar só entra em ação quando essas colunas estão **vazias** —
+se elas já têm um valor (mesmo que errado), o sistema usa esse valor
+tal como está, porque não tem como saber que ele está "errado" sem
+comparar com a ficha real do filme. Pra corrigir de vez: ou você ajusta
+a coluna `poster` de cada filme afetado direto no Supabase pra apontar
+pra imagem certa, ou apaga o valor errado (deixa vazio) — nesse caso o
+reforço via TMDB assume sozinho, buscando a capa individual correta
+pelo `tmdb_id` de cada filme (desde que cada um tenha o tmdb_id
+correto do filme específico, não da franquia/coleção).
+
+## 31. Notas do Agente QA Final
 
 - **Nenhuma tabela/coluna do Supabase é alterada** — o sistema apenas lê os
   dados existentes, exatamente como solicitado.

@@ -30,7 +30,19 @@ export async function buscarFilmesPorCategoria(
     .range(offset, offset + limit - 1);
 
   const items = data || [];
-  return { items, fim: items.length < limit };
+
+  // Mesmo reforço usado em séries: se o filme não tem NENHUMA imagem
+  // própria (poster/banner vazios) mas tem tmdb_id, busca o pôster no
+  // TMDB como último recurso — evita capa em branco.
+  const itemsComFallback = await Promise.all(
+    items.map(async (item) => {
+      if (item.poster || item.banner || !item.tmdb_id) return item;
+      const posterTMDB = await getPosterDoTMDB(item.tmdb_id, 'movie');
+      return posterTMDB ? { ...item, poster: posterTMDB } : item;
+    })
+  );
+
+  return { items: itemsComFallback, fim: items.length < limit };
 }
 
 export async function buscarSeriesPorGenero(

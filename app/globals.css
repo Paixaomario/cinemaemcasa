@@ -35,6 +35,14 @@ body {
 /* O banner hero é grande demais para o mesmo zoom das capas pequenas —
    usa um contorno mais discreto, sem escalar (evita "esticar" a imagem
    de fundo inteira). */
+/* Garante emoji colorido (não monocromático) mesmo com a fonte do app
+   (Inter) aplicada no elemento pai — em alguns navegadores/SOs, sem
+   isso explícito, o emoji pode cair num fallback sem cor. */
+.emoji-fonte {
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji',
+    sans-serif;
+}
+
 /* Capas dentro de carrosséis de categoria "crescem" mais ao focar —
    efeito próximo do Prime Video, ficando por cima das vizinhas. */
 [data-carousel-card] .focusable:focus-visible,
@@ -102,28 +110,35 @@ body {
 
 /* Tamanho das capas: cresce progressivamente em telas maiores, pra
    ficar confortável de ver em smart TVs e telas gigantes (100"+),
-   não só em monitor de computador. */
+   não só em monitor de computador. Também usada pelo carrossel de
+   categorias (Filmes/Séries) — no mobile (abaixo de 768px) ele usa
+   31vw (3 por linha); a partir daí, os mesmos tamanhos da grade. */
 .poster-grid-desktop {
   display: grid;
   gap: 4px 4px;
-  grid-template-columns: repeat(auto-fit, minmax(227px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(232px, 1fr));
 }
 .poster-card-width {
-  width: 227px;
+  width: 31vw;
+}
+@media (min-width: 768px) {
+  .poster-card-width {
+    width: 232px;
+  }
 }
 @media (min-width: 1600px) {
   .poster-grid-desktop {
-    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(275px, 1fr));
   }
   .poster-card-width {
-    width: 270px;
+    width: 275px;
   }
 }
 @media (min-width: 2560px) {
   .poster-grid-desktop {
-    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(365px, 1fr));
   }
   .poster-card-width {
-    width: 360px;
+    width: 365px;
   }
 }
