@@ -49,7 +49,7 @@ export function HeroBanner({ heroes }: Props) {
     setMostrandoTrailer(false);
     if (!hero) return;
 
-    if (!hero.trailer) {
+    if (!hero.trailer && !hero.trailerYoutube) {
       const t = setTimeout(() => avancar(), TEMPO_SEM_TRAILER_MS);
       return () => clearTimeout(t);
     }
@@ -63,6 +63,15 @@ export function HeroBanner({ heroes }: Props) {
   // efeito acima rode de novo mesmo com 1 único título na lista (nesse
   // caso ele simplesmente repete capa→trailer→capa→trailer...).
   const avancar = () => setPasso((p) => p + 1);
+
+  // Trailer do YouTube (fallback via TMDB) não emite evento "acabou" —
+  // avança sozinho depois de um tempo fixo de exibição.
+  useEffect(() => {
+    if (!mostrandoTrailer || !hero?.trailerYoutube || hero.trailer) return;
+    const t = setTimeout(() => avancar(), 30_000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mostrandoTrailer, passo]);
 
   if (!hero) return null;
   const imagem = hero.backdrop || hero.banner || hero.poster;
@@ -78,6 +87,15 @@ export function HeroBanner({ heroes }: Props) {
           playsInline
           onEnded={avancar}
           className="absolute inset-0 w-full h-full object-cover"
+        />
+      ) : mostrandoTrailer && hero.trailerYoutube ? (
+        <iframe
+          key={`trailer-yt-${hero.id}`}
+          src={`https://www.youtube.com/embed/${hero.trailerYoutube}?autoplay=1&mute=1&controls=0&loop=1&playlist=${hero.trailerYoutube}&modestbranding=1&rel=0`}
+          className="absolute inset-0 w-full h-full pointer-events-none scale-[1.5]"
+          style={{ border: 0 }}
+          allow="autoplay; encrypted-media"
+          title={hero.titulo}
         />
       ) : imagem ? (
         // eslint-disable-next-line @next/next/no-img-element

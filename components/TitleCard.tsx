@@ -5,22 +5,40 @@ import Link from 'next/link';
 
 interface TitleCardProps {
   href: string;
+  assistirHref?: string;
   poster: string | null;
   titulo: string;
   ano?: number | null;
   duracao?: string | null;
   rating?: number | null;
   trailer?: string | null;
+  descricao?: string | null;
+  classificacao?: string | null;
+  temporadas?: number | null;
   tall?: boolean;
 }
 
-// Agente de prévia ao focar: ao parar o foco (mouse ou D-pad) por ~900ms
-// numa capa, ela já aumenta de tamanho via CSS (.focusable, ver
-// globals.css) e o trailer do título começa a tocar em loop mudo no
-// lugar do pôster — efeito padrão HBO Max em toda capa do sistema, não
-// só no banner hero. Ano e avaliação (com ícone de estrela) ficam
-// sempre visíveis no rodapé da capa.
-export function TitleCard({ href, poster, titulo, ano, duracao, rating, trailer, tall }: TitleCardProps) {
+// Agente de prévia ao focar (padrão Prime Video/HBO Max): ao parar o
+// foco (mouse ou D-pad) por ~900ms numa capa, ela aumenta de tamanho
+// (CSS, ver .focusable em globals.css), o trailer entra no lugar do
+// pôster, e um painel expandido aparece com: descrição (2 linhas),
+// duração (filme) OU nº de temporadas (série), classificação, e
+// atalhos rápidos de Assistir/Minha Lista — sem precisar abrir a
+// página de detalhes pra decidir se quer assistir.
+export function TitleCard({
+  href,
+  assistirHref,
+  poster,
+  titulo,
+  ano,
+  duracao,
+  rating,
+  trailer,
+  descricao,
+  classificacao,
+  temporadas,
+  tall
+}: TitleCardProps) {
   const [showPreview, setShowPreview] = useState(false);
   const [tocandoTrailer, setTocandoTrailer] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -36,6 +54,10 @@ export function TitleCard({ href, poster, titulo, ano, duracao, rating, trailer,
     setShowPreview(false);
     setTocandoTrailer(false);
   };
+
+  const metaLinha = temporadas
+    ? `${temporadas} temporada${temporadas > 1 ? 's' : ''}`
+    : duracao || null;
 
   return (
     <Link
@@ -69,9 +91,40 @@ export function TitleCard({ href, poster, titulo, ano, duracao, rating, trailer,
       </div>
 
       {showPreview && (
-        <div className="absolute inset-x-0 bottom-0 bg-black/85 px-2 py-1.5">
-          <p className="text-[11px] font-medium text-white truncate">{titulo}</p>
-          <p className="text-[10px] text-textmuted">{[ano, duracao].filter(Boolean).join(' · ')}</p>
+        <div className="absolute inset-x-0 bottom-0 bg-black/90 px-2.5 py-2 flex flex-col gap-1">
+          <p className="text-[12px] font-semibold text-white truncate">{titulo}</p>
+
+          {(classificacao || metaLinha) && (
+            <div className="flex items-center gap-1.5">
+              {classificacao && (
+                <span className="border border-white/40 rounded px-1 text-[9px] text-white/90">
+                  {classificacao}
+                </span>
+              )}
+              {metaLinha && <span className="text-[10px] text-textmuted">{metaLinha}</span>}
+            </div>
+          )}
+
+          {descricao && (
+            <p className="text-[10px] text-white/75 leading-snug line-clamp-2">{descricao}</p>
+          )}
+
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span
+              role="button"
+              aria-label="Assistir"
+              className="w-6 h-6 rounded-full bg-white flex items-center justify-center"
+            >
+              <i className="ti ti-player-play-filled text-[11px] text-black" aria-hidden="true" />
+            </span>
+            <span
+              role="button"
+              aria-label="Minha lista"
+              className="w-6 h-6 rounded-full border border-white/60 flex items-center justify-center"
+            >
+              <i className="ti ti-plus text-[12px] text-white" aria-hidden="true" />
+            </span>
+          </div>
         </div>
       )}
     </Link>

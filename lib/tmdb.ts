@@ -73,3 +73,68 @@ export async function getPosterDoTMDB(
   if (!data?.poster_path) return null;
   return `${TMDB_IMG_BASE}${data.poster_path}`;
 }
+
+export interface MetadadosTMDB {
+  backdrop: string | null;
+  poster: string | null;
+  descricao: string | null;
+  elenco: { nome: string; personagem?: string; foto?: string }[];
+  trailerYoutube: string | null;
+}
+
+/**
+ * Busca, numa única chamada, TODOS os metadados que a página de
+ * detalhes pode precisar como fallback quando o Supabase não tiver:
+ * imagem de fundo, pôster, sinopse, elenco principal e trailer do
+ * YouTube. Usado nas páginas de detalhes de filme/série E no banner
+ * hero — sempre como ÚLTIMO recurso, nunca substituindo um valor que
+ * já existe no banco.
+ */
+export async function getMetadadosDoTMDB(
+  tmdbId: number,
+  tipo: 'movie' | 'series'
+): Promise<MetadadosTMDB> {
+  const endpoint = tipo === 'series' ? `/tv/${tmdbId}` : `/movie/${tmdbId}`;
+  const [detalhes, creditos, videos] = await Promise.all([
+    tmdbFetch(endpoint),
+    tmdbFetch(`${endpoint}/credits`),
+    tmdbFetch(`${endpoint}/videos`)
+  ]);
+
+  const elenco = (creditos?.cast || [])
+    .slice(0, 8)
+    .map((p: { name: string; character?: string; profile_path?: string }) => ({
+      nome: p.name,
+      personagem: p.character,
+      foto: p.profile_path ? `${TMDB_IMG_BASE}${p.profile_path}` : undefined
+    }));
+
+  const trailer = (videos?.results || []).find(
+    (v: { site: string; type: string }) => v.site === 'YouTube' && v.type === 'Trailer'
+  );
+
+  return {
+    backdrop: detalhes?.backdrop_path ? `${TMDB_IMG_BASE}${detalhes.backdrop_path}` : null,
+    poster: detalhes?.poster_path ? `${TMDB_IMG_BASE}${detalhes.poster_path}` : null,
+    descricao: detalhes?.overview || null,
+    elenco,
+    trailerYoutube: trailer?.key || null
+  };
+}
+
+/**
+ * Versão leve do fallback de trailer — busca só o vídeo do YouTube,
+ * sem elenco nem sinopse (usada pelo banner hero, que roda pra vários
+ * títulos de uma vez e não precisa do resto dos metadados).
+ */
+export async function getTrailerYoutubeDoTMDB(
+  tmdbId: number,
+  tipo: 'movie' | 'series'
+): Promise<string | null> {
+  const endpoint = tipo === 'series' ? `/tv/${tmdbId}` : `/movie/${tmdbId}`;
+  const videos = await tmdbFetch(`${endpoint}/videos`);
+  const trailer = (videos?.results || []).find(
+    (v: { site: string; type: string }) => v.site === 'YouTube' && v.type === 'Trailer'
+  );
+  return trailer?.key || null;
+}

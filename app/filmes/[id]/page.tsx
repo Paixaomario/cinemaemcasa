@@ -1,6 +1,7 @@
 export const revalidate = 300;
 
 import { supabasePublic } from '@/lib/supabase/server';
+import { getMetadadosDoTMDB } from '@/lib/tmdb';
 import { PosterGrid } from '@/components/PosterGrid';
 import { BackButton } from '@/components/BackButton';
 import { GuardaModoInfantil } from '@/components/GuardaModoInfantil';
@@ -22,16 +23,21 @@ async function getRelacionados(ids: number[] | null): Promise<Cinema[]> {
 }
 
 // Página de DETALHES (informações) — separada da página de EXIBIÇÃO
-// (/filmes/[id]/assistir), exatamente como no padrão HBO Max: aqui só
-// se decide se vai assistir; o player só existe na rota de exibição.
-// Imagem em <img object-top> (não background-image) para não cortar o
-// topo, e tipografia ampliada para leitura à distância na TV.
+// (/filmes/[id]/assistir). Imagem/descrição/elenco vêm do Supabase; se
+// alguma dessas colunas estiver vazia E o filme tiver tmdb_id, busca
+// no TMDB como último recurso (nunca substitui o que já existe).
 export default async function FilmeDetalhesPage({ params }: { params: { id: string } }) {
   const filme = await getFilme(params.id);
   if (!filme) notFound();
 
+  const precisaDeReforco = (!filme.backdrop && !filme.banner) || !filme.description || !filme.elenco?.length;
+  const reforco = precisaDeReforco && filme.tmdb_id ? await getMetadadosDoTMDB(filme.tmdb_id, 'movie') : null;
+
+  const imagem = filme.backdrop || filme.banner || filme.poster || reforco?.backdrop || reforco?.poster;
+  const descricao = filme.description || reforco?.descricao;
+  const elenco = filme.elenco?.length ? filme.elenco : reforco?.elenco || [];
+
   const relacionados = await getRelacionados(filme.relacionados);
-  const imagem = filme.backdrop || filme.banner;
 
   return (
     <div>
@@ -56,7 +62,7 @@ export default async function FilmeDetalhesPage({ params }: { params: { id: stri
               {Math.round((filme.rating || 0) * 10)}% de compatibilidade
             </p>
           )}
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <Link
               href={`/filmes/${filme.id}/assistir`}
               className="focusable bg-accent text-white text-[15px] md:text-[17px] font-medium rounded-card px-7 py-3"
@@ -71,19 +77,19 @@ export default async function FilmeDetalhesPage({ params }: { params: { id: stri
       </div>
 
       <div className="px-6 md:px-10 pt-8">
-        <div className="flex gap-6">
-          <div className="flex-1 max-w-3xl">
-            <p className="text-[16px] md:text-[19px] text-white/90 leading-relaxed mb-5">{filme.description}</p>
-            {filme.elenco && filme.elenco.length > 0 && (
-              <p className="text-[14px] md:text-[16px] text-textmuted mb-1.5">
-                Elenco: {filme.elenco.map((e) => e.nome).join(', ')}
-              </p>
-            )}
-            {filme.genre && (
-              <p className="text-[14px] md:text-[16px] text-textmuted">Gêneros: {filme.genre}</p>
-            )}
-          </div>
-        </div>
+        {descricao && (
+          <p className="text-[19px] md:text-[22px] text-white/90 leading-relaxed mb-6 max-w-none line-clamp-6">
+            {descricao}
+          </p>
+        )}
+        {elenco.length > 0 && (
+          <p className="text-[14px] md:text-[16px] text-textmuted mb-1.5">
+            Elenco: {elenco.map((e) => e.nome).join(', ')}
+          </p>
+        )}
+        {filme.genre && (
+          <p className="text-[14px] md:text-[16px] text-textmuted">Gêneros: {filme.genre}</p>
+        )}
       </div>
 
       {relacionados.length > 0 && (

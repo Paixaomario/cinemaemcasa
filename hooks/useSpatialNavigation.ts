@@ -4,19 +4,12 @@ import { useEffect, useRef } from 'react';
 
 type Direcao = 'up' | 'down' | 'left' | 'right';
 
-// Intervalo mínimo entre duas navegações processadas. Controles remotos
-// de smart TV costumam disparar vários eventos "keydown" repetidos
-// enquanto o botão fica pressionado; sem esse limite, os eventos se
-// acumulam numa fila e o app "trava" por vários segundos processando
-// tudo de uma vez (o efeito de "delay de 10s" relatado na LG webOS).
 const INTERVALO_MINIMO_MS = 140;
 
 function getFocusaveis(container: ParentNode | null): HTMLElement[] {
   if (!container) return [];
   return Array.from(container.querySelectorAll<HTMLElement>('.focusable')).filter(
-    (el) =>
-      el.offsetParent !== null && // ignora elementos escondidos (display:none)
-      !el.closest('[data-nav-ignore]') // ignora clones do loop infinito dos carrosséis
+    (el) => el.offsetParent !== null && !el.closest('[data-nav-ignore]')
   );
 }
 
@@ -33,21 +26,22 @@ function maisProximoNoTopo(elementos: HTMLElement[]): HTMLElement | null {
 /**
  * Navegação espacial por D-pad (setas do controle remoto / teclado).
  *
- * Regras explícitas de transição entre o menu lateral e o conteúdo da
- * página:
- *  - Do menu lateral, seta DIREITA leva direto para a primeira linha/
- *    primeira coluna do conteúdo.
- *  - Da PRIMEIRA COLUNA do conteúdo, seta ESQUERDA volta para o ícone
- *    Início do menu lateral (que também expande o menu, via
- *    :focus-within).
+ * CORREÇÃO DE PERFORMANCE (LG webOS): a versão anterior, pra decidir
+ * pra onde mover o foco em CIMA/BAIXO, buscava e calculava a posição
+ * (getBoundingClientRect) de TODOS os elementos focáveis dentro de
+ * `<main>` — com a rolagem infinita das categorias acumulando centenas
+ * ou milhares de capas na página, isso virou uma varredura gigante a
+ * cada aperto de seta, e o processador fraco de uma smart TV levava
+ * segundos pra terminar (o "delay de quase 5s" relatado).
  *
- * Fora dessas transições, o foco vai para o elemento `.focusable` mais
- * próximo na direção pressionada, dentro da MESMA região (menu OU
- * conteúdo) — nunca pula de uma pra outra fora das regras acima.
- *
- * Otimizado para TVs mais lentas (LG webOS): throttle de eventos,
- * scroll instantâneo (sem animação) e cálculo de distância mais
- * assertivo pra evitar "pulos" errados de direção.
+ * Agora cada linha de capas é uma <section> (Home/Filmes/Séries já
+ * renderizam assim). Pra cima/baixo, a busca fica restrita à seção
+ * ANTERIOR/SEGUINTE (só a lista de <section> é escaneada primeiro —
+ * leve, são dezenas, não milhares — e só DEPOIS os elementos DENTRO da
+ * seção-alvo, que é só uma linha). Pra esquerda/direita, a busca fica
+ * restrita à seção ATUAL. Isso reduz o trabalho por tecla de "milhares
+ * de elementos" pra "uma ou duas dezenas", não importa quanto a
+ * rolagem infinita tenha crescido em outras categorias.
  */
 export function useSpatialNavigation() {
   const ultimoProcessadoRef = useRef(0);
@@ -64,9 +58,6 @@ export function useSpatialNavigation() {
       const direction = map[e.key];
       if (!direction) return;
 
-      // Throttle: ignora eventos repetidos demais em sequência (evita
-      // fila de eventos travando a TV) e eventos de "auto-repeat" do
-      // navegador enquanto a tecla fica pressionada.
       const agora = performance.now();
       if (e.repeat || agora - ultimoProcessadoRef.current < INTERVALO_MINIMO_MS) {
         e.preventDefault();
@@ -78,7 +69,18 @@ export function useSpatialNavigation() {
       }
 
       const current = document.activeElement as HTMLElement | null;
-      if (!current) return;
+
+      if (!current || current === document.body) {
+        e.preventDefault();
+        const main = document.querySelector<HTMLElement>('main');
+        const primeiraSecao = main?.querySelector<HTMLElement>('section');
+        const primeiro =
+          maisProximoNoTopo(getFocusaveis(primeiraSecao || main)) ||
+          document.querySelector<HTMLElement>('aside a[href="/"]');
+        primeiro?.focus();
+        primeiro?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' });
+        return;
+      }
 
       processandoRef.current = true;
       ultimoProcessadoRef.current = agora;
@@ -88,10 +90,12 @@ export function useSpatialNavigation() {
         const main = document.querySelector<HTMLElement>('main');
         const emMenu = !!aside && aside.contains(current);
         const emConteudo = !!main && main.contains(current);
+        const currentRect = current.getBoundingClientRect();
 
         // Regra 1: do menu lateral, direita -> primeira linha/coluna do conteúdo.
         if (direction === 'right' && emMenu) {
-          const alvo = maisProximoNoTopo(getFocusaveis(main));
+          const primeiraSecao = main?.querySelector<HTMLElement>('section');
+          const alvo = maisProximoNoTopo(getFocusaveis(primeiraSecao || main));
           if (alvo) {
             e.preventDefault();
             alvo.focus();
@@ -100,11 +104,15 @@ export function useSpatialNavigation() {
           }
         }
 
+        // A seção (linha) onde o foco atual está — cada carrossel/grade
+        // de capas é uma <section> própria. Usada pra restringir as
+        // buscas abaixo, em vez de varrer a página inteira.
+        const secaoAtual = emConteudo ? (current.closest('section') as HTMLElement | null) : null;
+
         // Regra 2: da primeira coluna do conteúdo, esquerda -> ícone Início do menu.
         if (direction === 'left' && emConteudo) {
-          const focaveisConteudo = getFocusaveis(main);
-          const currentRect = current.getBoundingClientRect();
-          const menorEsquerda = Math.min(...focaveisConteudo.map((el) => el.getBoundingClientRect().left));
+          const focaveisSecao = getFocusaveis(secaoAtual || main);
+          const menorEsquerda = Math.min(...focaveisSecao.map((el) => el.getBoundingClientRect().left));
           const primeiraColuna = currentRect.left - menorEsquerda < 8;
 
           if (primeiraColuna) {
@@ -117,89 +125,92 @@ export function useSpatialNavigation() {
           }
         }
 
-        // Navegação genérica: restrita à própria região (menu OU conteúdo).
-        const pool = emMenu ? getFocusaveis(aside) : emConteudo ? getFocusaveis(main) : getFocusaveis(document.body);
-        const currentRect = current.getBoundingClientRect();
-
-        // Regra 3: dentro de uma linha de capas (esquerda/direita), o
-        // foco nunca pula para outra linha sozinho — se não há vizinho
-        // na mesma linha na direção pressionada, ele dá a volta para o
-        // outro extremo DA MESMA LINHA. Só cima/baixo trocam de linha.
-        if ((direction === 'left' || direction === 'right') && !emMenu) {
-          const ALTURA_TOLERANCIA = 12;
-          const mesmaLinha = pool.filter((el) => {
+        // Esquerda/direita: restrito à SEÇÃO ATUAL (uma linha só) —
+        // nunca precisa olhar pra fora dela.
+        if ((direction === 'left' || direction === 'right') && emConteudo) {
+          const pool = getFocusaveis(secaoAtual || main);
+          const candidatosNaDirecao = pool.filter((el) => {
             if (el === current) return false;
             const r = el.getBoundingClientRect();
-            return Math.abs(r.top - currentRect.top) < ALTURA_TOLERANCIA;
+            return direction === 'right' ? r.left > currentRect.left : r.left < currentRect.left;
           });
 
-          if (mesmaLinha.length > 0) {
-            const candidatosNaDirecao = mesmaLinha.filter((el) => {
-              const r = el.getBoundingClientRect();
-              return direction === 'right' ? r.left > currentRect.left : r.left < currentRect.left;
-            });
+          let alvo: HTMLElement | null = null;
+          if (candidatosNaDirecao.length > 0) {
+            alvo = candidatosNaDirecao.sort(
+              (a, b) =>
+                Math.abs(a.getBoundingClientRect().left - currentRect.left) -
+                Math.abs(b.getBoundingClientRect().left - currentRect.left)
+            )[0];
+          } else {
+            // Chegou na ponta: dá a volta pro outro extremo DESSA MESMA seção.
+            alvo = [...pool].sort((a, b) => {
+              const ra = a.getBoundingClientRect().left;
+              const rb = b.getBoundingClientRect().left;
+              return direction === 'right' ? ra - rb : rb - ra;
+            })[0];
+          }
 
-            let alvoLinha: HTMLElement | null = null;
-            if (candidatosNaDirecao.length > 0) {
-              alvoLinha = candidatosNaDirecao.sort(
-                (a, b) => Math.abs(a.getBoundingClientRect().left - currentRect.left) -
-                  Math.abs(b.getBoundingClientRect().left - currentRect.left)
-              )[0];
-            } else {
-              // Chegou na ponta da linha: dá a volta para o outro extremo
-              // DESSA MESMA LINHA (nunca pula para a linha de baixo/cima).
-              alvoLinha = [...mesmaLinha].sort((a, b) => {
-                const ra = a.getBoundingClientRect().left;
-                const rb = b.getBoundingClientRect().left;
-                return direction === 'right' ? ra - rb : rb - ra;
-              })[0];
-            }
+          if (alvo && alvo !== current) {
+            e.preventDefault();
+            alvo.focus();
+            alvo.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' });
+            return;
+          }
+        }
 
-            if (alvoLinha) {
+        // Cima/baixo: primeiro acha a seção anterior/seguinte (lista de
+        // <section> é leve — dezenas, não milhares) e só then busca os
+        // elementos DENTRO dela (de novo, uma linha só, não a página
+        // inteira). É isso que elimina o delay de segundos na TV.
+        if ((direction === 'up' || direction === 'down') && emConteudo && main) {
+          const todasSecoes = Array.from(main.querySelectorAll<HTMLElement>('section'));
+          const indiceAtual = secaoAtual ? todasSecoes.indexOf(secaoAtual) : -1;
+          const indiceAlvo = direction === 'down' ? indiceAtual + 1 : indiceAtual - 1;
+          const secaoAlvo = todasSecoes[indiceAlvo];
+
+          if (secaoAlvo) {
+            const focaveisAlvo = getFocusaveis(secaoAlvo);
+            const alvo = focaveisAlvo.sort(
+              (a, b) =>
+                Math.abs(a.getBoundingClientRect().left - currentRect.left) -
+                Math.abs(b.getBoundingClientRect().left - currentRect.left)
+            )[0];
+
+            if (alvo) {
               e.preventDefault();
-              alvoLinha.focus();
-              alvoLinha.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' });
+              alvo.focus();
+              alvo.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' });
               return;
             }
           }
         }
 
-        let melhor: HTMLElement | null = null;
-        let melhorDistancia = Infinity;
+        // Navegação dentro do menu lateral (poucos itens — pode
+        // continuar com a busca simples, sem custo perceptível).
+        if (emMenu) {
+          const pool = getFocusaveis(aside);
+          let melhor: HTMLElement | null = null;
+          let melhorDistancia = Infinity;
 
-        for (const el of pool) {
-          if (el === current) continue;
-          const rect = el.getBoundingClientRect();
-
-          const dx = rect.left - currentRect.left;
-          const dy = rect.top - currentRect.top;
-
-          const naDirecao =
-            (direction === 'up' && dy < -4) ||
-            (direction === 'down' && dy > 4) ||
-            (direction === 'left' && dx < -4) ||
-            (direction === 'right' && dx > 4);
-
-          if (!naDirecao) continue;
-
-          // Penalidade maior no eixo perpendicular: favorece fortemente
-          // o vizinho alinhado na mesma linha/coluna, evitando que o
-          // foco "pule" pra direção errada em grades apertadas.
-          const distancia =
-            direction === 'up' || direction === 'down'
-              ? Math.abs(dy) + Math.abs(dx) * 3
-              : Math.abs(dx) + Math.abs(dy) * 3;
-
-          if (distancia < melhorDistancia) {
-            melhorDistancia = distancia;
-            melhor = el;
+          for (const el of pool) {
+            if (el === current) continue;
+            const rect = el.getBoundingClientRect();
+            const dy = rect.top - currentRect.top;
+            const naDirecao =
+              (direction === 'up' && dy < -4) || (direction === 'down' && dy > 4);
+            if (!naDirecao) continue;
+            const distancia = Math.abs(dy);
+            if (distancia < melhorDistancia) {
+              melhorDistancia = distancia;
+              melhor = el;
+            }
           }
-        }
 
-        if (melhor) {
-          e.preventDefault();
-          melhor.focus();
-          melhor.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' });
+          if (melhor) {
+            e.preventDefault();
+            melhor.focus();
+          }
         }
       } finally {
         processandoRef.current = false;

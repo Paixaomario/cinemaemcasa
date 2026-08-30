@@ -9,7 +9,7 @@ export function BackButton() {
     <button
       onClick={() => router.back()}
       aria-label="Voltar"
-      className="focusable absolute top-5 left-5 z-20 w-11 h-11 rounded-full bg-black/75 flex items-center justify-center text-white"
+      className="focusable absolute top-5 left-5 z-50 w-11 h-11 rounded-full bg-black/75 flex items-center justify-center text-white"
     >
       <i className="ti ti-arrow-left text-xl" aria-hidden="true" />
     </button>

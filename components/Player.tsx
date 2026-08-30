@@ -77,6 +77,26 @@ export function PlayerVideoJS({
     if (typeof atual === 'number') playerRef.current?.currentTime(atual + segundos);
   };
 
+  // Transmitir pra TV (Chromecast/AirPlay) — usa a API nativa do
+  // navegador (RemotePlayback), sem precisar do SDK pago do Google
+  // Cast. Funciona no Chrome/Edge (Chromecast) e Safari (AirPlay);
+  // navegadores sem suporte simplesmente não mostram o botão.
+  const [suportaTransmissao, setSuportaTransmissao] = useState(false);
+  useEffect(() => {
+    const video = videoElRef.current as (HTMLVideoElement & { remote?: unknown }) | null;
+    setSuportaTransmissao(!!video && 'remote' in video);
+  }, []);
+
+  const transmitir = () => {
+    const video = videoElRef.current as (HTMLVideoElement & {
+      remote?: { prompt: () => Promise<void> };
+    }) | null;
+    video?.remote?.prompt().catch(() => {
+      // Usuário cancelou o diálogo ou não há dispositivo disponível —
+      // sem erro pra mostrar, é um fluxo normal.
+    });
+  };
+
   // Inicializa o Video.js uma vez por src.
   useEffect(() => {
     if (!videoElRef.current || !src) return;
@@ -101,6 +121,21 @@ export function PlayerVideoJS({
       });
 
       playerRef.current = player;
+
+      // Tenta iniciar em tela cheia — navegadores só permitem isso
+      // como resultado direto de um clique do usuário (aqui, o clique
+      // em "Assistir" que trouxe até esta página); alguns navegadores
+      // ainda assim bloqueiam por segurança, então isso é best-effort,
+      // não uma garantia.
+      player.one('play', () => {
+        const el = videoElRef.current?.closest('.cinema-player-skin');
+        if (el && el.requestFullscreen) {
+          el.requestFullscreen().catch(() => {
+            // Bloqueado pelo navegador — sem problema, os controles
+            // normais de tela cheia continuam disponíveis.
+          });
+        }
+      });
 
       player.on('ended', () => {
         if (nextEpisodeHref) setCountdown(10);
@@ -222,6 +257,19 @@ export function PlayerVideoJS({
           <i className="ti ti-rewind-forward-10 text-2xl" aria-hidden="true" />
         </button>
       </div>
+
+      {/* Transmitir pra TV (Chromecast/AirPlay) */}
+      {suportaTransmissao && (
+        <button
+          onClick={transmitir}
+          aria-label="Transmitir para TV"
+          className={`focusable absolute top-5 z-30 w-11 h-11 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white transition-opacity duration-300 ${
+            audioTracks?.length || subtitles?.length ? 'right-[70px]' : 'right-5'
+          } ${controlesVisiveis ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        >
+          <i className="ti ti-device-tv text-xl" aria-hidden="true" />
+        </button>
+      )}
 
       {/* Legendas/áudio: flutua sobre o vídeo, nunca empurra layout */}
       {(audioTracks?.length || subtitles?.length) ? (

@@ -615,7 +615,63 @@ reforço via TMDB assume sozinho, buscando a capa individual correta
 pelo `tmdb_id` de cada filme (desde que cada um tenha o tmdb_id
 correto do filme específico, não da franquia/coleção).
 
-## 31. Notas do Agente QA Final
+## 32. Correção crítica de performance na TV + lote de correções (esta entrega)
+
+### Delay de ~5s pra mudar de linha na LG webOS — causa raiz encontrada
+A navegação por seta pra CIMA/BAIXO calculava a posição na tela
+(`getBoundingClientRect`) de **todos** os elementos focáveis dentro de
+`<main>` pra decidir o mais próximo — e como a rolagem infinita das
+categorias vai acumulando capas sem limite (por pedido seu, "sem
+paginação, sem limite"), essa lista podia chegar a milhares de
+elementos depois de um tempo de uso. Num processador fraco de smart
+TV, recalcular a posição de milhares de elementos a cada aperto de
+seta é exatamente o tipo de trabalho que trava por segundos.
+`hooks/useSpatialNavigation.ts` foi reescrito: cada linha de capas já é
+uma `<section>` própria — agora cima/baixo primeiro localiza a seção
+anterior/seguinte (rápido, são dezenas de seções) e só DEPOIS busca os
+elementos dentro dela (uma linha só, não a página inteira). O trabalho
+por tecla caiu de "milhares de elementos" pra "uma dezena", não importa
+quanto a rolagem infinita tenha crescido.
+
+**Limitação residual:** se você rolar MUITO tempo numa única categoria
+lotada, aquela seção especificamente ainda pode acumular bastante DOM
+(a rolagem infinita nunca remove itens antigos). Isso não afeta mais a
+navegação nas OUTRAS categorias (que é o que causava o travamento
+geral), mas se quiser, numa próxima rodada dá pra implementar uma poda
+dos itens mais antigos de uma categoria conforme ela cresce demais.
+
+### Outras correções desta entrega
+- **Páginas de detalhes sem imagem/elenco:** agora buscam no TMDB como
+  último recurso quando o Supabase não tem `backdrop`/`banner`/
+  `poster`, `description` ou `elenco` — usando o `tmdb_id` salvo.
+- **Botão Voltar atrás do botão Assistir:** z-index aumentado bem acima
+  de qualquer outro elemento da página (`z-50`).
+- **Descrição das páginas de detalhes:** fonte maior (+3px), até 6
+  linhas, ocupando a largura toda (antes ficava restrita a uma coluna
+  central).
+- **Nenhuma capa aparece focada ao abrir o sistema:** removido o
+  autofoco silencioso — agora o foco só nasce na PRIMEIRA seta que o
+  usuário aperta (ação real do usuário, não algo "acontecendo sozinho"
+  no carregamento).
+- **Prévia ao focar uma capa, bem mais completa** (mais perto do Prime
+  Video): descrição (2 linhas), duração (filme) ou nº de temporadas
+  (série), classificação, e atalhos rápidos de Assistir/Minha Lista —
+  além do trailer que já tocava.
+- **Trailer do hero quando o campo `trailer` está vazio:** busca um
+  trailer do YouTube no TMDB como último recurso (mostra em vez de
+  ficar com a tela preta).
+- **Nome dos participantes no chat:** peso 600, +3px.
+- **Emojis reforçados de novo:** ainda maiores, com `!important` na
+  fonte de emoji colorida (mais garantia contra o navegador escolher um
+  fallback monocromático).
+- **Botão de "Transmitir para TV" no player** (Chromecast/AirPlay) via
+  API nativa do navegador (`RemotePlayback`) — sem custo, sem SDK
+  pago do Google Cast.
+- **Tentativa de iniciar em tela cheia automaticamente** — navegadores
+  só permitem isso como resultado direto de um gesto do usuário; é
+  best-effort, alguns navegadores ainda assim bloqueiam por segurança.
+
+## 33. Notas do Agente QA Final
 
 - **Nenhuma tabela/coluna do Supabase é alterada** — o sistema apenas lê os
   dados existentes, exatamente como solicitado.

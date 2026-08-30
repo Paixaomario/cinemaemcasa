@@ -1,14 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
 import { useSpatialNavigation } from '@/hooks/useSpatialNavigation';
 import { useBurnInProtection } from '@/hooks/useBurnInProtection';
 import { detectarPlataforma, ehSmartTV, type Plataforma } from '@/lib/platform/platformDetect';
 
 export function PlatformProvider({ children }: { children: React.ReactNode }) {
   const [plataforma, setPlataforma] = useState<Plataforma>('desktop');
-  const pathname = usePathname();
 
   useEffect(() => {
     setPlataforma(detectarPlataforma());
@@ -21,21 +19,11 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  useEffect(() => {
-    // Garante um ponto de partida para o D-pad em TODA troca de página
-    // (não só no carregamento inicial) — sem isso, depois de navegar
-    // para uma nova rota o foco "sumia" (voltava pro body) e o
-    // controle remoto parecia travado até o usuário usar o mouse.
-    const t = setTimeout(() => {
-      if (document.activeElement && document.activeElement !== document.body) return;
-      const main = document.querySelector<HTMLElement>('main');
-      const primeiro =
-        main?.querySelector<HTMLElement>('.focusable') ||
-        document.querySelector<HTMLElement>('aside a[href="/"]');
-      primeiro?.focus({ preventScroll: true });
-    }, 250);
-    return () => clearTimeout(t);
-  }, [pathname]);
+  // IMPORTANTE: não focamos nada proativamente aqui. Nenhuma capa deve
+  // aparecer com o visual de "selecionada" assim que a página abre —
+  // o foco só nasce na PRIMEIRA seta que o usuário apertar (ver
+  // hooks/useSpatialNavigation.ts), que já é uma ação do usuário, não
+  // algo acontecendo sozinho no carregamento.
 
   const isTV = ehSmartTV(plataforma);
 

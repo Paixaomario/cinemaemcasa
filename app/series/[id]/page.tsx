@@ -2,6 +2,7 @@ export const revalidate = 300;
 
 import { supabasePublic } from '@/lib/supabase/server';
 import { BackButton } from '@/components/BackButton';
+import { getMetadadosDoTMDB } from '@/lib/tmdb';
 import { GuardaModoInfantil } from '@/components/GuardaModoInfantil';
 import { AssistirJuntoButton } from '@/components/AssistirJuntoButton';
 import { BotaoMinhaLista } from '@/components/BotaoMinhaLista';
@@ -50,7 +51,13 @@ export default async function SerieDetalhesPage({
     temporadas.find((t) => String(t.numero_temporada) === searchParams.temporada) ||
     temporadas[0];
   const episodios = temporadaAtual ? await getEpisodios(temporadaAtual.id_n) : [];
-  const imagem = serie.banner || serie.capa;
+
+  const precisaDeReforco = (!serie.banner && !serie.capa) || !serie.descricao || !serie.elenco?.length;
+  const reforco = precisaDeReforco && serie.tmdb_id ? await getMetadadosDoTMDB(serie.tmdb_id, 'series') : null;
+
+  const imagem = serie.banner || serie.capa || serie.poster || reforco?.backdrop || reforco?.poster;
+  const descricao = serie.descricao || reforco?.descricao;
+  const elenco = serie.elenco?.length ? serie.elenco : reforco?.elenco || [];
 
   return (
     <div>
@@ -75,7 +82,14 @@ export default async function SerieDetalhesPage({
               {Math.round((serie.rating || 0) * 10)}% de compatibilidade
             </p>
           )}
-          <p className="text-[16px] md:text-[19px] text-white/90 leading-relaxed max-w-2xl">{serie.descricao}</p>
+          <p className="text-[19px] md:text-[22px] text-white/90 leading-relaxed max-w-none line-clamp-6">
+            {descricao}
+          </p>
+          {elenco.length > 0 && (
+            <p className="text-[14px] md:text-[16px] text-white/70 mt-2">
+              Elenco: {elenco.map((e) => e.nome).join(', ')}
+            </p>
+          )}
           <div className="flex gap-3 mt-4 flex-wrap">
             <BotaoMinhaLista contentId={serie.id_n} contentType="series" />
             {episodios[0] && (

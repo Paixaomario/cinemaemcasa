@@ -1,9 +1,10 @@
-import { getBackdropDoTMDB, getOrigemDoTMDB } from './tmdb';
+import { getBackdropDoTMDB, getOrigemDoTMDB, getTrailerYoutubeDoTMDB } from './tmdb';
 import type { Cinema } from './types';
 
 export interface HeroData extends Cinema {
   classificacao?: string | null;
   bandeira?: string | null;
+  trailerYoutube?: string | null;
 }
 
 /**
@@ -32,14 +33,20 @@ export async function enrichHeroes(
 export async function enrichHero(base: Cinema, classificacao?: string | null): Promise<HeroData> {
   let backdrop = base.backdrop;
   let bandeira: string | null = null;
+  let trailerYoutube: string | null = null;
 
   if (base.tmdb_id) {
     const tipo = base.type === 'series' ? 'series' : 'movie';
     if (!backdrop && !base.banner) {
       backdrop = await getBackdropDoTMDB(base.tmdb_id, tipo);
     }
+    // Sem trailer próprio no banco: busca um trailer do YouTube no
+    // TMDB — melhor mostrar ALGUM movimento do que ficar preto/parado.
+    if (!base.trailer) {
+      trailerYoutube = await getTrailerYoutubeDoTMDB(base.tmdb_id, tipo);
+    }
     bandeira = await getOrigemDoTMDB(base.tmdb_id, tipo);
   }
 
-  return { ...base, backdrop, classificacao: classificacao ?? null, bandeira };
+  return { ...base, backdrop, classificacao: classificacao ?? null, bandeira, trailerYoutube };
 }

@@ -37,10 +37,13 @@ body {
    de fundo inteira). */
 /* Garante emoji colorido (não monocromático) mesmo com a fonte do app
    (Inter) aplicada no elemento pai — em alguns navegadores/SOs, sem
-   isso explícito, o emoji pode cair num fallback sem cor. */
+   isso explícito, o emoji pode cair num fallback sem cor. !important
+   porque classes de texto do Tailwind aplicadas depois (ex: text-gold)
+   não podem voltar a sobrescrever a fonte aqui. */
 .emoji-fonte {
   font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji',
-    sans-serif;
+    sans-serif !important;
+  -webkit-text-fill-color: initial !important;
 }
 
 /* Capas dentro de carrosséis de categoria "crescem" mais ao focar —
