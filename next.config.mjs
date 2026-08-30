@@ -17,5 +17,11 @@ export default withSentryConfig(nextConfig, {
   silent: true,
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
-  disableLogger: true
+  disableLogger: true,
+  sourcemaps: {
+    // Evita publicar os source maps (mapeamento pro código-fonte
+    // original) publicamente — eles são enviados pro Sentry (útil pra
+    // depurar erros) e depois apagados do build final.
+    deleteSourcemapsAfterUpload: true
+  }
 });
