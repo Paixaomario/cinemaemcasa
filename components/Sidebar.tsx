@@ -9,6 +9,7 @@ const ITEMS = [
   { href: '/', label: 'Início', icon: 'home' },
   { href: '/filmes', label: 'Filmes', icon: 'movie' },
   { href: '/series', label: 'Séries', icon: 'device-tv' },
+  { href: '/infantil', label: 'Infantil', icon: 'mood-kid' },
   { href: '/minha-lista', label: 'Minha lista', icon: 'heart' },
   { href: '/busca', label: 'Buscar', icon: 'search' }
 ];

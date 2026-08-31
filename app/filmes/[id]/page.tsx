@@ -7,6 +7,7 @@ import { BackButton } from '@/components/BackButton';
 import { GuardaModoInfantil } from '@/components/GuardaModoInfantil';
 import { AssistirJuntoButton } from '@/components/AssistirJuntoButton';
 import { BotaoMinhaLista } from '@/components/BotaoMinhaLista';
+import { ElencoRow } from '@/components/ElencoRow';
 import type { Cinema } from '@/lib/types';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -82,11 +83,7 @@ export default async function FilmeDetalhesPage({ params }: { params: { id: stri
             {descricao}
           </p>
         )}
-        {elenco.length > 0 && (
-          <p className="text-[14px] md:text-[16px] text-textmuted mb-1.5">
-            Elenco: {elenco.map((e) => e.nome).join(', ')}
-          </p>
-        )}
+        {elenco.length > 0 && <ElencoRow elenco={elenco} />}
         {filme.genre && (
           <p className="text-[14px] md:text-[16px] text-textmuted">Gêneros: {filme.genre}</p>
         )}

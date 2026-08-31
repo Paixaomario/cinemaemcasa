@@ -6,6 +6,7 @@ import { getMetadadosDoTMDB } from '@/lib/tmdb';
 import { GuardaModoInfantil } from '@/components/GuardaModoInfantil';
 import { AssistirJuntoButton } from '@/components/AssistirJuntoButton';
 import { BotaoMinhaLista } from '@/components/BotaoMinhaLista';
+import { ElencoRow } from '@/components/ElencoRow';
 import type { Serie, Temporada, Episodio } from '@/lib/types';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -82,21 +83,25 @@ export default async function SerieDetalhesPage({
               {Math.round((serie.rating || 0) * 10)}% de compatibilidade
             </p>
           )}
-          <p className="text-[19px] md:text-[22px] text-white/90 leading-relaxed max-w-none line-clamp-6">
-            {descricao}
-          </p>
-          {elenco.length > 0 && (
-            <p className="text-[14px] md:text-[16px] text-white/70 mt-2">
-              Elenco: {elenco.map((e) => e.nome).join(', ')}
-            </p>
-          )}
-          <div className="flex gap-3 mt-4 flex-wrap">
+          <div className="flex gap-3 flex-wrap">
             <BotaoMinhaLista contentId={serie.id_n} contentType="series" />
             {episodios[0] && (
               <AssistirJuntoButton contentId={String(episodios[0].id_n)} contentType="series" titulo={serie.titulo || ''} />
             )}
           </div>
         </div>
+      </div>
+
+      <div className="px-6 md:px-10 pt-8">
+        {descricao && (
+          <p className="text-[19px] md:text-[22px] text-white/90 leading-relaxed mb-6 max-w-none line-clamp-6">
+            {descricao}
+          </p>
+        )}
+        {elenco.length > 0 && <ElencoRow elenco={elenco} />}
+        {serie.genero && (
+          <p className="text-[14px] md:text-[16px] text-textmuted">Gêneros: {serie.genero}</p>
+        )}
       </div>
 
       <div className="px-6 md:px-10 pt-8 flex items-center justify-between flex-wrap gap-3">

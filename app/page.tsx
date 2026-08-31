@@ -5,7 +5,7 @@ import { filtrarConteudoAdulto, contemTermoAdulto, COOKIE_PERFIL_INFANTIL } from
 import { cookies } from 'next/headers';
 import { HomeSectionRow } from '@/components/HomeSectionRow';
 import { HeroBanner } from '@/components/HeroBanner';
-import { PosterGrid } from '@/components/PosterGrid';
+import { HorizontalRow } from '@/components/HorizontalRow';
 import type { Cinema, HomeSection } from '@/lib/types';
 
 interface ItemContinuar {
@@ -163,11 +163,11 @@ export default async function HomePage() {
       {heroes.length > 0 && <HeroBanner heroes={heroes} />}
 
       {continuarAssistindo.length > 0 && (
-        <section className="px-3 py-3">
-          <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold text-white mb-3 px-1">
+        <section className="py-4">
+          <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold text-white mb-3 px-3">
             Continuar assistindo
           </h2>
-          <PosterGrid items={continuarAssistindo} tall={false} />
+          <HorizontalRow items={continuarAssistindo} />
         </section>
       )}
 
@@ -176,23 +176,27 @@ export default async function HomePage() {
       ))}
 
       {recomendados.length > 0 && (
-        <section className="px-3 py-3">
-          <div className="flex items-center gap-2 mb-2 px-1">
+        <section className="py-4">
+          <div className="flex items-center gap-2 mb-3 px-3">
             <i className="ti ti-sparkles text-gold text-base" aria-hidden="true" />
             <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold text-white">Escolhido para você</h2>
           </div>
-          <PosterGrid
-            items={recomendados.slice(0, 5).map((item) => ({
+          <HorizontalRow
+            items={recomendados.map((item) => ({
               id: item.id,
               href: `/filmes/${item.id}`,
               poster: item.poster || item.banner,
               titulo: item.titulo,
               ano: item.year,
               rating: item.rating,
-              trailer: item.trailer
+              trailer: item.trailer,
+              duracao: item.duration,
+              descricao: item.description,
+              tmdbId: item.tmdb_id,
+              tipo: 'movie'
             }))}
           />
-          <p className="text-[10px] text-textmuted mt-2">
+          <p className="text-[10px] text-textmuted mt-2 px-3">
             Indicações geradas apenas com títulos do seu catálogo.
           </p>
         </section>

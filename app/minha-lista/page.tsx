@@ -1,5 +1,5 @@
 import { supabaseServer } from '@/lib/supabase/server';
-import { PosterGrid } from '@/components/PosterGrid';
+import { HorizontalRow } from '@/components/HorizontalRow';
 import { HeroBanner } from '@/components/HeroBanner';
 import { enrichHeroes } from '@/lib/heroEnrichment';
 import type { Cinema, Serie } from '@/lib/types';
@@ -110,7 +110,7 @@ export default async function MinhaListaPage() {
       {itensFilme.length > 0 && (
         <div className="mb-6">
           <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold text-white mb-3 px-2">Filmes</h2>
-          <PosterGrid
+          <HorizontalRow
             items={itensFilme.map((f) => ({ id: `f-${f.id}`, href: `/filmes/${f.id}`, poster: f.poster, titulo: f.titulo, ano: f.ano, rating: f.rating, trailer: f.trailer }))}
           />
         </div>
@@ -119,7 +119,7 @@ export default async function MinhaListaPage() {
       {itensSerie.length > 0 && (
         <div>
           <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold text-white mb-3 px-2">Séries</h2>
-          <PosterGrid
+          <HorizontalRow
             items={itensSerie.map((s) => ({ id: `s-${s.id}`, href: `/series/${s.id}`, poster: s.poster, titulo: s.titulo, ano: s.ano, rating: s.rating, trailer: s.trailer }))}
           />
         </div>

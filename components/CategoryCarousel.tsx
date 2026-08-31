@@ -145,6 +145,10 @@ export function CategoryCarousel({ titulo, itensIniciais, fimInicial, categoria,
               ano={item.year}
               rating={item.rating}
               trailer={item.trailer}
+              duracao={item.duration}
+              descricao={item.description}
+              tmdbId={item.tmdb_id}
+              tipo={tipo === 'filme' ? 'movie' : 'series'}
               tall
             />
           </div>

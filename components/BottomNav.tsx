@@ -7,6 +7,7 @@ const ITEMS = [
   { href: '/', label: 'Início', icon: 'home' },
   { href: '/filmes', label: 'Filmes', icon: 'movie' },
   { href: '/series', label: 'Séries', icon: 'device-tv' },
+  { href: '/infantil', label: 'Infantil', icon: 'mood-kid' },
   { href: '/minha-lista', label: 'Lista', icon: 'heart' },
   { href: '/busca', label: 'Buscar', icon: 'search' },
   { href: '/perfil', label: 'Perfil', icon: 'user' }
@@ -34,7 +35,7 @@ export function BottomNav() {
       {ITEMS.map((item) => {
         const active = pathname === item.href;
         return (
-          <Link key={item.href} href={item.href} className="flex flex-col items-center gap-0.5 px-2 py-0.5">
+          <Link key={item.href} href={item.href} className="flex flex-col items-center gap-0.5 px-1 py-0.5">
             <i
               className={`ti ti-${item.icon} text-lg`}
               style={{ color: active ? '#E8C97A' : '#FFFFFF' }}

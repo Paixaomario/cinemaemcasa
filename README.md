@@ -671,7 +671,47 @@ dos itens mais antigos de uma categoria conforme ela cresce demais.
   só permitem isso como resultado direto de um gesto do usuário; é
   best-effort, alguns navegadores ainda assim bloqueiam por segurança.
 
-## 33. Notas do Agente QA Final
+## 34. Correções desta entrega (segurança, layout horizontal, elenco, menu Infantil)
+
+- **Segurança: Next.js atualizado de 14.2.15 para 14.2.35** — o log de
+  build acusou uma vulnerabilidade real (confirmada: há CVEs corrigidos
+  entre essas versões). Sem isso, o app ficava exposto a falhas já
+  conhecidas publicamente.
+- **Todas as seções agora são linha horizontal com rolagem, nunca
+  grade que quebra:** Home ("Continuar assistindo", seções, "Escolhido
+  para você") e Minha Lista usavam uma grade (`PosterGrid`) que podia
+  quebrar em mais de uma linha dependendo da largura da tela — por
+  isso aparecia "vertical" no F12. Criei `components/HorizontalRow.tsx`
+  (mesmo comportamento de rolagem das categorias de Filmes/Séries) e
+  troquei em todo lugar.
+- **Trailer nas capas ao focar, mesmo sem o campo `trailer` no banco:**
+  conectei o mesmo reforço via TMDB do hero também nas capas comuns —
+  busca sob demanda (só quando o usuário realmente para na capa por
+  900ms), nunca antecipado, pra não estourar limite de chamadas.
+- **Elenco agora com fotos redondas** (`components/ElencoRow.tsx`),
+  abaixo da descrição — antes era só uma lista de texto corrido.
+- **Página de série reestruturada:** descrição/elenco/gênero saíram de
+  dentro do banner hero (onde ficavam espremidos numa coluna estreita)
+  e foram pro mesmo padrão de largura total da página de filme.
+- **Menu "Infantil" criado** (`/infantil`, no menu lateral e na barra
+  mobile) — mostra só filmes/séries já classificados como "Infantil",
+  sem remover essa categoria de nenhum outro lugar do sistema. É um
+  atalho de acesso rápido, não um filtro.
+
+### Preciso de 2 informações suas pros itens que restaram
+1. **"Coleção" nas capas de sequência:** você confirmou que o banco
+   está correto (posters individuais, tmdb_id sem repetição). Isso me
+   diz que a causa NÃO é o fallback do TMDB (ele só age quando o campo
+   já está vazio). Preciso do nome de UM filme específico que está
+   mostrando a capa errada pra eu conseguir investigar o caminho real
+   do bug em vez de adivinhar às cegas.
+2. **Vídeo que fica só carregando e dá erro:** preciso de um exemplo
+   específico (nome do filme/episódio) que está fazendo isso, pra eu
+   conseguir olhar a URL exata salva no banco pra aquele item — sem
+   isso não dá pra saber se é formato incompatível, link quebrado do
+   Archive.org, ou outra causa.
+
+## 35. Notas do Agente QA Final
 
 - **Nenhuma tabela/coluna do Supabase é alterada** — o sistema apenas lê os
   dados existentes, exatamente como solicitado.

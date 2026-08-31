@@ -15,6 +15,8 @@ interface TitleCardProps {
   descricao?: string | null;
   classificacao?: string | null;
   temporadas?: number | null;
+  tmdbId?: number | null;
+  tipo?: 'movie' | 'series' | null;
   tall?: boolean;
 }
 
@@ -25,6 +27,11 @@ interface TitleCardProps {
 // duração (filme) OU nº de temporadas (série), classificação, e
 // atalhos rápidos de Assistir/Minha Lista — sem precisar abrir a
 // página de detalhes pra decidir se quer assistir.
+//
+// Se o título não tem `trailer` próprio no banco, busca um trailer do
+// YouTube no TMDB SOB DEMANDA (só quando o usuário realmente para na
+// capa, nunca antes) — evita bater na API do TMDB pra toda capa que só
+// passa voando pela tela enquanto rola.
 export function TitleCard({
   href,
   assistirHref,
@@ -37,16 +44,33 @@ export function TitleCard({
   descricao,
   classificacao,
   temporadas,
+  tmdbId,
+  tipo,
   tall
 }: TitleCardProps) {
   const [showPreview, setShowPreview] = useState(false);
   const [tocandoTrailer, setTocandoTrailer] = useState(false);
+  const [trailerYoutube, setTrailerYoutube] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const jaBuscouTrailer = useRef(false);
 
   const start = () => {
-    timer.current = setTimeout(() => {
+    timer.current = setTimeout(async () => {
       setShowPreview(true);
-      if (trailer) setTocandoTrailer(true);
+      if (trailer) {
+        setTocandoTrailer(true);
+        return;
+      }
+      if (!jaBuscouTrailer.current && tmdbId && tipo) {
+        jaBuscouTrailer.current = true;
+        try {
+          const res = await fetch(`/api/trailer?tmdbId=${tmdbId}&tipo=${tipo}`);
+          const data = await res.json();
+          if (data.key) setTrailerYoutube(data.key);
+        } catch {
+          // sem trailer disponível — a capa continua mostrando o pôster
+        }
+      }
     }, 900);
   };
   const stop = () => {
@@ -73,6 +97,14 @@ export function TitleCard({
     >
       {tocandoTrailer && trailer ? (
         <video src={trailer} autoPlay muted loop playsInline className="w-full h-full object-cover" />
+      ) : showPreview && trailerYoutube ? (
+        <iframe
+          src={`https://www.youtube.com/embed/${trailerYoutube}?autoplay=1&mute=1&controls=0&loop=1&playlist=${trailerYoutube}&modestbranding=1&rel=0`}
+          className="w-full h-full pointer-events-none scale-150"
+          style={{ border: 0 }}
+          allow="autoplay; encrypted-media"
+          title={titulo}
+        />
       ) : poster ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={poster} alt={titulo} className="w-full h-full object-cover" />
