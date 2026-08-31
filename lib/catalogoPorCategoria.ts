@@ -1,5 +1,4 @@
 import { supabasePublic } from './supabase/server';
-import { getPosterDoTMDB } from './tmdb';
 import type { Cinema } from './types';
 
 const TAMANHO_PAGINA = 24;
@@ -7,13 +6,17 @@ const TAMANHO_PAGINA = 24;
 /**
  * Busca uma "página" de filmes de uma categoria — usada tanto na
  * primeira renderização da página de Filmes (servidor) quanto na API
- * de rolagem infinita (app/api/categoria/route.ts), pra garantir que
- * as duas fontes usem exatamente a mesma consulta/ordem.
+ * de rolagem infinita (app/api/categoria/route.ts).
  *
- * Sem LIMITE MÁXIMO por categoria: o `offset` avança conforme o
- * usuário rola, e a rota de API é chamada de novo até esgotar tudo que
- * existe no banco para aquela categoria — só então a rolagem reinicia
- * do começo (nunca antes de mostrar tudo).
+ * CORREÇÃO DE PERFORMANCE IMPORTANTE: essa função ANTES buscava o
+ * pôster no TMDB, um por um, para cada item sem imagem, ANTES de
+ * responder — com muitos itens sem capa numa mesma categoria, isso
+ * podia demorar dezenas de segundos (ou minutos) só numa página,
+ * porque a resposta ficava esperando todas essas chamadas externas
+ * terminarem. Agora essa função só lê o banco (rápida, sempre) — o
+ * reforço de capa via TMDB roda no NAVEGADOR, sob demanda, só para os
+ * itens que realmente aparecerem sem imagem (ver TitleCard.tsx +
+ * /api/poster), sem nunca travar o carregamento da página.
  */
 export async function buscarFilmesPorCategoria(
   categoria: string,
@@ -30,19 +33,7 @@ export async function buscarFilmesPorCategoria(
     .range(offset, offset + limit - 1);
 
   const items = data || [];
-
-  // Mesmo reforço usado em séries: se o filme não tem NENHUMA imagem
-  // própria (poster/banner vazios) mas tem tmdb_id, busca o pôster no
-  // TMDB como último recurso — evita capa em branco.
-  const itemsComFallback = await Promise.all(
-    items.map(async (item) => {
-      if (item.poster || item.banner || !item.tmdb_id) return item;
-      const posterTMDB = await getPosterDoTMDB(item.tmdb_id, 'movie');
-      return posterTMDB ? { ...item, poster: posterTMDB } : item;
-    })
-  );
-
-  return { items: itemsComFallback, fim: items.length < limit };
+  return { items, fim: items.length < limit };
 }
 
 export async function buscarSeriesPorGenero(
@@ -82,17 +73,7 @@ export async function buscarSeriesPorGenero(
     relacionados: s.relacionados
   }));
 
-  // Se a série não tem NENHUMA imagem própria mas tem tmdb_id, busca o
-  // pôster no TMDB como último recurso — evita capa em branco.
-  const itemsComFallback = await Promise.all(
-    items.map(async (item) => {
-      if (item.poster || item.banner || !item.tmdb_id) return item;
-      const posterTMDB = await getPosterDoTMDB(item.tmdb_id, 'series');
-      return posterTMDB ? { ...item, poster: posterTMDB } : item;
-    })
-  );
-
-  return { items: itemsComFallback, fim: items.length < limit };
+  return { items, fim: items.length < limit };
 }
 
 export { TAMANHO_PAGINA };

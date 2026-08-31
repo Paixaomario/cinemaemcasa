@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { extrairIdYoutube } from '@/lib/videoHelpers';
 import type { HeroData } from '@/lib/heroEnrichment';
 
 interface Props {
@@ -38,6 +39,13 @@ export function HeroBanner({ heroes }: Props) {
   const indice = heroes.length > 0 ? passo % heroes.length : 0;
   const hero = heroes[indice];
 
+  // Detecta se `trailer` é um link do YouTube em vez de arquivo de
+  // vídeo direto — precisa disso ANTES dos efeitos abaixo pra decidir
+  // corretamente o tempo de exibição (iframe não avisa quando "acaba").
+  const idYoutubeProprio = extrairIdYoutube(hero?.trailer);
+  const idYoutubeParaMostrar = idYoutubeProprio || hero?.trailerYoutube || null;
+  const ehVideoDireto = !!hero?.trailer && !idYoutubeProprio;
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(chaveArmazenamento, String(passo));
@@ -49,7 +57,7 @@ export function HeroBanner({ heroes }: Props) {
     setMostrandoTrailer(false);
     if (!hero) return;
 
-    if (!hero.trailer && !hero.trailerYoutube) {
+    if (!ehVideoDireto && !idYoutubeParaMostrar) {
       const t = setTimeout(() => avancar(), TEMPO_SEM_TRAILER_MS);
       return () => clearTimeout(t);
     }
@@ -64,10 +72,10 @@ export function HeroBanner({ heroes }: Props) {
   // caso ele simplesmente repete capa→trailer→capa→trailer...).
   const avancar = () => setPasso((p) => p + 1);
 
-  // Trailer do YouTube (fallback via TMDB) não emite evento "acabou" —
-  // avança sozinho depois de um tempo fixo de exibição.
+  // Trailer via iframe (YouTube, próprio ou fallback do TMDB) não emite
+  // evento "acabou" — avança sozinho depois de um tempo fixo de exibição.
   useEffect(() => {
-    if (!mostrandoTrailer || !hero?.trailerYoutube || hero.trailer) return;
+    if (!mostrandoTrailer || !idYoutubeParaMostrar || ehVideoDireto) return;
     const t = setTimeout(() => avancar(), 30_000);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -78,20 +86,20 @@ export function HeroBanner({ heroes }: Props) {
 
   return (
     <div className="relative w-full aspect-video overflow-hidden bg-accent-soft md:-ml-[92px] md:w-[calc(100%+92px)]">
-      {mostrandoTrailer && hero.trailer ? (
+      {mostrandoTrailer && ehVideoDireto ? (
         <video
           key={`trailer-${hero.id}`}
-          src={hero.trailer}
+          src={hero.trailer!}
           autoPlay
           muted
           playsInline
           onEnded={avancar}
           className="absolute inset-0 w-full h-full object-cover"
         />
-      ) : mostrandoTrailer && hero.trailerYoutube ? (
+      ) : mostrandoTrailer && idYoutubeParaMostrar ? (
         <iframe
           key={`trailer-yt-${hero.id}`}
-          src={`https://www.youtube.com/embed/${hero.trailerYoutube}?autoplay=1&mute=1&controls=0&loop=1&playlist=${hero.trailerYoutube}&modestbranding=1&rel=0`}
+          src={`https://www.youtube.com/embed/${idYoutubeParaMostrar}?autoplay=1&mute=1&controls=0&loop=1&playlist=${idYoutubeParaMostrar}&modestbranding=1&rel=0`}
           className="absolute inset-0 w-full h-full pointer-events-none scale-[1.5]"
           style={{ border: 0 }}
           allow="autoplay; encrypted-media"

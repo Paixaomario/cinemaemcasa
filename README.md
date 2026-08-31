@@ -711,7 +711,61 @@ dos itens mais antigos de uma categoria conforme ela cresce demais.
    isso não dá pra saber se é formato incompatível, link quebrado do
    Archive.org, ou outra causa.
 
-## 35. Notas do Agente QA Final
+## 36. Causa provável do "3 minutos pra carregar" + trailer que nunca tocava (esta entrega)
+
+### Descoberta principal: trailer do YouTube salvo como link, não como arquivo
+Você confirmou que TODOS os conteúdos já têm trailer salvo corretamente
+na coluna do banco — isso, combinado com "nenhum trailer toca em lugar
+nenhum", aponta pra uma causa bem específica: se a coluna `trailer`
+guarda um **link do YouTube** (`youtube.com/watch?v=...`) em vez de um
+arquivo de vídeo direto (`.mp4`), a tag `<video>` do navegador nunca
+consegue tocar isso — ela só reproduz arquivo de vídeo puro, não uma
+página web. Criei `lib/videoHelpers.ts` que detecta esse caso e usa o
+embed certo (iframe) automaticamente, tanto no banner hero quanto nas
+capas — funciona pra link do YouTube em qualquer idioma, sem precisar
+filtrar nada.
+
+### Causa real do carregamento de minutos
+`buscarFilmesPorCategoria`/`buscarSeriesPorGenero` buscavam o pôster no
+TMDB, **um por um, esperando terminar antes de responder**, pra cada
+item sem imagem. Com várias categorias e vários itens sem capa, isso
+podia empilhar dezenas de chamadas externas sequenciais numa única
+carga de página — exatamente o tipo de coisa que vira "3 minutos".
+Removido: agora essas funções só leem o banco (sempre rápidas); o
+reforço de capa via TMDB roda no NAVEGADOR, sob demanda, só para os
+itens que realmente aparecerem sem imagem (`/api/poster`), sem travar
+o carregamento de mais nada.
+
+### Ícones "quadrados"
+Trocado o ícone de estrela (avaliação) e os ícones do painel de
+prévia (play, mais) de fonte de ícones pra **SVG embutido no próprio
+código** — não depende de nenhum arquivo externo carregar, então não
+tem como aparecer como quadrado.
+
+### Performance na TV — mais uma causa encontrada
+Tocar um trailer (vídeo ou, pior, um iframe inteiro do YouTube) consome
+bastante processamento. Numa smart TV mais fraca, isso competia por
+CPU com a própria navegação por D-pad. Agora o trailer (vídeo ou
+iframe) só toca fora de smart TV — na TV, a capa ainda aumenta e mostra
+as informações, só sem o vídeo tocando dentro dela.
+
+### Home: sem repetir capa entre seções + "random" de verdade
+`app/page.tsx` agora resolve as seções em sequência (não mais em
+paralelo), reservando os IDs já usados — a mesma capa nunca aparece em
+duas seções ao mesmo tempo. Seções configuradas com `ordenacao =
+'random'` agora sorteiam de verdade a cada carregamento da Home (antes
+caíam num `order(created_at)`, que não é aleatório).
+
+### O que ainda depende de você
+**"Coleção" nas capas de sequência (Harry Potter, Velozes e Furiosos,
+Sexta-Feira 13, Piratas do Caribe):** não tenho acesso direto ao seu
+Supabase — só ao que o próprio código consegue ler em produção. Rode
+`supabase/investigar-colecao.sql` no SQL Editor e me mande o resultado
+(os valores de `poster`/`banner`/`backdrop`/`tmdb_id` de cada filme da
+saga). Com esse dado exato eu confirmo se são realmente diferentes
+entre si ou se algum está repetido, e corrijo com precisão.
+
+## 37. Notas do Agente QA Final
 
 - **Nenhuma tabela/coluna do Supabase é alterada** — o sistema apenas lê os
   dados existentes, exatamente como solicitado.

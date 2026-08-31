@@ -83,8 +83,23 @@ async function getSections(): Promise<HomeSection[]> {
   return data || [];
 }
 
-async function getSectionItems(section: HomeSection): Promise<Cinema[]> {
-  let query = supabaseServer.from('cinema').select('*').limit(section.limite || 5);
+function embaralhar<T>(lista: T[]): T[] {
+  const copia = [...lista];
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  return copia;
+}
+
+async function getSectionItems(section: HomeSection, jaUsados: Set<number>): Promise<Cinema[]> {
+  // Busca um lote maior que o necessário — dá margem pra: (1) sortear
+  // de verdade quando ordenacao='random' (antes isso caía num
+  // order(created_at), que não é aleatório nenhum) e (2) filtrar o que
+  // já apareceu em outra seção desta MESMA carga da Home, sem repetir
+  // a mesma capa em duas seções ao mesmo tempo.
+  const quantidadeDesejada = section.limite || 5;
+  let query = supabaseServer.from('cinema').select('*').limit(quantidadeDesejada * 4);
 
   if (section.categorias && section.categorias.length > 0) {
     query = query.in('category', section.categorias);
@@ -95,7 +110,21 @@ async function getSectionItems(section: HomeSection): Promise<Cinema[]> {
   else query = query.order('created_at', { ascending: false });
 
   const { data } = await query;
-  return data || [];
+  let candidatos = data || [];
+
+  // 'random' de verdade — a cada carregamento da Home sorteia uma
+  // combinação diferente dentro do lote buscado, em vez de sempre
+  // mostrar exatamente os mesmos títulos na mesma ordem.
+  if (section.ordenacao === 'random') candidatos = embaralhar(candidatos);
+
+  const selecionados: Cinema[] = [];
+  for (const item of candidatos) {
+    if (jaUsados.has(item.id)) continue;
+    selecionados.push(item);
+    jaUsados.add(item.id);
+    if (selecionados.length >= quantidadeDesejada) break;
+  }
+  return selecionados;
 }
 
 async function getHeroes(featuredSection: HomeSection | undefined, infantil: boolean): Promise<Cinema[]> {
@@ -135,14 +164,22 @@ export default async function HomePage() {
     // categoria configurada for de conteúdo adulto.
     .filter((s) => !infantil || !s.categorias.some((c) => contemTermoAdulto(c)));
 
+  // As seções são resolvidas em SEQUÊNCIA (não em paralelo) de
+  // propósito — é isso que permite cada uma "reservar" os IDs que já
+  // usou (jaUsadosNaHome) pra próxima seção nunca repetir a mesma capa.
+  const jaUsadosNaHome = new Set<number>();
+  async function resolverSecoesEmSequencia() {
+    const resultado: { section: HomeSection; items: Cinema[] }[] = [];
+    for (const s of secoesLinha) {
+      const items = await getSectionItems(s, jaUsadosNaHome);
+      resultado.push({ section: s, items: infantil ? filtrarConteudoAdulto(items) : items });
+    }
+    return resultado;
+  }
+
   const [heroesBase, sectionData, continuarAssistindo] = await Promise.all([
     getHeroes(secaoFeatured, infantil),
-    Promise.all(
-      secoesLinha.map(async (s) => ({
-        section: s,
-        items: infantil ? filtrarConteudoAdulto(await getSectionItems(s)) : await getSectionItems(s)
-      }))
-    ),
+    resolverSecoesEmSequencia(),
     getContinuarAssistindo()
   ]);
 
