@@ -80,25 +80,41 @@ export interface MetadadosTMDB {
   descricao: string | null;
   elenco: { nome: string; personagem?: string; foto?: string }[];
   trailerYoutube: string | null;
+  classificacao: string | null;
+  duracao: string | null;
+  generos: string[];
+  bandeira: string | null;
+  idiomasAudio: string[];
+  idiomasLegenda: string[];
 }
 
 /**
  * Busca, numa única chamada, TODOS os metadados que a página de
  * detalhes pode precisar como fallback quando o Supabase não tiver:
- * imagem de fundo, pôster, sinopse, elenco principal e trailer do
- * YouTube. Usado nas páginas de detalhes de filme/série E no banner
- * hero — sempre como ÚLTIMO recurso, nunca substituindo um valor que
- * já existe no banco.
+ * imagem de fundo, pôster, sinopse, elenco principal, trailer do
+ * YouTube, classificação etária, duração, gêneros, bandeira do país e
+ * idiomas de áudio/legenda disponíveis. Usado nas páginas de detalhes
+ * de filme/série — sempre como ÚLTIMO recurso, nunca substituindo um
+ * valor que já existe no banco.
+ *
+ * NOTA HONESTA: o TMDB não tem nenhum campo de "prêmios/premiações" —
+ * essa informação simplesmente não existe na API deles, então não tem
+ * como buscar isso de lá. Se você tiver essa informação disponível em
+ * outro lugar, me avise que conecto.
  */
 export async function getMetadadosDoTMDB(
   tmdbId: number,
   tipo: 'movie' | 'series'
 ): Promise<MetadadosTMDB> {
   const endpoint = tipo === 'series' ? `/tv/${tmdbId}` : `/movie/${tmdbId}`;
-  const [detalhes, creditos, videos] = await Promise.all([
+  const classificacaoEndpoint =
+    tipo === 'series' ? `${endpoint}/content_ratings` : `${endpoint}/release_dates`;
+
+  const [detalhes, creditos, videos, classificacoes] = await Promise.all([
     tmdbFetch(endpoint),
     tmdbFetch(`${endpoint}/credits`),
-    tmdbFetch(`${endpoint}/videos`)
+    tmdbFetch(`${endpoint}/videos`),
+    tmdbFetch(classificacaoEndpoint)
   ]);
 
   const elenco = (creditos?.cast || [])
@@ -113,12 +129,49 @@ export async function getMetadadosDoTMDB(
     (v: { site: string; type: string }) => v.site === 'YouTube' && v.type === 'Trailer'
   );
 
+  // Classificação etária: prioriza o Brasil (BR); se não tiver, usa a
+  // primeira disponível — sempre real, nunca um palpite.
+  let classificacao: string | null = null;
+  if (tipo === 'series') {
+    const resultados = classificacoes?.results || [];
+    const br = resultados.find((r: { iso_3166_1: string }) => r.iso_3166_1 === 'BR');
+    classificacao = br?.rating || resultados[0]?.rating || null;
+  } else {
+    const resultados = classificacoes?.results || [];
+    const br = resultados.find((r: { iso_3166_1: string }) => r.iso_3166_1 === 'BR');
+    const certBr = br?.release_dates?.find((d: { certification: string }) => d.certification)?.certification;
+    if (certBr) classificacao = certBr;
+    else {
+      for (const r of resultados) {
+        const cert = r.release_dates?.find((d: { certification: string }) => d.certification)?.certification;
+        if (cert) {
+          classificacao = cert;
+          break;
+        }
+      }
+    }
+  }
+
+  const codigoPais: string | undefined =
+    detalhes?.origin_country?.[0] || detalhes?.production_countries?.[0]?.iso_3166_1;
+
+  const runtimeMinutos: number | null =
+    tipo === 'series' ? detalhes?.episode_run_time?.[0] : detalhes?.runtime;
+
   return {
     backdrop: detalhes?.backdrop_path ? `${TMDB_IMG_BASE}${detalhes.backdrop_path}` : null,
     poster: detalhes?.poster_path ? `${TMDB_IMG_BASE}${detalhes.poster_path}` : null,
     descricao: detalhes?.overview || null,
     elenco,
-    trailerYoutube: trailer?.key || null
+    trailerYoutube: trailer?.key || null,
+    classificacao,
+    duracao: runtimeMinutos ? `${runtimeMinutos} min` : null,
+    generos: (detalhes?.genres || []).map((g: { name: string }) => g.name),
+    bandeira: codigoPais ? codigoParaBandeira(codigoPais) : null,
+    idiomasAudio: (detalhes?.spoken_languages || []).map(
+      (l: { english_name?: string; name?: string }) => l.english_name || l.name || ''
+    ),
+    idiomasLegenda: [] // TMDB não informa legendas disponíveis por título
   };
 }
 

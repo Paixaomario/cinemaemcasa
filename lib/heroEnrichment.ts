@@ -1,4 +1,5 @@
 import { getBackdropDoTMDB, getOrigemDoTMDB, getTrailerYoutubeDoTMDB } from './tmdb';
+import { limparTituloExibicao, qualidadeMaximaTMDB } from './exibicao';
 import type { Cinema } from './types';
 
 export interface HeroData extends Cinema {
@@ -48,5 +49,14 @@ export async function enrichHero(base: Cinema, classificacao?: string | null): P
     bandeira = await getOrigemDoTMDB(base.tmdb_id, tipo);
   }
 
-  return { ...base, backdrop, classificacao: classificacao ?? null, bandeira, trailerYoutube };
+  return {
+    ...base,
+    titulo: limparTituloExibicao(base.titulo),
+    backdrop: qualidadeMaximaTMDB(backdrop),
+    banner: qualidadeMaximaTMDB(base.banner),
+    poster: qualidadeMaximaTMDB(base.poster),
+    classificacao: classificacao ?? null,
+    bandeira,
+    trailerYoutube
+  };
 }

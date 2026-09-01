@@ -765,7 +765,65 @@ Supabase — só ao que o próprio código consegue ler em produção. Rode
 saga). Com esse dado exato eu confirmo se são realmente diferentes
 entre si ou se algum está repetido, e corrijo com precisão.
 
-## 37. Notas do Agente QA Final
+## 38. Confirmado e corrigido: bug real da "capa de coleção" + redesign das páginas de detalhes + bug de sessão (esta entrega)
+
+### "Coleção" — confirmado com os dados que você mandou
+Toda a saga "Velozes e Furiosos" tem o **mesmo valor de `poster`**
+salvo no banco, enquanto `banner`, `backdrop` e `tmdb_id` são
+diferentes e corretos em cada filme — confirma que é um dado importado
+errado (provavelmente uma capa de coleção/franquia usada por engano no
+lugar da capa individual). Implementei uma correção que NÃO exige
+mexer no banco: `lib/catalogoPorCategoria.ts` agora detecta quando o
+mesmo `poster` aparece em títulos com `tmdb_id` diferentes dentro do
+mesmo lote e trata isso como inválido — nesse caso, o `TitleCard` busca
+sozinho, no navegador, o pôster individual correto no TMDB (usando o
+tmdb_id certo de cada filme, via `/api/poster`).
+
+### Bug real de sessão encontrado: cliente do navegador nunca gravava cookie
+Isso explica o "Minha Lista não salva" e é mais sério do que parecia:
+`lib/supabase/client.ts` usava o `createClient()` genérico do
+supabase-js, que guarda a sessão só em `localStorage` — **nunca em
+cookie**. Isso quer dizer que, mesmo depois de eu ter corrigido o
+cliente do SERVIDOR pra ler cookies (entrega de duas rodadas atrás), o
+servidor nunca via ninguém logado, porque o navegador nunca escreveu
+esse cookie. Troquei pra `createBrowserClient()` do `@supabase/ssr`
+(mesma família do cliente do servidor) — agora sessão fica em cookie E
+em localStorage, cliente e servidor enxergam o mesmo login. Isso pode
+ter efeito colateral positivo em outras coisas que dependiam de saber
+quem estava logado no servidor (como "Continuar assistindo").
+
+Além disso, `BotaoMinhaLista` nunca checava se a gravação realmente
+tinha funcionado — sempre mostrava "salvo" mesmo quando o Supabase
+recusava a operação. Corrigido: agora mostra erro na tela se a
+gravação falhar de verdade, em vez de fingir sucesso.
+
+### Páginas de detalhes redesenhadas por completo
+Novo layout: imagem de fundo grande, capa em tamanho normal à
+**esquerda**, título grande e todas as informações + botões à
+**direita** — responsivo (empilha em telas estreitas). Ordem das
+informações, como pedido: título → ano → gênero/categoria →
+classificação etária + avaliação + bandeira do país + duração → idioma
+de áudio/legenda (quando disponível) → sinopse (6 linhas) → elenco →
+botões.
+
+Tudo isso é buscado no TMDB automaticamente (via `getMetadadosDoTMDB`,
+expandido nesta entrega) quando o Supabase não tiver: classificação
+etária (prioriza avaliação brasileira), duração, gêneros, bandeira do
+país. **Única exceção honesta: o TMDB não tem nenhum campo de
+"prêmios/premiações"** — essa informação não existe na API deles, não
+tem como buscar de lá. Se você tiver isso disponível em outro lugar, me
+diga que conecto.
+
+### Outros ajustes
+- **Títulos sem ano solto no final:** "Velozes e Furiosos Hobbs e Shaw
+  2019" vira "Velozes e Furiosos Hobbs e Shaw" — mantém números de
+  sequência (1, 2, 3...) e mantém títulos que SÃO só um ano (ex: um
+  filme chamado literalmente "1917").
+- **Qualidade de imagem reforçada:** qualquer imagem do TMDB (mesmo já
+  salva no banco em resolução menor, tipo `w500`) agora é pedida em
+  `original` na exibição — bem acima de 1080p de largura.
+
+## 39. Notas do Agente QA Final
 
 - **Nenhuma tabela/coluna do Supabase é alterada** — o sistema apenas lê os
   dados existentes, exatamente como solicitado.

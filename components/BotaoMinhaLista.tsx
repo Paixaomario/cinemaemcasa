@@ -17,6 +17,7 @@ export function BotaoMinhaLista({ contentId, contentType }: Props) {
   const [userId, setUserId] = useState<string | null>(null);
   const [salvo, setSalvo] = useState(false);
   const [carregando, setCarregando] = useState(false);
+  const [erro, setErro] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -43,34 +44,44 @@ export function BotaoMinhaLista({ contentId, contentType }: Props) {
       return;
     }
     setCarregando(true);
+    setErro(false);
 
+    // CORREÇÃO IMPORTANTE: antes, o resultado da gravação nunca era
+    // checado — o botão sempre mostrava "salvo" mesmo quando o
+    // Supabase recusava a operação (por RLS, por exemplo), fazendo
+    // parecer que funcionou quando na verdade não gravou nada.
     if (salvo) {
-      await supabaseBrowser
+      const { error } = await supabaseBrowser
         .from('favorites')
         .delete()
         .eq('user_id', userId)
         .eq('legacy_id', contentId)
         .eq('content_type', contentType);
-      setSalvo(false);
+      if (error) setErro(true);
+      else setSalvo(false);
     } else {
-      await supabaseBrowser.from('favorites').insert({
+      const { error } = await supabaseBrowser.from('favorites').insert({
         user_id: userId,
         legacy_id: contentId,
         content_type: contentType
       });
-      setSalvo(true);
+      if (error) setErro(true);
+      else setSalvo(true);
     }
     setCarregando(false);
   };
 
   return (
-    <button
-      onClick={alternar}
-      disabled={carregando}
-      className="focusable bg-white/10 border border-border text-white text-[15px] md:text-[17px] font-medium rounded-card px-6 py-3 disabled:opacity-60"
-    >
-      <i className={`ti ${salvo ? 'ti-check' : 'ti-plus'} mr-2`} aria-hidden="true" />
-      {salvo ? 'Na minha lista' : 'Minha lista'}
-    </button>
+    <div className="flex flex-col items-start gap-1">
+      <button
+        onClick={alternar}
+        disabled={carregando}
+        className="focusable bg-white/10 border border-border text-white text-[15px] md:text-[17px] font-medium rounded-card px-6 py-3 disabled:opacity-60"
+      >
+        <i className={`ti ${salvo ? 'ti-check' : 'ti-plus'} mr-2`} aria-hidden="true" />
+        {salvo ? 'Na minha lista' : 'Minha lista'}
+      </button>
+      {erro && <p className="text-[11px] text-red-400">Não foi possível salvar. Tente novamente.</p>}
+    </div>
   );
 }
