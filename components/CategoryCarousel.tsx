@@ -127,7 +127,7 @@ export function CategoryCarousel({ titulo, itensIniciais, fimInicial, categoria,
       <div
         ref={scrollRef}
         onWheel={aoRodarMouse}
-        className="flex gap-1 overflow-x-auto px-3 py-8 -my-8"
+        className="flex gap-1 overflow-x-auto overflow-y-visible px-3 py-8 -my-8"
         style={{ scrollSnapType: 'x proximity' }}
       >
         {items.map((item, idx) => (

@@ -1,38 +1,9 @@
 import { supabaseServer } from '@/lib/supabase/server';
-import { HorizontalRow } from '@/components/HorizontalRow';
-import { HeroBanner } from '@/components/HeroBanner';
-import { enrichHeroes } from '@/lib/heroEnrichment';
+import { MinhaListaSecao } from '@/components/MinhaListaSecao';
 import type { Cinema, Serie } from '@/lib/types';
 
-function serieParaHero(s: Serie): Cinema {
-  return {
-    id: s.id_n,
-    titulo: s.titulo || '',
-    description: s.descricao,
-    tmdb_id: s.tmdb_id,
-    url: null,
-    trailer: s.trailer,
-    year: s.ano,
-    rating: s.rating,
-    duration: s.tmdb_runtime,
-    duration_seconds: null,
-    category: s.genero,
-    genre: s.genero,
-    type: 'series',
-    poster: s.poster || s.capa,
-    banner: s.banner,
-    backdrop: null,
-    created_at: '',
-    subtitles: null,
-    audio_tracks: null,
-    elenco: s.elenco,
-    relacionados: s.relacionados
-  };
-}
-
-// Agente de Minha Lista: lê a tabela `favorites` do usuário autenticado
-// e resolve cada item na tabela de origem (cinema ou series), sem
-// alterar nenhuma estrutura existente.
+// Agente de Minha Lista: SEM banner hero (removido a pedido) — só as
+// capas salvas, cada uma com botão de excluir.
 export default async function MinhaListaPage() {
   const { data: userData } = await supabaseServer.auth.getUser();
   const userId = userData.user?.id;
@@ -71,34 +42,32 @@ export default async function MinhaListaPage() {
       : Promise.resolve([] as Serie[])
   ]);
 
-  const itensSerie = series.map((s) => ({
-    id: s.id_n,
-    titulo: s.titulo || '',
-    poster: s.poster || s.capa,
-    ano: s.ano,
-    rating: s.rating,
-    trailer: s.trailer
-  }));
-
   const itensFilme = filmes.map((f) => ({
     id: f.id,
+    href: `/filmes/${f.id}`,
     titulo: f.titulo,
     poster: f.poster || f.banner,
     ano: f.year,
     rating: f.rating,
-    trailer: f.trailer
+    trailer: f.trailer,
+    contentType: 'movie' as const
+  }));
+
+  const itensSerie = series.map((s) => ({
+    id: s.id_n,
+    href: `/series/${s.id_n}`,
+    titulo: s.titulo || '',
+    poster: s.poster || s.capa,
+    ano: s.ano,
+    rating: s.rating,
+    trailer: s.trailer,
+    contentType: 'series' as const
   }));
 
   const vazio = itensFilme.length === 0 && itensSerie.length === 0;
-  // Agente de Minha Lista: banner hero rotativo entre os favoritos mais recentes.
-  const heroesFonte = [...filmes, ...series.map(serieParaHero)];
-  const mapaClassificacao = new Map(series.map((s) => [s.id_n, s.classificacao] as const));
-  const heroes = await enrichHeroes(heroesFonte, mapaClassificacao);
 
   return (
-    <div>
-      {heroes.length > 0 && <HeroBanner heroes={heroes} />}
-      <div className="px-3 pt-6 pb-10">
+    <div className="px-3 pt-10 pb-10">
       <h1 className="text-xl font-medium mb-4 px-2">Minha lista</h1>
 
       {vazio && (
@@ -107,24 +76,8 @@ export default async function MinhaListaPage() {
         </p>
       )}
 
-      {itensFilme.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold text-white mb-3 px-2">Filmes</h2>
-          <HorizontalRow
-            items={itensFilme.map((f) => ({ id: `f-${f.id}`, href: `/filmes/${f.id}`, poster: f.poster, titulo: f.titulo, ano: f.ano, rating: f.rating, trailer: f.trailer }))}
-          />
-        </div>
-      )}
-
-      {itensSerie.length > 0 && (
-        <div>
-          <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold text-white mb-3 px-2">Séries</h2>
-          <HorizontalRow
-            items={itensSerie.map((s) => ({ id: `s-${s.id}`, href: `/series/${s.id}`, poster: s.poster, titulo: s.titulo, ano: s.ano, rating: s.rating, trailer: s.trailer }))}
-          />
-        </div>
-      )}
-    </div>
+      <MinhaListaSecao titulo="Filmes" itensIniciais={itensFilme} />
+      <MinhaListaSecao titulo="Séries" itensIniciais={itensSerie} />
     </div>
   );
 }

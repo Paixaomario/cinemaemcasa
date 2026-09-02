@@ -823,7 +823,49 @@ diga que conecto.
   salva no banco em resolução menor, tipo `w500`) agora é pedida em
   `original` na exibição — bem acima de 1080p de largura.
 
-## 39. Notas do Agente QA Final
+## 40. Correções desta entrega (z-index, Minha Lista, script definitivo de capas)
+
+- **Capa expandida agora sobrepõe TUDO, inclusive o menu lateral:** o
+  menu usa `z-40`; a capa expandida usava `z-30` — por isso ficava
+  atrás dele nas primeiras colunas. Subido pra `z-100`. Também liberei
+  o vazamento vertical da capa expandida (`overflow-y-visible` na
+  linha de rolagem) — antes o `overflow-x-auto` sozinho também
+  cortava o topo/base da capa quando ela crescia.
+- **Minha Lista:** banner removido; cada capa agora tem botão de
+  excluir (ícone de lixeira, canto superior direito) que remove da
+  lista na hora, sem precisar abrir os detalhes.
+- **"Continuar assistindo" ausente:** o código já está na ordem certa
+  (Hero → Continuar assistindo → resto). Se ainda não aparece, o mais
+  provável é a sessão ter sido criada ANTES da correção do cookie de
+  login (entrega anterior) — tente sair, entrar de novo, assistir algo
+  por uns 15s (é o tempo mínimo pro progresso ser salvo) e voltar pra
+  Home.
+- **Travamento na reprodução:** confirmado que é o teto técnico do
+  Archive.org (uma única qualidade fixa por vídeo, sem opção de
+  qualidade menor pra internet mais lenta) — não é algo que o código
+  consiga contornar sozinho.
+
+### Script definitivo para as capas de "coleção"
+A detecção em tempo real (entrega anterior) só pega duplicatas quando
+os filmes aparecem juntos na mesma consulta — por isso ainda falhava
+em alguns casos. Agora tem dois arquivos pra resolver isso **de vez,
+no banco**:
+
+- `scripts/diagnostico-capas.sql` — só leitura, mostra exatamente quais
+  filmes têm capa quebrada ou compartilhada com outro filme diferente.
+- `scripts/corrigir-capas-colecao.mjs` — script Node que você roda no
+  seu computador (instruções completas no topo do arquivo): busca a
+  capa individual correta de cada filme afetado no TMDB (usando o
+  tmdb_id certo) e atualiza a coluna `poster` no Supabase. Roda em
+  modo "dry-run" por padrão (só mostra o que faria); precisa do
+  argumento `--aplicar` pra gravar de verdade.
+
+**Importante:** esse script precisa da chave **service_role** do
+Supabase (não a "anon" que o site usa) — ela tem permissão de escrita
+total, então só use localmente, nunca no código do site, nunca faça
+commit dela.
+
+## 41. Notas do Agente QA Final
 
 - **Nenhuma tabela/coluna do Supabase é alterada** — o sistema apenas lê os
   dados existentes, exatamente como solicitado.

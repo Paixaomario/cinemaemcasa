@@ -47,11 +47,12 @@ body {
 }
 
 /* Capas dentro de carrosséis de categoria "crescem" mais ao focar —
-   efeito próximo do Prime Video, ficando por cima das vizinhas. */
+   efeito próximo do Prime Video, ficando por cima de QUALQUER coisa
+   na página (inclusive o menu lateral, que usa z-40) enquanto expande. */
 [data-carousel-card] .focusable:focus-visible,
 [data-carousel-card] .focusable[data-focused='true'] {
   transform: scale(1.35);
-  z-index: 30;
+  z-index: 100;
 }
 
 @media (prefers-reduced-motion: reduce) {
