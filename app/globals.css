@@ -55,6 +55,15 @@ body {
   z-index: 100;
 }
 
+/* A capa da PRIMEIRA coluna de cada linha cresce só pra DIREITA (não
+   pros dois lados a partir do centro) — senão a metade esquerda sairia
+   da área de rolagem horizontal e ficaria cortada, já que rolagem
+   horizontal por definição precisa recortar o que passa da borda. */
+[data-carousel-card]:first-child .focusable:focus-visible,
+[data-carousel-card]:first-child .focusable[data-focused='true'] {
+  transform-origin: left center;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .focusable {
     transition: none;

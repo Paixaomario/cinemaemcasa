@@ -865,7 +865,36 @@ Supabase (não a "anon" que o site usa) — ela tem permissão de escrita
 total, então só use localmente, nunca no código do site, nunca faça
 commit dela.
 
-## 41. Notas do Agente QA Final
+## 42. Correções desta entrega (tamanho das capas, corte na 1ª coluna, imagem quebrada, trailers)
+
+- **Ano/avaliação reduzidos para 13px** (eram 33px).
+- **Capa da primeira coluna cortada ao expandir:** causa diferente do
+  bug de z-index já corrigido antes — a capa cresce a partir do
+  CENTRO por padrão, então a metade esquerda saía da área de rolagem
+  horizontal (que precisa recortar por definição, senão a rolagem não
+  funcionaria). Corrigido: a capa da primeira coluna de cada linha
+  agora cresce só pra direita (`transform-origin: left`).
+- **"Emoji de imagem quebrada" — causa real encontrada:** o reforço
+  via TMDB só era acionado quando a capa estava **vazia** no banco —
+  se tinha uma URL só que ela estava morta/quebrada, o sistema nunca
+  tentava buscar alternativa, e o navegador mostrava o próprio ícone
+  de "imagem quebrada". Agora o `<img>` tem um `onError`: se o link
+  falhar de verdade ao carregar, aciona o mesmo reforço via TMDB
+  (antes só reagia a campo vazio, agora reage a link quebrado também).
+- **Deduplicação de capas na Home:** conferido — já está funcionando
+  (nenhuma capa repete entre seções, nem no hero, incluindo depois de
+  reiniciar).
+
+### Script de trailers ausentes/quebrados
+Mesmo modelo do script de capas: `scripts/diagnostico-trailers.sql`
+(só leitura) encontra filmes/séries sem trailer ou com link de busca
+do YouTube em vez do vídeo direto; `scripts/corrigir-trailers.mjs`
+busca um trailer de verdade no TMDB (em qualquer idioma disponível,
+sem forçar português) e grava o link direto do vídeo. Mesma exigência
+de `service_role` key, mesmo aviso de segurança de não colar ela aqui
+no chat.
+
+## 43. Notas do Agente QA Final
 
 - **Nenhuma tabela/coluna do Supabase é alterada** — o sistema apenas lê os
   dados existentes, exatamente como solicitado.

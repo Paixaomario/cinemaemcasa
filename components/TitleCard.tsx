@@ -78,16 +78,24 @@ export function TitleCard({
   const [tocandoTrailer, setTocandoTrailer] = useState(false);
   const [trailerYoutubeFallback, setTrailerYoutubeFallback] = useState<string | null>(null);
   const [posterReforcado, setPosterReforcado] = useState<string | null>(null);
+  const [posterOriginalQuebrado, setPosterOriginalQuebrado] = useState(false);
+  const [posterReforcadoTambemQuebrado, setPosterReforcadoTambemQuebrado] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const jaBuscouTrailer = useRef(false);
 
-  const posterFinal = poster || posterReforcado;
+  const posterFinal = posterReforcadoTambemQuebrado
+    ? null
+    : (!posterOriginalQuebrado && poster) || posterReforcado;
 
-  // Capa sem imagem nenhuma: busca no TMDB sob demanda, direto no
-  // navegador — assim que o card aparece, não trava o carregamento da
-  // página (que roda no servidor) esperando isso.
+  // Busca no TMDB sob demanda, direto no navegador, em DOIS casos: (1)
+  // a capa está vazia no banco, OU (2) a capa TEM uma URL, mas ela
+  // está quebrada de verdade (link morto) — antes só o caso (1) era
+  // tratado, então um link quebrado (em vez de vazio) ficava mostrando
+  // o ícone de imagem quebrada do navegador pra sempre, sem nunca
+  // acionar o reforço. Roda sem travar o carregamento da página.
   useEffect(() => {
-    if (poster || !tmdbId || !tipo) return;
+    const precisaDeReforco = (!poster || posterOriginalQuebrado) && !posterReforcado;
+    if (!precisaDeReforco || !tmdbId || !tipo) return;
     let ativo = true;
     fetch(`/api/poster?tmdbId=${tmdbId}&tipo=${tipo}`)
       .then((res) => res.json())
@@ -100,7 +108,7 @@ export function TitleCard({
     return () => {
       ativo = false;
     };
-  }, [poster, tmdbId, tipo]);
+  }, [poster, posterOriginalQuebrado, posterReforcado, tmdbId, tipo]);
 
   // Se `trailer` for um link do YouTube (não um arquivo de vídeo
   // direto), a tag <video> nunca conseguiria tocar — usa embed certo.
@@ -165,16 +173,24 @@ export function TitleCard({
         />
       ) : posterFinal ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={posterFinal} alt={titulo} className="w-full h-full object-cover" />
+        <img
+          src={posterFinal}
+          alt={titulo}
+          className="w-full h-full object-cover"
+          onError={() => {
+            if (posterFinal === poster) setPosterOriginalQuebrado(true);
+            else setPosterReforcadoTambemQuebrado(true);
+          }}
+        />
       ) : (
         <div className="w-full h-full bg-card" />
       )}
 
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2 pt-9 pb-2 flex items-center justify-between">
-        {ano ? <span className="text-[33px] leading-none font-bold text-white/90">{ano}</span> : <span />}
+        {ano ? <span className="text-[13px] leading-none font-bold text-white/90">{ano}</span> : <span />}
         {rating !== null && rating !== undefined && rating > 0 && (
-          <span className="flex items-center gap-1 text-[33px] leading-none font-bold text-gold">
-            <IconeEstrela className="w-[26px] h-[26px]" />
+          <span className="flex items-center gap-1 text-[13px] leading-none font-bold text-gold">
+            <IconeEstrela className="w-[11px] h-[11px]" />
             {rating.toFixed(1)}
           </span>
         )}
