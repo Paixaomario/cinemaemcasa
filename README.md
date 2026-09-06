@@ -894,7 +894,17 @@ sem forçar português) e grava o link direto do vídeo. Mesma exigência
 de `service_role` key, mesmo aviso de segurança de não colar ela aqui
 no chat.
 
-## 43. Notas do Agente QA Final
+## 44. Revisão de consistência + limpeza (esta entrega)
+
+Fiz uma checagem geral no código acumulado em todas as rodadas
+anteriores: imports não usados, tipos incompatíveis entre componentes,
+CSS duplicado/conflitante, código de debug esquecido. Nada quebrado
+encontrado. Único achado: `components/PosterGrid.tsx` tinha ficado
+órfão (substituído por `HorizontalRow` em Home/Minha Lista nas
+últimas entregas) — removido por limpeza, não estava sendo importado
+em lugar nenhum.
+
+## 45. Notas do Agente QA Final
 
 - **Nenhuma tabela/coluna do Supabase é alterada** — o sistema apenas lê os
   dados existentes, exatamente como solicitado.
