@@ -14,7 +14,7 @@ export function HomeSectionRow({ titulo, items }: Props) {
   if (items.length === 0) return null;
 
   return (
-    <section className="py-4">
+    <section className="secao-tela-cheia md:min-h-screen md:flex md:flex-col md:justify-center py-4">
       <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold text-white mb-3 px-3">
         {titulo}
       </h2>

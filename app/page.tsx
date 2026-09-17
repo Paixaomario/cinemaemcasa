@@ -200,7 +200,7 @@ export default async function HomePage() {
       {heroes.length > 0 && <HeroBanner heroes={heroes} />}
 
       {continuarAssistindo.length > 0 && (
-        <section className="py-4">
+        <section className="secao-tela-cheia md:min-h-screen md:flex md:flex-col md:justify-center py-4">
           <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold text-white mb-3 px-3">
             Continuar assistindo
           </h2>
@@ -213,7 +213,7 @@ export default async function HomePage() {
       ))}
 
       {recomendados.length > 0 && (
-        <section className="py-4">
+        <section className="secao-tela-cheia md:min-h-screen md:flex md:flex-col md:justify-center py-4">
           <div className="flex items-center gap-2 mb-3 px-3">
             <i className="ti ti-sparkles text-gold text-base" aria-hidden="true" />
             <h2 className="text-[20px] md:text-[32px] lg:text-[40px] font-heading font-bold text-white">Escolhido para você</h2>

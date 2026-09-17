@@ -1,34 +1,31 @@
-const CACHE_NAME = 'cinema-em-casa-cache-v1';
-const urlsToCache = [
-  '/',
-  '/filmes',
-  '/series',
-  // Adicione aqui outros assets estáticos que você queira pré-cachear
-  // ex: '/logo.png', '/styles/globals.css'
-];
+const CACHE = 'cinema-em-casa-v1';
+const SHELL = ['/', '/manifest.json'];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Service Worker: Cache aberto');
-        return cache.addAll(urlsToCache);
-      })
-  );
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)));
+  self.skipWaiting();
 });
 
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
+// Estratégia network-first: sempre tenta a rede (catálogo muda com
+// frequência); só usa o cache como fallback se a rede falhar.
 self.addEventListener('fetch', (event) => {
-  // Estratégia: Stale-While-Revalidate
-  // Serve do cache primeiro para velocidade, depois atualiza em segundo plano.
+  if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request).then((networkResponse) => {
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, networkResponse.clone());
-        });
-        return networkResponse;
-      });
-      return cachedResponse || fetchPromise;
-    })
+    fetch(event.request)
+      .then((res) => {
+        const clone = res.clone();
+        caches.open(CACHE).then((cache) => cache.put(event.request, clone));
+        return res;
+      })
+      .catch(() => caches.match(event.request))
   );
 });

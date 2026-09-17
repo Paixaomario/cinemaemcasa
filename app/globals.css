@@ -155,3 +155,17 @@ body {
     width: 365px;
   }
 }
+
+/* Rolagem por seção, uma de cada vez — padrão confirmado em apps de
+   TV (Apple tvOS, Android TV): ao rolar pra baixo, a próxima seção
+   "sobe" e ocupa a tela, a anterior sai de vista. Só em telas médias+
+   (md:) — no celular, onde o espaço é pequeno e a rolagem é por
+   toque, isso atrapalharia mais do que ajudaria. */
+@media (min-width: 768px) {
+  html {
+    scroll-snap-type: y proximity;
+  }
+  .secao-tela-cheia {
+    scroll-snap-align: start;
+  }
+}

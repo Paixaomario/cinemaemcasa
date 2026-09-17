@@ -4,6 +4,7 @@ import './globals.css';
 import { Sidebar } from '@/components/Sidebar';
 import { BottomNav } from '@/components/BottomNav';
 import { PlatformProvider } from '@/components/PlatformProvider';
+import { HeroPreviewProvider } from '@/components/HeroPreviewContext';
 import { SplashScreen } from '@/components/SplashScreen';
 
 // Agente de layout: fontes oficiais do sistema. Inter para textos
@@ -60,11 +61,13 @@ export default function RootLayout({
       </head>
       <body className="bg-black text-white font-sans">
         <SplashScreen />
-        <PlatformProvider>
-          <Sidebar />
-          <main className="md:pl-[92px] pb-24 md:pb-0">{children}</main>
-          <BottomNav />
-        </PlatformProvider>
+        <HeroPreviewProvider>
+          <PlatformProvider>
+            <Sidebar />
+            <main className="md:pl-[92px] pb-24 md:pb-0">{children}</main>
+            <BottomNav />
+          </PlatformProvider>
+        </HeroPreviewProvider>
       </body>
     </html>
   );
